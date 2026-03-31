@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Clarity.Domain\Clarity.Domain.csproj" />
+    <ProjectReference Include="..\Clarity.Application\Clarity.Application.csproj" />
+    <ProjectReference Include="..\Clarity.SharedContracts\Clarity.SharedContracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ClosedXML" Version="*" />
+    <PackageReference Include="CsvHelper" Version="*" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

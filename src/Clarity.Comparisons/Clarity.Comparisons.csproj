@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Clarity.Domain\Clarity.Domain.csproj" />
+    <ProjectReference Include="..\Clarity.Application\Clarity.Application.csproj" />
+    <ProjectReference Include="..\Clarity.SharedContracts\Clarity.SharedContracts.csproj" />
+    <ProjectReference Include="..\Clarity.Collectors.Contracts\Clarity.Collectors.Contracts.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

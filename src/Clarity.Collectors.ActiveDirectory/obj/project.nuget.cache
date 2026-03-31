@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "dgSpecHash": "Qg2IjSE44/U=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\MathieuLEROY\\.copilot\\worktrees\\Clarity\\maleroyfr\\acclimatisable-nancey\\src\\Clarity.Collectors.ActiveDirectory\\Clarity.Collectors.ActiveDirectory.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\MathieuLEROY\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\10.0.0\\microsoft.extensions.dependencyinjection.abstractions.10.0.0.nupkg.sha512",
+    "C:\\Users\\MathieuLEROY\\.nuget\\packages\\microsoft.extensions.logging.abstractions\\10.0.0\\microsoft.extensions.logging.abstractions.10.0.0.nupkg.sha512",
+    "C:\\Users\\MathieuLEROY\\.nuget\\packages\\system.configuration.configurationmanager\\10.0.5\\system.configuration.configurationmanager.10.0.5.nupkg.sha512",
+    "C:\\Users\\MathieuLEROY\\.nuget\\packages\\system.diagnostics.eventlog\\10.0.5\\system.diagnostics.eventlog.10.0.5.nupkg.sha512",
+    "C:\\Users\\MathieuLEROY\\.nuget\\packages\\system.directoryservices\\10.0.5\\system.directoryservices.10.0.5.nupkg.sha512",
+    "C:\\Users\\MathieuLEROY\\.nuget\\packages\\system.directoryservices.accountmanagement\\10.0.5\\system.directoryservices.accountmanagement.10.0.5.nupkg.sha512",
+    "C:\\Users\\MathieuLEROY\\.nuget\\packages\\system.directoryservices.protocols\\10.0.5\\system.directoryservices.protocols.10.0.5.nupkg.sha512",
+    "C:\\Users\\MathieuLEROY\\.nuget\\packages\\system.security.cryptography.protecteddata\\10.0.5\\system.security.cryptography.protecteddata.10.0.5.nupkg.sha512"
+  ],
+  "logs": []
+}
