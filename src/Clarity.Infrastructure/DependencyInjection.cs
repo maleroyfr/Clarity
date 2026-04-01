@@ -4,7 +4,9 @@ using Clarity.Domain.Environments;
 using Clarity.Domain.Exports;
 using Clarity.Domain.Snapshots;
 using Clarity.Infrastructure.Persistence;
+using Clarity.Infrastructure.Onboarding;
 using Clarity.Infrastructure.Repositories;
+using Clarity.Application.Onboarding;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -51,6 +53,7 @@ public static class DependencyInjection
         services.AddScoped<IInventoryObjectRepository, InventoryObjectRepository>();
         services.AddScoped<IExportJobRepository, ExportJobRepository>();
         services.AddScoped<IComparisonJobRepository, ComparisonJobRepository>();
+        services.AddSingleton<IAzureCliSetupScriptGenerator, AzureCliSetupScriptGenerator>();
 
         return services;
     }

@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Clarity.Application.Tests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+efb177ec0c26d4f345528b2aa0c87df46dc81d64")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c27c9ab32e0f260362b1321e9f8a113fd2f47b3f")]
 [assembly: System.Reflection.AssemblyProductAttribute("Clarity.Application.Tests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Clarity.Application.Tests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

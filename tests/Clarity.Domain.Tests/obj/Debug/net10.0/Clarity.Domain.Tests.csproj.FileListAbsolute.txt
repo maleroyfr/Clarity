@@ -1,10 +1,4 @@
 C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\tests\Clarity.Domain.Tests\bin\Debug\net10.0\CoverletSourceRootsMapping_Clarity.Domain.Tests
-C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\tests\Clarity.Domain.Tests\obj\Debug\net10.0\Clarity.Domain.Tests.csproj.AssemblyReference.cache
-C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\tests\Clarity.Domain.Tests\obj\Debug\net10.0\Clarity.Domain.Tests.GeneratedMSBuildEditorConfig.editorconfig
-C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\tests\Clarity.Domain.Tests\obj\Debug\net10.0\Clarity.Domain.Tests.AssemblyInfoInputs.cache
-C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\tests\Clarity.Domain.Tests\obj\Debug\net10.0\Clarity.Domain.Tests.AssemblyInfo.cs
-C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\tests\Clarity.Domain.Tests\obj\Debug\net10.0\Clarity.Domain.Tests.csproj.CoreCompileInputs.cache
-C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\tests\Clarity.Domain.Tests\obj\Debug\net10.0\Clarity.Domain.Tests.sourcelink.json
 C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\tests\Clarity.Domain.Tests\bin\Debug\net10.0\testhost.dll
 C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\tests\Clarity.Domain.Tests\bin\Debug\net10.0\testhost.exe
 C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\tests\Clarity.Domain.Tests\bin\Debug\net10.0\xunit.runner.visualstudio.dotnetcore.testadapter.dll
@@ -103,6 +97,12 @@ C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey
 C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\tests\Clarity.Domain.Tests\bin\Debug\net10.0\Clarity.SharedContracts.dll
 C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\tests\Clarity.Domain.Tests\bin\Debug\net10.0\Clarity.Domain.pdb
 C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\tests\Clarity.Domain.Tests\bin\Debug\net10.0\Clarity.SharedContracts.pdb
+C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\tests\Clarity.Domain.Tests\obj\Debug\net10.0\Clarity.Domain.Tests.csproj.AssemblyReference.cache
+C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\tests\Clarity.Domain.Tests\obj\Debug\net10.0\Clarity.Domain.Tests.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\tests\Clarity.Domain.Tests\obj\Debug\net10.0\Clarity.Domain.Tests.AssemblyInfoInputs.cache
+C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\tests\Clarity.Domain.Tests\obj\Debug\net10.0\Clarity.Domain.Tests.AssemblyInfo.cs
+C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\tests\Clarity.Domain.Tests\obj\Debug\net10.0\Clarity.Domain.Tests.csproj.CoreCompileInputs.cache
+C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\tests\Clarity.Domain.Tests\obj\Debug\net10.0\Clarity.Domain.Tests.sourcelink.json
 C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\tests\Clarity.Domain.Tests\obj\Debug\net10.0\Clarity..1330D3DF.Up2Date
 C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\tests\Clarity.Domain.Tests\obj\Debug\net10.0\Clarity.Domain.Tests.dll
 C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\tests\Clarity.Domain.Tests\obj\Debug\net10.0\refint\Clarity.Domain.Tests.dll

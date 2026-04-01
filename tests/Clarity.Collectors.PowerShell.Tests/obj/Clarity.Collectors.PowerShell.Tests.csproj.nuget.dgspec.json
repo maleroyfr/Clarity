@@ -388,6 +388,12 @@
             "projectReferences": {
               "C:\\Users\\MathieuLEROY\\.copilot\\worktrees\\Clarity\\maleroyfr\\acclimatisable-nancey\\src\\Clarity.Collectors.Contracts\\Clarity.Collectors.Contracts.csproj": {
                 "projectPath": "C:\\Users\\MathieuLEROY\\.copilot\\worktrees\\Clarity\\maleroyfr\\acclimatisable-nancey\\src\\Clarity.Collectors.Contracts\\Clarity.Collectors.Contracts.csproj"
+              },
+              "C:\\Users\\MathieuLEROY\\.copilot\\worktrees\\Clarity\\maleroyfr\\acclimatisable-nancey\\src\\Clarity.Domain\\Clarity.Domain.csproj": {
+                "projectPath": "C:\\Users\\MathieuLEROY\\.copilot\\worktrees\\Clarity\\maleroyfr\\acclimatisable-nancey\\src\\Clarity.Domain\\Clarity.Domain.csproj"
+              },
+              "C:\\Users\\MathieuLEROY\\.copilot\\worktrees\\Clarity\\maleroyfr\\acclimatisable-nancey\\src\\Clarity.SharedContracts\\Clarity.SharedContracts.csproj": {
+                "projectPath": "C:\\Users\\MathieuLEROY\\.copilot\\worktrees\\Clarity\\maleroyfr\\acclimatisable-nancey\\src\\Clarity.SharedContracts\\Clarity.SharedContracts.csproj"
               }
             }
           }
@@ -408,6 +414,14 @@
         "net10.0": {
           "targetAlias": "net10.0",
           "dependencies": {
+            "Microsoft.Extensions.DependencyInjection.Abstractions": {
+              "target": "Package",
+              "version": "[*, )"
+            },
+            "Microsoft.Extensions.Logging.Abstractions": {
+              "target": "Package",
+              "version": "[*, )"
+            },
             "Microsoft.PowerShell.SDK": {
               "target": "Package",
               "version": "[*, )"

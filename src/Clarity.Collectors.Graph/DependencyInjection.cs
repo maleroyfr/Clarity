@@ -10,6 +10,7 @@ public static class DependencyInjection
     public static IServiceCollection AddGraphCollectors(this IServiceCollection services)
     {
         services.AddSingleton<IGraphClientFactory, GraphClientFactory>();
+        services.AddSingleton<ICollectorCatalog, CollectorCatalog>();
 
         services.AddSingleton<IGraphUserFetcher, GraphUserFetcher>();
         services.AddSingleton<IGraphGroupFetcher, GraphGroupFetcher>();

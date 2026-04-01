@@ -2,7 +2,6 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
-using Clarity.Desktop.ViewModels;
 
 namespace Clarity.Desktop;
 
@@ -21,19 +20,23 @@ public class ViewLocator : IDataTemplate
         if (param is null)
             return null;
 
-        var vmName = param.GetType().FullName!;
+        var vmType = param.GetType();
+        var vmName = vmType.FullName;
+        if (string.IsNullOrWhiteSpace(vmName))
+            return null;
 
         // Convert ViewModels namespace to Views and strip "ViewModel" suffix
         var viewName = vmName
             .Replace(".ViewModels.", ".Views.", StringComparison.Ordinal)
             .Replace("ViewModel", "View", StringComparison.Ordinal);
 
-        var type = Type.GetType(viewName);
+        var type = Type.GetType(viewName) ?? vmType.Assembly.GetType(viewName);
         if (type != null)
             return (Control)Activator.CreateInstance(type)!;
 
         return new TextBlock { Text = $"View not found: {viewName}" };
     }
 
-    public bool Match(object? data) => data is ViewModelBase;
+    public bool Match(object? data) =>
+        data?.GetType().Namespace?.StartsWith("Clarity.Desktop.ViewModels", StringComparison.Ordinal) == true;
 }

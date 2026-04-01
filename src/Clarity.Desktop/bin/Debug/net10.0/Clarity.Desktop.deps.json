@@ -3649,6 +3649,10 @@
       "Clarity.Collectors.PowerShell/1.0.0": {
         "dependencies": {
           "Clarity.Collectors.Contracts": "1.0.0",
+          "Clarity.Domain": "1.0.0",
+          "Clarity.SharedContracts": "1.0.0",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.5",
+          "Microsoft.Extensions.Logging.Abstractions": "10.0.5",
           "Microsoft.PowerShell.SDK": "7.6.0"
         },
         "runtime": {

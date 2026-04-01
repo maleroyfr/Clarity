@@ -1,5 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Clarity.Application.Onboarding;
+using Clarity.Collectors.PowerShell;
 using Clarity.Application.Environments.Commands;
 using MediatR;
 
@@ -30,30 +32,46 @@ public sealed partial class OnboardingWizardViewModel : ObservableObject
 
     public Guid TargetCustomerId { get; set; }
 
-    public WorkloadSelectionStepViewModel WorkloadStep { get; } = new();
-    public PrerequisitesStepViewModel PrerequisitesStep { get; } = new();
-    public SummaryStepViewModel SummaryStep { get; } = new();
+    public WorkloadSelectionStepViewModel WorkloadStep { get; }
+    public PrerequisitesStepViewModel PrerequisitesStep { get; }
+    public SummaryStepViewModel SummaryStep { get; }
 
     public event Action? Finished;
     public event Action? Cancelled;
 
-    public OnboardingWizardViewModel(IMediator mediator)
+    public OnboardingWizardViewModel(
+        IMediator mediator,
+        IAzureCliSetupScriptGenerator scriptGenerator,
+        IPowerShellPrerequisiteService powerShellPrerequisiteService)
     {
         _mediator = mediator;
+        WorkloadStep = new WorkloadSelectionStepViewModel();
+        PrerequisitesStep = new PrerequisitesStepViewModel(powerShellPrerequisiteService);
+        SummaryStep = new SummaryStepViewModel(scriptGenerator);
+
+        foreach (var workload in WorkloadStep.Workloads)
+        {
+            workload.PropertyChanged += (_, args) =>
+            {
+                if (args.PropertyName == nameof(WorkloadItemVm.IsSelected))
+                {
+                    OnPropertyChanged(nameof(CanGoNext));
+                }
+            };
+        }
     }
 
     [RelayCommand]
-    public void Next()
+    public async Task NextAsync()
     {
         if (!CanGoNext) return;
 
         if (CurrentStep == 0)
         {
-            PrerequisitesStep.BuildFrom(WorkloadStep.SelectedAreas);
+            await PrerequisitesStep.BuildFromAsync(WorkloadStep.SelectedAreas);
         }
         else if (CurrentStep == 1)
         {
-            var met = PrerequisitesStep.Prerequisites.Count(p => p.IsCompleted && !p.IsOptional);
             SummaryStep.Update(
                 WorkloadStep.SelectedAreas,
                 PrerequisitesStep.Prerequisites.Count(p => p.IsCompleted),

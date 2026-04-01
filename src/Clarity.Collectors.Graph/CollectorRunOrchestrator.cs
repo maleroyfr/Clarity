@@ -13,14 +13,14 @@ namespace Clarity.Collectors.Graph;
 /// </summary>
 public sealed class CollectorRunOrchestrator : ICollectorRunOrchestrator
 {
-    private readonly IEnumerable<ICollector> _collectors;
+    private readonly ICollectorCatalog _collectorCatalog;
     private readonly ILogger<CollectorRunOrchestrator> _logger;
 
     public CollectorRunOrchestrator(
-        IEnumerable<ICollector> collectors,
+        ICollectorCatalog collectorCatalog,
         ILogger<CollectorRunOrchestrator> logger)
     {
-        _collectors = collectors;
+        _collectorCatalog = collectorCatalog;
         _logger = logger;
     }
 
@@ -31,9 +31,7 @@ public sealed class CollectorRunOrchestrator : ICollectorRunOrchestrator
         IProgress<CollectorProgress> progress,
         CancellationToken cancellationToken)
     {
-        var matching = _collectors
-            .Where(c => scope.Contains(c.WorkloadArea))
-            .ToList();
+        var matching = _collectorCatalog.GetCollectorsForScope(scope);
 
         int total = matching.Count;
         int processed = 0;

@@ -1,6 +1,8 @@
 using Avalonia;
 using Clarity.Application;
 using Clarity.Comparisons;
+using Clarity.Collectors.Graph;
+using Clarity.Collectors.PowerShell;
 using Clarity.Desktop.Services;
 using Clarity.Exports;
 using Clarity.Infrastructure;
@@ -55,6 +57,8 @@ sealed class Program
                 services.AddLogging(b => b.AddSerilog());
                 services.AddApplication();
                 services.AddInfrastructure(); // SQLite local dev mode
+                services.AddGraphCollectors();
+                services.AddPowerShellCollectors();
                 services.AddExports();
                 services.AddComparisons();
                 services.AddDesktopViewModels();

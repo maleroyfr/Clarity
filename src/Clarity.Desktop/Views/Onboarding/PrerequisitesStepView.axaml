@@ -8,13 +8,30 @@
     <StyleInclude Source="/Styles/ClarityTheme.axaml"/>
   </UserControl.Styles>
 
-  <Grid RowDefinitions="Auto,Auto,*">
+  <Grid RowDefinitions="Auto,Auto,Auto,*">
     <TextBlock Grid.Row="0" Text="Prerequisites" Classes="PageTitle" Margin="0,0,0,4"/>
     <TextBlock Grid.Row="1"
-               Text="Verify the following prerequisites are in place before proceeding."
-               Classes="PageSubtitle" Margin="0,0,0,16" TextWrapping="Wrap"/>
+                Text="Verify the following prerequisites are in place before proceeding."
+                Classes="PageSubtitle" Margin="0,0,0,16" TextWrapping="Wrap"/>
 
-    <ScrollViewer Grid.Row="2">
+    <Grid Grid.Row="2" ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,16">
+      <TextBlock Text="{Binding StatusMessage}"
+                 VerticalAlignment="Center"
+                 Foreground="{DynamicResource SystemBaseMediumHighColor}"/>
+      <Button Grid.Column="1"
+              Classes="SecondaryButton"
+              Content="Refresh"
+              Command="{Binding RefreshCommand}"
+              IsEnabled="{Binding !IsChecking}"
+              Margin="0,0,8,0"/>
+      <Button Grid.Column="2"
+              Classes="PrimaryButton"
+              Content="Install missing modules"
+              Command="{Binding InstallMissingModulesCommand}"
+              IsEnabled="{Binding CanInstallMissingModules}"/>
+    </Grid>
+
+    <ScrollViewer Grid.Row="3">
       <ItemsControl ItemsSource="{Binding Prerequisites}">
         <ItemsControl.ItemTemplate>
           <DataTemplate x:DataType="vm:PrerequisiteItemVm">
@@ -31,6 +48,7 @@
                   <TextBlock Text="{Binding Label}" Classes="CardTitle" TextWrapping="Wrap"/>
                   <TextBlock Text="{Binding Description}" Classes="CardSubtitle" TextWrapping="Wrap"/>
                   <TextBlock Text="{Binding Category}" Classes="CardMeta"/>
+                  <TextBlock Text="{Binding StatusText}" Classes="CardMeta"/>
                 </StackPanel>
                 <Border Grid.Column="2"
                         IsVisible="{Binding IsOptional}"

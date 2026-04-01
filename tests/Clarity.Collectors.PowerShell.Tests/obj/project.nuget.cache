@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "SLtU+52FwkE=",
+  "dgSpecHash": "B4Jmeg8Vm1w=",
   "success": true,
   "projectFilePath": "C:\\Users\\MathieuLEROY\\.copilot\\worktrees\\Clarity\\maleroyfr\\acclimatisable-nancey\\tests\\Clarity.Collectors.PowerShell.Tests\\Clarity.Collectors.PowerShell.Tests.csproj",
   "expectedPackageFiles": [
@@ -18,8 +18,8 @@
     "C:\\Users\\MathieuLEROY\\.nuget\\packages\\microsoft.codeanalysis.common\\5.0.0\\microsoft.codeanalysis.common.5.0.0.nupkg.sha512",
     "C:\\Users\\MathieuLEROY\\.nuget\\packages\\microsoft.codeanalysis.csharp\\5.0.0\\microsoft.codeanalysis.csharp.5.0.0.nupkg.sha512",
     "C:\\Users\\MathieuLEROY\\.nuget\\packages\\microsoft.codecoverage\\17.8.0\\microsoft.codecoverage.17.8.0.nupkg.sha512",
-    "C:\\Users\\MathieuLEROY\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\10.0.0\\microsoft.extensions.dependencyinjection.abstractions.10.0.0.nupkg.sha512",
-    "C:\\Users\\MathieuLEROY\\.nuget\\packages\\microsoft.extensions.logging.abstractions\\10.0.0\\microsoft.extensions.logging.abstractions.10.0.0.nupkg.sha512",
+    "C:\\Users\\MathieuLEROY\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\10.0.5\\microsoft.extensions.dependencyinjection.abstractions.10.0.5.nupkg.sha512",
+    "C:\\Users\\MathieuLEROY\\.nuget\\packages\\microsoft.extensions.logging.abstractions\\10.0.5\\microsoft.extensions.logging.abstractions.10.0.5.nupkg.sha512",
     "C:\\Users\\MathieuLEROY\\.nuget\\packages\\microsoft.extensions.objectpool\\10.0.5\\microsoft.extensions.objectpool.10.0.5.nupkg.sha512",
     "C:\\Users\\MathieuLEROY\\.nuget\\packages\\microsoft.management.infrastructure\\3.0.0\\microsoft.management.infrastructure.3.0.0.nupkg.sha512",
     "C:\\Users\\MathieuLEROY\\.nuget\\packages\\microsoft.management.infrastructure.cimcmdlets\\7.6.0\\microsoft.management.infrastructure.cimcmdlets.7.6.0.nupkg.sha512",

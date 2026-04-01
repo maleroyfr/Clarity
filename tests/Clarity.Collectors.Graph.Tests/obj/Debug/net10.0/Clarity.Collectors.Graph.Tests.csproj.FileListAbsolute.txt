@@ -1,10 +1,4 @@
 C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\tests\Clarity.Collectors.Graph.Tests\bin\Debug\net10.0\CoverletSourceRootsMapping_Clarity.Collectors.Graph.Tests
-C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\tests\Clarity.Collectors.Graph.Tests\obj\Debug\net10.0\Clarity.Collectors.Graph.Tests.csproj.AssemblyReference.cache
-C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\tests\Clarity.Collectors.Graph.Tests\obj\Debug\net10.0\Clarity.Collectors.Graph.Tests.GeneratedMSBuildEditorConfig.editorconfig
-C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\tests\Clarity.Collectors.Graph.Tests\obj\Debug\net10.0\Clarity.Collectors.Graph.Tests.AssemblyInfoInputs.cache
-C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\tests\Clarity.Collectors.Graph.Tests\obj\Debug\net10.0\Clarity.Collectors.Graph.Tests.AssemblyInfo.cs
-C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\tests\Clarity.Collectors.Graph.Tests\obj\Debug\net10.0\Clarity.Collectors.Graph.Tests.csproj.CoreCompileInputs.cache
-C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\tests\Clarity.Collectors.Graph.Tests\obj\Debug\net10.0\Clarity.Collectors.Graph.Tests.sourcelink.json
 C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\tests\Clarity.Collectors.Graph.Tests\bin\Debug\net10.0\testhost.dll
 C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\tests\Clarity.Collectors.Graph.Tests\bin\Debug\net10.0\testhost.exe
 C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\tests\Clarity.Collectors.Graph.Tests\bin\Debug\net10.0\xunit.runner.visualstudio.dotnetcore.testadapter.dll
@@ -144,6 +138,12 @@ C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey
 C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\tests\Clarity.Collectors.Graph.Tests\bin\Debug\net10.0\Clarity.Collectors.Contracts.pdb
 C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\tests\Clarity.Collectors.Graph.Tests\bin\Debug\net10.0\Clarity.Domain.pdb
 C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\tests\Clarity.Collectors.Graph.Tests\bin\Debug\net10.0\Clarity.SharedContracts.pdb
+C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\tests\Clarity.Collectors.Graph.Tests\obj\Debug\net10.0\Clarity.Collectors.Graph.Tests.csproj.AssemblyReference.cache
+C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\tests\Clarity.Collectors.Graph.Tests\obj\Debug\net10.0\Clarity.Collectors.Graph.Tests.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\tests\Clarity.Collectors.Graph.Tests\obj\Debug\net10.0\Clarity.Collectors.Graph.Tests.AssemblyInfoInputs.cache
+C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\tests\Clarity.Collectors.Graph.Tests\obj\Debug\net10.0\Clarity.Collectors.Graph.Tests.AssemblyInfo.cs
+C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\tests\Clarity.Collectors.Graph.Tests\obj\Debug\net10.0\Clarity.Collectors.Graph.Tests.csproj.CoreCompileInputs.cache
+C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\tests\Clarity.Collectors.Graph.Tests\obj\Debug\net10.0\Clarity.Collectors.Graph.Tests.sourcelink.json
 C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\tests\Clarity.Collectors.Graph.Tests\obj\Debug\net10.0\Clarity..50E43CC6.Up2Date
 C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\tests\Clarity.Collectors.Graph.Tests\obj\Debug\net10.0\Clarity.Collectors.Graph.Tests.dll
 C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\tests\Clarity.Collectors.Graph.Tests\obj\Debug\net10.0\refint\Clarity.Collectors.Graph.Tests.dll

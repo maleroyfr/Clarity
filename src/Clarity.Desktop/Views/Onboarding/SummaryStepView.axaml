@@ -50,5 +50,36 @@
                Watermark="e.g. xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
                Classes="FormInput"/>
     </StackPanel>
+
+    <StackPanel Spacing="6">
+      <TextBlock Text="Required permissions" Classes="FormLabel"/>
+      <TextBox Text="{Binding RequiredPermissionsText}"
+               IsReadOnly="True"
+               AcceptsReturn="True"
+               MinHeight="88"
+               Classes="FormInput"/>
+    </StackPanel>
+
+    <StackPanel Spacing="6">
+      <TextBlock Text="Optional permissions" Classes="FormLabel"/>
+      <TextBox Text="{Binding OptionalPermissionsText}"
+               IsReadOnly="True"
+               AcceptsReturn="True"
+               MinHeight="72"
+               Classes="FormInput"/>
+    </StackPanel>
+
+    <StackPanel Spacing="6" IsVisible="{Binding HasSetupScript}">
+      <TextBlock Text="Azure CLI setup script preview" Classes="FormLabel"/>
+      <TextBlock Text="Use this script with a customer admin to create an app registration and grant the required application permissions."
+                 Classes="CardSubtitle"
+                 TextWrapping="Wrap"/>
+      <TextBox Text="{Binding SetupScript}"
+               IsReadOnly="True"
+               AcceptsReturn="True"
+               TextWrapping="NoWrap"
+               Height="240"
+               Classes="FormInput"/>
+    </StackPanel>
   </StackPanel>
 </UserControl>
