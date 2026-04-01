@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:shell="clr-namespace:Clarity.Desktop.ViewModels.Shell"
+        xmlns:local="clr-namespace:Clarity.Desktop"
         x:Class="Clarity.Desktop.Views.Shell.AppShell"
         x:DataType="shell:AppShellViewModel"
         Title="Clarity"
@@ -82,6 +83,10 @@
     <!-- Page content area -->
     <ContentControl Grid.Column="1"
                     Content="{Binding CurrentPage}"
-                    Margin="0"/>
+                    Margin="0">
+      <ContentControl.DataTemplates>
+        <local:ViewLocator/>
+      </ContentControl.DataTemplates>
+    </ContentControl>
   </Grid>
 </Window>
