@@ -1,5 +1,7 @@
+using Clarity.Domain.Comparisons;
 using Clarity.Domain.Customers;
 using Clarity.Domain.Environments;
+using Clarity.Domain.Exports;
 using Clarity.Domain.Snapshots;
 using Clarity.Infrastructure.Persistence;
 using Clarity.Infrastructure.Repositories;
@@ -47,6 +49,8 @@ public static class DependencyInjection
         services.AddScoped<IEnvironmentRelationRepository, EnvironmentRelationRepository>();
         services.AddScoped<ISnapshotRepository, SnapshotRepository>();
         services.AddScoped<IInventoryObjectRepository, InventoryObjectRepository>();
+        services.AddScoped<IExportJobRepository, ExportJobRepository>();
+        services.AddScoped<IComparisonJobRepository, ComparisonJobRepository>();
 
         return services;
     }

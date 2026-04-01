@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Clarity.Collectors.PowerShell")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ab344bca4cf2be0016c210b6447d23ca1e479405")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+efb177ec0c26d4f345528b2aa0c87df46dc81d64")]
 [assembly: System.Reflection.AssemblyProductAttribute("Clarity.Collectors.PowerShell")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Clarity.Collectors.PowerShell")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
