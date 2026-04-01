@@ -1,0 +1,116 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:Clarity.Desktop.ViewModels.Inventory"
+             xmlns:local="clr-namespace:Clarity.Desktop"
+             x:Class="Clarity.Desktop.Views.Inventory.InventoryExplorerView"
+             x:DataType="vm:InventoryExplorerViewModel">
+
+  <UserControl.Styles>
+    <StyleInclude Source="/Styles/ClarityTheme.axaml"/>
+  </UserControl.Styles>
+
+  <!-- List mode -->
+  <Panel>
+    <Grid RowDefinitions="Auto,Auto,*,Auto" IsVisible="{Binding !ShowDetail}">
+
+      <!-- Page Header -->
+      <Border Grid.Row="0" Padding="24,20,24,16"
+              BorderBrush="{DynamicResource SystemBaseLowColor}"
+              BorderThickness="0,0,0,1">
+        <StackPanel>
+          <TextBlock Text="📦 Inventory Explorer" Classes="PageTitle"/>
+          <TextBlock Text="Browse inventory snapshots and explore objects" Classes="PageSubtitle"/>
+        </StackPanel>
+      </Border>
+
+      <!-- Toolbar -->
+      <Border Grid.Row="1" Padding="24,12">
+        <StackPanel Orientation="Horizontal" Spacing="12">
+          <TextBox Watermark="Search snapshots..."
+                   Text="{Binding SearchText}"
+                   Width="280"
+                   Classes="SearchBox"/>
+        </StackPanel>
+      </Border>
+
+      <!-- Loading / Empty / List -->
+      <Panel Grid.Row="2">
+
+        <StackPanel IsVisible="{Binding IsLoading}"
+                    HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
+          <ProgressBar IsIndeterminate="True" Width="200"/>
+          <TextBlock Text="Loading inventory data…" HorizontalAlignment="Center"
+                     Foreground="{DynamicResource SystemBaseMediumColor}"/>
+        </StackPanel>
+
+        <StackPanel IsVisible="{Binding IsEmpty}"
+                    HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
+          <TextBlock Text="📦" FontSize="48" HorizontalAlignment="Center"/>
+          <TextBlock Text="No inventory data yet" Classes="EmptyStateTitle"/>
+          <TextBlock Text="Run an inventory snapshot first to see data here." Classes="EmptyStateSubtitle"/>
+        </StackPanel>
+
+        <ScrollViewer IsVisible="{Binding HasSnapshots}" Padding="24,8">
+          <ItemsControl ItemsSource="{Binding FilteredSnapshots}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:SnapshotSummaryItemVm">
+                <Border Classes="CustomerCard" Margin="0,0,0,8">
+                  <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Grid.Column="0" Spacing="4">
+                      <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="{Binding SnapshotName}" Classes="CardTitle"/>
+                        <Border Classes="Badge">
+                          <TextBlock Text="{Binding TotalObjects, StringFormat='{}{0} objects'}" Classes="BadgeText"/>
+                        </Border>
+                      </StackPanel>
+                      <ItemsControl ItemsSource="{Binding CategorySummaries}" Margin="0,4,0,0">
+                        <ItemsControl.ItemsPanel>
+                          <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Horizontal"/>
+                          </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                          <DataTemplate x:DataType="vm:CategoryCountVm">
+                            <Border Background="{DynamicResource SystemBaseLowColor}"
+                                    CornerRadius="4" Padding="6,2" Margin="0,0,6,4"
+                                    IsVisible="{Binding Count}">
+                              <StackPanel Orientation="Horizontal" Spacing="4">
+                                <TextBlock Text="{Binding Icon}" FontSize="12"/>
+                                <TextBlock Text="{Binding Category}" Classes="BadgeText"/>
+                                <TextBlock Text="{Binding Count, StringFormat=': {0}'}" Classes="BadgeText"/>
+                              </StackPanel>
+                            </Border>
+                          </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                      </ItemsControl>
+                    </StackPanel>
+
+                    <Button Grid.Column="1" Classes="SecondaryButton"
+                            Content="Explore →"
+                            Command="{Binding DrillIntoCommand}"
+                            VerticalAlignment="Center"/>
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+      </Panel>
+
+      <!-- Error bar -->
+      <Border Grid.Row="3"
+              IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+              Background="#FFF0F0" Padding="16,10" Margin="24,0,24,16" CornerRadius="6">
+        <TextBlock Text="{Binding ErrorMessage}" Foreground="#C0392B" TextWrapping="Wrap"/>
+      </Border>
+    </Grid>
+
+    <!-- Detail mode -->
+    <ContentControl IsVisible="{Binding ShowDetail}"
+                    Content="{Binding DetailPage}">
+      <ContentControl.DataTemplates>
+        <local:ViewLocator/>
+      </ContentControl.DataTemplates>
+    </ContentControl>
+  </Panel>
+</UserControl>

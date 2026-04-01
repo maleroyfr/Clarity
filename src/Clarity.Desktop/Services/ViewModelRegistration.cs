@@ -1,5 +1,6 @@
 using Clarity.Desktop.ViewModels.Customers;
 using Clarity.Desktop.ViewModels.Environments;
+using Clarity.Desktop.ViewModels.Inventory;
 using Clarity.Desktop.ViewModels.Onboarding;
 using Clarity.Desktop.ViewModels.Shell;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,6 +17,8 @@ public static class ViewModelRegistration
         services.AddTransient<EnvironmentsListViewModel>();
         services.AddTransient<EnvironmentFormViewModel>();
         services.AddTransient<OnboardingWizardViewModel>();
+        services.AddTransient<InventoryExplorerViewModel>();
+        services.AddTransient<InventoryObjectListViewModel>();
         return services;
     }
 }

@@ -1,0 +1,165 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:Clarity.Desktop.ViewModels.Inventory"
+             x:Class="Clarity.Desktop.Views.Inventory.InventoryObjectListView"
+             x:DataType="vm:InventoryObjectListViewModel">
+
+  <UserControl.Styles>
+    <StyleInclude Source="/Styles/ClarityTheme.axaml"/>
+  </UserControl.Styles>
+
+  <Grid RowDefinitions="Auto,Auto,*,Auto">
+
+    <!-- Page Header -->
+    <Border Grid.Row="0" Padding="24,20,24,16"
+            BorderBrush="{DynamicResource SystemBaseLowColor}"
+            BorderThickness="0,0,0,1">
+      <Grid ColumnDefinitions="Auto,*">
+        <Button Grid.Column="0" Classes="SecondaryButton"
+                Content="← Back"
+                Command="{Binding BackCommand}"
+                VerticalAlignment="Center" Margin="0,0,16,0"/>
+        <StackPanel Grid.Column="1">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Text="Objects in:" Classes="PageTitle"/>
+            <TextBlock Text="{Binding SnapshotName}" Classes="PageTitle"/>
+          </StackPanel>
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <!-- Toolbar -->
+    <Border Grid.Row="1" Padding="24,12">
+      <StackPanel Orientation="Horizontal" Spacing="12">
+        <TextBox Watermark="Search objects..."
+                 Text="{Binding SearchText}"
+                 Width="280"
+                 Classes="SearchBox"/>
+        <ComboBox ItemsSource="{Binding AvailableTypes}"
+                  SelectedItem="{Binding SelectedTypeFilter}"
+                  MinWidth="180">
+          <ComboBox.ItemTemplate>
+            <DataTemplate x:DataType="vm:TypeFilterOption">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <TextBlock Text="{Binding DisplayName}"/>
+                <TextBlock Text="{Binding Count, StringFormat='({0})'}"
+                           Foreground="{DynamicResource SystemBaseMediumColor}"/>
+              </StackPanel>
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
+      </StackPanel>
+    </Border>
+
+    <!-- Loading / Empty / Content -->
+    <Panel Grid.Row="2">
+
+      <StackPanel IsVisible="{Binding IsLoading}"
+                  HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
+        <ProgressBar IsIndeterminate="True" Width="200"/>
+        <TextBlock Text="Loading objects…" HorizontalAlignment="Center"
+                   Foreground="{DynamicResource SystemBaseMediumColor}"/>
+      </StackPanel>
+
+      <StackPanel IsVisible="{Binding IsEmpty}"
+                  HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
+        <TextBlock Text="🔍" FontSize="48" HorizontalAlignment="Center"/>
+        <TextBlock Text="No objects found" Classes="EmptyStateTitle"/>
+        <TextBlock Text="Try adjusting your search or filter criteria." Classes="EmptyStateSubtitle"/>
+      </StackPanel>
+
+      <Grid IsVisible="{Binding HasObjects}" ColumnDefinitions="*,Auto">
+
+        <!-- Object list -->
+        <ScrollViewer Grid.Column="0" Padding="24,8">
+          <ItemsControl ItemsSource="{Binding FilteredObjects}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:InventoryObjectItemVm">
+                <Button Classes="NavButton" Command="{Binding SelectCommand}"
+                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+                        Margin="0,0,0,4" Padding="0">
+                  <Border Classes="CustomerCard" Margin="0,0,0,4">
+                    <Grid ColumnDefinitions="Auto,*">
+                      <Border Grid.Column="0" Classes="Badge" VerticalAlignment="Center"
+                              Margin="0,0,12,0">
+                        <TextBlock Text="{Binding TypeDisplay}" Classes="BadgeText"/>
+                      </Border>
+                      <StackPanel Grid.Column="1" Spacing="2">
+                        <TextBlock Text="{Binding DisplayName}" Classes="CardTitle"
+                                   IsVisible="{Binding DisplayName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                        <TextBlock Text="{Binding ExternalId}" Classes="CardSubtitle"/>
+                      </StackPanel>
+                    </Grid>
+                  </Border>
+                </Button>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+
+        <!-- Detail panel -->
+        <Border Grid.Column="1" IsVisible="{Binding ShowDetail}"
+                Width="360" Padding="24,16"
+                BorderBrush="{DynamicResource SystemBaseLowColor}"
+                BorderThickness="1,0,0,0">
+          <ScrollViewer>
+            <StackPanel Spacing="12" DataContext="{Binding SelectedObject}"
+                        x:DataType="vm:InventoryObjectItemVm">
+
+              <!-- Detail header -->
+              <StackPanel Spacing="4">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <Border Classes="Badge">
+                    <TextBlock Text="{Binding TypeDisplay}" Classes="BadgeText"/>
+                  </Border>
+                </StackPanel>
+                <TextBlock Text="{Binding DisplayName}" Classes="CardTitle" TextWrapping="Wrap"
+                           IsVisible="{Binding DisplayName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+              </StackPanel>
+
+              <!-- External ID -->
+              <StackPanel Spacing="2">
+                <TextBlock Text="External ID" FontWeight="SemiBold" FontSize="12"
+                           Foreground="{DynamicResource SystemBaseMediumColor}"/>
+                <TextBlock Text="{Binding ExternalId}" TextWrapping="Wrap"/>
+              </StackPanel>
+
+              <!-- Properties list -->
+              <StackPanel Spacing="2">
+                <TextBlock Text="Properties" FontWeight="SemiBold" FontSize="12"
+                           Foreground="{DynamicResource SystemBaseMediumColor}" Margin="0,0,0,4"/>
+                <ItemsControl ItemsSource="{Binding KeyProperties}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Border Padding="0,4" BorderBrush="{DynamicResource SystemBaseLowColor}"
+                              BorderThickness="0,0,0,1">
+                        <Grid ColumnDefinitions="Auto,*">
+                          <TextBlock Grid.Column="0" Text="{Binding Key}" FontWeight="SemiBold"
+                                     FontSize="12" MinWidth="100" Margin="0,0,12,0"/>
+                          <TextBlock Grid.Column="1" Text="{Binding Value}" TextWrapping="Wrap"
+                                     FontSize="12"/>
+                        </Grid>
+                      </Border>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+
+              <!-- Close button -->
+              <Button Classes="SecondaryButton" Content="Clear"
+                      Command="{Binding $parent[UserControl].((vm:InventoryObjectListViewModel)DataContext).ClearSelectionCommand}"
+                      HorizontalAlignment="Left" Margin="0,8,0,0"/>
+            </StackPanel>
+          </ScrollViewer>
+        </Border>
+      </Grid>
+    </Panel>
+
+    <!-- Error bar -->
+    <Border Grid.Row="3"
+            IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+            Background="#FFF0F0" Padding="16,10" Margin="24,0,24,16" CornerRadius="6">
+      <TextBlock Text="{Binding ErrorMessage}" Foreground="#C0392B" TextWrapping="Wrap"/>
+    </Border>
+  </Grid>
+</UserControl>

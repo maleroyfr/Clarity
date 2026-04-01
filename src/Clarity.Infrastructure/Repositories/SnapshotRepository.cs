@@ -12,6 +12,11 @@ internal sealed class SnapshotRepository(ClarityDbContext db) : ISnapshotReposit
             .Include(s => s.CollectorRuns)
             .FirstOrDefaultAsync(s => s.Id == id, ct);
 
+    public async Task<IReadOnlyList<Snapshot>> GetAllAsync(CancellationToken ct = default) =>
+        await db.Snapshots
+            .OrderByDescending(s => s.CreatedAt)
+            .ToListAsync(ct);
+
     public async Task<IReadOnlyList<Snapshot>> GetByEnvironmentAsync(
         Guid environmentId, CancellationToken ct = default) =>
         await db.Snapshots

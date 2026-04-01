@@ -5,6 +5,7 @@ namespace Clarity.Domain.Snapshots;
 public interface ISnapshotRepository
 {
     Task<Snapshot?> GetByIdAsync(Guid id, CancellationToken ct = default);
+    Task<IReadOnlyList<Snapshot>> GetAllAsync(CancellationToken ct = default);
     Task<IReadOnlyList<Snapshot>> GetByEnvironmentAsync(Guid environmentId, CancellationToken ct = default);
     Task<IReadOnlyList<Snapshot>> GetByCustomerAsync(Guid customerId, CancellationToken ct = default);
     Task AddAsync(Snapshot snapshot, CancellationToken ct = default);
