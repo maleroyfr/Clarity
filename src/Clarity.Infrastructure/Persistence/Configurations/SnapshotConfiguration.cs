@@ -25,7 +25,7 @@ internal sealed class SnapshotConfiguration : IEntityTypeConfiguration<Snapshot>
         // WorkloadScope stored as JSON string with value conversion via backing field
         b.Property<List<WorkloadArea>>("_workloadScope")
             .HasColumnName("WorkloadScopeJson")
-            .HasDefaultValue("[]")
+            .HasDefaultValueSql("'[]'")
             .HasConversion(
                 v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
                 v => JsonSerializer.Deserialize<List<WorkloadArea>>(v, (JsonSerializerOptions?)null) ?? new());
@@ -90,7 +90,7 @@ internal sealed class InventoryObjectConfiguration : IEntityTypeConfiguration<In
         // Map Properties backing field (_properties) with JSON conversion
         b.Property<Dictionary<string, string?>>("_properties")
             .HasColumnName("PropertiesJson")
-            .HasDefaultValue("{}")
+            .HasDefaultValueSql("'{}'")
             .HasConversion(
                 v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
                 v => JsonSerializer.Deserialize<Dictionary<string, string?>>(v, (JsonSerializerOptions?)null) ?? new());
