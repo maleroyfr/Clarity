@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Clarity.Desktop.Services;
 using Clarity.Desktop.ViewModels.Customers;
+using Clarity.Desktop.ViewModels.Environments;
 
 namespace Clarity.Desktop.ViewModels.Shell;
 
@@ -18,9 +19,10 @@ public sealed partial class AppShellViewModel : ObservableObject
 
     public IReadOnlyList<NavItem> NavItems { get; } =
     [
-        new NavItem { Label = "Home",      Icon = "🏠", Section = NavSection.Home },
-        new NavItem { Label = "Customers", Icon = "🏢", Section = NavSection.Customers },
-        new NavItem { Label = "Settings",  Icon = "⚙",  Section = NavSection.Settings }
+        new NavItem { Label = "Home",         Icon = "🏠", Section = NavSection.Home },
+        new NavItem { Label = "Customers",    Icon = "🏢", Section = NavSection.Customers },
+        new NavItem { Label = "Environments", Icon = "🌐", Section = NavSection.Environments },
+        new NavItem { Label = "Settings",     Icon = "⚙",  Section = NavSection.Settings }
     ];
 
     public AppShellViewModel()
@@ -34,10 +36,11 @@ public sealed partial class AppShellViewModel : ObservableObject
         ActiveSection = section;
         CurrentPage = section switch
         {
-            NavSection.Customers => AppServiceLocator.Get<CustomersListViewModel>(),
-            NavSection.Home      => new HomeViewModel(),
-            NavSection.Settings  => new SettingsViewModel(),
-            _                    => new HomeViewModel()
+            NavSection.Customers    => AppServiceLocator.Get<CustomersListViewModel>(),
+            NavSection.Environments => AppServiceLocator.Get<EnvironmentsListViewModel>(),
+            NavSection.Home         => new HomeViewModel(),
+            NavSection.Settings     => new SettingsViewModel(),
+            _                       => new HomeViewModel()
         };
     }
 

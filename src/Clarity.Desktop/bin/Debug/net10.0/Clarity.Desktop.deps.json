@@ -3586,7 +3586,9 @@
       },
       "Clarity.Application/1.0.0": {
         "dependencies": {
+          "Clarity.Comparisons": "1.0.0",
           "Clarity.Domain": "1.0.0",
+          "Clarity.Exports": "1.0.0",
           "Clarity.SharedContracts": "1.0.0",
           "FluentValidation": "12.1.1",
           "FluentValidation.DependencyInjectionExtensions": "12.1.1",
@@ -3631,8 +3633,11 @@
         "dependencies": {
           "Azure.Identity": "1.20.0",
           "Clarity.Collectors.Contracts": "1.0.0",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.5",
+          "Microsoft.Extensions.Logging.Abstractions": "10.0.5",
           "Microsoft.Graph": "5.103.0",
-          "Microsoft.Identity.Client": "4.83.3"
+          "Microsoft.Identity.Client": "4.83.3",
+          "Polly": "8.6.6"
         },
         "runtime": {
           "Clarity.Collectors.Graph.dll": {
@@ -3655,10 +3660,10 @@
       },
       "Clarity.Comparisons/1.0.0": {
         "dependencies": {
-          "Clarity.Application": "1.0.0",
-          "Clarity.Collectors.Contracts": "1.0.0",
           "Clarity.Domain": "1.0.0",
-          "Clarity.SharedContracts": "1.0.0"
+          "Clarity.SharedContracts": "1.0.0",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.5",
+          "Microsoft.Extensions.Logging.Abstractions": "10.0.5"
         },
         "runtime": {
           "Clarity.Comparisons.dll": {
@@ -3680,11 +3685,12 @@
       },
       "Clarity.Exports/1.0.0": {
         "dependencies": {
-          "Clarity.Application": "1.0.0",
           "Clarity.Domain": "1.0.0",
           "Clarity.SharedContracts": "1.0.0",
           "ClosedXML": "0.105.0",
-          "CsvHelper": "33.1.0"
+          "CsvHelper": "33.1.0",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.5",
+          "Microsoft.Extensions.Logging.Abstractions": "10.0.5"
         },
         "runtime": {
           "Clarity.Exports.dll": {

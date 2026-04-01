@@ -43,6 +43,24 @@ build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 [C:/Users/MathieuLEROY/.copilot/worktrees/Clarity/maleroyfr/acclimatisable-nancey/src/Clarity.Desktop/Views/Customers/CustomersListView.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 
+[C:/Users/MathieuLEROY/.copilot/worktrees/Clarity/maleroyfr/acclimatisable-nancey/src/Clarity.Desktop/Views/Environments/EnvironmentFormView.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[C:/Users/MathieuLEROY/.copilot/worktrees/Clarity/maleroyfr/acclimatisable-nancey/src/Clarity.Desktop/Views/Environments/EnvironmentsListView.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[C:/Users/MathieuLEROY/.copilot/worktrees/Clarity/maleroyfr/acclimatisable-nancey/src/Clarity.Desktop/Views/Onboarding/OnboardingWizardView.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[C:/Users/MathieuLEROY/.copilot/worktrees/Clarity/maleroyfr/acclimatisable-nancey/src/Clarity.Desktop/Views/Onboarding/PrerequisitesStepView.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[C:/Users/MathieuLEROY/.copilot/worktrees/Clarity/maleroyfr/acclimatisable-nancey/src/Clarity.Desktop/Views/Onboarding/SummaryStepView.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[C:/Users/MathieuLEROY/.copilot/worktrees/Clarity/maleroyfr/acclimatisable-nancey/src/Clarity.Desktop/Views/Onboarding/WorkloadSelectionStepView.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
 [C:/Users/MathieuLEROY/.copilot/worktrees/Clarity/maleroyfr/acclimatisable-nancey/src/Clarity.Desktop/Views/Shell/AppShell.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 

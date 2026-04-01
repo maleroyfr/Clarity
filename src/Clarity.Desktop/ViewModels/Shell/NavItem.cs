@@ -4,6 +4,7 @@ public enum NavSection
 {
     Home,
     Customers,
+    Environments,
     Settings
 }
 

@@ -16,3 +16,7 @@ C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey
 C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\src\Clarity.Application\obj\Debug\net10.0\refint\Clarity.Application.dll
 C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\src\Clarity.Application\obj\Debug\net10.0\Clarity.Application.pdb
 C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\src\Clarity.Application\obj\Debug\net10.0\ref\Clarity.Application.dll
+C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\src\Clarity.Application\bin\Debug\net10.0\Clarity.Comparisons.dll
+C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\src\Clarity.Application\bin\Debug\net10.0\Clarity.Exports.dll
+C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\src\Clarity.Application\bin\Debug\net10.0\Clarity.Exports.pdb
+C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\src\Clarity.Application\bin\Debug\net10.0\Clarity.Comparisons.pdb

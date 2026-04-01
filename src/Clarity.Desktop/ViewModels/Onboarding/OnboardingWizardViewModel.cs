@@ -1,7 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Clarity.Application.Environments.Commands;
-using Clarity.Desktop.Services;
 using MediatR;
 
 namespace Clarity.Desktop.ViewModels.Onboarding;
@@ -17,7 +16,7 @@ public sealed partial class OnboardingWizardViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(CurrentStepViewModel))]
     private int _currentStep;
 
-    public ObservableObject CurrentStepViewModel => _currentStep switch
+    public ObservableObject CurrentStepViewModel => CurrentStep switch
     {
         0 => WorkloadStep,
         1 => PrerequisitesStep,
@@ -25,9 +24,9 @@ public sealed partial class OnboardingWizardViewModel : ObservableObject
         _ => WorkloadStep
     };
 
-    public bool CanGoNext => _currentStep < 2 && CurrentStepCanProceed();
-    public bool CanGoPrev => _currentStep > 0;
-    public bool IsLastStep => _currentStep == 2;
+    public bool CanGoNext => CurrentStep < 2 && CurrentStepCanProceed();
+    public bool CanGoPrev => CurrentStep > 0;
+    public bool IsLastStep => CurrentStep == 2;
 
     public Guid TargetCustomerId { get; set; }
 
@@ -48,11 +47,11 @@ public sealed partial class OnboardingWizardViewModel : ObservableObject
     {
         if (!CanGoNext) return;
 
-        if (_currentStep == 0)
+        if (CurrentStep == 0)
         {
             PrerequisitesStep.BuildFrom(WorkloadStep.SelectedAreas);
         }
-        else if (_currentStep == 1)
+        else if (CurrentStep == 1)
         {
             var met = PrerequisitesStep.Prerequisites.Count(p => p.IsCompleted && !p.IsOptional);
             SummaryStep.Update(
@@ -94,7 +93,7 @@ public sealed partial class OnboardingWizardViewModel : ObservableObject
     [RelayCommand]
     public void Cancel() => Cancelled?.Invoke();
 
-    private bool CurrentStepCanProceed() => _currentStep switch
+    private bool CurrentStepCanProceed() => CurrentStep switch
     {
         0 => WorkloadStep.HasSelection,
         1 => true,

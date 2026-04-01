@@ -5673,8 +5673,8 @@
         "dependencies": {
           "Azure.Identity": "0.0.0",
           "Clarity.Collectors.Contracts": "1.0.0",
-          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.0",
-          "Microsoft.Extensions.Logging.Abstractions": "10.0.0",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "0.0.0",
+          "Microsoft.Extensions.Logging.Abstractions": "0.0.0",
           "Microsoft.Graph": "0.0.0",
           "Microsoft.Identity.Client": "0.0.0",
           "Polly": "8.5.2"
