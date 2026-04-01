@@ -5,6 +5,7 @@ public enum NavSection
     Home,
     Customers,
     Environments,
+    Inventory,
     Settings
 }
 

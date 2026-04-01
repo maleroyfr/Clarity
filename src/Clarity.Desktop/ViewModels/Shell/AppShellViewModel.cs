@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using Clarity.Desktop.Services;
 using Clarity.Desktop.ViewModels.Customers;
 using Clarity.Desktop.ViewModels.Environments;
+using Clarity.Desktop.ViewModels.Inventory;
 
 namespace Clarity.Desktop.ViewModels.Shell;
 
@@ -22,6 +23,7 @@ public sealed partial class AppShellViewModel : ObservableObject
         new NavItem { Label = "Home",         Icon = "🏠", Section = NavSection.Home },
         new NavItem { Label = "Customers",    Icon = "🏢", Section = NavSection.Customers },
         new NavItem { Label = "Environments", Icon = "🌐", Section = NavSection.Environments },
+        new NavItem { Label = "Inventory",    Icon = "📦", Section = NavSection.Inventory },
         new NavItem { Label = "Settings",     Icon = "⚙",  Section = NavSection.Settings }
     ];
 
@@ -38,6 +40,7 @@ public sealed partial class AppShellViewModel : ObservableObject
         {
             NavSection.Customers    => AppServiceLocator.Get<CustomersListViewModel>(),
             NavSection.Environments => AppServiceLocator.Get<EnvironmentsListViewModel>(),
+            NavSection.Inventory    => AppServiceLocator.Get<InventoryExplorerViewModel>(),
             NavSection.Home         => new HomeViewModel(),
             NavSection.Settings     => new SettingsViewModel(),
             _                       => new HomeViewModel()
