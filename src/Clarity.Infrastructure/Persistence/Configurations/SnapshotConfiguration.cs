@@ -22,10 +22,13 @@ internal sealed class SnapshotConfiguration : IEntityTypeConfiguration<Snapshot>
         b.Property(x => x.IsImmutable).IsRequired();
         b.Property(x => x.CreatedAt).IsRequired();
 
-        // WorkloadScope stored as JSON string
-        b.Property<string>("_workloadScopeJson")
+        // WorkloadScope stored as JSON string with value conversion via backing field
+        b.Property<List<WorkloadArea>>("_workloadScope")
             .HasColumnName("WorkloadScopeJson")
-            .HasDefaultValue("[]");
+            .HasDefaultValue("[]")
+            .HasConversion(
+                v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                v => JsonSerializer.Deserialize<List<WorkloadArea>>(v, (JsonSerializerOptions?)null) ?? new());
 
         b.Ignore(x => x.WorkloadScope);
 
@@ -84,7 +87,14 @@ internal sealed class InventoryObjectConfiguration : IEntityTypeConfiguration<In
         b.Property(x => x.RawDataJson);
         b.Property(x => x.CreatedAt).IsRequired();
 
-        b.Property<string>("_propertiesJson").HasColumnName("PropertiesJson").HasDefaultValue("{}");
+        // Map Properties backing field (_properties) with JSON conversion
+        b.Property<Dictionary<string, string?>>("_properties")
+            .HasColumnName("PropertiesJson")
+            .HasDefaultValue("{}")
+            .HasConversion(
+                v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                v => JsonSerializer.Deserialize<Dictionary<string, string?>>(v, (JsonSerializerOptions?)null) ?? new());
+
         b.Ignore(x => x.Properties);
 
         b.HasIndex(x => new { x.SnapshotId, x.ObjectType });

@@ -10,17 +10,21 @@ namespace Clarity.Collectors.Graph;
 /// <summary>
 /// Orchestrates Graph collector runs for a snapshot. Runs collectors sequentially
 /// to respect Graph throttling limits, reporting progress after each.
+/// Persists collected InventoryObjects via IInventoryObjectRepository.
 /// </summary>
 public sealed class CollectorRunOrchestrator : ICollectorRunOrchestrator
 {
     private readonly ICollectorCatalog _collectorCatalog;
+    private readonly IInventoryObjectRepository _inventoryObjectRepository;
     private readonly ILogger<CollectorRunOrchestrator> _logger;
 
     public CollectorRunOrchestrator(
         ICollectorCatalog collectorCatalog,
+        IInventoryObjectRepository inventoryObjectRepository,
         ILogger<CollectorRunOrchestrator> logger)
     {
         _collectorCatalog = collectorCatalog;
+        _inventoryObjectRepository = inventoryObjectRepository;
         _logger = logger;
     }
 
@@ -99,6 +103,16 @@ public sealed class CollectorRunOrchestrator : ICollectorRunOrchestrator
             if (result.Status == CollectorRunStatus.Completed)
             {
                 run.Complete(result.ItemsCollected, result.PermissionsUsed, result.CommandsExecuted);
+
+                // Persist collected inventory objects
+                if (result.Objects.Count > 0)
+                {
+                    await _inventoryObjectRepository.AddRangeAsync(result.Objects, cancellationToken);
+                    await _inventoryObjectRepository.SaveChangesAsync(cancellationToken);
+                    _logger.LogInformation(
+                        "Persisted {Count} inventory objects from {CollectorId}.",
+                        result.Objects.Count, collector.CollectorId);
+                }
             }
             else
             {
