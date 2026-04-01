@@ -87,6 +87,7 @@ public sealed partial class InventoryExplorerViewModel : ObservableObject
     public InventoryExplorerViewModel(IMediator mediator)
     {
         _mediator = mediator;
+        _ = LoadAsync();
     }
 
     public async Task LoadAsync()
