@@ -21,25 +21,52 @@
         </StackPanel>
         <Button Grid.Column="1" Classes="PrimaryButton"
                 Command="{Binding CreateNewCommand}"
+                IsEnabled="{Binding HasSelectedCustomer}"
                 Content="+ New Environment"
                 VerticalAlignment="Center"/>
       </Grid>
     </Border>
 
-    <!-- Toolbar -->
+    <!-- Toolbar with customer picker -->
     <Border Grid.Row="1" Padding="24,12">
-      <StackPanel Orientation="Horizontal" Spacing="12">
-        <TextBox Watermark="Search environments..."
-                 Text="{Binding SearchText}"
-                 Width="280"
-                 Classes="SearchBox"/>
-        <CheckBox Content="Show archived"
-                  IsChecked="{Binding ShowArchived}"/>
+      <StackPanel Spacing="12">
+        <StackPanel Orientation="Horizontal" Spacing="12">
+          <StackPanel Spacing="4">
+            <TextBlock Text="Customer" FontSize="12"
+                       Foreground="{DynamicResource SystemBaseMediumColor}"/>
+            <ComboBox ItemsSource="{Binding Customers}"
+                      SelectedItem="{Binding SelectedCustomer}"
+                      PlaceholderText="Select a customer…"
+                      Width="280"/>
+          </StackPanel>
+          <StackPanel Spacing="4" IsVisible="{Binding HasSelectedCustomer}">
+            <TextBlock Text="Search" FontSize="12"
+                       Foreground="{DynamicResource SystemBaseMediumColor}"/>
+            <TextBox Watermark="Search environments..."
+                     Text="{Binding SearchText}"
+                     Width="280"
+                     Classes="SearchBox"/>
+          </StackPanel>
+          <StackPanel Spacing="4" VerticalAlignment="Bottom" IsVisible="{Binding HasSelectedCustomer}">
+            <CheckBox Content="Show archived"
+                      IsChecked="{Binding ShowArchived}"
+                      Margin="0,0,0,4"/>
+          </StackPanel>
+        </StackPanel>
       </StackPanel>
     </Border>
 
-    <!-- Loading / Empty / List -->
+    <!-- Loading / Empty / No Customer / List -->
     <Panel Grid.Row="2">
+
+      <!-- No customer selected -->
+      <StackPanel IsVisible="{Binding !HasSelectedCustomer}"
+                  HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
+        <TextBlock Text="🏢" FontSize="48" HorizontalAlignment="Center"/>
+        <TextBlock Text="Select a customer" Classes="EmptyStateTitle"/>
+        <TextBlock Text="Choose a customer above to view and manage their environments."
+                   Classes="EmptyStateSubtitle" TextAlignment="Center"/>
+      </StackPanel>
 
       <StackPanel IsVisible="{Binding IsLoading}"
                   HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">

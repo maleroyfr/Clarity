@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Clarity.Application.Common.Exceptions;
 using Clarity.Application.Environments;
 using Clarity.Application.Environments.Commands;
 using Clarity.Domain.Environments;
@@ -20,7 +21,7 @@ public sealed partial class EnvironmentFormViewModel : ObservableObject
     private string _description = string.Empty;
 
     [ObservableProperty]
-    private EnvironmentType _selectedType = EnvironmentType.M365Tenant;
+    private EnvironmentTypeOption _selectedTypeOption = EnvironmentTypeOption.All[0];
 
     [ObservableProperty]
     private string _tenantId = string.Empty;
@@ -39,8 +40,7 @@ public sealed partial class EnvironmentFormViewModel : ObservableObject
 
     public string Title => IsEditMode ? "Edit Environment" : "New Environment";
 
-    public IReadOnlyList<EnvironmentType> AvailableTypes { get; } =
-        Enum.GetValues<EnvironmentType>().ToList();
+    public IReadOnlyList<EnvironmentTypeOption> AvailableTypes => EnvironmentTypeOption.All;
 
     public event Action? SaveCompleted;
     public event Action? Cancelled;
@@ -58,7 +58,8 @@ public sealed partial class EnvironmentFormViewModel : ObservableObject
             _editingId = existing.Id;
             Name = existing.Name;
             Description = existing.Description ?? string.Empty;
-            SelectedType = existing.Type;
+            SelectedTypeOption = EnvironmentTypeOption.All
+                .FirstOrDefault(o => o.Value == existing.Type) ?? EnvironmentTypeOption.All[0];
             TenantId = existing.TenantId?.ToString() ?? string.Empty;
             TenantDomain = existing.TenantDomain ?? string.Empty;
             IsEditMode = true;
@@ -68,7 +69,7 @@ public sealed partial class EnvironmentFormViewModel : ObservableObject
             _editingId = null;
             Name = string.Empty;
             Description = string.Empty;
-            SelectedType = EnvironmentType.M365Tenant;
+            SelectedTypeOption = EnvironmentTypeOption.All[0];
             TenantId = string.Empty;
             TenantDomain = string.Empty;
             IsEditMode = false;
@@ -82,7 +83,7 @@ public sealed partial class EnvironmentFormViewModel : ObservableObject
     {
         if (string.IsNullOrWhiteSpace(Name))
         {
-            ErrorMessage = "Name is required.";
+            ErrorMessage = "Environment name is required.";
             return;
         }
 
@@ -102,11 +103,15 @@ public sealed partial class EnvironmentFormViewModel : ObservableObject
             else
             {
                 await _mediator.Send(new CreateEnvironmentCommand(
-                    _customerId, Name.Trim(), SelectedType,
+                    _customerId, Name.Trim(), SelectedTypeOption.Value,
                     Description.TrimOrNull(), parsedTenantId, domain, []));
             }
 
             SaveCompleted?.Invoke();
+        }
+        catch (ValidationException vex)
+        {
+            ErrorMessage = FormatValidationErrors(vex.Errors);
         }
         catch (Exception ex)
         {
@@ -120,6 +125,14 @@ public sealed partial class EnvironmentFormViewModel : ObservableObject
 
     [RelayCommand]
     public void Cancel() => Cancelled?.Invoke();
+
+    private static string FormatValidationErrors(IReadOnlyDictionary<string, string[]> errors)
+    {
+        var messages = errors
+            .SelectMany(kvp => kvp.Value)
+            .Where(m => !string.IsNullOrWhiteSpace(m));
+        return string.Join("\n", messages);
+    }
 }
 
 file static class EnvFormStringExtensions

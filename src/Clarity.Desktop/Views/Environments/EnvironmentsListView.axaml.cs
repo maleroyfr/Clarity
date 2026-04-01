@@ -18,17 +18,18 @@ public partial class EnvironmentsListView : UserControl
         if (DataContext is EnvironmentsListViewModel vm)
         {
             vm.EditRequested += OnEditRequested;
-            _ = vm.LoadAsync();
+            _ = vm.LoadCustomersAsync();
         }
     }
 
     private void OnEditRequested(EnvironmentDto? environment)
     {
         if (DataContext is not EnvironmentsListViewModel listVm) return;
+        if (listVm.SelectedCustomer is null) return;
 
         var form = new EnvironmentFormView();
         var formVm = (EnvironmentFormViewModel)form.DataContext!;
-        formVm.Initialize(environment, customerId: default);
+        formVm.Initialize(environment, customerId: listVm.SelectedCustomer.Id);
         formVm.SaveCompleted += async () =>
         {
             if (DataContext is EnvironmentsListViewModel lvm)

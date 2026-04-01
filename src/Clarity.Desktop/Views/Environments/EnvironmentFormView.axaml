@@ -4,7 +4,8 @@
         x:Class="Clarity.Desktop.Views.Environments.EnvironmentFormView"
         x:DataType="vm:EnvironmentFormViewModel"
         Title="{Binding Title}"
-        Width="540" Height="480"
+        Width="540" SizeToContent="Height"
+        MinHeight="520" MaxHeight="700"
         CanResize="False"
         WindowStartupLocation="CenterOwner">
 
@@ -35,7 +36,7 @@
       <StackPanel Spacing="4">
         <TextBlock Text="Type *" Classes="FormLabel"/>
         <ComboBox ItemsSource="{Binding AvailableTypes}"
-                  SelectedItem="{Binding SelectedType}"
+                  SelectedItem="{Binding SelectedTypeOption}"
                   HorizontalAlignment="Stretch"/>
       </StackPanel>
 
@@ -53,6 +54,7 @@
                  Classes="FormInput"/>
       </StackPanel>
 
+      <!-- Validation error display -->
       <Border IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
               Background="#FFF0F0" Padding="12,8" CornerRadius="4">
         <TextBlock Text="{Binding ErrorMessage}" Foreground="#C0392B" TextWrapping="Wrap"/>
@@ -60,7 +62,7 @@
     </StackPanel>
 
     <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right"
-                Spacing="12" Margin="0,16,0,0">
+                Spacing="12" Margin="0,20,0,0">
       <Button Classes="SecondaryButton" Content="Cancel"
               Command="{Binding CancelCommand}"/>
       <Button Classes="PrimaryButton"
