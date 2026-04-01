@@ -1,14 +1,10 @@
 C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\src\Clarity.Comparisons\bin\Debug\net10.0\Clarity.Comparisons.deps.json
 C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\src\Clarity.Comparisons\bin\Debug\net10.0\Clarity.Comparisons.dll
 C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\src\Clarity.Comparisons\bin\Debug\net10.0\Clarity.Comparisons.pdb
-C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\src\Clarity.Comparisons\bin\Debug\net10.0\Clarity.Application.dll
-C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\src\Clarity.Comparisons\bin\Debug\net10.0\Clarity.Collectors.Contracts.dll
 C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\src\Clarity.Comparisons\bin\Debug\net10.0\Clarity.Domain.dll
 C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\src\Clarity.Comparisons\bin\Debug\net10.0\Clarity.SharedContracts.dll
 C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\src\Clarity.Comparisons\bin\Debug\net10.0\Clarity.Domain.pdb
-C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\src\Clarity.Comparisons\bin\Debug\net10.0\Clarity.Application.pdb
 C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\src\Clarity.Comparisons\bin\Debug\net10.0\Clarity.SharedContracts.pdb
-C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\src\Clarity.Comparisons\bin\Debug\net10.0\Clarity.Collectors.Contracts.pdb
 C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\src\Clarity.Comparisons\obj\Debug\net10.0\Clarity.Comparisons.csproj.AssemblyReference.cache
 C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\src\Clarity.Comparisons\obj\Debug\net10.0\Clarity.Comparisons.GeneratedMSBuildEditorConfig.editorconfig
 C:\Users\MathieuLEROY\.copilot\worktrees\Clarity\maleroyfr\acclimatisable-nancey\src\Clarity.Comparisons\obj\Debug\net10.0\Clarity.Comparisons.AssemblyInfoInputs.cache

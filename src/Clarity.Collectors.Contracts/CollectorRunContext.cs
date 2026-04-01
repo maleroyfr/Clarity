@@ -10,6 +10,7 @@ namespace Clarity.Collectors.Contracts;
 /// </summary>
 public sealed record CollectorRunContext(
     Guid SnapshotId,
+    Guid CollectorRunId,
     Guid EnvironmentId,
     WorkloadArea WorkloadArea,
     AuthConfiguration AuthConfig,

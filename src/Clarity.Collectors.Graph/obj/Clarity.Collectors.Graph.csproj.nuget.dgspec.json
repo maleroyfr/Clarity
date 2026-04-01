@@ -412,6 +412,14 @@
               "target": "Package",
               "version": "[*, )"
             },
+            "Microsoft.Extensions.DependencyInjection.Abstractions": {
+              "target": "Package",
+              "version": "[*, )"
+            },
+            "Microsoft.Extensions.Logging.Abstractions": {
+              "target": "Package",
+              "version": "[*, )"
+            },
             "Microsoft.Graph": {
               "target": "Package",
               "version": "[*, )"
@@ -419,6 +427,10 @@
             "Microsoft.Identity.Client": {
               "target": "Package",
               "version": "[*, )"
+            },
+            "Polly": {
+              "target": "Package",
+              "version": "[8.5.2, )"
             }
           },
           "imports": [

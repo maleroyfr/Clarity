@@ -1,0 +1,54 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:Clarity.Desktop.ViewModels.Onboarding"
+             x:Class="Clarity.Desktop.Views.Onboarding.SummaryStepView"
+             x:DataType="vm:SummaryStepViewModel">
+
+  <UserControl.Styles>
+    <StyleInclude Source="/Styles/ClarityTheme.axaml"/>
+  </UserControl.Styles>
+
+  <StackPanel Spacing="16">
+    <TextBlock Text="Summary" Classes="PageTitle" Margin="0,0,0,4"/>
+    <TextBlock Text="Review your selections and provide environment details before finishing."
+               Classes="PageSubtitle" TextWrapping="Wrap" Margin="0,0,0,8"/>
+
+    <!-- Stats card -->
+    <Border Background="{DynamicResource SystemAltHighColor}"
+            BorderBrush="{DynamicResource SystemBaseLowColor}"
+            BorderThickness="1" CornerRadius="8" Padding="16,14">
+      <StackPanel Spacing="8">
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <TextBlock Text="Workloads selected:" Classes="FormLabel" VerticalAlignment="Center"/>
+          <TextBlock Text="{Binding SelectedWorkloadCount}" Classes="CardTitle" VerticalAlignment="Center"/>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <TextBlock Text="Prerequisites met:" Classes="FormLabel" VerticalAlignment="Center"/>
+          <TextBlock Classes="CardTitle" VerticalAlignment="Center">
+            <TextBlock.Text>
+              <MultiBinding StringFormat="{}{0} / {1}">
+                <Binding Path="PrerequisitesMetCount"/>
+                <Binding Path="PrerequisitesTotalCount"/>
+              </MultiBinding>
+            </TextBlock.Text>
+          </TextBlock>
+        </StackPanel>
+      </StackPanel>
+    </Border>
+
+    <!-- Environment details -->
+    <StackPanel Spacing="4">
+      <TextBlock Text="Environment name *" Classes="FormLabel"/>
+      <TextBox Text="{Binding EnvironmentName}"
+               Watermark="e.g. Contoso Production"
+               Classes="FormInput"/>
+    </StackPanel>
+
+    <StackPanel Spacing="4">
+      <TextBlock Text="Tenant ID (optional)" Classes="FormLabel"/>
+      <TextBox Text="{Binding TenantId}"
+               Watermark="e.g. xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+               Classes="FormInput"/>
+    </StackPanel>
+  </StackPanel>
+</UserControl>

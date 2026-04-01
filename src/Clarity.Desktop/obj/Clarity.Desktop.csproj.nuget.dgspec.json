@@ -33,8 +33,14 @@
           "net10.0": {
             "targetAlias": "net10.0",
             "projectReferences": {
+              "C:\\Users\\MathieuLEROY\\.copilot\\worktrees\\Clarity\\maleroyfr\\acclimatisable-nancey\\src\\Clarity.Comparisons\\Clarity.Comparisons.csproj": {
+                "projectPath": "C:\\Users\\MathieuLEROY\\.copilot\\worktrees\\Clarity\\maleroyfr\\acclimatisable-nancey\\src\\Clarity.Comparisons\\Clarity.Comparisons.csproj"
+              },
               "C:\\Users\\MathieuLEROY\\.copilot\\worktrees\\Clarity\\maleroyfr\\acclimatisable-nancey\\src\\Clarity.Domain\\Clarity.Domain.csproj": {
                 "projectPath": "C:\\Users\\MathieuLEROY\\.copilot\\worktrees\\Clarity\\maleroyfr\\acclimatisable-nancey\\src\\Clarity.Domain\\Clarity.Domain.csproj"
+              },
+              "C:\\Users\\MathieuLEROY\\.copilot\\worktrees\\Clarity\\maleroyfr\\acclimatisable-nancey\\src\\Clarity.Exports\\Clarity.Exports.csproj": {
+                "projectPath": "C:\\Users\\MathieuLEROY\\.copilot\\worktrees\\Clarity\\maleroyfr\\acclimatisable-nancey\\src\\Clarity.Exports\\Clarity.Exports.csproj"
               },
               "C:\\Users\\MathieuLEROY\\.copilot\\worktrees\\Clarity\\maleroyfr\\acclimatisable-nancey\\src\\Clarity.SharedContracts\\Clarity.SharedContracts.csproj": {
                 "projectPath": "C:\\Users\\MathieuLEROY\\.copilot\\worktrees\\Clarity\\maleroyfr\\acclimatisable-nancey\\src\\Clarity.SharedContracts\\Clarity.SharedContracts.csproj"
@@ -1135,6 +1141,14 @@
               "target": "Package",
               "version": "[*, )"
             },
+            "Microsoft.Extensions.DependencyInjection.Abstractions": {
+              "target": "Package",
+              "version": "[10.0.0, )"
+            },
+            "Microsoft.Extensions.Logging.Abstractions": {
+              "target": "Package",
+              "version": "[10.0.0, )"
+            },
             "Microsoft.Graph": {
               "target": "Package",
               "version": "[*, )"
@@ -1142,6 +1156,10 @@
             "Microsoft.Identity.Client": {
               "target": "Package",
               "version": "[*, )"
+            },
+            "Polly": {
+              "target": "Package",
+              "version": "[8.5.2, )"
             }
           },
           "imports": [
@@ -1817,12 +1835,6 @@
           "net10.0": {
             "targetAlias": "net10.0",
             "projectReferences": {
-              "C:\\Users\\MathieuLEROY\\.copilot\\worktrees\\Clarity\\maleroyfr\\acclimatisable-nancey\\src\\Clarity.Application\\Clarity.Application.csproj": {
-                "projectPath": "C:\\Users\\MathieuLEROY\\.copilot\\worktrees\\Clarity\\maleroyfr\\acclimatisable-nancey\\src\\Clarity.Application\\Clarity.Application.csproj"
-              },
-              "C:\\Users\\MathieuLEROY\\.copilot\\worktrees\\Clarity\\maleroyfr\\acclimatisable-nancey\\src\\Clarity.Collectors.Contracts\\Clarity.Collectors.Contracts.csproj": {
-                "projectPath": "C:\\Users\\MathieuLEROY\\.copilot\\worktrees\\Clarity\\maleroyfr\\acclimatisable-nancey\\src\\Clarity.Collectors.Contracts\\Clarity.Collectors.Contracts.csproj"
-              },
               "C:\\Users\\MathieuLEROY\\.copilot\\worktrees\\Clarity\\maleroyfr\\acclimatisable-nancey\\src\\Clarity.Domain\\Clarity.Domain.csproj": {
                 "projectPath": "C:\\Users\\MathieuLEROY\\.copilot\\worktrees\\Clarity\\maleroyfr\\acclimatisable-nancey\\src\\Clarity.Domain\\Clarity.Domain.csproj"
               },
@@ -1847,6 +1859,16 @@
       "frameworks": {
         "net10.0": {
           "targetAlias": "net10.0",
+          "dependencies": {
+            "Microsoft.Extensions.DependencyInjection.Abstractions": {
+              "target": "Package",
+              "version": "[*, )"
+            },
+            "Microsoft.Extensions.Logging.Abstractions": {
+              "target": "Package",
+              "version": "[*, )"
+            }
+          },
           "imports": [
             "net461",
             "net462",
@@ -2921,9 +2943,6 @@
           "net10.0": {
             "targetAlias": "net10.0",
             "projectReferences": {
-              "C:\\Users\\MathieuLEROY\\.copilot\\worktrees\\Clarity\\maleroyfr\\acclimatisable-nancey\\src\\Clarity.Application\\Clarity.Application.csproj": {
-                "projectPath": "C:\\Users\\MathieuLEROY\\.copilot\\worktrees\\Clarity\\maleroyfr\\acclimatisable-nancey\\src\\Clarity.Application\\Clarity.Application.csproj"
-              },
               "C:\\Users\\MathieuLEROY\\.copilot\\worktrees\\Clarity\\maleroyfr\\acclimatisable-nancey\\src\\Clarity.Domain\\Clarity.Domain.csproj": {
                 "projectPath": "C:\\Users\\MathieuLEROY\\.copilot\\worktrees\\Clarity\\maleroyfr\\acclimatisable-nancey\\src\\Clarity.Domain\\Clarity.Domain.csproj"
               },
@@ -2954,6 +2973,14 @@
               "version": "[*, )"
             },
             "CsvHelper": {
+              "target": "Package",
+              "version": "[*, )"
+            },
+            "Microsoft.Extensions.DependencyInjection.Abstractions": {
+              "target": "Package",
+              "version": "[*, )"
+            },
+            "Microsoft.Extensions.Logging.Abstractions": {
               "target": "Package",
               "version": "[*, )"
             }

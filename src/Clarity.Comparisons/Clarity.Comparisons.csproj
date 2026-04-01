@@ -2,9 +2,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Clarity.Domain\Clarity.Domain.csproj" />
-    <ProjectReference Include="..\Clarity.Application\Clarity.Application.csproj" />
     <ProjectReference Include="..\Clarity.SharedContracts\Clarity.SharedContracts.csproj" />
-    <ProjectReference Include="..\Clarity.Collectors.Contracts\Clarity.Collectors.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="*" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="*" />
   </ItemGroup>
 
   <PropertyGroup>

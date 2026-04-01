@@ -3,6 +3,8 @@
   <ItemGroup>
     <ProjectReference Include="..\Clarity.Domain\Clarity.Domain.csproj" />
     <ProjectReference Include="..\Clarity.SharedContracts\Clarity.SharedContracts.csproj" />
+    <ProjectReference Include="..\Clarity.Exports\Clarity.Exports.csproj" />
+    <ProjectReference Include="..\Clarity.Comparisons\Clarity.Comparisons.csproj" />
   </ItemGroup>
 
   <ItemGroup>

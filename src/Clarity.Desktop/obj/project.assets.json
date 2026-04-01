@@ -5620,7 +5620,9 @@
         "type": "project",
         "framework": ".NETCoreApp,Version=v10.0",
         "dependencies": {
+          "Clarity.Comparisons": "1.0.0",
           "Clarity.Domain": "1.0.0",
+          "Clarity.Exports": "1.0.0",
           "Clarity.SharedContracts": "1.0.0",
           "FluentValidation": "0.0.0",
           "FluentValidation.DependencyInjectionExtensions": "12.1.1",
@@ -5671,8 +5673,11 @@
         "dependencies": {
           "Azure.Identity": "0.0.0",
           "Clarity.Collectors.Contracts": "1.0.0",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.0",
+          "Microsoft.Extensions.Logging.Abstractions": "10.0.0",
           "Microsoft.Graph": "0.0.0",
-          "Microsoft.Identity.Client": "0.0.0"
+          "Microsoft.Identity.Client": "0.0.0",
+          "Polly": "8.5.2"
         },
         "compile": {
           "bin/placeholder/Clarity.Collectors.Graph.dll": {}
@@ -5699,10 +5704,10 @@
         "type": "project",
         "framework": ".NETCoreApp,Version=v10.0",
         "dependencies": {
-          "Clarity.Application": "1.0.0",
-          "Clarity.Collectors.Contracts": "1.0.0",
           "Clarity.Domain": "1.0.0",
-          "Clarity.SharedContracts": "1.0.0"
+          "Clarity.SharedContracts": "1.0.0",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "0.0.0",
+          "Microsoft.Extensions.Logging.Abstractions": "0.0.0"
         },
         "compile": {
           "bin/placeholder/Clarity.Comparisons.dll": {}
@@ -5728,11 +5733,12 @@
         "type": "project",
         "framework": ".NETCoreApp,Version=v10.0",
         "dependencies": {
-          "Clarity.Application": "1.0.0",
           "Clarity.Domain": "1.0.0",
           "Clarity.SharedContracts": "1.0.0",
           "ClosedXML": "0.0.0",
-          "CsvHelper": "0.0.0"
+          "CsvHelper": "0.0.0",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "0.0.0",
+          "Microsoft.Extensions.Logging.Abstractions": "0.0.0"
         },
         "compile": {
           "bin/placeholder/Clarity.Exports.dll": {}

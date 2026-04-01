@@ -1,0 +1,113 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:Clarity.Desktop.ViewModels.Environments"
+             x:Class="Clarity.Desktop.Views.Environments.EnvironmentsListView"
+             x:DataType="vm:EnvironmentsListViewModel">
+
+  <UserControl.Styles>
+    <StyleInclude Source="/Styles/ClarityTheme.axaml"/>
+  </UserControl.Styles>
+
+  <Grid RowDefinitions="Auto,Auto,*,Auto">
+
+    <!-- Page Header -->
+    <Border Grid.Row="0" Padding="24,20,24,16"
+            BorderBrush="{DynamicResource SystemBaseLowColor}"
+            BorderThickness="0,0,0,1">
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel Grid.Column="0">
+          <TextBlock Text="Environments" Classes="PageTitle"/>
+          <TextBlock Text="Manage customer environments" Classes="PageSubtitle"/>
+        </StackPanel>
+        <Button Grid.Column="1" Classes="PrimaryButton"
+                Command="{Binding CreateNewCommand}"
+                Content="+ New Environment"
+                VerticalAlignment="Center"/>
+      </Grid>
+    </Border>
+
+    <!-- Toolbar -->
+    <Border Grid.Row="1" Padding="24,12">
+      <StackPanel Orientation="Horizontal" Spacing="12">
+        <TextBox Watermark="Search environments..."
+                 Text="{Binding SearchText}"
+                 Width="280"
+                 Classes="SearchBox"/>
+        <CheckBox Content="Show archived"
+                  IsChecked="{Binding ShowArchived}"/>
+      </StackPanel>
+    </Border>
+
+    <!-- Loading / Empty / List -->
+    <Panel Grid.Row="2">
+
+      <StackPanel IsVisible="{Binding IsLoading}"
+                  HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
+        <ProgressBar IsIndeterminate="True" Width="200"/>
+        <TextBlock Text="Loading environments…" HorizontalAlignment="Center"
+                   Foreground="{DynamicResource SystemBaseMediumColor}"/>
+      </StackPanel>
+
+      <StackPanel IsVisible="{Binding IsEmpty}"
+                  HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
+        <TextBlock Text="🌐" FontSize="48" HorizontalAlignment="Center"/>
+        <TextBlock Text="No environments yet" Classes="EmptyStateTitle"/>
+        <TextBlock Text="Create your first environment to get started." Classes="EmptyStateSubtitle"/>
+        <Button Classes="PrimaryButton" Content="+ New Environment"
+                Command="{Binding CreateNewCommand}"
+                HorizontalAlignment="Center" Margin="0,8,0,0"/>
+      </StackPanel>
+
+      <ScrollViewer IsVisible="{Binding HasEnvironments}" Padding="24,8">
+        <ItemsControl ItemsSource="{Binding FilteredEnvironments}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:EnvironmentListItemVm">
+              <Border Classes="CustomerCard" Margin="0,0,0,8">
+                <Grid ColumnDefinitions="*,Auto">
+                  <StackPanel Grid.Column="0" Spacing="2">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                      <TextBlock Text="{Binding Name}" Classes="CardTitle"/>
+                      <!-- Type badge -->
+                      <Border Background="{DynamicResource SystemBaseLowColor}"
+                              CornerRadius="4" Padding="6,2">
+                        <TextBlock Text="{Binding TypeDisplay}" Classes="BadgeText"/>
+                      </Border>
+                      <!-- Status badge -->
+                      <Border Background="{DynamicResource SystemBaseLowColor}"
+                              CornerRadius="4" Padding="6,2">
+                        <TextBlock Text="{Binding StatusDisplay}" Classes="BadgeText"/>
+                      </Border>
+                      <Border IsVisible="{Binding IsArchived}" Classes="BadgeArchived">
+                        <TextBlock Text="Archived" Classes="BadgeText"/>
+                      </Border>
+                    </StackPanel>
+                    <TextBlock Text="{Binding TenantDomain}" Classes="CardSubtitle"
+                               IsVisible="{Binding TenantDomain, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                    <TextBlock Classes="CardMeta"
+                               Text="{Binding WorkloadCount, StringFormat='{}{0} workload(s) configured'}"/>
+                  </StackPanel>
+
+                  <StackPanel Grid.Column="1" Orientation="Horizontal"
+                              Spacing="8" VerticalAlignment="Center">
+                    <Button Classes="SecondaryButton" Content="Edit"
+                            Command="{Binding EditCommand}"/>
+                    <Button Classes="DangerButton" Content="Archive"
+                            IsVisible="{Binding !IsArchived}"
+                            Command="{Binding ArchiveCommand}"/>
+                  </StackPanel>
+                </Grid>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </ScrollViewer>
+    </Panel>
+
+    <!-- Error bar -->
+    <Border Grid.Row="3"
+            IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+            Background="#FFF0F0" Padding="16,10" Margin="24,0,24,16" CornerRadius="6">
+      <TextBlock Text="{Binding ErrorMessage}" Foreground="#C0392B" TextWrapping="Wrap"/>
+    </Border>
+  </Grid>
+</UserControl>

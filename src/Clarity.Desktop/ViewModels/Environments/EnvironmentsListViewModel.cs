@@ -1,0 +1,162 @@
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using Clarity.Application.Environments;
+using Clarity.Application.Environments.Commands;
+using Clarity.Application.Environments.Queries;
+using Clarity.Domain.Environments;
+using MediatR;
+using System.Collections.ObjectModel;
+
+namespace Clarity.Desktop.ViewModels.Environments;
+
+/// <summary>Per-row ViewModel for the environments list.</summary>
+public sealed partial class EnvironmentListItemVm : ObservableObject
+{
+    private readonly Action<EnvironmentDto> _onEdit;
+    private readonly Func<EnvironmentDto, Task> _onArchive;
+    private readonly EnvironmentDto _dto;
+
+    public Guid Id { get; }
+    public string Name { get; }
+    public EnvironmentType Type { get; }
+    public EnvironmentStatus Status { get; }
+    public string? TenantDomain { get; }
+    public bool IsArchived { get; }
+    public int WorkloadCount { get; }
+
+    public string TypeDisplay => Type switch
+    {
+        EnvironmentType.M365Tenant     => "M365",
+        EnvironmentType.OnPremAD       => "OnPrem AD",
+        EnvironmentType.HybridAD       => "Hybrid AD",
+        EnvironmentType.ExchangeOnPrem => "Exchange",
+        EnvironmentType.Standalone     => "Standalone",
+        _                              => Type.ToString()
+    };
+
+    public string StatusDisplay => Status.ToString();
+
+    public EnvironmentListItemVm(
+        EnvironmentDto dto,
+        Action<EnvironmentDto> onEdit,
+        Func<EnvironmentDto, Task> onArchive)
+    {
+        _dto = dto;
+        Id = dto.Id;
+        Name = dto.Name;
+        Type = dto.Type;
+        Status = dto.Status;
+        TenantDomain = dto.TenantDomain;
+        IsArchived = dto.IsArchived;
+        WorkloadCount = dto.WorkloadAreas.Count;
+        _onEdit = onEdit;
+        _onArchive = onArchive;
+    }
+
+    [RelayCommand]
+    public void Edit() => _onEdit(_dto);
+
+    [RelayCommand]
+    public async Task Archive() => await _onArchive(_dto);
+}
+
+public sealed partial class EnvironmentsListViewModel : ObservableObject
+{
+    private readonly IMediator _mediator;
+    private Guid _customerId;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsEmpty))]
+    [NotifyPropertyChangedFor(nameof(HasEnvironments))]
+    private ObservableCollection<EnvironmentListItemVm> _filteredEnvironments = [];
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsEmpty))]
+    [NotifyPropertyChangedFor(nameof(HasEnvironments))]
+    private bool _isLoading;
+
+    [ObservableProperty]
+    private string? _errorMessage;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsEmpty))]
+    [NotifyPropertyChangedFor(nameof(HasEnvironments))]
+    private bool _showArchived;
+
+    [ObservableProperty]
+    private string _searchText = string.Empty;
+
+    public bool IsEmpty => !IsLoading && FilteredEnvironments.Count == 0;
+    public bool HasEnvironments => !IsLoading && FilteredEnvironments.Count > 0;
+
+    private List<EnvironmentDto> _allEnvironments = [];
+
+    public event Action<EnvironmentDto?>? EditRequested;
+
+    public EnvironmentsListViewModel(IMediator mediator)
+    {
+        _mediator = mediator;
+    }
+
+    /// <summary>Sets the customer context and loads environments.</summary>
+    public void SetCustomer(Guid customerId)
+    {
+        _customerId = customerId;
+        _ = LoadAsync();
+    }
+
+    public async Task LoadAsync()
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+        try
+        {
+            _allEnvironments = (await _mediator.Send(
+                new ListEnvironmentsByCustomerQuery(_customerId, ShowArchived))).ToList();
+            ApplyFilter();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Failed to load environments: {ex.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    partial void OnSearchTextChanged(string value) => ApplyFilter();
+    partial void OnShowArchivedChanged(bool value) => _ = LoadAsync();
+
+    private void ApplyFilter()
+    {
+        var filtered = string.IsNullOrWhiteSpace(SearchText)
+            ? _allEnvironments
+            : _allEnvironments.Where(e =>
+                e.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase)).ToList();
+
+        FilteredEnvironments = new ObservableCollection<EnvironmentListItemVm>(
+            filtered.Select(d => new EnvironmentListItemVm(d, OnEditItem, OnArchiveItem)));
+
+        OnPropertyChanged(nameof(IsEmpty));
+        OnPropertyChanged(nameof(HasEnvironments));
+    }
+
+    private void OnEditItem(EnvironmentDto dto) => EditRequested?.Invoke(dto);
+
+    private async Task OnArchiveItem(EnvironmentDto dto)
+    {
+        try
+        {
+            await _mediator.Send(new ArchiveEnvironmentCommand(dto.Id));
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Failed to archive: {ex.Message}";
+        }
+    }
+
+    [RelayCommand]
+    public void CreateNew() => EditRequested?.Invoke(null);
+}

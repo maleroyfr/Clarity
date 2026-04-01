@@ -8,6 +8,9 @@
     <PackageReference Include="Azure.Identity" Version="*" />
     <PackageReference Include="Microsoft.Graph" Version="*" />
     <PackageReference Include="Microsoft.Identity.Client" Version="*" />
+    <PackageReference Include="Polly" Version="8.5.2" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="*" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="*" />
   </ItemGroup>
 
   <PropertyGroup>

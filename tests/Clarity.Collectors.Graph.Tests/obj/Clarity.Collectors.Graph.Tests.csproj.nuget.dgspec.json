@@ -57,6 +57,12 @@
       "frameworks": {
         "net10.0": {
           "targetAlias": "net10.0",
+          "dependencies": {
+            "Microsoft.Extensions.Logging.Abstractions": {
+              "target": "Package",
+              "version": "[10.0.0, )"
+            }
+          },
           "imports": [
             "net461",
             "net462",
@@ -406,6 +412,14 @@
               "target": "Package",
               "version": "[*, )"
             },
+            "Microsoft.Extensions.DependencyInjection.Abstractions": {
+              "target": "Package",
+              "version": "[*, )"
+            },
+            "Microsoft.Extensions.Logging.Abstractions": {
+              "target": "Package",
+              "version": "[*, )"
+            },
             "Microsoft.Graph": {
               "target": "Package",
               "version": "[*, )"
@@ -413,6 +427,10 @@
             "Microsoft.Identity.Client": {
               "target": "Package",
               "version": "[*, )"
+            },
+            "Polly": {
+              "target": "Package",
+              "version": "[8.5.2, )"
             }
           },
           "imports": [

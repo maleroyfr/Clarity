@@ -1,0 +1,129 @@
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using Clarity.Application.Environments;
+using Clarity.Application.Environments.Commands;
+using Clarity.Domain.Environments;
+using MediatR;
+
+namespace Clarity.Desktop.ViewModels.Environments;
+
+public sealed partial class EnvironmentFormViewModel : ObservableObject
+{
+    private readonly IMediator _mediator;
+    private Guid? _editingId;
+    private Guid _customerId;
+
+    [ObservableProperty]
+    private string _name = string.Empty;
+
+    [ObservableProperty]
+    private string _description = string.Empty;
+
+    [ObservableProperty]
+    private EnvironmentType _selectedType = EnvironmentType.M365Tenant;
+
+    [ObservableProperty]
+    private string _tenantId = string.Empty;
+
+    [ObservableProperty]
+    private string _tenantDomain = string.Empty;
+
+    [ObservableProperty]
+    private bool _isSaving;
+
+    [ObservableProperty]
+    private string? _errorMessage;
+
+    [ObservableProperty]
+    private bool _isEditMode;
+
+    public string Title => IsEditMode ? "Edit Environment" : "New Environment";
+
+    public IReadOnlyList<EnvironmentType> AvailableTypes { get; } =
+        Enum.GetValues<EnvironmentType>().ToList();
+
+    public event Action? SaveCompleted;
+    public event Action? Cancelled;
+
+    public EnvironmentFormViewModel(IMediator mediator)
+    {
+        _mediator = mediator;
+    }
+
+    public void Initialize(EnvironmentDto? existing, Guid customerId)
+    {
+        _customerId = customerId;
+        if (existing is not null)
+        {
+            _editingId = existing.Id;
+            Name = existing.Name;
+            Description = existing.Description ?? string.Empty;
+            SelectedType = existing.Type;
+            TenantId = existing.TenantId?.ToString() ?? string.Empty;
+            TenantDomain = existing.TenantDomain ?? string.Empty;
+            IsEditMode = true;
+        }
+        else
+        {
+            _editingId = null;
+            Name = string.Empty;
+            Description = string.Empty;
+            SelectedType = EnvironmentType.M365Tenant;
+            TenantId = string.Empty;
+            TenantDomain = string.Empty;
+            IsEditMode = false;
+        }
+        ErrorMessage = null;
+        OnPropertyChanged(nameof(Title));
+    }
+
+    [RelayCommand]
+    public async Task SaveAsync()
+    {
+        if (string.IsNullOrWhiteSpace(Name))
+        {
+            ErrorMessage = "Name is required.";
+            return;
+        }
+
+        IsSaving = true;
+        ErrorMessage = null;
+
+        try
+        {
+            Guid? parsedTenantId = Guid.TryParse(TenantId, out var tid) ? tid : null;
+            var domain = string.IsNullOrWhiteSpace(TenantDomain) ? null : TenantDomain.Trim();
+
+            if (IsEditMode && _editingId.HasValue)
+            {
+                await _mediator.Send(new UpdateEnvironmentCommand(
+                    _editingId.Value, Name.Trim(), Description.TrimOrNull(), domain));
+            }
+            else
+            {
+                await _mediator.Send(new CreateEnvironmentCommand(
+                    _customerId, Name.Trim(), SelectedType,
+                    Description.TrimOrNull(), parsedTenantId, domain, []));
+            }
+
+            SaveCompleted?.Invoke();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+
+    [RelayCommand]
+    public void Cancel() => Cancelled?.Invoke();
+}
+
+file static class EnvFormStringExtensions
+{
+    internal static string? TrimOrNull(this string? s) =>
+        string.IsNullOrWhiteSpace(s) ? null : s.Trim();
+}
