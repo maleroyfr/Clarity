@@ -12,6 +12,7 @@ public enum InventoryObjectType
     EntraServicePrincipal,
     EntraConditionalAccessPolicy,
     EntraNamedLocation,
+    TenantOrganization,
 
     // Licenses
     LicenseSku,
@@ -21,6 +22,7 @@ public enum InventoryObjectType
     IntuneDevice,
     IntuneCompliancePolicy,
     IntuneConfigurationProfile,
+    IntuneManagedApp,
 
     // Exchange Online
     Mailbox,

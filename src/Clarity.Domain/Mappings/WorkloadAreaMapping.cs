@@ -19,6 +19,7 @@ public static class WorkloadAreaMapping
         { InventoryObjectType.EntraServicePrincipal,        WorkloadArea.EntraId },
         { InventoryObjectType.EntraConditionalAccessPolicy, WorkloadArea.EntraId },
         { InventoryObjectType.EntraNamedLocation,           WorkloadArea.EntraId },
+        { InventoryObjectType.TenantOrganization,          WorkloadArea.EntraId },
         { InventoryObjectType.LicenseSku,                   WorkloadArea.EntraId },
         { InventoryObjectType.LicenseAssignment,            WorkloadArea.EntraId },
 
@@ -26,6 +27,7 @@ public static class WorkloadAreaMapping
         { InventoryObjectType.IntuneDevice,               WorkloadArea.Intune },
         { InventoryObjectType.IntuneCompliancePolicy,     WorkloadArea.Intune },
         { InventoryObjectType.IntuneConfigurationProfile, WorkloadArea.Intune },
+        { InventoryObjectType.IntuneManagedApp,          WorkloadArea.Intune },
 
         // Exchange Online
         { InventoryObjectType.Mailbox,           WorkloadArea.ExchangeOnline },

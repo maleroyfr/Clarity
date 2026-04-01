@@ -22,4 +22,5 @@ public sealed record CollectorOptions(
     int MaxPageSize = 999,
     int MaxRetries = 3,
     TimeSpan RetryDelay = default,
-    bool IncludeRawData = false);
+    bool IncludeRawData = false,
+    string? TenantDomain = null);
