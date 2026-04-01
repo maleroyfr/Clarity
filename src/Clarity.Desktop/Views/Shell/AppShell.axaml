@@ -62,6 +62,15 @@
           </Button>
           <Button Classes="NavButton"
                   Command="{Binding NavigateToCommand}"
+                  CommandParameter="{x:Static shell:NavSection.Inventory}"
+                  ToolTip.Tip="Inventory">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+              <TextBlock Text="📦" FontSize="18" Width="24" TextAlignment="Center"/>
+              <TextBlock Text="Inventory" FontSize="13" IsVisible="{Binding IsNavExpanded}" VerticalAlignment="Center"/>
+            </StackPanel>
+          </Button>
+          <Button Classes="NavButton"
+                  Command="{Binding NavigateToCommand}"
                   CommandParameter="{x:Static shell:NavSection.Settings}"
                   ToolTip.Tip="Settings">
             <StackPanel Orientation="Horizontal" Spacing="10">
