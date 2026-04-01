@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Clarity.Domain\Clarity.Domain.csproj" />
+    <ProjectReference Include="..\Clarity.SharedContracts\Clarity.SharedContracts.csproj" />
+    <ProjectReference Include="..\Clarity.Exports\Clarity.Exports.csproj" />
+    <ProjectReference Include="..\Clarity.Comparisons\Clarity.Comparisons.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentValidation" Version="*" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
+    <PackageReference Include="MediatR" Version="*" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="*" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="*" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

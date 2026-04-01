@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "loT0Z4MMYVE=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\MathieuLEROY\\.copilot\\worktrees\\Clarity\\maleroyfr\\acclimatisable-nancey\\src\\Clarity.Comparisons\\Clarity.Comparisons.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\MathieuLEROY\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\10.0.5\\microsoft.extensions.dependencyinjection.abstractions.10.0.5.nupkg.sha512",
+    "C:\\Users\\MathieuLEROY\\.nuget\\packages\\microsoft.extensions.logging.abstractions\\10.0.5\\microsoft.extensions.logging.abstractions.10.0.5.nupkg.sha512"
+  ],
+  "logs": []
+}

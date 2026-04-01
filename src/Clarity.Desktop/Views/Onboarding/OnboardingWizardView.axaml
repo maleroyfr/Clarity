@@ -1,0 +1,81 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:Clarity.Desktop.ViewModels.Onboarding"
+        xmlns:views="clr-namespace:Clarity.Desktop.Views.Onboarding"
+        x:Class="Clarity.Desktop.Views.Onboarding.OnboardingWizardView"
+        x:DataType="vm:OnboardingWizardViewModel"
+        Title="New Environment Wizard"
+        Width="680" Height="620"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner">
+
+  <Window.Styles>
+    <StyleInclude Source="/Styles/ClarityTheme.axaml"/>
+  </Window.Styles>
+
+  <Grid RowDefinitions="Auto,*,Auto" Margin="28">
+
+    <!-- Step progress dots -->
+    <StackPanel Grid.Row="0" Orientation="Horizontal"
+                HorizontalAlignment="Center" Spacing="16" Margin="0,0,0,24">
+      <StackPanel Orientation="Horizontal" Spacing="6">
+        <Ellipse Width="10" Height="10"
+                 Fill="{DynamicResource SystemAccentColor}"/>
+        <TextBlock Text="Workloads" FontSize="12" VerticalAlignment="Center"
+                   Foreground="{DynamicResource SystemAccentColor}"/>
+      </StackPanel>
+      <TextBlock Text="›" FontSize="16" Foreground="{DynamicResource SystemBaseMediumColor}"
+                 VerticalAlignment="Center"/>
+      <StackPanel Orientation="Horizontal" Spacing="6">
+        <Ellipse Width="10" Height="10"
+                 Fill="{DynamicResource SystemBaseMediumColor}"/>
+        <TextBlock Text="Prerequisites" FontSize="12" VerticalAlignment="Center"
+                   Foreground="{DynamicResource SystemBaseMediumColor}"/>
+      </StackPanel>
+      <TextBlock Text="›" FontSize="16" Foreground="{DynamicResource SystemBaseMediumColor}"
+                 VerticalAlignment="Center"/>
+      <StackPanel Orientation="Horizontal" Spacing="6">
+        <Ellipse Width="10" Height="10"
+                 Fill="{DynamicResource SystemBaseMediumColor}"/>
+        <TextBlock Text="Summary" FontSize="12" VerticalAlignment="Center"
+                   Foreground="{DynamicResource SystemBaseMediumColor}"/>
+      </StackPanel>
+    </StackPanel>
+
+    <!-- Step content -->
+    <ScrollViewer Grid.Row="1">
+      <ContentControl Content="{Binding CurrentStepViewModel}">
+        <ContentControl.DataTemplates>
+          <DataTemplate DataType="vm:WorkloadSelectionStepViewModel">
+            <views:WorkloadSelectionStepView/>
+          </DataTemplate>
+          <DataTemplate DataType="vm:PrerequisitesStepViewModel">
+            <views:PrerequisitesStepView/>
+          </DataTemplate>
+          <DataTemplate DataType="vm:SummaryStepViewModel">
+            <views:SummaryStepView/>
+          </DataTemplate>
+        </ContentControl.DataTemplates>
+      </ContentControl>
+    </ScrollViewer>
+
+    <!-- Navigation buttons -->
+    <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto,Auto" Margin="0,20,0,0">
+      <Button Grid.Column="0" Classes="SecondaryButton" Content="Cancel"
+              Command="{Binding CancelCommand}"/>
+      <Button Grid.Column="2" Classes="SecondaryButton" Content="← Back"
+              IsVisible="{Binding CanGoPrev}"
+              Command="{Binding PrevCommand}"
+              Margin="0,0,8,0"/>
+      <Button Grid.Column="3" Classes="PrimaryButton"
+              IsVisible="{Binding !IsLastStep}"
+              IsEnabled="{Binding CanGoNext}"
+              Content="Next →"
+              Command="{Binding NextCommand}"/>
+      <Button Grid.Column="3" Classes="PrimaryButton"
+              IsVisible="{Binding IsLastStep}"
+              Content="✓ Finish"
+              Command="{Binding FinishCommand}"/>
+    </Grid>
+  </Grid>
+</Window>

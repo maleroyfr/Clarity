@@ -1,0 +1,39 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v10.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v10.0": {
+      "Clarity.Domain/1.0.0": {
+        "dependencies": {
+          "Clarity.SharedContracts": "1.0.0"
+        },
+        "runtime": {
+          "Clarity.Domain.dll": {}
+        }
+      },
+      "Clarity.SharedContracts/1.0.0": {
+        "runtime": {
+          "Clarity.SharedContracts.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "Clarity.Domain/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Clarity.SharedContracts/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

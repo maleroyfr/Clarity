@@ -1,0 +1,26 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Clarity.Api/Clarity.Api.csproj" />
+    <Project Path="src/Clarity.Application/Clarity.Application.csproj" />
+    <Project Path="src/Clarity.Collectors.ActiveDirectory/Clarity.Collectors.ActiveDirectory.csproj" />
+    <Project Path="src/Clarity.Collectors.Contracts/Clarity.Collectors.Contracts.csproj" />
+    <Project Path="src/Clarity.Collectors.Graph/Clarity.Collectors.Graph.csproj" />
+    <Project Path="src/Clarity.Collectors.PowerShell/Clarity.Collectors.PowerShell.csproj" />
+    <Project Path="src/Clarity.Comparisons/Clarity.Comparisons.csproj" />
+    <Project Path="src/Clarity.Desktop/Clarity.Desktop.csproj" />
+    <Project Path="src/Clarity.Domain/Clarity.Domain.csproj" />
+    <Project Path="src/Clarity.Exports/Clarity.Exports.csproj" />
+    <Project Path="src/Clarity.Infrastructure/Clarity.Infrastructure.csproj" />
+    <Project Path="src/Clarity.SharedContracts/Clarity.SharedContracts.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Clarity.Application.Tests/Clarity.Application.Tests.csproj" />
+    <Project Path="tests/Clarity.Collectors.Graph.Tests/Clarity.Collectors.Graph.Tests.csproj" />
+    <Project Path="tests/Clarity.Collectors.PowerShell.Tests/Clarity.Collectors.PowerShell.Tests.csproj" />
+    <Project Path="tests/Clarity.Comparisons.Tests/Clarity.Comparisons.Tests.csproj" />
+    <Project Path="tests/Clarity.Domain.Tests/Clarity.Domain.Tests.csproj" />
+    <Project Path="tests/Clarity.Exports.Tests/Clarity.Exports.Tests.csproj" />
+    <Project Path="tests/Clarity.Infrastructure.Tests/Clarity.Infrastructure.Tests.csproj" />
+    <Project Path="tests/Clarity.Integration.Tests/Clarity.Integration.Tests.csproj" />
+  </Folder>
+</Solution>

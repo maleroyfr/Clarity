@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Clarity.Collectors.Contracts\Clarity.Collectors.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Azure.Identity" Version="*" />
+    <PackageReference Include="Microsoft.Graph" Version="*" />
+    <PackageReference Include="Microsoft.Identity.Client" Version="*" />
+    <PackageReference Include="Polly" Version="8.5.2" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="*" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="*" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

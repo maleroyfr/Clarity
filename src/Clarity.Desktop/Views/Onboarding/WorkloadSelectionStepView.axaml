@@ -1,0 +1,35 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:Clarity.Desktop.ViewModels.Onboarding"
+             x:Class="Clarity.Desktop.Views.Onboarding.WorkloadSelectionStepView"
+             x:DataType="vm:WorkloadSelectionStepViewModel">
+
+  <UserControl.Styles>
+    <StyleInclude Source="/Styles/ClarityTheme.axaml"/>
+  </UserControl.Styles>
+
+  <StackPanel Spacing="8">
+    <TextBlock Text="Select Workloads" Classes="PageTitle" Margin="0,0,0,4"/>
+    <TextBlock Text="Choose the workloads you want to collect data for in this environment."
+               Classes="PageSubtitle" Margin="0,0,0,16" TextWrapping="Wrap"/>
+
+    <ItemsControl ItemsSource="{Binding Workloads}">
+      <ItemsControl.ItemTemplate>
+        <DataTemplate x:DataType="vm:WorkloadItemVm">
+          <Border Background="{DynamicResource SystemAltHighColor}"
+                  BorderBrush="{DynamicResource SystemBaseLowColor}"
+                  BorderThickness="1" CornerRadius="8"
+                  Padding="16,12" Margin="0,0,0,6">
+            <CheckBox IsChecked="{Binding IsSelected}">
+              <StackPanel Spacing="2">
+                <TextBlock Text="{Binding Label}" Classes="CardTitle"/>
+                <TextBlock Text="{Binding Description}" Classes="CardSubtitle"
+                           TextWrapping="Wrap"/>
+              </StackPanel>
+            </CheckBox>
+          </Border>
+        </DataTemplate>
+      </ItemsControl.ItemTemplate>
+    </ItemsControl>
+  </StackPanel>
+</UserControl>

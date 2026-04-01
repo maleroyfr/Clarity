@@ -1,0 +1,134 @@
+using Clarity.Collectors.Contracts;
+using Clarity.Domain.Environments;
+using Clarity.Domain.Snapshots;
+using Clarity.SharedContracts.Enums;
+using Microsoft.Extensions.Logging;
+using DomainCollectorError = Clarity.Domain.Snapshots.CollectorError;
+
+namespace Clarity.Collectors.Graph;
+
+/// <summary>
+/// Orchestrates Graph collector runs for a snapshot. Runs collectors sequentially
+/// to respect Graph throttling limits, reporting progress after each.
+/// Persists collected InventoryObjects via IInventoryObjectRepository.
+/// </summary>
+public sealed class CollectorRunOrchestrator : ICollectorRunOrchestrator
+{
+    private readonly ICollectorCatalog _collectorCatalog;
+    private readonly IInventoryObjectRepository _inventoryObjectRepository;
+    private readonly ILogger<CollectorRunOrchestrator> _logger;
+
+    public CollectorRunOrchestrator(
+        ICollectorCatalog collectorCatalog,
+        IInventoryObjectRepository inventoryObjectRepository,
+        ILogger<CollectorRunOrchestrator> logger)
+    {
+        _collectorCatalog = collectorCatalog;
+        _inventoryObjectRepository = inventoryObjectRepository;
+        _logger = logger;
+    }
+
+    public async Task OrchestrateAsync(
+        Snapshot snapshot,
+        Domain.Environments.Environment environment,
+        IReadOnlyList<WorkloadArea> scope,
+        IProgress<CollectorProgress> progress,
+        CancellationToken cancellationToken)
+    {
+        var matching = _collectorCatalog.GetCollectorsForScope(scope);
+
+        int total = matching.Count;
+        int processed = 0;
+
+        foreach (var collector in matching)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var authConfig = environment.GetActiveAuthConfig(collector.WorkloadArea);
+            if (authConfig is null)
+            {
+                _logger.LogWarning(
+                    "No active auth configuration for {WorkloadArea}. Skipping {CollectorId}.",
+                    collector.WorkloadArea, collector.CollectorId);
+
+                processed++;
+                progress.Report(new CollectorProgress(
+                    collector.WorkloadArea,
+                    $"Skipped {collector.CollectorId} — no auth configuration.",
+                    processed, total, processed == total, HasError: false));
+                continue;
+            }
+
+            var run = snapshot.StartCollectorRun(
+                collector.WorkloadArea,
+                collector.CollectorType,
+                collector.Version);
+
+            var context = new CollectorRunContext(
+                snapshot.Id,
+                run.Id,
+                snapshot.EnvironmentId,
+                collector.WorkloadArea,
+                authConfig,
+                new CollectorOptions(),
+                _logger,
+                cancellationToken);
+
+            progress.Report(new CollectorProgress(
+                collector.WorkloadArea,
+                $"Starting {collector.CollectorId}...",
+                processed, total, IsComplete: false, HasError: false));
+
+            CollectorResult result;
+            try
+            {
+                result = await collector.RunAsync(context);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Collector {CollectorId} threw unexpectedly.", collector.CollectorId);
+
+                run.Fail(new DomainCollectorError(
+                    "UNEXPECTED_ERROR", ex.Message, ex.ToString()));
+
+                processed++;
+                progress.Report(new CollectorProgress(
+                    collector.WorkloadArea,
+                    $"{collector.CollectorId} failed unexpectedly.",
+                    processed, total, processed == total, HasError: true));
+                continue;
+            }
+
+            if (result.Status == CollectorRunStatus.Completed)
+            {
+                run.Complete(result.ItemsCollected, result.PermissionsUsed, result.CommandsExecuted);
+
+                // Persist collected inventory objects
+                if (result.Objects.Count > 0)
+                {
+                    await _inventoryObjectRepository.AddRangeAsync(result.Objects, cancellationToken);
+                    await _inventoryObjectRepository.SaveChangesAsync(cancellationToken);
+                    _logger.LogInformation(
+                        "Persisted {Count} inventory objects from {CollectorId}.",
+                        result.Objects.Count, collector.CollectorId);
+                }
+            }
+            else
+            {
+                var firstError = result.Errors.FirstOrDefault();
+                run.Fail(firstError is not null
+                    ? new DomainCollectorError(firstError.Code, firstError.Message, firstError.Detail)
+                    : new DomainCollectorError("UNKNOWN", "Collector failed without an error."));
+            }
+
+            processed++;
+            progress.Report(new CollectorProgress(
+                collector.WorkloadArea,
+                $"{collector.CollectorId} completed with {result.ItemsCollected} items.",
+                processed, total,
+                IsComplete: processed == total,
+                HasError: result.Status != CollectorRunStatus.Completed));
+        }
+    }
+}

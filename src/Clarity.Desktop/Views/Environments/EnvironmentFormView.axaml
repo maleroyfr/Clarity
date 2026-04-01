@@ -1,0 +1,76 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:Clarity.Desktop.ViewModels.Environments"
+        x:Class="Clarity.Desktop.Views.Environments.EnvironmentFormView"
+        x:DataType="vm:EnvironmentFormViewModel"
+        Title="{Binding Title}"
+        Width="540" Height="480"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner">
+
+  <Window.Styles>
+    <StyleInclude Source="/Styles/ClarityTheme.axaml"/>
+  </Window.Styles>
+
+  <Grid RowDefinitions="Auto,*,Auto" Margin="24">
+
+    <TextBlock Grid.Row="0" Text="{Binding Title}" Classes="PageTitle" Margin="0,0,0,20"/>
+
+    <StackPanel Grid.Row="1" Spacing="14">
+
+      <StackPanel Spacing="4">
+        <TextBlock Text="Environment name *" Classes="FormLabel"/>
+        <TextBox Text="{Binding Name}" Watermark="e.g. Contoso Production" Classes="FormInput"/>
+      </StackPanel>
+
+      <StackPanel Spacing="4">
+        <TextBlock Text="Description" Classes="FormLabel"/>
+        <TextBox Text="{Binding Description}"
+                 Watermark="Optional description"
+                 AcceptsReturn="True"
+                 Height="70"
+                 Classes="FormInput"/>
+      </StackPanel>
+
+      <StackPanel Spacing="4">
+        <TextBlock Text="Type *" Classes="FormLabel"/>
+        <ComboBox ItemsSource="{Binding AvailableTypes}"
+                  SelectedItem="{Binding SelectedType}"
+                  HorizontalAlignment="Stretch"/>
+      </StackPanel>
+
+      <StackPanel Spacing="4">
+        <TextBlock Text="Tenant ID (optional)" Classes="FormLabel"/>
+        <TextBox Text="{Binding TenantId}"
+                 Watermark="e.g. xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                 Classes="FormInput"/>
+      </StackPanel>
+
+      <StackPanel Spacing="4">
+        <TextBlock Text="Tenant Domain (optional)" Classes="FormLabel"/>
+        <TextBox Text="{Binding TenantDomain}"
+                 Watermark="e.g. contoso.onmicrosoft.com"
+                 Classes="FormInput"/>
+      </StackPanel>
+
+      <Border IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+              Background="#FFF0F0" Padding="12,8" CornerRadius="4">
+        <TextBlock Text="{Binding ErrorMessage}" Foreground="#C0392B" TextWrapping="Wrap"/>
+      </Border>
+    </StackPanel>
+
+    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right"
+                Spacing="12" Margin="0,16,0,0">
+      <Button Classes="SecondaryButton" Content="Cancel"
+              Command="{Binding CancelCommand}"/>
+      <Button Classes="PrimaryButton"
+              IsEnabled="{Binding !IsSaving}"
+              Command="{Binding SaveCommand}">
+        <Panel>
+          <TextBlock Text="Saving…" IsVisible="{Binding IsSaving}"/>
+          <TextBlock Text="Save" IsVisible="{Binding !IsSaving}"/>
+        </Panel>
+      </Button>
+    </StackPanel>
+  </Grid>
+</Window>

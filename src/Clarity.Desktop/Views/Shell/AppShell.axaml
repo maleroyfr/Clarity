@@ -1,0 +1,92 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:shell="clr-namespace:Clarity.Desktop.ViewModels.Shell"
+        xmlns:local="clr-namespace:Clarity.Desktop"
+        x:Class="Clarity.Desktop.Views.Shell.AppShell"
+        x:DataType="shell:AppShellViewModel"
+        Title="Clarity"
+        Width="1280" Height="800"
+        MinWidth="900" MinHeight="600"
+        Background="{DynamicResource SystemChromeLowColor}">
+
+  <Window.Styles>
+    <StyleInclude Source="/Styles/ClarityTheme.axaml"/>
+  </Window.Styles>
+
+  <Grid x:Name="RootGrid" ColumnDefinitions="Auto,*">
+
+    <!-- Navigation Rail -->
+    <Border Grid.Column="0"
+            Background="{DynamicResource SystemAltHighColor}"
+            BorderBrush="{DynamicResource SystemBaseLowColor}"
+            BorderThickness="0,0,1,0">
+      <Grid RowDefinitions="Auto,*,Auto">
+
+        <!-- App Logo -->
+        <StackPanel Grid.Row="0" Margin="0,16,0,8" HorizontalAlignment="Center">
+          <TextBlock Text="✦" FontSize="28" HorizontalAlignment="Center"
+                     Foreground="{DynamicResource SystemAccentColor}"/>
+          <TextBlock Text="Clarity" FontSize="11" FontWeight="SemiBold"
+                     HorizontalAlignment="Center" Margin="0,4,0,0"
+                     IsVisible="{Binding IsNavExpanded}"/>
+        </StackPanel>
+
+        <!-- Nav Items (non-compiled bindings for parent context cross-references) -->
+        <StackPanel Grid.Row="1" Margin="8,8,8,0" Spacing="2">
+          <Button Classes="NavButton"
+                  Command="{Binding NavigateToCommand}"
+                  CommandParameter="{x:Static shell:NavSection.Home}"
+                  ToolTip.Tip="Home">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+              <TextBlock Text="🏠" FontSize="18" Width="24" TextAlignment="Center"/>
+              <TextBlock Text="Home" FontSize="13" IsVisible="{Binding IsNavExpanded}" VerticalAlignment="Center"/>
+            </StackPanel>
+          </Button>
+          <Button Classes="NavButton"
+                  Command="{Binding NavigateToCommand}"
+                  CommandParameter="{x:Static shell:NavSection.Customers}"
+                  ToolTip.Tip="Customers">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+              <TextBlock Text="🏢" FontSize="18" Width="24" TextAlignment="Center"/>
+              <TextBlock Text="Customers" FontSize="13" IsVisible="{Binding IsNavExpanded}" VerticalAlignment="Center"/>
+            </StackPanel>
+          </Button>
+          <Button Classes="NavButton"
+                  Command="{Binding NavigateToCommand}"
+                  CommandParameter="{x:Static shell:NavSection.Environments}"
+                  ToolTip.Tip="Environments">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+              <TextBlock Text="🌐" FontSize="18" Width="24" TextAlignment="Center"/>
+              <TextBlock Text="Environments" FontSize="13" IsVisible="{Binding IsNavExpanded}" VerticalAlignment="Center"/>
+            </StackPanel>
+          </Button>
+          <Button Classes="NavButton"
+                  Command="{Binding NavigateToCommand}"
+                  CommandParameter="{x:Static shell:NavSection.Settings}"
+                  ToolTip.Tip="Settings">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+              <TextBlock Text="⚙" FontSize="18" Width="24" TextAlignment="Center"/>
+              <TextBlock Text="Settings" FontSize="13" IsVisible="{Binding IsNavExpanded}" VerticalAlignment="Center"/>
+            </StackPanel>
+          </Button>
+        </StackPanel>
+
+        <!-- Toggle Nav -->
+        <Button Grid.Row="2" Classes="NavButton" Margin="8,8,8,16"
+                Command="{Binding ToggleNavCommand}"
+                ToolTip.Tip="Toggle navigation">
+          <TextBlock Text="◀" FontSize="14" IsVisible="{Binding IsNavExpanded}"/>
+        </Button>
+      </Grid>
+    </Border>
+
+    <!-- Page content area -->
+    <ContentControl Grid.Column="1"
+                    Content="{Binding CurrentPage}"
+                    Margin="0">
+      <ContentControl.DataTemplates>
+        <local:ViewLocator/>
+      </ContentControl.DataTemplates>
+    </ContentControl>
+  </Grid>
+</Window>

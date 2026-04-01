@@ -1,0 +1,67 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:Clarity.Desktop.ViewModels.Onboarding"
+             x:Class="Clarity.Desktop.Views.Onboarding.PrerequisitesStepView"
+             x:DataType="vm:PrerequisitesStepViewModel">
+
+  <UserControl.Styles>
+    <StyleInclude Source="/Styles/ClarityTheme.axaml"/>
+  </UserControl.Styles>
+
+  <Grid RowDefinitions="Auto,Auto,Auto,*">
+    <TextBlock Grid.Row="0" Text="Prerequisites" Classes="PageTitle" Margin="0,0,0,4"/>
+    <TextBlock Grid.Row="1"
+                Text="Verify the following prerequisites are in place before proceeding."
+                Classes="PageSubtitle" Margin="0,0,0,16" TextWrapping="Wrap"/>
+
+    <Grid Grid.Row="2" ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,16">
+      <TextBlock Text="{Binding StatusMessage}"
+                 VerticalAlignment="Center"
+                 Foreground="{DynamicResource SystemBaseMediumHighColor}"/>
+      <Button Grid.Column="1"
+              Classes="SecondaryButton"
+              Content="Refresh"
+              Command="{Binding RefreshCommand}"
+              IsEnabled="{Binding !IsChecking}"
+              Margin="0,0,8,0"/>
+      <Button Grid.Column="2"
+              Classes="PrimaryButton"
+              Content="Install missing modules"
+              Command="{Binding InstallMissingModulesCommand}"
+              IsEnabled="{Binding CanInstallMissingModules}"/>
+    </Grid>
+
+    <ScrollViewer Grid.Row="3">
+      <ItemsControl ItemsSource="{Binding Prerequisites}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="vm:PrerequisiteItemVm">
+            <Border Background="{DynamicResource SystemAltHighColor}"
+                    BorderBrush="{DynamicResource SystemBaseLowColor}"
+                    BorderThickness="1" CornerRadius="8"
+                    Padding="14,10" Margin="0,0,0,6">
+              <Grid ColumnDefinitions="Auto,*,Auto">
+                <CheckBox Grid.Column="0"
+                          IsChecked="{Binding IsCompleted}"
+                          VerticalAlignment="Top"
+                          Margin="0,0,10,0"/>
+                <StackPanel Grid.Column="1" Spacing="2">
+                  <TextBlock Text="{Binding Label}" Classes="CardTitle" TextWrapping="Wrap"/>
+                  <TextBlock Text="{Binding Description}" Classes="CardSubtitle" TextWrapping="Wrap"/>
+                  <TextBlock Text="{Binding Category}" Classes="CardMeta"/>
+                  <TextBlock Text="{Binding StatusText}" Classes="CardMeta"/>
+                </StackPanel>
+                <Border Grid.Column="2"
+                        IsVisible="{Binding IsOptional}"
+                        Background="{DynamicResource SystemBaseLowColor}"
+                        CornerRadius="4" Padding="6,2"
+                        VerticalAlignment="Top" Margin="8,0,0,0">
+                  <TextBlock Text="Optional" Classes="BadgeText"/>
+                </Border>
+              </Grid>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </ScrollViewer>
+  </Grid>
+</UserControl>

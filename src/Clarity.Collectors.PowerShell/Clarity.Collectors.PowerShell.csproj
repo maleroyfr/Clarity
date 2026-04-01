@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Clarity.Collectors.Contracts\Clarity.Collectors.Contracts.csproj" />
+    <ProjectReference Include="..\Clarity.Domain\Clarity.Domain.csproj" />
+    <ProjectReference Include="..\Clarity.SharedContracts\Clarity.SharedContracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="*" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="*" />
+    <PackageReference Include="Microsoft.PowerShell.SDK" Version="*" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>
