@@ -1,5 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Clarity.Application.Customers.Commands;
+using Clarity.Application.Customers.Queries;
 using Clarity.Application.Environments;
 using Clarity.Application.Environments.Commands;
 using Clarity.Application.Environments.Queries;
@@ -24,16 +26,7 @@ public sealed partial class EnvironmentListItemVm : ObservableObject
     public bool IsArchived { get; }
     public int WorkloadCount { get; }
 
-    public string TypeDisplay => Type switch
-    {
-        EnvironmentType.M365Tenant     => "M365",
-        EnvironmentType.OnPremAD       => "OnPrem AD",
-        EnvironmentType.HybridAD       => "Hybrid AD",
-        EnvironmentType.ExchangeOnPrem => "Exchange",
-        EnvironmentType.Standalone     => "Standalone",
-        _                              => Type.ToString()
-    };
-
+    public string TypeDisplay => EnvironmentTypeHelper.ToDisplayName(Type);
     public string StatusDisplay => Status.ToString();
 
     public EnvironmentListItemVm(
@@ -60,11 +53,34 @@ public sealed partial class EnvironmentListItemVm : ObservableObject
     public async Task Archive() => await _onArchive(_dto);
 }
 
+/// <summary>Selectable customer item for the customer picker.</summary>
+public sealed class CustomerPickerItem
+{
+    public Guid Id { get; init; }
+    public string Name { get; init; } = string.Empty;
+
+    public override string ToString() => Name;
+}
+
 public sealed partial class EnvironmentsListViewModel : ObservableObject
 {
     private readonly IMediator _mediator;
-    private Guid _customerId;
 
+    // ── Customer picker ──────────────────────────────────────────────────
+    [ObservableProperty]
+    private ObservableCollection<CustomerPickerItem> _customers = [];
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasSelectedCustomer))]
+    [NotifyPropertyChangedFor(nameof(IsEmpty))]
+    private CustomerPickerItem? _selectedCustomer;
+
+    [ObservableProperty]
+    private bool _isLoadingCustomers;
+
+    public bool HasSelectedCustomer => SelectedCustomer is not null;
+
+    // ── Environments list ────────────────────────────────────────────────
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsEmpty))]
     [NotifyPropertyChangedFor(nameof(HasEnvironments))]
@@ -86,7 +102,7 @@ public sealed partial class EnvironmentsListViewModel : ObservableObject
     [ObservableProperty]
     private string _searchText = string.Empty;
 
-    public bool IsEmpty => !IsLoading && FilteredEnvironments.Count == 0;
+    public bool IsEmpty => !IsLoading && HasSelectedCustomer && FilteredEnvironments.Count == 0;
     public bool HasEnvironments => !IsLoading && FilteredEnvironments.Count > 0;
 
     private List<EnvironmentDto> _allEnvironments = [];
@@ -98,21 +114,61 @@ public sealed partial class EnvironmentsListViewModel : ObservableObject
         _mediator = mediator;
     }
 
+    /// <summary>Loads the customer list for the picker.</summary>
+    public async Task LoadCustomersAsync()
+    {
+        IsLoadingCustomers = true;
+        try
+        {
+            var dtos = await _mediator.Send(new ListCustomersQuery(IncludeArchived: false));
+            Customers = new ObservableCollection<CustomerPickerItem>(
+                dtos.Select(c => new CustomerPickerItem { Id = c.Id, Name = c.Name }));
+
+            // Auto-select if only one customer
+            if (Customers.Count == 1)
+                SelectedCustomer = Customers[0];
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Failed to load customers: {ex.Message}";
+        }
+        finally
+        {
+            IsLoadingCustomers = false;
+        }
+    }
+
+    partial void OnSelectedCustomerChanged(CustomerPickerItem? value)
+    {
+        if (value is not null)
+            _ = LoadAsync();
+        else
+        {
+            _allEnvironments = [];
+            FilteredEnvironments = [];
+            OnPropertyChanged(nameof(IsEmpty));
+            OnPropertyChanged(nameof(HasEnvironments));
+        }
+    }
+
     /// <summary>Sets the customer context and loads environments.</summary>
     public void SetCustomer(Guid customerId)
     {
-        _customerId = customerId;
-        _ = LoadAsync();
+        var match = Customers.FirstOrDefault(c => c.Id == customerId);
+        if (match is not null)
+            SelectedCustomer = match;
     }
 
     public async Task LoadAsync()
     {
+        if (SelectedCustomer is null) return;
+
         IsLoading = true;
         ErrorMessage = null;
         try
         {
             _allEnvironments = (await _mediator.Send(
-                new ListEnvironmentsByCustomerQuery(_customerId, ShowArchived))).ToList();
+                new ListEnvironmentsByCustomerQuery(SelectedCustomer.Id, ShowArchived))).ToList();
             ApplyFilter();
         }
         catch (Exception ex)
@@ -157,6 +213,6 @@ public sealed partial class EnvironmentsListViewModel : ObservableObject
         }
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(HasSelectedCustomer))]
     public void CreateNew() => EditRequested?.Invoke(null);
 }
