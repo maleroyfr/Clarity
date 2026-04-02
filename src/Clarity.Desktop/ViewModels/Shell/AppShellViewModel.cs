@@ -18,6 +18,12 @@ public sealed partial class AppShellViewModel : ObservableObject
     [ObservableProperty]
     private bool _isNavExpanded = true;
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ThemeIcon))]
+    private bool _isDarkMode;
+
+    public string ThemeIcon => IsDarkMode ? "☀️" : "🌙";
+
     public IReadOnlyList<NavItem> NavItems { get; } =
     [
         new NavItem { Label = "Home",         Icon = "🏠", Section = NavSection.Home },
@@ -45,6 +51,18 @@ public sealed partial class AppShellViewModel : ObservableObject
             NavSection.Settings     => new SettingsViewModel(),
             _                       => new HomeViewModel()
         };
+    }
+
+    [RelayCommand]
+    public void ToggleTheme()
+    {
+        IsDarkMode = !IsDarkMode;
+        if (Avalonia.Application.Current is not null)
+        {
+            Avalonia.Application.Current.RequestedThemeVariant = IsDarkMode
+                ? Avalonia.Styling.ThemeVariant.Dark
+                : Avalonia.Styling.ThemeVariant.Light;
+        }
     }
 
     [RelayCommand]

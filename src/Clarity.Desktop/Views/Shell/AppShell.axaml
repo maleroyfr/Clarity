@@ -80,12 +80,33 @@
           </Button>
         </StackPanel>
 
-        <!-- Toggle Nav -->
-        <Button Grid.Row="2" Classes="NavButton" Margin="8,8,8,16"
-                Command="{Binding ToggleNavCommand}"
-                ToolTip.Tip="Toggle navigation">
-          <TextBlock Text="◀" FontSize="14" IsVisible="{Binding IsNavExpanded}"/>
-        </Button>
+        <!-- Bottom Actions -->
+        <StackPanel Grid.Row="2" Margin="8,8,8,16" Spacing="2">
+          <Button Classes="NavButton"
+                  x:Name="AboutButton"
+                  ToolTip.Tip="About Clarity">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+              <TextBlock Text="ℹ️" FontSize="18" Width="24" TextAlignment="Center"/>
+              <TextBlock Text="About" FontSize="13" IsVisible="{Binding IsNavExpanded}" VerticalAlignment="Center"/>
+            </StackPanel>
+          </Button>
+          <Button Classes="NavButton"
+                  Command="{Binding ToggleThemeCommand}"
+                  ToolTip.Tip="Toggle dark mode">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+              <TextBlock Text="{Binding ThemeIcon}" FontSize="18" Width="24" TextAlignment="Center"/>
+              <TextBlock Text="Toggle Theme" FontSize="13" IsVisible="{Binding IsNavExpanded}" VerticalAlignment="Center"/>
+            </StackPanel>
+          </Button>
+          <Button Classes="NavButton"
+                  Command="{Binding ToggleNavCommand}"
+                  ToolTip.Tip="Toggle navigation">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+              <TextBlock Text="◀" FontSize="14" Width="24" TextAlignment="Center"/>
+              <TextBlock Text="Collapse" FontSize="13" IsVisible="{Binding IsNavExpanded}" VerticalAlignment="Center"/>
+            </StackPanel>
+          </Button>
+        </StackPanel>
       </Grid>
     </Border>
 
