@@ -4,10 +4,83 @@
              x:Class="Clarity.Desktop.Views.Shell.HomeView"
              x:DataType="vm:HomeViewModel">
 
-  <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
-    <TextBlock Text="✦" FontSize="56" HorizontalAlignment="Center"
-               Foreground="{DynamicResource SystemAccentColor}"/>
-    <TextBlock Text="{Binding WelcomeMessage}" Classes="PageTitle" HorizontalAlignment="Center"/>
-    <TextBlock Text="{Binding SubMessage}" Classes="PageSubtitle" HorizontalAlignment="Center"/>
-  </StackPanel>
+  <UserControl.Styles>
+    <StyleInclude Source="/Styles/ClarityTheme.axaml"/>
+  </UserControl.Styles>
+
+  <ScrollViewer Padding="32,24">
+    <StackPanel Spacing="24" MaxWidth="900">
+
+      <!-- Welcome Header -->
+      <StackPanel Spacing="4">
+        <StackPanel Orientation="Horizontal" Spacing="12">
+          <TextBlock Text="✦" FontSize="32"
+                     Foreground="{DynamicResource SystemAccentColor}"
+                     VerticalAlignment="Center"/>
+          <TextBlock Text="{Binding WelcomeMessage}" Classes="PageTitle"
+                     VerticalAlignment="Center"/>
+        </StackPanel>
+        <TextBlock Text="{Binding SubMessage}" Classes="PageSubtitle" Margin="44,0,0,0"/>
+      </StackPanel>
+
+      <!-- Loading -->
+      <StackPanel IsVisible="{Binding IsLoading}" Spacing="8"
+                  HorizontalAlignment="Center" Margin="0,20">
+        <ProgressBar IsIndeterminate="True" Width="200"/>
+        <TextBlock Text="Loading dashboard..." HorizontalAlignment="Center"
+                   Foreground="{DynamicResource SystemBaseMediumColor}"/>
+      </StackPanel>
+
+      <!-- Error -->
+      <Border IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+              Background="#FFF0F0" Padding="16,10" CornerRadius="6">
+        <TextBlock Text="{Binding ErrorMessage}" Foreground="#C0392B" TextWrapping="Wrap"/>
+      </Border>
+
+      <!-- Stats Cards -->
+      <StackPanel Orientation="Horizontal" Spacing="16"
+                  IsVisible="{Binding !IsLoading}">
+        <Border Classes="CustomerCard" MinWidth="200">
+          <StackPanel Spacing="4">
+            <TextBlock Text="🏢" FontSize="24"/>
+            <TextBlock Text="{Binding TotalCustomers}" FontSize="32" FontWeight="Bold"/>
+            <TextBlock Text="Customers" Classes="CardSubtitle"/>
+          </StackPanel>
+        </Border>
+        <Border Classes="CustomerCard" MinWidth="200">
+          <StackPanel Spacing="4">
+            <TextBlock Text="🌐" FontSize="24"/>
+            <TextBlock Text="{Binding TotalEnvironments}" FontSize="32" FontWeight="Bold"/>
+            <TextBlock Text="Environments" Classes="CardSubtitle"/>
+          </StackPanel>
+        </Border>
+      </StackPanel>
+
+      <!-- Quick Actions -->
+      <StackPanel Spacing="8" IsVisible="{Binding !IsLoading}">
+        <TextBlock Text="Quick Actions" Classes="CardTitle" Margin="0,8,0,0"/>
+        <StackPanel Orientation="Horizontal" Spacing="12">
+          <Border Classes="CustomerCard" Padding="16">
+            <StackPanel Spacing="4">
+              <TextBlock Text="🏢 Manage Customers" Classes="CardTitle"/>
+              <TextBlock Text="Create and manage client organisations" Classes="CardSubtitle"/>
+            </StackPanel>
+          </Border>
+          <Border Classes="CustomerCard" Padding="16">
+            <StackPanel Spacing="4">
+              <TextBlock Text="🌐 Manage Environments" Classes="CardTitle"/>
+              <TextBlock Text="Configure tenant and AD connections" Classes="CardSubtitle"/>
+            </StackPanel>
+          </Border>
+          <Border Classes="CustomerCard" Padding="16">
+            <StackPanel Spacing="4">
+              <TextBlock Text="📦 Run Inventory" Classes="CardTitle"/>
+              <TextBlock Text="Collect and browse discovery snapshots" Classes="CardSubtitle"/>
+            </StackPanel>
+          </Border>
+        </StackPanel>
+      </StackPanel>
+
+    </StackPanel>
+  </ScrollViewer>
 </UserControl>

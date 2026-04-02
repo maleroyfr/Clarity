@@ -93,6 +93,14 @@
     <Setter Property="Background" Value="{DynamicResource SystemBaseLowColor}"/>
   </Style>
 
+  <Style Selector="Button.NavButton.active">
+    <Setter Property="Background" Value="{DynamicResource SystemBaseLowColor}"/>
+  </Style>
+
+  <Style Selector="Button.NavButton.active /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource SystemBaseLowColor}"/>
+  </Style>
+
   <!-- ── Inputs ────────────────────────────────────────────────────────── -->
   <Style Selector="TextBox.FormInput">
     <Setter Property="CornerRadius" Value="6"/>

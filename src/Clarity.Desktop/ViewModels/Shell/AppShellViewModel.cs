@@ -18,6 +18,12 @@ public sealed partial class AppShellViewModel : ObservableObject
     [ObservableProperty]
     private bool _isNavExpanded = true;
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ThemeIcon))]
+    private bool _isDarkMode;
+
+    public string ThemeIcon => IsDarkMode ? "☀️" : "🌙";
+
     public IReadOnlyList<NavItem> NavItems { get; } =
     [
         new NavItem { Label = "Home",         Icon = "🏠", Section = NavSection.Home },
@@ -36,17 +42,45 @@ public sealed partial class AppShellViewModel : ObservableObject
     public void NavigateTo(NavSection section)
     {
         ActiveSection = section;
+        foreach (var item in NavItems)
+            item.IsActive = item.Section == section;
         CurrentPage = section switch
         {
             NavSection.Customers    => AppServiceLocator.Get<CustomersListViewModel>(),
             NavSection.Environments => AppServiceLocator.Get<EnvironmentsListViewModel>(),
             NavSection.Inventory    => AppServiceLocator.Get<InventoryExplorerViewModel>(),
-            NavSection.Home         => new HomeViewModel(),
-            NavSection.Settings     => new SettingsViewModel(),
-            _                       => new HomeViewModel()
+            NavSection.Home         => AppServiceLocator.Get<HomeViewModel>(),
+            NavSection.Settings     => AppServiceLocator.Get<SettingsViewModel>(),
+            _                       => AppServiceLocator.Get<HomeViewModel>()
         };
     }
 
     [RelayCommand]
+    public void ToggleTheme()
+    {
+        IsDarkMode = !IsDarkMode;
+        if (Avalonia.Application.Current is not null)
+        {
+            Avalonia.Application.Current.RequestedThemeVariant = IsDarkMode
+                ? Avalonia.Styling.ThemeVariant.Dark
+                : Avalonia.Styling.ThemeVariant.Light;
+        }
+    }
+
+    [RelayCommand]
     public void ToggleNav() => IsNavExpanded = !IsNavExpanded;
+
+    public void NavigateToCustomerEnvironments(Guid customerId)
+    {
+        ActiveSection = NavSection.Environments;
+        var vm = AppServiceLocator.Get<EnvironmentsListViewModel>();
+        CurrentPage = vm;
+        _ = LoadAndSelectCustomerAsync(vm, customerId);
+    }
+
+    private static async Task LoadAndSelectCustomerAsync(EnvironmentsListViewModel vm, Guid customerId)
+    {
+        await vm.LoadCustomersAsync();
+        vm.SetCustomer(customerId);
+    }
 }

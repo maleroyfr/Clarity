@@ -79,6 +79,8 @@
                   <!-- Actions -->
                   <StackPanel Grid.Column="1" Orientation="Horizontal"
                               Spacing="8" VerticalAlignment="Center">
+                    <Button Classes="PrimaryButton" Content="Environments"
+                            Command="{Binding ViewEnvironmentsCommand}"/>
                     <Button Classes="SecondaryButton" Content="Edit"
                             Command="{Binding EditCommand}"/>
                     <Button Classes="DangerButton" Content="Archive"

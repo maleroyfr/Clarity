@@ -37,7 +37,13 @@
             <ComboBox ItemsSource="{Binding Customers}"
                       SelectedItem="{Binding SelectedCustomer}"
                       PlaceholderText="Select a customer…"
-                      Width="280"/>
+                      Width="280">
+              <ComboBox.ItemTemplate>
+                <DataTemplate>
+                  <TextBlock Text="{Binding Name}"/>
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
           </StackPanel>
           <StackPanel Spacing="4" IsVisible="{Binding HasSelectedCustomer}">
             <TextBlock Text="Search" FontSize="12"
