@@ -1,0 +1,46 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:Clarity.Desktop.ViewModels.Shell"
+        x:Class="Clarity.Desktop.Views.Shell.AboutView"
+        x:DataType="vm:AboutViewModel"
+        Title="About Clarity"
+        Width="420" Height="340"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner">
+
+  <Window.Styles>
+    <StyleInclude Source="/Styles/ClarityTheme.axaml"/>
+  </Window.Styles>
+
+  <Grid RowDefinitions="*,Auto" Margin="32">
+    <StackPanel Grid.Row="0" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
+      <TextBlock Text="✦" FontSize="48" HorizontalAlignment="Center"
+                 Foreground="{DynamicResource SystemAccentColor}"/>
+      <TextBlock Text="{Binding AppName}" FontSize="24" FontWeight="Bold"
+                 HorizontalAlignment="Center"/>
+      <TextBlock Text="{Binding Description}" FontSize="13"
+                 Foreground="{DynamicResource SystemBaseMediumColor}"
+                 HorizontalAlignment="Center" TextAlignment="Center"/>
+      <StackPanel Spacing="4" Margin="0,8,0,0">
+        <TextBlock HorizontalAlignment="Center" FontSize="12"
+                   Foreground="{DynamicResource SystemBaseMediumColor}">
+          <Run Text="Version "/>
+          <Run Text="{Binding Version}"/>
+        </TextBlock>
+        <TextBlock HorizontalAlignment="Center" FontSize="12"
+                   Foreground="{DynamicResource SystemBaseMediumColor}">
+          <Run Text="Runtime: "/>
+          <Run Text="{Binding Framework}"/>
+        </TextBlock>
+      </StackPanel>
+      <TextBlock Text="{Binding Copyright}" FontSize="11"
+                 Foreground="{DynamicResource SystemBaseMediumLowColor}"
+                 HorizontalAlignment="Center" Margin="0,8,0,0"/>
+    </StackPanel>
+
+    <Button Grid.Row="1" Classes="PrimaryButton"
+            Content="Close" HorizontalAlignment="Center"
+            Command="{Binding CloseCommand}"
+            Width="100"/>
+  </Grid>
+</Window>

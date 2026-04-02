@@ -42,14 +42,16 @@ public sealed partial class AppShellViewModel : ObservableObject
     public void NavigateTo(NavSection section)
     {
         ActiveSection = section;
+        foreach (var item in NavItems)
+            item.IsActive = item.Section == section;
         CurrentPage = section switch
         {
             NavSection.Customers    => AppServiceLocator.Get<CustomersListViewModel>(),
             NavSection.Environments => AppServiceLocator.Get<EnvironmentsListViewModel>(),
             NavSection.Inventory    => AppServiceLocator.Get<InventoryExplorerViewModel>(),
-            NavSection.Home         => new HomeViewModel(),
+            NavSection.Home         => AppServiceLocator.Get<HomeViewModel>(),
             NavSection.Settings     => new SettingsViewModel(),
-            _                       => new HomeViewModel()
+            _                       => AppServiceLocator.Get<HomeViewModel>()
         };
     }
 
@@ -67,4 +69,18 @@ public sealed partial class AppShellViewModel : ObservableObject
 
     [RelayCommand]
     public void ToggleNav() => IsNavExpanded = !IsNavExpanded;
+
+    public void NavigateToCustomerEnvironments(Guid customerId)
+    {
+        ActiveSection = NavSection.Environments;
+        var vm = AppServiceLocator.Get<EnvironmentsListViewModel>();
+        CurrentPage = vm;
+        _ = LoadAndSelectCustomerAsync(vm, customerId);
+    }
+
+    private static async Task LoadAndSelectCustomerAsync(EnvironmentsListViewModel vm, Guid customerId)
+    {
+        await vm.LoadCustomersAsync();
+        vm.SetCustomer(customerId);
+    }
 }

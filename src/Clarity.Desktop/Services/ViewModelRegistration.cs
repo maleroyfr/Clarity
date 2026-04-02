@@ -12,6 +12,7 @@ public static class ViewModelRegistration
     public static IServiceCollection AddDesktopViewModels(this IServiceCollection services)
     {
         services.AddTransient<AppShellViewModel>();
+        services.AddTransient<HomeViewModel>();
         services.AddTransient<CustomersListViewModel>();
         services.AddTransient<CustomerFormViewModel>();
         services.AddTransient<EnvironmentsListViewModel>();

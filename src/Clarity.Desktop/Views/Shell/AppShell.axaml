@@ -31,54 +31,26 @@
                      IsVisible="{Binding IsNavExpanded}"/>
         </StackPanel>
 
-        <!-- Nav Items (non-compiled bindings for parent context cross-references) -->
-        <StackPanel Grid.Row="1" Margin="8,8,8,0" Spacing="2">
-          <Button Classes="NavButton"
-                  Command="{Binding NavigateToCommand}"
-                  CommandParameter="{x:Static shell:NavSection.Home}"
-                  ToolTip.Tip="Home">
-            <StackPanel Orientation="Horizontal" Spacing="10">
-              <TextBlock Text="🏠" FontSize="18" Width="24" TextAlignment="Center"/>
-              <TextBlock Text="Home" FontSize="13" IsVisible="{Binding IsNavExpanded}" VerticalAlignment="Center"/>
-            </StackPanel>
-          </Button>
-          <Button Classes="NavButton"
-                  Command="{Binding NavigateToCommand}"
-                  CommandParameter="{x:Static shell:NavSection.Customers}"
-                  ToolTip.Tip="Customers">
-            <StackPanel Orientation="Horizontal" Spacing="10">
-              <TextBlock Text="🏢" FontSize="18" Width="24" TextAlignment="Center"/>
-              <TextBlock Text="Customers" FontSize="13" IsVisible="{Binding IsNavExpanded}" VerticalAlignment="Center"/>
-            </StackPanel>
-          </Button>
-          <Button Classes="NavButton"
-                  Command="{Binding NavigateToCommand}"
-                  CommandParameter="{x:Static shell:NavSection.Environments}"
-                  ToolTip.Tip="Environments">
-            <StackPanel Orientation="Horizontal" Spacing="10">
-              <TextBlock Text="🌐" FontSize="18" Width="24" TextAlignment="Center"/>
-              <TextBlock Text="Environments" FontSize="13" IsVisible="{Binding IsNavExpanded}" VerticalAlignment="Center"/>
-            </StackPanel>
-          </Button>
-          <Button Classes="NavButton"
-                  Command="{Binding NavigateToCommand}"
-                  CommandParameter="{x:Static shell:NavSection.Inventory}"
-                  ToolTip.Tip="Inventory">
-            <StackPanel Orientation="Horizontal" Spacing="10">
-              <TextBlock Text="📦" FontSize="18" Width="24" TextAlignment="Center"/>
-              <TextBlock Text="Inventory" FontSize="13" IsVisible="{Binding IsNavExpanded}" VerticalAlignment="Center"/>
-            </StackPanel>
-          </Button>
-          <Button Classes="NavButton"
-                  Command="{Binding NavigateToCommand}"
-                  CommandParameter="{x:Static shell:NavSection.Settings}"
-                  ToolTip.Tip="Settings">
-            <StackPanel Orientation="Horizontal" Spacing="10">
-              <TextBlock Text="⚙" FontSize="18" Width="24" TextAlignment="Center"/>
-              <TextBlock Text="Settings" FontSize="13" IsVisible="{Binding IsNavExpanded}" VerticalAlignment="Center"/>
-            </StackPanel>
-          </Button>
-        </StackPanel>
+        <!-- Nav Items -->
+        <ItemsControl Grid.Row="1" Margin="8,8,8,0" ItemsSource="{Binding NavItems}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="shell:NavItem" x:CompileBindings="False">
+              <Button Classes="NavButton"
+                      Classes.active="{Binding IsActive}"
+                      Command="{Binding $parent[Window].DataContext.NavigateToCommand}"
+                      CommandParameter="{Binding Section}"
+                      ToolTip.Tip="{Binding Label}"
+                      Margin="0,1">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                  <TextBlock Text="{Binding Icon}" FontSize="18" Width="24" TextAlignment="Center"/>
+                  <TextBlock Text="{Binding Label}" FontSize="13"
+                             IsVisible="{Binding $parent[Window].DataContext.IsNavExpanded}"
+                             VerticalAlignment="Center"/>
+                </StackPanel>
+              </Button>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
 
         <!-- Bottom Actions -->
         <StackPanel Grid.Row="2" Margin="8,8,8,16" Spacing="2">

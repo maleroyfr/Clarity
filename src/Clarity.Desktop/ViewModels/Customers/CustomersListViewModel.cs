@@ -11,6 +11,7 @@ namespace Clarity.Desktop.ViewModels.Customers;
 public sealed partial class CustomerListItemVm : ObservableObject
 {
     private readonly Action<CustomerDto> _onEdit;
+    private readonly Action<CustomerDto> _onViewEnvironments;
     private readonly Func<CustomerDto, Task> _onArchive;
     private readonly Func<CustomerDto, Task> _onRestore;
 
@@ -29,7 +30,8 @@ public sealed partial class CustomerListItemVm : ObservableObject
         CustomerDto dto,
         Action<CustomerDto> onEdit,
         Func<CustomerDto, Task> onArchive,
-        Func<CustomerDto, Task> onRestore)
+        Func<CustomerDto, Task> onRestore,
+        Action<CustomerDto> onViewEnvironments)
     {
         _dto = dto;
         Id = dto.Id;
@@ -40,10 +42,14 @@ public sealed partial class CustomerListItemVm : ObservableObject
         _onEdit = onEdit;
         _onArchive = onArchive;
         _onRestore = onRestore;
+        _onViewEnvironments = onViewEnvironments;
     }
 
     [RelayCommand]
     public void Edit() => _onEdit(_dto);
+
+    [RelayCommand]
+    public void ViewEnvironments() => _onViewEnvironments(_dto);
 
     [RelayCommand]
     public async Task Archive() => await _onArchive(_dto);
@@ -84,6 +90,7 @@ public sealed partial class CustomersListViewModel : ObservableObject
     private List<CustomerDto> _allCustomers = [];
 
     public event Action<CustomerDto?>? EditRequested;
+    public event Action<Guid>? ViewEnvironmentsRequested;
 
     public CustomersListViewModel(IMediator mediator)
     {
@@ -119,12 +126,14 @@ public sealed partial class CustomersListViewModel : ObservableObject
             : _allCustomers.Where(c => c.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase)).ToList();
 
         FilteredCustomers = new ObservableCollection<CustomerListItemVm>(
-            filtered.Select(d => new CustomerListItemVm(d, OnEditItem, OnArchiveItem, OnRestoreItem)));
+            filtered.Select(d => new CustomerListItemVm(d, OnEditItem, OnArchiveItem, OnRestoreItem, OnViewEnvironments)));
         OnPropertyChanged(nameof(IsEmpty));
         OnPropertyChanged(nameof(HasCustomers));
     }
 
     private void OnEditItem(CustomerDto dto) => EditRequested?.Invoke(dto);
+
+    private void OnViewEnvironments(CustomerDto dto) => ViewEnvironmentsRequested?.Invoke(dto.Id);
 
     private async Task OnArchiveItem(CustomerDto dto)
     {

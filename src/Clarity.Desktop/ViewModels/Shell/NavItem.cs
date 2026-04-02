@@ -1,3 +1,5 @@
+using CommunityToolkit.Mvvm.ComponentModel;
+
 namespace Clarity.Desktop.ViewModels.Shell;
 
 public enum NavSection
@@ -9,9 +11,12 @@ public enum NavSection
     Settings
 }
 
-public sealed class NavItem
+public sealed partial class NavItem : ObservableObject
 {
     public string Label { get; init; } = default!;
     public string Icon { get; init; } = default!;
     public NavSection Section { get; init; }
+
+    [ObservableProperty]
+    private bool _isActive;
 }

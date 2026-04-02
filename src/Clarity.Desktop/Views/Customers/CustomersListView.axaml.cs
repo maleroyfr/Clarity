@@ -18,6 +18,7 @@ public partial class CustomersListView : UserControl
         if (DataContext is CustomersListViewModel vm)
         {
             vm.EditRequested += OnEditRequested;
+            vm.ViewEnvironmentsRequested += OnViewEnvironmentsRequested;
             _ = vm.LoadAsync();
         }
     }
@@ -34,5 +35,13 @@ public partial class CustomersListView : UserControl
         };
         // Show as dialog overlay — simplified for scaffold
         form.ShowDialog(VisualRoot as Avalonia.Controls.Window ?? throw new InvalidOperationException());
+    }
+
+    private void OnViewEnvironmentsRequested(Guid customerId)
+    {
+        if (VisualRoot is Window window && window.DataContext is Clarity.Desktop.ViewModels.Shell.AppShellViewModel shell)
+        {
+            shell.NavigateToCustomerEnvironments(customerId);
+        }
     }
 }
