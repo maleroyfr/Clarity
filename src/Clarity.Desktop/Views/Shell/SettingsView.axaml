@@ -3,8 +3,67 @@
              xmlns:vm="clr-namespace:Clarity.Desktop.ViewModels.Shell"
              x:Class="Clarity.Desktop.Views.Shell.SettingsView"
              x:DataType="vm:SettingsViewModel">
-  <StackPanel Margin="24" Spacing="8">
-    <TextBlock Text="{Binding Title}" Classes="PageTitle"/>
-    <TextBlock Text="Settings will be available in a future release." Classes="PageSubtitle"/>
-  </StackPanel>
+
+  <UserControl.Styles>
+    <StyleInclude Source="/Styles/ClarityTheme.axaml"/>
+  </UserControl.Styles>
+
+  <ScrollViewer Padding="32,24">
+    <StackPanel Spacing="24" MaxWidth="600">
+
+      <TextBlock Text="Settings" Classes="PageTitle"/>
+
+      <!-- Appearance -->
+      <Border Classes="CustomerCard">
+        <StackPanel Spacing="12">
+          <TextBlock Text="Appearance" Classes="CardTitle"/>
+          <StackPanel Spacing="4">
+            <TextBlock Text="Theme" Classes="FormLabel"/>
+            <ComboBox ItemsSource="{Binding AvailableThemes}"
+                      SelectedItem="{Binding SelectedTheme}"
+                      Width="200"/>
+          </StackPanel>
+        </StackPanel>
+      </Border>
+
+      <!-- Data -->
+      <Border Classes="CustomerCard">
+        <StackPanel Spacing="12">
+          <TextBlock Text="Data" Classes="CardTitle"/>
+          <StackPanel Spacing="4">
+            <TextBlock Text="Database Location" Classes="FormLabel"/>
+            <TextBlock Text="{Binding DatabasePath}" Classes="CardSubtitle" TextWrapping="Wrap"/>
+            <Button Classes="SecondaryButton" Content="Open Folder"
+                    Command="{Binding OpenDatabaseDirectoryCommand}"
+                    Margin="0,4,0,0"/>
+          </StackPanel>
+          <StackPanel Spacing="4">
+            <TextBlock Text="Log Directory" Classes="FormLabel"/>
+            <TextBlock Text="{Binding LogDirectory}" Classes="CardSubtitle" TextWrapping="Wrap"/>
+            <Button Classes="SecondaryButton" Content="Open Logs"
+                    Command="{Binding OpenLogDirectoryCommand}"
+                    Margin="0,4,0,0"/>
+          </StackPanel>
+        </StackPanel>
+      </Border>
+
+      <!-- About -->
+      <Border Classes="CustomerCard">
+        <StackPanel Spacing="8">
+          <TextBlock Text="About" Classes="CardTitle"/>
+          <StackPanel Spacing="2">
+            <TextBlock Classes="CardSubtitle">
+              <Run Text="Version: "/>
+              <Run Text="{Binding AppVersion}"/>
+            </TextBlock>
+            <TextBlock Classes="CardSubtitle">
+              <Run Text="Runtime: "/>
+              <Run Text="{Binding Framework}"/>
+            </TextBlock>
+          </StackPanel>
+        </StackPanel>
+      </Border>
+
+    </StackPanel>
+  </ScrollViewer>
 </UserControl>

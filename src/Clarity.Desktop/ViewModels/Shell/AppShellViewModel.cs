@@ -50,7 +50,7 @@ public sealed partial class AppShellViewModel : ObservableObject
             NavSection.Environments => AppServiceLocator.Get<EnvironmentsListViewModel>(),
             NavSection.Inventory    => AppServiceLocator.Get<InventoryExplorerViewModel>(),
             NavSection.Home         => AppServiceLocator.Get<HomeViewModel>(),
-            NavSection.Settings     => new SettingsViewModel(),
+            NavSection.Settings     => AppServiceLocator.Get<SettingsViewModel>(),
             _                       => AppServiceLocator.Get<HomeViewModel>()
         };
     }

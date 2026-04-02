@@ -59,7 +59,3 @@ public sealed partial class HomeViewModel : ObservableObject
     }
 }
 
-public sealed partial class SettingsViewModel : ObservableObject
-{
-    public string Title { get; } = "Settings";
-}

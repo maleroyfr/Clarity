@@ -20,6 +20,7 @@ public static class ViewModelRegistration
         services.AddTransient<OnboardingWizardViewModel>();
         services.AddTransient<InventoryExplorerViewModel>();
         services.AddTransient<InventoryObjectListViewModel>();
+        services.AddTransient<SettingsViewModel>();
         return services;
     }
 }
