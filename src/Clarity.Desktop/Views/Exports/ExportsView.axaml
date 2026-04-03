@@ -1,0 +1,266 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:Clarity.Desktop.ViewModels.Exports"
+             xmlns:enums="clr-namespace:Clarity.SharedContracts.Enums;assembly=Clarity.SharedContracts"
+             x:Class="Clarity.Desktop.Views.Exports.ExportsView"
+             x:DataType="vm:ExportsViewModel">
+
+  <UserControl.Styles>
+    <StyleInclude Source="/Styles/ClarityTheme.axaml"/>
+  </UserControl.Styles>
+
+  <Grid RowDefinitions="Auto,*,Auto">
+
+    <!-- ═══ Page Header ═══ -->
+    <Border Grid.Row="0" Padding="24,20,24,16"
+            BorderBrush="{DynamicResource SystemBaseLowColor}"
+            BorderThickness="0,0,0,1">
+      <StackPanel>
+        <TextBlock Text="Exports" Classes="PageTitle"/>
+        <TextBlock Text="Export snapshot data to CSV, XLSX, or JSON" Classes="PageSubtitle"/>
+      </StackPanel>
+    </Border>
+
+    <!-- ═══ Main Content ═══ -->
+    <ScrollViewer Grid.Row="1" Padding="24,16">
+      <StackPanel Spacing="24">
+
+        <!-- ── Loading State ── -->
+        <StackPanel IsVisible="{Binding IsLoading}"
+                    HorizontalAlignment="Center" Spacing="12" Margin="0,24">
+          <ProgressBar IsIndeterminate="True" Width="200"/>
+          <TextBlock Text="Loading customers…" HorizontalAlignment="Center"
+                     Foreground="{DynamicResource SystemBaseMediumColor}"/>
+        </StackPanel>
+
+        <!-- ── Empty State ── -->
+        <StackPanel IsVisible="{Binding IsEmpty}"
+                    HorizontalAlignment="Center" VerticalAlignment="Center"
+                    Spacing="8" Margin="0,32">
+          <TextBlock Text="📦" FontSize="48" HorizontalAlignment="Center"/>
+          <TextBlock Text="No customers available" Classes="EmptyStateTitle"/>
+          <TextBlock Text="Create a customer and capture snapshots before exporting."
+                     Classes="EmptyStateSubtitle"/>
+        </StackPanel>
+
+        <!-- ── Configuration Section (visible when customers are loaded) ── -->
+        <StackPanel Spacing="20"
+                    IsVisible="{Binding !IsLoading}">
+
+          <!-- Customer Picker -->
+          <StackPanel Spacing="4">
+            <TextBlock Text="Customer" Classes="FormLabel"/>
+            <ComboBox ItemsSource="{Binding Customers}"
+                      SelectedItem="{Binding SelectedCustomer}"
+                      PlaceholderText="Select a customer…"
+                      HorizontalAlignment="Stretch">
+              <ComboBox.ItemTemplate>
+                <DataTemplate x:CompileBindings="False">
+                  <TextBlock Text="{Binding Name}"/>
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+          </StackPanel>
+
+          <!-- Snapshot Picker -->
+          <StackPanel Spacing="4">
+            <TextBlock Text="Snapshot" Classes="FormLabel"/>
+            <Panel>
+              <ComboBox ItemsSource="{Binding Snapshots}"
+                        SelectedItem="{Binding SelectedSnapshot}"
+                        PlaceholderText="Select a snapshot…"
+                        IsEnabled="{Binding SelectedCustomer, Converter={x:Static ObjectConverters.IsNotNull}}"
+                        HorizontalAlignment="Stretch">
+                <ComboBox.ItemTemplate>
+                  <DataTemplate x:CompileBindings="False">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                      <TextBlock Text="{Binding Name}"/>
+                      <TextBlock Text="{Binding Status}"
+                                 Foreground="{DynamicResource SystemBaseMediumColor}"
+                                 FontSize="12"
+                                 VerticalAlignment="Center"/>
+                    </StackPanel>
+                  </DataTemplate>
+                </ComboBox.ItemTemplate>
+              </ComboBox>
+              <ProgressBar IsIndeterminate="True" Height="2"
+                           VerticalAlignment="Bottom"
+                           IsVisible="{Binding IsLoadingSnapshots}"/>
+            </Panel>
+          </StackPanel>
+
+          <!-- Export Format Cards -->
+          <StackPanel Spacing="4">
+            <TextBlock Text="Export Format" Classes="FormLabel"/>
+            <StackPanel Orientation="Horizontal" Spacing="12">
+              <RadioButton GroupName="ExportFormat"
+                           IsChecked="{Binding SelectedFormat, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static enums:ExportFormat.Csv}}">
+                <Border Classes="ActionCard" Padding="16,12" MinWidth="100">
+                  <StackPanel HorizontalAlignment="Center" Spacing="4">
+                    <TextBlock Text="📄" FontSize="24" HorizontalAlignment="Center"/>
+                    <TextBlock Text="CSV" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                    <TextBlock Text="Comma-separated" FontSize="11"
+                               Foreground="{DynamicResource SystemBaseMediumColor}"
+                               HorizontalAlignment="Center"/>
+                  </StackPanel>
+                </Border>
+              </RadioButton>
+
+              <RadioButton GroupName="ExportFormat"
+                           IsChecked="{Binding SelectedFormat, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static enums:ExportFormat.Xlsx}}">
+                <Border Classes="ActionCard" Padding="16,12" MinWidth="100">
+                  <StackPanel HorizontalAlignment="Center" Spacing="4">
+                    <TextBlock Text="📊" FontSize="24" HorizontalAlignment="Center"/>
+                    <TextBlock Text="XLSX" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                    <TextBlock Text="Excel workbook" FontSize="11"
+                               Foreground="{DynamicResource SystemBaseMediumColor}"
+                               HorizontalAlignment="Center"/>
+                  </StackPanel>
+                </Border>
+              </RadioButton>
+
+              <RadioButton GroupName="ExportFormat"
+                           IsChecked="{Binding SelectedFormat, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static enums:ExportFormat.Json}}">
+                <Border Classes="ActionCard" Padding="16,12" MinWidth="100">
+                  <StackPanel HorizontalAlignment="Center" Spacing="4">
+                    <TextBlock Text="{}{ }" FontSize="24" HorizontalAlignment="Center"/>
+                    <TextBlock Text="JSON" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                    <TextBlock Text="Structured data" FontSize="11"
+                               Foreground="{DynamicResource SystemBaseMediumColor}"
+                               HorizontalAlignment="Center"/>
+                  </StackPanel>
+                </Border>
+              </RadioButton>
+            </StackPanel>
+          </StackPanel>
+
+          <!-- Output Path -->
+          <StackPanel Spacing="4">
+            <TextBlock Text="Output Path" Classes="FormLabel"/>
+            <Grid ColumnDefinitions="*,Auto" HorizontalAlignment="Stretch">
+              <TextBox Grid.Column="0" Text="{Binding OutputPath}"
+                       Watermark="Select output directory…"
+                       Classes="FormInput"/>
+              <Button Grid.Column="1" Classes="SecondaryButton"
+                      Content="Browse…"
+                      Command="{Binding BrowseCommand}"
+                      Margin="8,0,0,0"/>
+            </Grid>
+          </StackPanel>
+
+          <!-- Export Button -->
+          <Button Classes="PrimaryButton"
+                  HorizontalAlignment="Left"
+                  IsEnabled="{Binding CanExport}"
+                  Command="{Binding ExportCommand}"
+                  MinWidth="160" Padding="24,10">
+            <Panel>
+              <StackPanel Orientation="Horizontal" Spacing="8"
+                          IsVisible="{Binding !IsExporting}">
+                <TextBlock Text="⬇" VerticalAlignment="Center"/>
+                <TextBlock Text="Export" VerticalAlignment="Center"/>
+              </StackPanel>
+              <StackPanel Orientation="Horizontal" Spacing="8"
+                          IsVisible="{Binding IsExporting}">
+                <ProgressBar IsIndeterminate="True" Width="16" Height="16"/>
+                <TextBlock Text="Exporting…" VerticalAlignment="Center"/>
+              </StackPanel>
+            </Panel>
+          </Button>
+
+          <!-- ── Result Panel ── -->
+          <!-- Success -->
+          <Border IsVisible="{Binding IsResultSuccess}"
+                  Background="#F0FFF4" Padding="16" CornerRadius="6"
+                  BorderBrush="#27AE60" BorderThickness="1">
+            <StackPanel Spacing="8">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <TextBlock Text="✅" FontSize="18" VerticalAlignment="Center"/>
+                <TextBlock Text="Export completed successfully" FontWeight="SemiBold"
+                           VerticalAlignment="Center"/>
+              </StackPanel>
+              <StackPanel Spacing="4" Margin="26,0,0,0">
+                <TextBlock Text="{Binding ResultFilePath, StringFormat='File: {0}'}"
+                           TextWrapping="Wrap" FontSize="12"/>
+                <TextBlock Text="{Binding ResultSizeDisplay, StringFormat='Size: {0}'}"
+                           FontSize="12"
+                           Foreground="{DynamicResource SystemBaseMediumColor}"/>
+              </StackPanel>
+              <Button Classes="SecondaryButton" Content="Open File"
+                      Command="{Binding OpenFileCommand}"
+                      HorizontalAlignment="Left" Margin="26,4,0,0"/>
+            </StackPanel>
+          </Border>
+
+          <!-- Error -->
+          <Border IsVisible="{Binding IsResultError}"
+                  Background="#FFF0F0" Padding="16" CornerRadius="6"
+                  BorderBrush="#C0392B" BorderThickness="1">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <TextBlock Text="❌" FontSize="18" VerticalAlignment="Center"/>
+              <TextBlock Text="{Binding ResultErrorMessage}" Foreground="#C0392B"
+                         TextWrapping="Wrap" VerticalAlignment="Center"/>
+            </StackPanel>
+          </Border>
+
+          <!-- ── Divider ── -->
+          <Border Classes="Divider" IsVisible="{Binding HasHistory}"/>
+
+          <!-- ── Export History ── -->
+          <StackPanel Spacing="12" IsVisible="{Binding HasHistory}">
+            <TextBlock Text="Export History" Classes="SectionTitle"/>
+
+            <ItemsControl ItemsSource="{Binding ExportHistory}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:CompileBindings="False">
+                  <Border Classes="CustomerCard" Margin="0,0,0,8" Padding="12">
+                    <Grid ColumnDefinitions="*,Auto">
+                      <StackPanel Grid.Column="0" Spacing="2">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                          <TextBlock Text="{Binding SnapshotName}" Classes="CardTitle"/>
+                          <Border Classes="BadgeSuccess" IsVisible="{Binding IsSuccess}">
+                            <TextBlock Text="{Binding StatusDisplay}" Classes="BadgeText"/>
+                          </Border>
+                          <Border Classes="BadgeError" IsVisible="{Binding !IsSuccess}">
+                            <TextBlock Text="{Binding StatusDisplay}" Classes="BadgeText"/>
+                          </Border>
+                          <Border Classes="BadgeInfo">
+                            <TextBlock Text="{Binding FormatDisplay}" Classes="BadgeText"/>
+                          </Border>
+                        </StackPanel>
+                        <TextBlock Text="{Binding OutputPath}" Classes="CardSubtitle"
+                                   IsVisible="{Binding IsSuccess}" TextTrimming="CharacterEllipsis"/>
+                        <TextBlock Text="{Binding ErrorMessage}" Classes="CardSubtitle"
+                                   Foreground="#C0392B" IsVisible="{Binding IsFailed}"/>
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                          <TextBlock Classes="CardMeta"
+                                     Text="{Binding ExportedAt, StringFormat='{}{0:MMM d, yyyy HH:mm}'}"/>
+                          <TextBlock Classes="CardMeta" Text="{Binding SizeDisplay}"
+                                     IsVisible="{Binding IsSuccess}"/>
+                        </StackPanel>
+                      </StackPanel>
+                      <Button Grid.Column="1" Classes="SecondaryButton" Content="Open"
+                              IsVisible="{Binding IsSuccess}"
+                              Command="{Binding $parent[UserControl].((vm:ExportsViewModel)DataContext).OpenHistoryFileCommand}"
+                              CommandParameter="{Binding}"
+                              VerticalAlignment="Center"/>
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+
+        </StackPanel>
+      </StackPanel>
+    </ScrollViewer>
+
+    <!-- ═══ Error Bar ═══ -->
+    <Border Grid.Row="2"
+            IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+            Background="#FFF0F0" Padding="16,10" Margin="24,0,24,16" CornerRadius="6">
+      <TextBlock Text="{Binding ErrorMessage}" Foreground="#C0392B" TextWrapping="Wrap"/>
+    </Border>
+
+  </Grid>
+</UserControl>

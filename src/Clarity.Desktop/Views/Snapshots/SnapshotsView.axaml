@@ -1,0 +1,181 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:Clarity.Desktop.ViewModels.Snapshots"
+             x:Class="Clarity.Desktop.Views.Snapshots.SnapshotsView"
+             x:DataType="vm:SnapshotsViewModel">
+
+  <UserControl.Styles>
+    <StyleInclude Source="/Styles/ClarityTheme.axaml"/>
+  </UserControl.Styles>
+
+  <Grid RowDefinitions="Auto,Auto,*,Auto">
+
+    <!-- Page Header -->
+    <Border Grid.Row="0" Padding="24,20,24,16"
+            BorderBrush="{DynamicResource SystemBaseLowColor}"
+            BorderThickness="0,0,0,1">
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel Grid.Column="0">
+          <TextBlock Text="📸 Snapshots" Classes="PageTitle"/>
+          <TextBlock Text="Create and manage environment snapshots" Classes="PageSubtitle"/>
+        </StackPanel>
+        <Button Grid.Column="1" Classes="PrimaryButton"
+                Command="{Binding CreateSnapshotCommand}"
+                IsEnabled="{Binding HasSelectedEnvironment}"
+                VerticalAlignment="Center">
+          <Panel>
+            <TextBlock Text="Creating…" IsVisible="{Binding IsCreating}"/>
+            <TextBlock Text="+ New Snapshot" IsVisible="{Binding !IsCreating}"/>
+          </Panel>
+        </Button>
+      </Grid>
+    </Border>
+
+    <!-- Toolbar with customer + environment pickers -->
+    <Border Grid.Row="1" Padding="24,12">
+      <StackPanel Spacing="12">
+        <StackPanel Orientation="Horizontal" Spacing="12">
+          <StackPanel Spacing="4">
+            <TextBlock Text="Customer" FontSize="12"
+                       Foreground="{DynamicResource SystemBaseMediumColor}"/>
+            <ComboBox ItemsSource="{Binding Customers}"
+                      SelectedItem="{Binding SelectedCustomer}"
+                      PlaceholderText="Select a customer…"
+                      Width="280">
+              <ComboBox.ItemTemplate>
+                <DataTemplate>
+                  <TextBlock Text="{Binding Name}"/>
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+          </StackPanel>
+          <StackPanel Spacing="4" IsVisible="{Binding HasSelectedCustomer}">
+            <TextBlock Text="Environment" FontSize="12"
+                       Foreground="{DynamicResource SystemBaseMediumColor}"/>
+            <ComboBox ItemsSource="{Binding Environments}"
+                      SelectedItem="{Binding SelectedEnvironment}"
+                      PlaceholderText="Select an environment…"
+                      Width="280">
+              <ComboBox.ItemTemplate>
+                <DataTemplate>
+                  <TextBlock Text="{Binding Name}"/>
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+          </StackPanel>
+          <StackPanel Spacing="4" IsVisible="{Binding HasSelectedEnvironment}">
+            <TextBlock Text="Search" FontSize="12"
+                       Foreground="{DynamicResource SystemBaseMediumColor}"/>
+            <TextBox Watermark="Search snapshots..."
+                     Text="{Binding SearchText}"
+                     Width="280"
+                     Classes="SearchBox"/>
+          </StackPanel>
+        </StackPanel>
+      </StackPanel>
+    </Border>
+
+    <!-- Loading / Empty / No Selection / List -->
+    <Panel Grid.Row="2">
+
+      <!-- No customer selected -->
+      <StackPanel IsVisible="{Binding !HasSelectedCustomer}"
+                  HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
+        <TextBlock Text="🏢" FontSize="48" HorizontalAlignment="Center"/>
+        <TextBlock Text="Select a customer" Classes="EmptyStateTitle"/>
+        <TextBlock Text="Choose a customer above to view their environments and snapshots."
+                   Classes="EmptyStateSubtitle" TextAlignment="Center"/>
+      </StackPanel>
+
+      <!-- Customer selected but no environment -->
+      <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
+        <StackPanel.IsVisible>
+          <MultiBinding Converter="{x:Static BoolConverters.And}">
+            <Binding Path="HasSelectedCustomer"/>
+            <Binding Path="!HasSelectedEnvironment"/>
+          </MultiBinding>
+        </StackPanel.IsVisible>
+        <TextBlock Text="🌐" FontSize="48" HorizontalAlignment="Center"/>
+        <TextBlock Text="Select an environment" Classes="EmptyStateTitle"/>
+        <TextBlock Text="Choose an environment above to view its snapshots."
+                   Classes="EmptyStateSubtitle" TextAlignment="Center"/>
+      </StackPanel>
+
+      <!-- Loading -->
+      <StackPanel IsVisible="{Binding IsLoading}"
+                  HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
+        <ProgressBar IsIndeterminate="True" Width="200"/>
+        <TextBlock Text="Loading snapshots…" HorizontalAlignment="Center"
+                   Foreground="{DynamicResource SystemBaseMediumColor}"/>
+      </StackPanel>
+
+      <!-- Empty state -->
+      <StackPanel IsVisible="{Binding IsEmpty}"
+                  HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
+        <TextBlock Text="📸" FontSize="48" HorizontalAlignment="Center"/>
+        <TextBlock Text="No snapshots yet" Classes="EmptyStateTitle"/>
+        <TextBlock Text="Create your first snapshot to capture the environment state."
+                   Classes="EmptyStateSubtitle"/>
+        <Button Classes="PrimaryButton" Content="+ New Snapshot"
+                Command="{Binding CreateSnapshotCommand}"
+                HorizontalAlignment="Center" Margin="0,8,0,0"/>
+      </StackPanel>
+
+      <!-- Snapshot list -->
+      <ScrollViewer IsVisible="{Binding HasSnapshots}" Padding="24,8">
+        <ItemsControl ItemsSource="{Binding FilteredSnapshots}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:SnapshotListItemVm">
+              <Border Classes="CustomerCard" Margin="0,0,0,8">
+                <Grid ColumnDefinitions="*,Auto">
+                  <StackPanel Grid.Column="0" Spacing="2">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                      <TextBlock Text="{Binding Name}" Classes="CardTitle"/>
+                      <!-- Status badge -->
+                      <Border Classes.BadgeInfo="{Binding IsDraft}"
+                              Classes.BadgeWarning="{Binding IsRunningOrPartial}"
+                              Classes.BadgeSuccess="{Binding IsCompleted}"
+                              Classes.BadgeError="{Binding IsFailed}">
+                        <TextBlock Text="{Binding StatusDisplay}" Classes="BadgeText"/>
+                      </Border>
+                      <Border IsVisible="{Binding IsImmutable}" Classes="BadgeArchived">
+                        <TextBlock Text="Sealed" Classes="BadgeText"/>
+                      </Border>
+                    </StackPanel>
+                    <TextBlock Classes="CardMeta">
+                      <TextBlock.Text>
+                        <MultiBinding StringFormat="Created {0:yyyy-MM-dd HH:mm} · {1} workload(s) · {2} collector run(s)">
+                          <Binding Path="CreatedAt"/>
+                          <Binding Path="WorkloadScopeCount"/>
+                          <Binding Path="CollectorRunCount"/>
+                        </MultiBinding>
+                      </TextBlock.Text>
+                    </TextBlock>
+                  </StackPanel>
+
+                  <StackPanel Grid.Column="1" Orientation="Horizontal"
+                              Spacing="8" VerticalAlignment="Center">
+                    <Button Classes="SecondaryButton" Content="View Inventory"
+                            Command="{Binding ViewInventoryCommand}"/>
+                    <Button Classes="SecondaryButton" Content="Export"
+                            Command="{Binding ExportCommand}"/>
+                    <Button Classes="SuccessButton" Content="Seal"
+                            IsVisible="{Binding CanSeal}"
+                            Command="{Binding SealCommand}"/>
+                  </StackPanel>
+                </Grid>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </ScrollViewer>
+    </Panel>
+
+    <!-- Error bar -->
+    <Border Grid.Row="3"
+            IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+            Background="#FFF0F0" Padding="16,10" Margin="24,0,24,16" CornerRadius="6">
+      <TextBlock Text="{Binding ErrorMessage}" Foreground="#C0392B" TextWrapping="Wrap"/>
+    </Border>
+  </Grid>
+</UserControl>

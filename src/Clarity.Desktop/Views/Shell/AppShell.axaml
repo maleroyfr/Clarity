@@ -4,9 +4,9 @@
         xmlns:local="clr-namespace:Clarity.Desktop"
         x:Class="Clarity.Desktop.Views.Shell.AppShell"
         x:DataType="shell:AppShellViewModel"
-        Title="Clarity"
-        Width="1280" Height="800"
-        MinWidth="900" MinHeight="600"
+        Title="Clarity — Audit &amp; Discovery Platform"
+        Width="1360" Height="860"
+        MinWidth="1024" MinHeight="680"
         Background="{DynamicResource SystemChromeLowColor}">
 
   <Window.Styles>
@@ -19,62 +19,85 @@
     <Border Grid.Column="0"
             Background="{DynamicResource SystemAltHighColor}"
             BorderBrush="{DynamicResource SystemBaseLowColor}"
-            BorderThickness="0,0,1,0">
+            BorderThickness="0,0,1,0"
+            MinWidth="52">
       <Grid RowDefinitions="Auto,*,Auto">
 
         <!-- App Logo -->
-        <StackPanel Grid.Row="0" Margin="0,16,0,8" HorizontalAlignment="Center">
+        <StackPanel Grid.Row="0" Margin="0,16,0,4" HorizontalAlignment="Center">
           <TextBlock Text="✦" FontSize="28" HorizontalAlignment="Center"
                      Foreground="{DynamicResource SystemAccentColor}"/>
-          <TextBlock Text="Clarity" FontSize="11" FontWeight="SemiBold"
-                     HorizontalAlignment="Center" Margin="0,4,0,0"
+          <TextBlock Text="Clarity" FontSize="12" FontWeight="Bold"
+                     HorizontalAlignment="Center" Margin="0,2,0,0"
+                     IsVisible="{Binding IsNavExpanded}"
+                     Foreground="{DynamicResource SystemAccentColor}"/>
+          <TextBlock Text="Audit Platform" FontSize="9" Opacity="0.6"
+                     HorizontalAlignment="Center" Margin="0,0,0,0"
                      IsVisible="{Binding IsNavExpanded}"/>
         </StackPanel>
 
-        <!-- Nav Items -->
-        <ItemsControl Grid.Row="1" Margin="8,8,8,0" ItemsSource="{Binding NavItems}">
-          <ItemsControl.ItemTemplate>
-            <DataTemplate x:DataType="shell:NavItem" x:CompileBindings="False">
-              <Button Classes="NavButton"
-                      Classes.active="{Binding IsActive}"
-                      Command="{Binding $parent[Window].DataContext.NavigateToCommand}"
-                      CommandParameter="{Binding Section}"
-                      ToolTip.Tip="{Binding Label}"
-                      Margin="0,1">
-                <StackPanel Orientation="Horizontal" Spacing="10">
-                  <TextBlock Text="{Binding Icon}" FontSize="18" Width="24" TextAlignment="Center"/>
-                  <TextBlock Text="{Binding Label}" FontSize="13"
-                             IsVisible="{Binding $parent[Window].DataContext.IsNavExpanded}"
-                             VerticalAlignment="Center"/>
+        <!-- Nav Groups -->
+        <ScrollViewer Grid.Row="1" Margin="6,4,6,0"
+                      HorizontalScrollBarVisibility="Disabled"
+                      VerticalScrollBarVisibility="Auto">
+          <ItemsControl ItemsSource="{Binding NavGroups}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="shell:NavGroup" x:CompileBindings="False">
+                <StackPanel Margin="0,2,0,4">
+                  <!-- Group header -->
+                  <TextBlock Text="{Binding Header}"
+                             FontSize="10" FontWeight="SemiBold" Opacity="0.5"
+                             Margin="14,8,0,4"
+                             IsVisible="{Binding Header, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                  <ItemsControl ItemsSource="{Binding Items}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate x:DataType="shell:NavItem" x:CompileBindings="False">
+                        <Button Classes="NavButton"
+                                Classes.active="{Binding IsActive}"
+                                Command="{Binding $parent[Window].DataContext.NavigateToCommand}"
+                                CommandParameter="{Binding Section}"
+                                ToolTip.Tip="{Binding Label}"
+                                Margin="0,1">
+                          <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Text="{Binding Icon}" FontSize="17" Width="22" TextAlignment="Center"/>
+                            <TextBlock Text="{Binding Label}" FontSize="13"
+                                       IsVisible="{Binding $parent[Window].DataContext.IsNavExpanded}"
+                                       VerticalAlignment="Center"/>
+                          </StackPanel>
+                        </Button>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
                 </StackPanel>
-              </Button>
-            </DataTemplate>
-          </ItemsControl.ItemTemplate>
-        </ItemsControl>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
 
         <!-- Bottom Actions -->
-        <StackPanel Grid.Row="2" Margin="8,8,8,16" Spacing="2">
+        <StackPanel Grid.Row="2" Margin="6,4,6,12" Spacing="1">
+          <Border Height="1" Background="{DynamicResource SystemBaseLowColor}" Margin="6,0,6,6"/>
           <Button Classes="NavButton"
                   x:Name="AboutButton"
                   ToolTip.Tip="About Clarity">
             <StackPanel Orientation="Horizontal" Spacing="10">
-              <TextBlock Text="ℹ️" FontSize="18" Width="24" TextAlignment="Center"/>
+              <TextBlock Text="ℹ️" FontSize="17" Width="22" TextAlignment="Center"/>
               <TextBlock Text="About" FontSize="13" IsVisible="{Binding IsNavExpanded}" VerticalAlignment="Center"/>
             </StackPanel>
           </Button>
           <Button Classes="NavButton"
                   Command="{Binding ToggleThemeCommand}"
-                  ToolTip.Tip="Toggle dark mode">
+                  ToolTip.Tip="{Binding ThemeLabel}">
             <StackPanel Orientation="Horizontal" Spacing="10">
-              <TextBlock Text="{Binding ThemeIcon}" FontSize="18" Width="24" TextAlignment="Center"/>
-              <TextBlock Text="Toggle Theme" FontSize="13" IsVisible="{Binding IsNavExpanded}" VerticalAlignment="Center"/>
+              <TextBlock Text="{Binding ThemeIcon}" FontSize="17" Width="22" TextAlignment="Center"/>
+              <TextBlock Text="{Binding ThemeLabel}" FontSize="13" IsVisible="{Binding IsNavExpanded}" VerticalAlignment="Center"/>
             </StackPanel>
           </Button>
           <Button Classes="NavButton"
                   Command="{Binding ToggleNavCommand}"
                   ToolTip.Tip="Toggle navigation">
             <StackPanel Orientation="Horizontal" Spacing="10">
-              <TextBlock Text="◀" FontSize="14" Width="24" TextAlignment="Center"/>
+              <TextBlock Text="◀" FontSize="13" Width="22" TextAlignment="Center"/>
               <TextBlock Text="Collapse" FontSize="13" IsVisible="{Binding IsNavExpanded}" VerticalAlignment="Center"/>
             </StackPanel>
           </Button>
