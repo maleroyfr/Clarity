@@ -325,7 +325,7 @@ public sealed partial class SnapshotsViewModel : ObservableObject
                 SelectedEnvironment.Id,
                 name,
                 workloadScope,
-                description: null));
+                Description: null));
 
             await LoadSnapshotsAsync();
         }

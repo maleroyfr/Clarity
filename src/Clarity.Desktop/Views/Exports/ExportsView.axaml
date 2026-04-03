@@ -218,7 +218,10 @@
                       <StackPanel Grid.Column="0" Spacing="2">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                           <TextBlock Text="{Binding SnapshotName}" Classes="CardTitle"/>
-                          <Border Classes="{Binding IsSuccess, Converter={x:Static BoolConverters.ToSelector}, ConverterParameter=BadgeSuccess|BadgeError}">
+                          <Border Classes="BadgeSuccess" IsVisible="{Binding IsSuccess}">
+                            <TextBlock Text="{Binding StatusDisplay}" Classes="BadgeText"/>
+                          </Border>
+                          <Border Classes="BadgeError" IsVisible="{Binding !IsSuccess}">
                             <TextBlock Text="{Binding StatusDisplay}" Classes="BadgeText"/>
                           </Border>
                           <Border Classes="BadgeInfo">

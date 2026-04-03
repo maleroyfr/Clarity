@@ -9,18 +9,19 @@
   </UserControl.Styles>
 
   <ScrollViewer Padding="32,24">
-    <StackPanel Spacing="24" MaxWidth="900">
+    <StackPanel Spacing="28" MaxWidth="960">
 
       <!-- Welcome Header -->
       <StackPanel Spacing="4">
         <StackPanel Orientation="Horizontal" Spacing="12">
-          <TextBlock Text="✦" FontSize="32"
+          <TextBlock Text="&#x2726;" FontSize="32"
                      Foreground="{DynamicResource SystemAccentColor}"
                      VerticalAlignment="Center"/>
-          <TextBlock Text="{Binding WelcomeMessage}" Classes="PageTitle"
-                     VerticalAlignment="Center"/>
+          <StackPanel>
+            <TextBlock Text="{Binding WelcomeMessage}" Classes="PageTitle"/>
+            <TextBlock Text="{Binding SubMessage}" Classes="PageSubtitle"/>
+          </StackPanel>
         </StackPanel>
-        <TextBlock Text="{Binding SubMessage}" Classes="PageSubtitle" Margin="44,0,0,0"/>
       </StackPanel>
 
       <!-- Loading -->
@@ -37,48 +38,150 @@
         <TextBlock Text="{Binding ErrorMessage}" Foreground="#C0392B" TextWrapping="Wrap"/>
       </Border>
 
-      <!-- Stats Cards -->
-      <StackPanel Orientation="Horizontal" Spacing="16"
-                  IsVisible="{Binding !IsLoading}">
-        <Border Classes="CustomerCard" MinWidth="200">
-          <StackPanel Spacing="4">
-            <TextBlock Text="🏢" FontSize="24"/>
-            <TextBlock Text="{Binding TotalCustomers}" FontSize="32" FontWeight="Bold"/>
-            <TextBlock Text="Customers" Classes="CardSubtitle"/>
-          </StackPanel>
-        </Border>
-        <Border Classes="CustomerCard" MinWidth="200">
-          <StackPanel Spacing="4">
-            <TextBlock Text="🌐" FontSize="24"/>
-            <TextBlock Text="{Binding TotalEnvironments}" FontSize="32" FontWeight="Bold"/>
-            <TextBlock Text="Environments" Classes="CardSubtitle"/>
-          </StackPanel>
-        </Border>
+      <!-- Stats Cards Row -->
+      <StackPanel IsVisible="{Binding !IsLoading}" Spacing="16">
+        <TextBlock Text="Overview" Classes="SectionTitle"/>
+        <WrapPanel Orientation="Horizontal" HorizontalAlignment="Left">
+          <Border Classes="StatCard" Margin="0,0,12,12">
+            <StackPanel Spacing="4">
+              <TextBlock Text="&#x1F3E2;" FontSize="22"/>
+              <TextBlock Text="{Binding TotalCustomers}" Classes="StatValue"/>
+              <TextBlock Text="Customers" Classes="StatLabel"/>
+            </StackPanel>
+          </Border>
+          <Border Classes="StatCard" Margin="0,0,12,12">
+            <StackPanel Spacing="4">
+              <TextBlock Text="&#x1F310;" FontSize="22"/>
+              <TextBlock Text="{Binding TotalEnvironments}" Classes="StatValue"/>
+              <TextBlock Text="Environments" Classes="StatLabel"/>
+            </StackPanel>
+          </Border>
+          <Border Classes="StatCard" Margin="0,0,12,12">
+            <StackPanel Spacing="4">
+              <TextBlock Text="&#x1F4F8;" FontSize="22"/>
+              <TextBlock Text="{Binding TotalSnapshots}" Classes="StatValue"/>
+              <TextBlock Text="Snapshots" Classes="StatLabel"/>
+            </StackPanel>
+          </Border>
+          <Border Classes="StatCard" Margin="0,0,12,12">
+            <StackPanel Spacing="4">
+              <TextBlock Text="&#x1F4E6;" FontSize="22"/>
+              <TextBlock Text="{Binding TotalInventoryObjects}" Classes="StatValue"/>
+              <TextBlock Text="Inventory Objects" Classes="StatLabel"/>
+            </StackPanel>
+          </Border>
+        </WrapPanel>
       </StackPanel>
 
       <!-- Quick Actions -->
+      <StackPanel Spacing="12" IsVisible="{Binding !IsLoading}">
+        <TextBlock Text="Quick Actions" Classes="SectionTitle"/>
+        <WrapPanel Orientation="Horizontal" HorizontalAlignment="Left">
+
+          <Button Classes="IconButton" Margin="0,0,12,12"
+                  Command="{Binding QuickNavigateCommand}" CommandParameter="Customers">
+            <Border Classes="ActionCard" MinWidth="200">
+              <StackPanel Spacing="6">
+                <TextBlock Text="&#x1F3E2; Manage Customers" Classes="CardTitle"/>
+                <TextBlock Text="Create and manage client organisations" Classes="CardSubtitle" TextWrapping="Wrap"/>
+              </StackPanel>
+            </Border>
+          </Button>
+
+          <Button Classes="IconButton" Margin="0,0,12,12"
+                  Command="{Binding QuickNavigateCommand}" CommandParameter="Environments">
+            <Border Classes="ActionCard" MinWidth="200">
+              <StackPanel Spacing="6">
+                <TextBlock Text="&#x1F310; Manage Environments" Classes="CardTitle"/>
+                <TextBlock Text="Configure tenant and AD connections" Classes="CardSubtitle" TextWrapping="Wrap"/>
+              </StackPanel>
+            </Border>
+          </Button>
+
+          <Button Classes="IconButton" Margin="0,0,12,12"
+                  Command="{Binding QuickNavigateCommand}" CommandParameter="Snapshots">
+            <Border Classes="ActionCard" MinWidth="200">
+              <StackPanel Spacing="6">
+                <TextBlock Text="&#x1F4F8; Run Discovery" Classes="CardTitle"/>
+                <TextBlock Text="Create and manage inventory snapshots" Classes="CardSubtitle" TextWrapping="Wrap"/>
+              </StackPanel>
+            </Border>
+          </Button>
+
+          <Button Classes="IconButton" Margin="0,0,12,12"
+                  Command="{Binding QuickNavigateCommand}" CommandParameter="Inventory">
+            <Border Classes="ActionCard" MinWidth="200">
+              <StackPanel Spacing="6">
+                <TextBlock Text="&#x1F4E6; Browse Inventory" Classes="CardTitle"/>
+                <TextBlock Text="Explore collected objects and properties" Classes="CardSubtitle" TextWrapping="Wrap"/>
+              </StackPanel>
+            </Border>
+          </Button>
+
+          <Button Classes="IconButton" Margin="0,0,12,12"
+                  Command="{Binding QuickNavigateCommand}" CommandParameter="Comparisons">
+            <Border Classes="ActionCard" MinWidth="200">
+              <StackPanel Spacing="6">
+                <TextBlock Text="&#x2696;&#xFE0F; Compare Snapshots" Classes="CardTitle"/>
+                <TextBlock Text="Side-by-side snapshot comparison" Classes="CardSubtitle" TextWrapping="Wrap"/>
+              </StackPanel>
+            </Border>
+          </Button>
+
+          <Button Classes="IconButton" Margin="0,0,12,12"
+                  Command="{Binding QuickNavigateCommand}" CommandParameter="Exports">
+            <Border Classes="ActionCard" MinWidth="200">
+              <StackPanel Spacing="6">
+                <TextBlock Text="&#x1F4E4; Export Data" Classes="CardTitle"/>
+                <TextBlock Text="Export to CSV, XLSX, or JSON" Classes="CardSubtitle" TextWrapping="Wrap"/>
+              </StackPanel>
+            </Border>
+          </Button>
+
+        </WrapPanel>
+      </StackPanel>
+
+      <!-- Workload Coverage -->
       <StackPanel Spacing="8" IsVisible="{Binding !IsLoading}">
-        <TextBlock Text="Quick Actions" Classes="CardTitle" Margin="0,8,0,0"/>
-        <StackPanel Orientation="Horizontal" Spacing="12">
-          <Border Classes="CustomerCard" Padding="16">
-            <StackPanel Spacing="4">
-              <TextBlock Text="🏢 Manage Customers" Classes="CardTitle"/>
-              <TextBlock Text="Create and manage client organisations" Classes="CardSubtitle"/>
+        <TextBlock Text="Supported Workloads" Classes="SectionTitle"/>
+        <WrapPanel Orientation="Horizontal">
+          <Border Classes="CustomerCard" Margin="0,0,8,8" Padding="12,8">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <TextBlock Text="&#x1F510;" FontSize="14"/>
+              <TextBlock Text="Entra ID" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
             </StackPanel>
           </Border>
-          <Border Classes="CustomerCard" Padding="16">
-            <StackPanel Spacing="4">
-              <TextBlock Text="🌐 Manage Environments" Classes="CardTitle"/>
-              <TextBlock Text="Configure tenant and AD connections" Classes="CardSubtitle"/>
+          <Border Classes="CustomerCard" Margin="0,0,8,8" Padding="12,8">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <TextBlock Text="&#x1F4F1;" FontSize="14"/>
+              <TextBlock Text="Intune" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
             </StackPanel>
           </Border>
-          <Border Classes="CustomerCard" Padding="16">
-            <StackPanel Spacing="4">
-              <TextBlock Text="📦 Run Inventory" Classes="CardTitle"/>
-              <TextBlock Text="Collect and browse discovery snapshots" Classes="CardSubtitle"/>
+          <Border Classes="CustomerCard" Margin="0,0,8,8" Padding="12,8">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <TextBlock Text="&#x1F4E7;" FontSize="14"/>
+              <TextBlock Text="Exchange Online" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
             </StackPanel>
           </Border>
-        </StackPanel>
+          <Border Classes="CustomerCard" Margin="0,0,8,8" Padding="12,8">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <TextBlock Text="&#x1F4C1;" FontSize="14"/>
+              <TextBlock Text="SharePoint Online" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+            </StackPanel>
+          </Border>
+          <Border Classes="CustomerCard" Margin="0,0,8,8" Padding="12,8">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <TextBlock Text="&#x1F4AC;" FontSize="14"/>
+              <TextBlock Text="Teams" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+            </StackPanel>
+          </Border>
+          <Border Classes="CustomerCard" Margin="0,0,8,8" Padding="12,8">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <TextBlock Text="&#x1F3D7;" FontSize="14"/>
+              <TextBlock Text="Active Directory" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+            </StackPanel>
+          </Border>
+        </WrapPanel>
       </StackPanel>
 
     </StackPanel>
