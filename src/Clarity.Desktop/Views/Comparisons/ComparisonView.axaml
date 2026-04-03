@@ -1,0 +1,279 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:Clarity.Desktop.ViewModels.Comparisons"
+             x:Class="Clarity.Desktop.Views.Comparisons.ComparisonView"
+             x:DataType="vm:ComparisonViewModel">
+
+  <UserControl.Styles>
+    <StyleInclude Source="/Styles/ClarityTheme.axaml"/>
+  </UserControl.Styles>
+
+  <Grid RowDefinitions="Auto,Auto,Auto,*,Auto">
+
+    <!-- Page Header -->
+    <Border Grid.Row="0" Padding="24,20,24,16"
+            BorderBrush="{DynamicResource SystemBaseLowColor}"
+            BorderThickness="0,0,0,1">
+      <StackPanel>
+        <TextBlock Text="⚖️ Comparisons" Classes="PageTitle"/>
+        <TextBlock Text="Compare snapshots side by side" Classes="PageSubtitle"/>
+      </StackPanel>
+    </Border>
+
+    <!-- Toolbar: customer + snapshot pickers + mode + run button -->
+    <Border Grid.Row="1" Padding="24,12">
+      <StackPanel Spacing="12">
+        <!-- Row 1: Customer -->
+        <StackPanel Orientation="Horizontal" Spacing="12">
+          <StackPanel Spacing="4">
+            <TextBlock Text="Customer" FontSize="12"
+                       Foreground="{DynamicResource SystemBaseMediumColor}"/>
+            <ComboBox ItemsSource="{Binding Customers}"
+                      SelectedItem="{Binding SelectedCustomer}"
+                      PlaceholderText="Select a customer…"
+                      Width="280">
+              <ComboBox.ItemTemplate>
+                <DataTemplate>
+                  <TextBlock Text="{Binding Name}"/>
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+          </StackPanel>
+
+          <StackPanel Spacing="4" IsVisible="{Binding HasSelectedCustomer}">
+            <TextBlock Text="Comparison Mode" FontSize="12"
+                       Foreground="{DynamicResource SystemBaseMediumColor}"/>
+            <ComboBox ItemsSource="{Binding ComparisonModes}"
+                      SelectedItem="{Binding SelectedMode}"
+                      Width="220">
+              <ComboBox.ItemTemplate>
+                <DataTemplate>
+                  <TextBlock Text="{Binding DisplayName}"/>
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+          </StackPanel>
+        </StackPanel>
+
+        <!-- Row 2: Left / Right snapshot pickers + Run button -->
+        <StackPanel Orientation="Horizontal" Spacing="12"
+                    IsVisible="{Binding HasSelectedCustomer}">
+
+          <!-- Loading snapshots indicator -->
+          <StackPanel Orientation="Horizontal" Spacing="6"
+                      VerticalAlignment="Bottom" Margin="0,0,0,4"
+                      IsVisible="{Binding IsLoadingSnapshots}">
+            <ProgressBar IsIndeterminate="True" Width="80" Height="4"/>
+            <TextBlock Text="Loading snapshots…" FontSize="12"
+                       Foreground="{DynamicResource SystemBaseMediumColor}"/>
+          </StackPanel>
+
+          <StackPanel Spacing="4" IsVisible="{Binding !IsLoadingSnapshots}">
+            <TextBlock Text="Left Snapshot" FontSize="12"
+                       Foreground="{DynamicResource SystemBaseMediumColor}"/>
+            <ComboBox ItemsSource="{Binding Snapshots}"
+                      SelectedItem="{Binding SelectedLeftSnapshot}"
+                      PlaceholderText="Select left snapshot…"
+                      Width="300">
+              <ComboBox.ItemTemplate>
+                <DataTemplate x:CompileBindings="False">
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <TextBlock Text="{Binding Name}"/>
+                    <TextBlock Text="{Binding EnvironmentName, StringFormat='({0})'}"
+                               Foreground="{DynamicResource SystemBaseMediumColor}" FontSize="12"/>
+                  </StackPanel>
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+          </StackPanel>
+
+          <StackPanel Spacing="4" IsVisible="{Binding !IsLoadingSnapshots}">
+            <TextBlock Text="Right Snapshot" FontSize="12"
+                       Foreground="{DynamicResource SystemBaseMediumColor}"/>
+            <ComboBox ItemsSource="{Binding Snapshots}"
+                      SelectedItem="{Binding SelectedRightSnapshot}"
+                      PlaceholderText="Select right snapshot…"
+                      Width="300">
+              <ComboBox.ItemTemplate>
+                <DataTemplate x:CompileBindings="False">
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <TextBlock Text="{Binding Name}"/>
+                    <TextBlock Text="{Binding EnvironmentName, StringFormat='({0})'}"
+                               Foreground="{DynamicResource SystemBaseMediumColor}" FontSize="12"/>
+                  </StackPanel>
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+          </StackPanel>
+
+          <StackPanel Spacing="4" VerticalAlignment="Bottom">
+            <Button Classes="PrimaryButton"
+                    Content="▶ Run Comparison"
+                    Command="{Binding RunComparisonCommand}"
+                    IsEnabled="{Binding CanRunComparison}"/>
+          </StackPanel>
+        </StackPanel>
+      </StackPanel>
+    </Border>
+
+    <!-- Running indicator -->
+    <Border Grid.Row="2" Padding="24,8" IsVisible="{Binding IsRunning}">
+      <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center">
+        <ProgressBar IsIndeterminate="True" Width="200"/>
+        <TextBlock Text="Running comparison…"
+                   Foreground="{DynamicResource SystemBaseMediumColor}"
+                   VerticalAlignment="Center"/>
+      </StackPanel>
+    </Border>
+
+    <!-- Main content area: empty state or results -->
+    <Panel Grid.Row="3">
+
+      <!-- Empty state: no customer -->
+      <StackPanel IsVisible="{Binding !HasSelectedCustomer}"
+                  HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
+        <TextBlock Text="⚖️" FontSize="48" HorizontalAlignment="Center"/>
+        <TextBlock Text="Select a customer" Classes="EmptyStateTitle"/>
+        <TextBlock Text="Choose a customer above to load snapshots for comparison."
+                   Classes="EmptyStateSubtitle" TextAlignment="Center"/>
+      </StackPanel>
+
+      <!-- Empty state: no comparison run yet -->
+      <StackPanel IsVisible="{Binding !HasResults}"
+                  HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
+        <StackPanel.IsVisible>
+          <MultiBinding Converter="{x:Static BoolConverters.And}">
+            <Binding Path="HasSelectedCustomer"/>
+            <Binding Path="!HasResults"/>
+            <Binding Path="!IsRunning"/>
+          </MultiBinding>
+        </StackPanel.IsVisible>
+        <TextBlock Text="📊" FontSize="48" HorizontalAlignment="Center"/>
+        <TextBlock Text="No comparison results yet" Classes="EmptyStateTitle"/>
+        <TextBlock Text="Select two snapshots and run a comparison to see results."
+                   Classes="EmptyStateSubtitle" TextAlignment="Center"/>
+      </StackPanel>
+
+      <!-- Results panel -->
+      <ScrollViewer IsVisible="{Binding HasResults}" Padding="24,12">
+        <StackPanel Spacing="16">
+
+          <!-- Summary stat cards -->
+          <TextBlock Text="Summary" Classes="CardTitle" Margin="0,0,0,4"/>
+          <WrapPanel Orientation="Horizontal" HorizontalAlignment="Left">
+
+            <!-- Total Left -->
+            <Border Background="#F0F4FF" CornerRadius="8" Padding="16,12" Margin="0,0,12,8" MinWidth="130">
+              <StackPanel Spacing="2">
+                <TextBlock Text="Total Left" FontSize="12"
+                           Foreground="{DynamicResource SystemBaseMediumColor}"/>
+                <TextBlock Text="{Binding TotalLeft}" FontSize="24" FontWeight="Bold"
+                           Foreground="#3366CC"/>
+              </StackPanel>
+            </Border>
+
+            <!-- Total Right -->
+            <Border Background="#F0F4FF" CornerRadius="8" Padding="16,12" Margin="0,0,12,8" MinWidth="130">
+              <StackPanel Spacing="2">
+                <TextBlock Text="Total Right" FontSize="12"
+                           Foreground="{DynamicResource SystemBaseMediumColor}"/>
+                <TextBlock Text="{Binding TotalRight}" FontSize="24" FontWeight="Bold"
+                           Foreground="#3366CC"/>
+              </StackPanel>
+            </Border>
+
+            <!-- Added -->
+            <Border Background="#E8F5E9" CornerRadius="8" Padding="16,12" Margin="0,0,12,8" MinWidth="130">
+              <StackPanel Spacing="2">
+                <TextBlock Text="Added" FontSize="12" Foreground="#2E7D32"/>
+                <TextBlock Text="{Binding Added}" FontSize="24" FontWeight="Bold"
+                           Foreground="#2E7D32"/>
+              </StackPanel>
+            </Border>
+
+            <!-- Removed -->
+            <Border Background="#FFEBEE" CornerRadius="8" Padding="16,12" Margin="0,0,12,8" MinWidth="130">
+              <StackPanel Spacing="2">
+                <TextBlock Text="Removed" FontSize="12" Foreground="#C62828"/>
+                <TextBlock Text="{Binding Removed}" FontSize="24" FontWeight="Bold"
+                           Foreground="#C62828"/>
+              </StackPanel>
+            </Border>
+
+            <!-- Modified -->
+            <Border Background="#FFF3E0" CornerRadius="8" Padding="16,12" Margin="0,0,12,8" MinWidth="130">
+              <StackPanel Spacing="2">
+                <TextBlock Text="Modified" FontSize="12" Foreground="#E65100"/>
+                <TextBlock Text="{Binding Modified}" FontSize="24" FontWeight="Bold"
+                           Foreground="#E65100"/>
+              </StackPanel>
+            </Border>
+
+            <!-- Unchanged -->
+            <Border Background="#F5F5F5" CornerRadius="8" Padding="16,12" Margin="0,0,12,8" MinWidth="130">
+              <StackPanel Spacing="2">
+                <TextBlock Text="Unchanged" FontSize="12" Foreground="#757575"/>
+                <TextBlock Text="{Binding Unchanged}" FontSize="24" FontWeight="Bold"
+                           Foreground="#757575"/>
+              </StackPanel>
+            </Border>
+          </WrapPanel>
+
+          <!-- Per-workload breakdown -->
+          <TextBlock Text="Per-Workload Breakdown" Classes="CardTitle" Margin="0,8,0,4"/>
+          <Border Background="{DynamicResource SystemBaseLowColor}" CornerRadius="8" Padding="0">
+            <Grid>
+              <StackPanel>
+                <!-- Header row -->
+                <Border Padding="12,8" BorderThickness="0,0,0,1"
+                        BorderBrush="{DynamicResource SystemBaseMediumColor}">
+                  <Grid ColumnDefinitions="*,80,80,80,80">
+                    <TextBlock Grid.Column="0" Text="Workload" FontWeight="SemiBold" FontSize="13"/>
+                    <TextBlock Grid.Column="1" Text="Added" FontWeight="SemiBold" FontSize="13"
+                               Foreground="#2E7D32" HorizontalAlignment="Right"/>
+                    <TextBlock Grid.Column="2" Text="Removed" FontWeight="SemiBold" FontSize="13"
+                               Foreground="#C62828" HorizontalAlignment="Right"/>
+                    <TextBlock Grid.Column="3" Text="Modified" FontWeight="SemiBold" FontSize="13"
+                               Foreground="#E65100" HorizontalAlignment="Right"/>
+                    <TextBlock Grid.Column="4" Text="Unchanged" FontWeight="SemiBold" FontSize="13"
+                               Foreground="#757575" HorizontalAlignment="Right"/>
+                  </Grid>
+                </Border>
+
+                <!-- Data rows -->
+                <ItemsControl ItemsSource="{Binding WorkloadBreakdown}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:CompileBindings="False">
+                      <Border Padding="12,6" BorderThickness="0,0,0,1"
+                              BorderBrush="{DynamicResource SystemBaseLowColor}">
+                        <Grid ColumnDefinitions="*,80,80,80,80">
+                          <TextBlock Grid.Column="0" Text="{Binding WorkloadArea}" FontSize="13"/>
+                          <TextBlock Grid.Column="1" Text="{Binding Added}" FontSize="13"
+                                     Foreground="#2E7D32" HorizontalAlignment="Right"/>
+                          <TextBlock Grid.Column="2" Text="{Binding Removed}" FontSize="13"
+                                     Foreground="#C62828" HorizontalAlignment="Right"/>
+                          <TextBlock Grid.Column="3" Text="{Binding Modified}" FontSize="13"
+                                     Foreground="#E65100" HorizontalAlignment="Right"/>
+                          <TextBlock Grid.Column="4" Text="{Binding Unchanged}" FontSize="13"
+                                     Foreground="#757575" HorizontalAlignment="Right"/>
+                        </Grid>
+                      </Border>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </Grid>
+          </Border>
+
+        </StackPanel>
+      </ScrollViewer>
+    </Panel>
+
+    <!-- Error bar -->
+    <Border Grid.Row="4"
+            IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+            Background="#FFF0F0" Padding="16,10" Margin="24,0,24,16" CornerRadius="6">
+      <TextBlock Text="{Binding ErrorMessage}" Foreground="#C0392B" TextWrapping="Wrap"/>
+    </Border>
+  </Grid>
+</UserControl>
