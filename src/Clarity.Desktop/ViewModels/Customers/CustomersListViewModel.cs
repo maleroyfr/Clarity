@@ -14,6 +14,7 @@ public sealed partial class CustomerListItemVm : ObservableObject
     private readonly Action<CustomerDto> _onViewEnvironments;
     private readonly Func<CustomerDto, Task> _onArchive;
     private readonly Func<CustomerDto, Task> _onRestore;
+    private readonly Func<CustomerDto, Task> _onDelete;
 
     public Guid Id { get; }
     public string Name { get; }
@@ -31,6 +32,7 @@ public sealed partial class CustomerListItemVm : ObservableObject
         Action<CustomerDto> onEdit,
         Func<CustomerDto, Task> onArchive,
         Func<CustomerDto, Task> onRestore,
+        Func<CustomerDto, Task> onDelete,
         Action<CustomerDto> onViewEnvironments)
     {
         _dto = dto;
@@ -42,6 +44,7 @@ public sealed partial class CustomerListItemVm : ObservableObject
         _onEdit = onEdit;
         _onArchive = onArchive;
         _onRestore = onRestore;
+        _onDelete = onDelete;
         _onViewEnvironments = onViewEnvironments;
     }
 
@@ -56,6 +59,9 @@ public sealed partial class CustomerListItemVm : ObservableObject
 
     [RelayCommand]
     public async Task Restore() => await _onRestore(_dto);
+
+    [RelayCommand]
+    public async Task Delete() => await _onDelete(_dto);
 }
 
 public sealed partial class CustomersListViewModel : ObservableObject
@@ -126,7 +132,7 @@ public sealed partial class CustomersListViewModel : ObservableObject
             : _allCustomers.Where(c => c.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase)).ToList();
 
         FilteredCustomers = new ObservableCollection<CustomerListItemVm>(
-            filtered.Select(d => new CustomerListItemVm(d, OnEditItem, OnArchiveItem, OnRestoreItem, OnViewEnvironments)));
+            filtered.Select(d => new CustomerListItemVm(d, OnEditItem, OnArchiveItem, OnRestoreItem, OnDeleteItem, OnViewEnvironments)));
         OnPropertyChanged(nameof(IsEmpty));
         OnPropertyChanged(nameof(HasCustomers));
     }
@@ -158,6 +164,19 @@ public sealed partial class CustomersListViewModel : ObservableObject
         catch (Exception ex)
         {
             ErrorMessage = $"Failed to restore: {ex.Message}";
+        }
+    }
+
+    private async Task OnDeleteItem(CustomerDto dto)
+    {
+        try
+        {
+            await _mediator.Send(new DeleteCustomerCommand(dto.Id));
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Failed to delete: {ex.Message}";
         }
     }
 
