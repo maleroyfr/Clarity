@@ -9,5 +9,6 @@ public interface ICustomerRepository
     Task<bool> ExistsAsync(Guid id, CancellationToken ct = default);
     Task AddAsync(Customer customer, CancellationToken ct = default);
     Task UpdateAsync(Customer customer, CancellationToken ct = default);
+    Task DeleteAsync(Guid id, CancellationToken ct = default);
     Task<int> SaveChangesAsync(CancellationToken ct = default);
 }

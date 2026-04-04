@@ -1,3 +1,4 @@
+using Clarity.Application.Common.Exceptions;
 using Clarity.Domain.Snapshots;
 using Clarity.Infrastructure.Persistence;
 using Clarity.SharedContracts.Enums;
@@ -38,6 +39,13 @@ internal sealed class SnapshotRepository(ClarityDbContext db) : ISnapshotReposit
     {
         db.Snapshots.Update(snapshot);
         return Task.CompletedTask;
+    }
+
+    public async Task DeleteAsync(Guid id, CancellationToken ct = default)
+    {
+        var snapshot = await db.Snapshots.FindAsync([id], ct);
+        if (snapshot is not null)
+            db.Snapshots.Remove(snapshot);
     }
 
     public Task<int> SaveChangesAsync(CancellationToken ct = default) => db.SaveChangesAsync(ct);

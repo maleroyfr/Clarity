@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:Clarity.Desktop.ViewModels.Environments"
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
              x:Class="Clarity.Desktop.Views.Environments.EnvironmentsListView"
              x:DataType="vm:EnvironmentsListViewModel">
 
@@ -16,14 +17,21 @@
             BorderThickness="0,0,0,1">
       <Grid ColumnDefinitions="*,Auto">
         <StackPanel Grid.Column="0">
-          <TextBlock Text="Environments" Classes="PageTitle"/>
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <ui:SymbolIcon Symbol="Globe" FontSize="22" VerticalAlignment="Center"/>
+            <TextBlock Text="Environments" Classes="PageTitle"/>
+          </StackPanel>
           <TextBlock Text="Manage customer environments" Classes="PageSubtitle"/>
         </StackPanel>
         <Button Grid.Column="1" Classes="PrimaryButton"
                 Command="{Binding CreateNewCommand}"
                 IsEnabled="{Binding HasSelectedCustomer}"
-                Content="+ New Environment"
-                VerticalAlignment="Center"/>
+                VerticalAlignment="Center">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <ui:SymbolIcon Symbol="Add" FontSize="14"/>
+            <TextBlock Text="New Environment" VerticalAlignment="Center"/>
+          </StackPanel>
+        </Button>
       </Grid>
     </Border>
 
@@ -68,7 +76,7 @@
       <!-- No customer selected -->
       <StackPanel IsVisible="{Binding !HasSelectedCustomer}"
                   HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
-        <TextBlock Text="🏢" FontSize="48" HorizontalAlignment="Center"/>
+        <ui:SymbolIcon Symbol="Globe" FontSize="48" HorizontalAlignment="Center"/>
         <TextBlock Text="Select a customer" Classes="EmptyStateTitle"/>
         <TextBlock Text="Choose a customer above to view and manage their environments."
                    Classes="EmptyStateSubtitle" TextAlignment="Center"/>
@@ -83,12 +91,17 @@
 
       <StackPanel IsVisible="{Binding IsEmpty}"
                   HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
-        <TextBlock Text="🌐" FontSize="48" HorizontalAlignment="Center"/>
+        <ui:SymbolIcon Symbol="Globe" FontSize="48" HorizontalAlignment="Center"/>
         <TextBlock Text="No environments yet" Classes="EmptyStateTitle"/>
         <TextBlock Text="Create your first environment to get started." Classes="EmptyStateSubtitle"/>
-        <Button Classes="PrimaryButton" Content="+ New Environment"
+        <Button Classes="PrimaryButton"
                 Command="{Binding CreateNewCommand}"
-                HorizontalAlignment="Center" Margin="0,8,0,0"/>
+                HorizontalAlignment="Center" Margin="0,8,0,0">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <ui:SymbolIcon Symbol="Add" FontSize="14"/>
+            <TextBlock Text="New Environment" VerticalAlignment="Center"/>
+          </StackPanel>
+        </Button>
       </StackPanel>
 
       <ScrollViewer IsVisible="{Binding HasEnvironments}" Padding="24,8">
@@ -122,11 +135,24 @@
 
                   <StackPanel Grid.Column="1" Orientation="Horizontal"
                               Spacing="8" VerticalAlignment="Center">
-                    <Button Classes="SecondaryButton" Content="Edit"
-                            Command="{Binding EditCommand}"/>
-                    <Button Classes="DangerButton" Content="Archive"
+                    <Button Classes="SecondaryButton"
+                            Command="{Binding EditCommand}">
+                      <StackPanel Orientation="Horizontal" Spacing="6">
+                        <ui:SymbolIcon Symbol="Edit" FontSize="14"/>
+                        <TextBlock Text="Edit" VerticalAlignment="Center"/>
+                      </StackPanel>
+                    </Button>
+                    <Button Classes="DangerButton"
                             IsVisible="{Binding !IsArchived}"
-                            Command="{Binding ArchiveCommand}"/>
+                            Command="{Binding ArchiveCommand}"
+                            Content="Archive"/>
+                    <Button Classes="DangerButton"
+                            Command="{Binding DeleteCommand}">
+                      <StackPanel Orientation="Horizontal" Spacing="6">
+                        <ui:SymbolIcon Symbol="Delete" FontSize="14"/>
+                        <TextBlock Text="Delete" VerticalAlignment="Center"/>
+                      </StackPanel>
+                    </Button>
                   </StackPanel>
                 </Grid>
               </Border>
@@ -137,10 +163,9 @@
     </Panel>
 
     <!-- Error bar -->
-    <Border Grid.Row="3"
-            IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-            Background="#FFF0F0" Padding="16,10" Margin="24,0,24,16" CornerRadius="6">
-      <TextBlock Text="{Binding ErrorMessage}" Foreground="#C0392B" TextWrapping="Wrap"/>
-    </Border>
+    <ui:InfoBar Grid.Row="3"
+                IsOpen="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                Severity="Error" Title="Error" Message="{Binding ErrorMessage}" IsClosable="True"
+                Margin="24,0,24,16"/>
   </Grid>
 </UserControl>

@@ -1,3 +1,4 @@
+using Clarity.Application.Common.Exceptions;
 using Clarity.Domain.Comparisons;
 using Clarity.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -21,4 +22,12 @@ internal sealed class ComparisonJobRepository(ClarityDbContext db) : IComparison
     }
 
     public Task<int> SaveChangesAsync(CancellationToken ct = default) => db.SaveChangesAsync(ct);
+
+    public async Task DeleteAsync(Guid id, CancellationToken ct = default)
+    {
+        var entity = await db.ComparisonJobs.FindAsync([id], ct)
+            ?? throw new NotFoundException(nameof(ComparisonJob), id);
+        db.ComparisonJobs.Remove(entity);
+        await db.SaveChangesAsync(ct);
+    }
 }

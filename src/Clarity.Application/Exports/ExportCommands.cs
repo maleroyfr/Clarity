@@ -66,3 +66,18 @@ public sealed class CreateExportJobHandler(
             result.ErrorMessage);
     }
 }
+
+// ─── Delete ──────────────────────────────────────────────────────────────────
+
+public sealed record DeleteExportCommand(Guid Id) : ICommand;
+
+public sealed class DeleteExportHandler(IExportJobRepository repo)
+    : ICommandHandler<DeleteExportCommand>
+{
+    public async Task Handle(DeleteExportCommand cmd, CancellationToken ct)
+    {
+        var job = await repo.GetByIdAsync(cmd.Id, ct)
+            ?? throw new NotFoundException(nameof(ExportJob), cmd.Id);
+        await repo.DeleteAsync(cmd.Id, ct);
+    }
+}

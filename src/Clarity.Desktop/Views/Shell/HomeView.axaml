@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:Clarity.Desktop.ViewModels.Shell"
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
              x:Class="Clarity.Desktop.Views.Shell.HomeView"
              x:DataType="vm:HomeViewModel">
 
@@ -14,9 +15,9 @@
       <!-- Welcome Header -->
       <StackPanel Spacing="4">
         <StackPanel Orientation="Horizontal" Spacing="12">
-          <TextBlock Text="&#x2726;" FontSize="32"
-                     Foreground="{DynamicResource SystemAccentColor}"
-                     VerticalAlignment="Center"/>
+          <ui:SymbolIcon Symbol="Home" FontSize="32"
+                         Foreground="{DynamicResource SystemAccentColor}"
+                         VerticalAlignment="Center"/>
           <StackPanel>
             <TextBlock Text="{Binding WelcomeMessage}" Classes="PageTitle"/>
             <TextBlock Text="{Binding SubMessage}" Classes="PageSubtitle"/>
@@ -33,10 +34,8 @@
       </StackPanel>
 
       <!-- Error -->
-      <Border IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-              Background="#FFF0F0" Padding="16,10" CornerRadius="6">
-        <TextBlock Text="{Binding ErrorMessage}" Foreground="#C0392B" TextWrapping="Wrap"/>
-      </Border>
+      <ui:InfoBar IsOpen="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                  Severity="Error" Title="Error" Message="{Binding ErrorMessage}" IsClosable="True"/>
 
       <!-- Stats Cards Row -->
       <StackPanel IsVisible="{Binding !IsLoading}" Spacing="16">
@@ -44,28 +43,28 @@
         <WrapPanel Orientation="Horizontal" HorizontalAlignment="Left">
           <Border Classes="StatCard" Margin="0,0,12,12">
             <StackPanel Spacing="4">
-              <TextBlock Text="&#x1F3E2;" FontSize="22"/>
+              <ui:SymbolIcon Symbol="People" FontSize="22"/>
               <TextBlock Text="{Binding TotalCustomers}" Classes="StatValue"/>
               <TextBlock Text="Customers" Classes="StatLabel"/>
             </StackPanel>
           </Border>
           <Border Classes="StatCard" Margin="0,0,12,12">
             <StackPanel Spacing="4">
-              <TextBlock Text="&#x1F310;" FontSize="22"/>
+              <ui:SymbolIcon Symbol="Globe" FontSize="22"/>
               <TextBlock Text="{Binding TotalEnvironments}" Classes="StatValue"/>
               <TextBlock Text="Environments" Classes="StatLabel"/>
             </StackPanel>
           </Border>
           <Border Classes="StatCard" Margin="0,0,12,12">
             <StackPanel Spacing="4">
-              <TextBlock Text="&#x1F4F8;" FontSize="22"/>
+              <ui:SymbolIcon Symbol="Camera" FontSize="22"/>
               <TextBlock Text="{Binding TotalSnapshots}" Classes="StatValue"/>
               <TextBlock Text="Snapshots" Classes="StatLabel"/>
             </StackPanel>
           </Border>
           <Border Classes="StatCard" Margin="0,0,12,12">
             <StackPanel Spacing="4">
-              <TextBlock Text="&#x1F4E6;" FontSize="22"/>
+              <ui:SymbolIcon Symbol="AllApps" FontSize="22"/>
               <TextBlock Text="{Binding TotalInventoryObjects}" Classes="StatValue"/>
               <TextBlock Text="Inventory Objects" Classes="StatLabel"/>
             </StackPanel>
@@ -82,7 +81,10 @@
                   Command="{Binding QuickNavigateCommand}" CommandParameter="Customers">
             <Border Classes="ActionCard" MinWidth="200">
               <StackPanel Spacing="6">
-                <TextBlock Text="&#x1F3E2; Manage Customers" Classes="CardTitle"/>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <ui:SymbolIcon Symbol="People" FontSize="16"/>
+                  <TextBlock Text="Manage Customers" Classes="CardTitle"/>
+                </StackPanel>
                 <TextBlock Text="Create and manage client organisations" Classes="CardSubtitle" TextWrapping="Wrap"/>
               </StackPanel>
             </Border>
@@ -92,7 +94,10 @@
                   Command="{Binding QuickNavigateCommand}" CommandParameter="Environments">
             <Border Classes="ActionCard" MinWidth="200">
               <StackPanel Spacing="6">
-                <TextBlock Text="&#x1F310; Manage Environments" Classes="CardTitle"/>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <ui:SymbolIcon Symbol="Globe" FontSize="16"/>
+                  <TextBlock Text="Manage Environments" Classes="CardTitle"/>
+                </StackPanel>
                 <TextBlock Text="Configure tenant and AD connections" Classes="CardSubtitle" TextWrapping="Wrap"/>
               </StackPanel>
             </Border>
@@ -102,7 +107,10 @@
                   Command="{Binding QuickNavigateCommand}" CommandParameter="Snapshots">
             <Border Classes="ActionCard" MinWidth="200">
               <StackPanel Spacing="6">
-                <TextBlock Text="&#x1F4F8; Run Discovery" Classes="CardTitle"/>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <ui:SymbolIcon Symbol="Camera" FontSize="16"/>
+                  <TextBlock Text="Run Discovery" Classes="CardTitle"/>
+                </StackPanel>
                 <TextBlock Text="Create and manage inventory snapshots" Classes="CardSubtitle" TextWrapping="Wrap"/>
               </StackPanel>
             </Border>
@@ -112,7 +120,10 @@
                   Command="{Binding QuickNavigateCommand}" CommandParameter="Inventory">
             <Border Classes="ActionCard" MinWidth="200">
               <StackPanel Spacing="6">
-                <TextBlock Text="&#x1F4E6; Browse Inventory" Classes="CardTitle"/>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <ui:SymbolIcon Symbol="AllApps" FontSize="16"/>
+                  <TextBlock Text="Browse Inventory" Classes="CardTitle"/>
+                </StackPanel>
                 <TextBlock Text="Explore collected objects and properties" Classes="CardSubtitle" TextWrapping="Wrap"/>
               </StackPanel>
             </Border>
@@ -122,7 +133,10 @@
                   Command="{Binding QuickNavigateCommand}" CommandParameter="Comparisons">
             <Border Classes="ActionCard" MinWidth="200">
               <StackPanel Spacing="6">
-                <TextBlock Text="&#x2696;&#xFE0F; Compare Snapshots" Classes="CardTitle"/>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <ui:SymbolIcon Symbol="Library" FontSize="16"/>
+                  <TextBlock Text="Compare Snapshots" Classes="CardTitle"/>
+                </StackPanel>
                 <TextBlock Text="Side-by-side snapshot comparison" Classes="CardSubtitle" TextWrapping="Wrap"/>
               </StackPanel>
             </Border>
@@ -132,7 +146,10 @@
                   Command="{Binding QuickNavigateCommand}" CommandParameter="Exports">
             <Border Classes="ActionCard" MinWidth="200">
               <StackPanel Spacing="6">
-                <TextBlock Text="&#x1F4E4; Export Data" Classes="CardTitle"/>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <ui:SymbolIcon Symbol="Download" FontSize="16"/>
+                  <TextBlock Text="Export Data" Classes="CardTitle"/>
+                </StackPanel>
                 <TextBlock Text="Export to CSV, XLSX, or JSON" Classes="CardSubtitle" TextWrapping="Wrap"/>
               </StackPanel>
             </Border>
@@ -147,37 +164,37 @@
         <WrapPanel Orientation="Horizontal">
           <Border Classes="CustomerCard" Margin="0,0,8,8" Padding="12,8">
             <StackPanel Orientation="Horizontal" Spacing="6">
-              <TextBlock Text="&#x1F510;" FontSize="14"/>
+              <ui:SymbolIcon Symbol="Setting" FontSize="14"/>
               <TextBlock Text="Entra ID" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
             </StackPanel>
           </Border>
           <Border Classes="CustomerCard" Margin="0,0,8,8" Padding="12,8">
             <StackPanel Orientation="Horizontal" Spacing="6">
-              <TextBlock Text="&#x1F4F1;" FontSize="14"/>
+              <ui:SymbolIcon Symbol="Document" FontSize="14"/>
               <TextBlock Text="Intune" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
             </StackPanel>
           </Border>
           <Border Classes="CustomerCard" Margin="0,0,8,8" Padding="12,8">
             <StackPanel Orientation="Horizontal" Spacing="6">
-              <TextBlock Text="&#x1F4E7;" FontSize="14"/>
+              <ui:SymbolIcon Symbol="Mail" FontSize="14"/>
               <TextBlock Text="Exchange Online" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
             </StackPanel>
           </Border>
           <Border Classes="CustomerCard" Margin="0,0,8,8" Padding="12,8">
             <StackPanel Orientation="Horizontal" Spacing="6">
-              <TextBlock Text="&#x1F4C1;" FontSize="14"/>
+              <ui:SymbolIcon Symbol="Document" FontSize="14"/>
               <TextBlock Text="SharePoint Online" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
             </StackPanel>
           </Border>
           <Border Classes="CustomerCard" Margin="0,0,8,8" Padding="12,8">
             <StackPanel Orientation="Horizontal" Spacing="6">
-              <TextBlock Text="&#x1F4AC;" FontSize="14"/>
+              <ui:SymbolIcon Symbol="People" FontSize="14"/>
               <TextBlock Text="Teams" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
             </StackPanel>
           </Border>
           <Border Classes="CustomerCard" Margin="0,0,8,8" Padding="12,8">
             <StackPanel Orientation="Horizontal" Spacing="6">
-              <TextBlock Text="&#x1F3D7;" FontSize="14"/>
+              <ui:SymbolIcon Symbol="Globe" FontSize="14"/>
               <TextBlock Text="Active Directory" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
             </StackPanel>
           </Border>

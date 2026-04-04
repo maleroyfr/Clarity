@@ -6,6 +6,7 @@ public interface IEnvironmentRepository
     Task<IReadOnlyList<Environment>> GetByCustomerAsync(Guid customerId, CancellationToken ct = default);
     Task AddAsync(Environment environment, CancellationToken ct = default);
     Task UpdateAsync(Environment environment, CancellationToken ct = default);
+    Task DeleteAsync(Guid id, CancellationToken ct = default);
     Task<int> SaveChangesAsync(CancellationToken ct = default);
 }
 

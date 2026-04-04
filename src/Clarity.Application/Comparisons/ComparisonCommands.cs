@@ -1,5 +1,7 @@
 using Clarity.Application.Common;
+using Clarity.Application.Common.Exceptions;
 using Clarity.Comparisons;
+using Clarity.Domain.Comparisons;
 using Clarity.SharedContracts.Enums;
 using Microsoft.Extensions.Logging;
 
@@ -60,5 +62,20 @@ public sealed class RunComparisonHandler(
             cmd.RightSnapshotId,
             status,
             summaryDto);
+    }
+}
+
+// ─── Delete ──────────────────────────────────────────────────────────────────
+
+public sealed record DeleteComparisonCommand(Guid Id) : ICommand;
+
+public sealed class DeleteComparisonHandler(IComparisonJobRepository repo)
+    : ICommandHandler<DeleteComparisonCommand>
+{
+    public async Task Handle(DeleteComparisonCommand cmd, CancellationToken ct)
+    {
+        var job = await repo.GetByIdAsync(cmd.Id, ct)
+            ?? throw new NotFoundException(nameof(ComparisonJob), cmd.Id);
+        await repo.DeleteAsync(cmd.Id, ct);
     }
 }
