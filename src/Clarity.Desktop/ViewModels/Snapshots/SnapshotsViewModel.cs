@@ -18,6 +18,7 @@ public sealed partial class SnapshotListItemVm : ObservableObject
 {
     private readonly SnapshotDto _dto;
     private readonly Func<SnapshotDto, Task> _onSeal;
+    private readonly Func<Guid, Task> _onDelete;
     private readonly Action<Guid> _onViewInventory;
     private readonly Action<Guid, string> _onExport;
 
@@ -39,11 +40,13 @@ public sealed partial class SnapshotListItemVm : ObservableObject
     public SnapshotListItemVm(
         SnapshotDto dto,
         Func<SnapshotDto, Task> onSeal,
+        Func<Guid, Task> onDelete,
         Action<Guid> onViewInventory,
         Action<Guid, string> onExport)
     {
         _dto = dto;
         _onSeal = onSeal;
+        _onDelete = onDelete;
         _onViewInventory = onViewInventory;
         _onExport = onExport;
 
@@ -58,6 +61,9 @@ public sealed partial class SnapshotListItemVm : ObservableObject
 
     [RelayCommand]
     public async Task Seal() => await _onSeal(_dto);
+
+    [RelayCommand]
+    public async Task Delete() => await _onDelete(Id);
 
     [RelayCommand]
     public void ViewInventory() => _onViewInventory(Id);
@@ -296,7 +302,7 @@ public sealed partial class SnapshotsViewModel : ObservableObject
                 s.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase)).ToList();
 
         FilteredSnapshots = new ObservableCollection<SnapshotListItemVm>(
-            filtered.Select(d => new SnapshotListItemVm(d, OnSealItem, OnViewInventory, OnExport)));
+            filtered.Select(d => new SnapshotListItemVm(d, OnSealItem, OnDeleteItem, OnViewInventory, OnExport)));
 
         OnPropertyChanged(nameof(IsEmpty));
         OnPropertyChanged(nameof(HasSnapshots));
@@ -350,6 +356,20 @@ public sealed partial class SnapshotsViewModel : ObservableObject
         catch (Exception ex)
         {
             ErrorMessage = $"Failed to seal snapshot: {ex.Message}";
+        }
+    }
+
+    private async Task OnDeleteItem(Guid snapshotId)
+    {
+        ErrorMessage = null;
+        try
+        {
+            await _mediator.Send(new DeleteSnapshotCommand(snapshotId));
+            await LoadSnapshotsAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Failed to delete snapshot: {ex.Message}";
         }
     }
 

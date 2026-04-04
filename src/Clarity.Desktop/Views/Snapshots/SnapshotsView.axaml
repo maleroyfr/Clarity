@@ -1,5 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
              xmlns:vm="clr-namespace:Clarity.Desktop.ViewModels.Snapshots"
              x:Class="Clarity.Desktop.Views.Snapshots.SnapshotsView"
              x:DataType="vm:SnapshotsViewModel">
@@ -15,9 +16,12 @@
             BorderBrush="{DynamicResource SystemBaseLowColor}"
             BorderThickness="0,0,0,1">
       <Grid ColumnDefinitions="*,Auto">
-        <StackPanel Grid.Column="0">
-          <TextBlock Text="📸 Snapshots" Classes="PageTitle"/>
-          <TextBlock Text="Create and manage environment snapshots" Classes="PageSubtitle"/>
+        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10">
+          <ui:SymbolIcon Symbol="Camera" FontSize="28"/>
+          <StackPanel>
+            <TextBlock Text="Snapshots" Classes="PageTitle"/>
+            <TextBlock Text="Create and manage environment snapshots" Classes="PageSubtitle"/>
+          </StackPanel>
         </StackPanel>
         <Button Grid.Column="1" Classes="PrimaryButton"
                 Command="{Binding CreateSnapshotCommand}"
@@ -25,7 +29,10 @@
                 VerticalAlignment="Center">
           <Panel>
             <TextBlock Text="Creating…" IsVisible="{Binding IsCreating}"/>
-            <TextBlock Text="+ New Snapshot" IsVisible="{Binding !IsCreating}"/>
+            <StackPanel Orientation="Horizontal" Spacing="6" IsVisible="{Binding !IsCreating}">
+              <ui:SymbolIcon Symbol="Add" FontSize="16"/>
+              <TextBlock Text="New Snapshot"/>
+            </StackPanel>
           </Panel>
         </Button>
       </Grid>
@@ -81,7 +88,7 @@
       <!-- No customer selected -->
       <StackPanel IsVisible="{Binding !HasSelectedCustomer}"
                   HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
-        <TextBlock Text="🏢" FontSize="48" HorizontalAlignment="Center"/>
+        <ui:SymbolIcon Symbol="People" FontSize="48" HorizontalAlignment="Center"/>
         <TextBlock Text="Select a customer" Classes="EmptyStateTitle"/>
         <TextBlock Text="Choose a customer above to view their environments and snapshots."
                    Classes="EmptyStateSubtitle" TextAlignment="Center"/>
@@ -95,7 +102,7 @@
             <Binding Path="!HasSelectedEnvironment"/>
           </MultiBinding>
         </StackPanel.IsVisible>
-        <TextBlock Text="🌐" FontSize="48" HorizontalAlignment="Center"/>
+        <ui:SymbolIcon Symbol="Globe" FontSize="48" HorizontalAlignment="Center"/>
         <TextBlock Text="Select an environment" Classes="EmptyStateTitle"/>
         <TextBlock Text="Choose an environment above to view its snapshots."
                    Classes="EmptyStateSubtitle" TextAlignment="Center"/>
@@ -112,13 +119,17 @@
       <!-- Empty state -->
       <StackPanel IsVisible="{Binding IsEmpty}"
                   HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
-        <TextBlock Text="📸" FontSize="48" HorizontalAlignment="Center"/>
+        <ui:SymbolIcon Symbol="Camera" FontSize="48" HorizontalAlignment="Center"/>
         <TextBlock Text="No snapshots yet" Classes="EmptyStateTitle"/>
         <TextBlock Text="Create your first snapshot to capture the environment state."
                    Classes="EmptyStateSubtitle"/>
-        <Button Classes="PrimaryButton" Content="+ New Snapshot"
-                Command="{Binding CreateSnapshotCommand}"
-                HorizontalAlignment="Center" Margin="0,8,0,0"/>
+        <Button Classes="PrimaryButton" HorizontalAlignment="Center" Margin="0,8,0,0"
+                Command="{Binding CreateSnapshotCommand}">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <ui:SymbolIcon Symbol="Add" FontSize="16"/>
+            <TextBlock Text="New Snapshot"/>
+          </StackPanel>
+        </Button>
       </StackPanel>
 
       <!-- Snapshot list -->
@@ -132,12 +143,15 @@
                     <StackPanel Orientation="Horizontal" Spacing="8">
                       <TextBlock Text="{Binding Name}" Classes="CardTitle"/>
                       <!-- Status badge -->
-                      <Border Classes.BadgeInfo="{Binding IsDraft}"
-                              Classes.BadgeWarning="{Binding IsRunningOrPartial}"
-                              Classes.BadgeSuccess="{Binding IsCompleted}"
-                              Classes.BadgeError="{Binding IsFailed}">
-                        <TextBlock Text="{Binding StatusDisplay}" Classes="BadgeText"/>
-                      </Border>
+                      <StackPanel Orientation="Horizontal" Spacing="4">
+                        <ui:InfoBadge Classes.Informational="{Binding IsDraft}"
+                                      Classes.Attention="{Binding IsRunningOrPartial}"
+                                      Classes.Success="{Binding IsCompleted}"
+                                      Classes.Critical="{Binding IsFailed}"
+                                      VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding StatusDisplay}" FontSize="12"
+                                   VerticalAlignment="Center"/>
+                      </StackPanel>
                       <Border IsVisible="{Binding IsImmutable}" Classes="BadgeArchived">
                         <TextBlock Text="Sealed" Classes="BadgeText"/>
                       </Border>
@@ -155,13 +169,33 @@
 
                   <StackPanel Grid.Column="1" Orientation="Horizontal"
                               Spacing="8" VerticalAlignment="Center">
-                    <Button Classes="SecondaryButton" Content="View Inventory"
-                            Command="{Binding ViewInventoryCommand}"/>
-                    <Button Classes="SecondaryButton" Content="Export"
-                            Command="{Binding ExportCommand}"/>
-                    <Button Classes="SuccessButton" Content="Seal"
+                    <Button Classes="SecondaryButton"
+                            Command="{Binding ViewInventoryCommand}">
+                      <StackPanel Orientation="Horizontal" Spacing="6">
+                        <ui:SymbolIcon Symbol="Library" FontSize="16"/>
+                        <TextBlock Text="View Inventory"/>
+                      </StackPanel>
+                    </Button>
+                    <Button Classes="SecondaryButton"
+                            Command="{Binding ExportCommand}">
+                      <StackPanel Orientation="Horizontal" Spacing="6">
+                        <ui:SymbolIcon Symbol="Download" FontSize="16"/>
+                        <TextBlock Text="Export"/>
+                      </StackPanel>
+                    </Button>
+                    <Button Classes="SuccessButton"
                             IsVisible="{Binding CanSeal}"
-                            Command="{Binding SealCommand}"/>
+                            Command="{Binding SealCommand}">
+                      <StackPanel Orientation="Horizontal" Spacing="6">
+                        <ui:SymbolIcon Symbol="ProtectedDocument" FontSize="16"/>
+                        <TextBlock Text="Seal"/>
+                      </StackPanel>
+                    </Button>
+                    <Button Classes="DangerButton"
+                            Command="{Binding DeleteCommand}"
+                            ToolTip.Tip="Delete snapshot">
+                      <ui:SymbolIcon Symbol="Delete" FontSize="16"/>
+                    </Button>
                   </StackPanel>
                 </Grid>
               </Border>
@@ -172,10 +206,9 @@
     </Panel>
 
     <!-- Error bar -->
-    <Border Grid.Row="3"
-            IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-            Background="#FFF0F0" Padding="16,10" Margin="24,0,24,16" CornerRadius="6">
-      <TextBlock Text="{Binding ErrorMessage}" Foreground="#C0392B" TextWrapping="Wrap"/>
-    </Border>
+    <ui:InfoBar Grid.Row="3"
+                IsOpen="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                Severity="Error" Title="Error" Message="{Binding ErrorMessage}" IsClosable="True"
+                Margin="24,0,24,16"/>
   </Grid>
 </UserControl>
