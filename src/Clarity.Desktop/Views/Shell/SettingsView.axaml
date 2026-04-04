@@ -1,69 +1,65 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
              xmlns:vm="clr-namespace:Clarity.Desktop.ViewModels.Shell"
              x:Class="Clarity.Desktop.Views.Shell.SettingsView"
              x:DataType="vm:SettingsViewModel">
 
-  <UserControl.Styles>
-    <StyleInclude Source="/Styles/ClarityTheme.axaml"/>
-  </UserControl.Styles>
-
   <ScrollViewer Padding="32,24">
-    <StackPanel Spacing="24" MaxWidth="600">
+    <StackPanel Spacing="4" MaxWidth="800">
+      <TextBlock Text="Settings" FontSize="28" FontWeight="SemiBold" Margin="0,0,0,24"/>
 
-      <TextBlock Text="Settings" Classes="PageTitle"/>
+      <!-- Appearance section -->
+      <TextBlock Text="Appearance" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,8"/>
 
-      <!-- Appearance -->
-      <Border Classes="CustomerCard">
-        <StackPanel Spacing="12">
-          <TextBlock Text="Appearance" Classes="CardTitle"/>
-          <StackPanel Spacing="4">
-            <TextBlock Text="Theme" Classes="FormLabel"/>
-            <ComboBox ItemsSource="{Binding AvailableThemes}"
-                      SelectedItem="{Binding SelectedTheme}"
-                      Width="200"/>
-          </StackPanel>
-        </StackPanel>
-      </Border>
+      <ui:SettingsExpander Header="App Theme"
+                           Description="Select which app theme to display">
+        <ui:SettingsExpander.IconSource>
+          <ui:SymbolIconSource Symbol="DarkTheme"/>
+        </ui:SettingsExpander.IconSource>
+        <ui:SettingsExpander.Footer>
+          <ComboBox SelectedIndex="{Binding ThemeIndex}" MinWidth="150">
+            <ComboBoxItem Content="Use system setting"/>
+            <ComboBoxItem Content="Light"/>
+            <ComboBoxItem Content="Dark"/>
+          </ComboBox>
+        </ui:SettingsExpander.Footer>
+      </ui:SettingsExpander>
 
-      <!-- Data -->
-      <Border Classes="CustomerCard">
-        <StackPanel Spacing="12">
-          <TextBlock Text="Data" Classes="CardTitle"/>
-          <StackPanel Spacing="4">
-            <TextBlock Text="Database Location" Classes="FormLabel"/>
-            <TextBlock Text="{Binding DatabasePath}" Classes="CardSubtitle" TextWrapping="Wrap"/>
-            <Button Classes="SecondaryButton" Content="Open Folder"
-                    Command="{Binding OpenDatabaseDirectoryCommand}"
-                    Margin="0,4,0,0"/>
-          </StackPanel>
-          <StackPanel Spacing="4">
-            <TextBlock Text="Log Directory" Classes="FormLabel"/>
-            <TextBlock Text="{Binding LogDirectory}" Classes="CardSubtitle" TextWrapping="Wrap"/>
-            <Button Classes="SecondaryButton" Content="Open Logs"
-                    Command="{Binding OpenLogDirectoryCommand}"
-                    Margin="0,4,0,0"/>
-          </StackPanel>
-        </StackPanel>
-      </Border>
+      <!-- Data section -->
+      <TextBlock Text="Data" FontSize="16" FontWeight="SemiBold" Margin="0,16,0,8"/>
 
-      <!-- About -->
-      <Border Classes="CustomerCard">
-        <StackPanel Spacing="8">
-          <TextBlock Text="About" Classes="CardTitle"/>
-          <StackPanel Spacing="2">
-            <TextBlock Classes="CardSubtitle">
-              <Run Text="Version: "/>
-              <Run Text="{Binding AppVersion}"/>
-            </TextBlock>
-            <TextBlock Classes="CardSubtitle">
-              <Run Text="Runtime: "/>
-              <Run Text="{Binding Framework}"/>
-            </TextBlock>
-          </StackPanel>
-        </StackPanel>
-      </Border>
+      <ui:SettingsExpander Header="Database"
+                           Description="{Binding DatabaseInfo}">
+        <ui:SettingsExpander.IconSource>
+          <ui:SymbolIconSource Symbol="Save"/>
+        </ui:SettingsExpander.IconSource>
+        <ui:SettingsExpander.Footer>
+          <Button Content="Open folder" Command="{Binding OpenDataFolderCommand}"/>
+        </ui:SettingsExpander.Footer>
+      </ui:SettingsExpander>
 
+      <ui:SettingsExpander Header="Logs"
+                           Description="{Binding LogDirectoryInfo}">
+        <ui:SettingsExpander.IconSource>
+          <ui:SymbolIconSource Symbol="Document"/>
+        </ui:SettingsExpander.IconSource>
+        <ui:SettingsExpander.Footer>
+          <Button Content="Open folder" Command="{Binding OpenLogFolderCommand}"/>
+        </ui:SettingsExpander.Footer>
+      </ui:SettingsExpander>
+
+      <!-- About section -->
+      <TextBlock Text="About" FontSize="16" FontWeight="SemiBold" Margin="0,16,0,8"/>
+
+      <ui:SettingsExpander Header="Clarity — Audit &amp; Discovery Platform"
+                           Description="{Binding VersionInfo}">
+        <ui:SettingsExpander.IconSource>
+          <ui:FontIconSource Glyph="&#xE946;" FontFamily="{StaticResource SymbolThemeFontFamily}"/>
+        </ui:SettingsExpander.IconSource>
+        <ui:SettingsExpanderItem Content="{Binding RuntimeInfo}"/>
+        <ui:SettingsExpanderItem Content="{Binding OsInfo}"/>
+      </ui:SettingsExpander>
     </StackPanel>
   </ScrollViewer>
 </UserControl>
