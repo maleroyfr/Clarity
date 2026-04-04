@@ -1,5 +1,5 @@
 using Avalonia.Controls;
-using Avalonia.Interactivity;
+using FluentAvalonia.UI.Controls;
 using Clarity.Desktop.Services;
 using Clarity.Desktop.ViewModels.Shell;
 
@@ -11,15 +11,22 @@ public partial class AppShell : Window
     {
         InitializeComponent();
         DataContext = AppServiceLocator.Get<AppShellViewModel>();
-
-        var aboutBtn = this.FindControl<Button>("AboutButton");
-        if (aboutBtn is not null)
-            aboutBtn.Click += OnAboutClick;
     }
 
-    private void OnAboutClick(object? sender, RoutedEventArgs e)
+    private void NavView_SelectionChanged(object? sender, NavigationViewSelectionChangedEventArgs e)
     {
-        var about = new AboutView();
-        about.ShowDialog(this);
+        if (DataContext is not AppShellViewModel vm) return;
+
+        if (e.IsSettingsSelected)
+        {
+            vm.NavigateTo(NavSection.Settings);
+            return;
+        }
+
+        if (e.SelectedItem is NavigationViewItem nvi && nvi.Tag is string tag)
+        {
+            if (Enum.TryParse<NavSection>(tag, out var section))
+                vm.NavigateTo(section);
+        }
     }
 }

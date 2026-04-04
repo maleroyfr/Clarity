@@ -8,6 +8,7 @@ using Clarity.Desktop.ViewModels.Exports;
 using Clarity.Desktop.ViewModels.Inventory;
 using Clarity.Desktop.ViewModels.Relations;
 using Clarity.Desktop.ViewModels.Snapshots;
+using FluentAvalonia.Styling;
 
 namespace Clarity.Desktop.ViewModels.Shell;
 
@@ -19,63 +20,6 @@ public sealed partial class AppShellViewModel : ObservableObject
     [ObservableProperty]
     private NavSection _activeSection = NavSection.Home;
 
-    [ObservableProperty]
-    private bool _isNavExpanded = true;
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ThemeIcon))]
-    [NotifyPropertyChangedFor(nameof(ThemeLabel))]
-    private bool _isDarkMode;
-
-    public string ThemeIcon => IsDarkMode ? "☀️" : "🌙";
-    public string ThemeLabel => IsDarkMode ? "Light Mode" : "Dark Mode";
-
-    public IReadOnlyList<NavGroup> NavGroups { get; } =
-    [
-        new NavGroup
-        {
-            Items =
-            [
-                new NavItem { Label = "Home", Icon = "🏠", Section = NavSection.Home }
-            ]
-        },
-        new NavGroup
-        {
-            Header = "MANAGE",
-            Items =
-            [
-                new NavItem { Label = "Customers",    Icon = "🏢", Section = NavSection.Customers },
-                new NavItem { Label = "Environments", Icon = "🌐", Section = NavSection.Environments },
-                new NavItem { Label = "Relations",    Icon = "🔗", Section = NavSection.Relations }
-            ]
-        },
-        new NavGroup
-        {
-            Header = "DISCOVER",
-            Items =
-            [
-                new NavItem { Label = "Snapshots",  Icon = "📸", Section = NavSection.Snapshots },
-                new NavItem { Label = "Inventory",  Icon = "📦", Section = NavSection.Inventory }
-            ]
-        },
-        new NavGroup
-        {
-            Header = "ANALYZE",
-            Items =
-            [
-                new NavItem { Label = "Comparisons", Icon = "⚖️", Section = NavSection.Comparisons },
-                new NavItem { Label = "Exports",     Icon = "📤", Section = NavSection.Exports }
-            ]
-        },
-        new NavGroup
-        {
-            Items =
-            [
-                new NavItem { Label = "Settings", Icon = "⚙", Section = NavSection.Settings }
-            ]
-        }
-    ];
-
     public AppShellViewModel()
     {
         NavigateTo(NavSection.Home);
@@ -85,10 +29,6 @@ public sealed partial class AppShellViewModel : ObservableObject
     public void NavigateTo(NavSection section)
     {
         ActiveSection = section;
-        foreach (var group in NavGroups)
-            foreach (var item in group.Items)
-                item.IsActive = item.Section == section;
-
         CurrentPage = section switch
         {
             NavSection.Customers    => AppServiceLocator.Get<CustomersListViewModel>(),
@@ -104,28 +44,9 @@ public sealed partial class AppShellViewModel : ObservableObject
         };
     }
 
-    [RelayCommand]
-    public void ToggleTheme()
-    {
-        IsDarkMode = !IsDarkMode;
-        if (Avalonia.Application.Current is not null)
-        {
-            Avalonia.Application.Current.RequestedThemeVariant = IsDarkMode
-                ? Avalonia.Styling.ThemeVariant.Dark
-                : Avalonia.Styling.ThemeVariant.Light;
-        }
-    }
-
-    [RelayCommand]
-    public void ToggleNav() => IsNavExpanded = !IsNavExpanded;
-
     public void NavigateToCustomerEnvironments(Guid customerId)
     {
         ActiveSection = NavSection.Environments;
-        foreach (var group in NavGroups)
-            foreach (var item in group.Items)
-                item.IsActive = item.Section == NavSection.Environments;
-
         var vm = AppServiceLocator.Get<EnvironmentsListViewModel>();
         CurrentPage = vm;
         _ = LoadAndSelectCustomerAsync(vm, customerId);
@@ -134,10 +55,6 @@ public sealed partial class AppShellViewModel : ObservableObject
     public void NavigateToEnvironmentSnapshots(Guid customerId, Guid environmentId, string environmentName)
     {
         ActiveSection = NavSection.Snapshots;
-        foreach (var group in NavGroups)
-            foreach (var item in group.Items)
-                item.IsActive = item.Section == NavSection.Snapshots;
-
         var vm = AppServiceLocator.Get<SnapshotsViewModel>();
         CurrentPage = vm;
         _ = vm.LoadForEnvironmentAsync(customerId, environmentId, environmentName);
@@ -146,10 +63,6 @@ public sealed partial class AppShellViewModel : ObservableObject
     public void NavigateToExportSnapshot(Guid snapshotId, string snapshotName)
     {
         ActiveSection = NavSection.Exports;
-        foreach (var group in NavGroups)
-            foreach (var item in group.Items)
-                item.IsActive = item.Section == NavSection.Exports;
-
         var vm = AppServiceLocator.Get<ExportsViewModel>();
         CurrentPage = vm;
         vm.SetSnapshotContext(snapshotId, snapshotName);
