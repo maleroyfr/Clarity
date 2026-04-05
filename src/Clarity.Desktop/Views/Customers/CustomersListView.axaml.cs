@@ -35,8 +35,15 @@ public partial class CustomersListView : UserControl
         {
             formVm.SaveCompleted += async () =>
             {
-                if (DataContext is CustomersListViewModel listVm)
-                    await listVm.LoadAsync();
+                try
+                {
+                    if (DataContext is CustomersListViewModel listVm)
+                        await listVm.LoadAsync();
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Failed to reload customers: {ex.Message}");
+                }
             };
 
             var builder = new SukiDialogBuilder(shell.DialogManager);
@@ -44,7 +51,14 @@ public partial class CustomersListView : UserControl
             builder.SetContent(form);
             builder.AddActionButton("Save", async _ =>
             {
-                await formVm.SaveCommand.ExecuteAsync(null);
+                try
+                {
+                    await formVm.SaveCommand.ExecuteAsync(null);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Save failed: {ex.Message}");
+                }
             }, true, ["Flat"]);
             builder.AddActionButton("Cancel", _ => { }, true, ["Flat"]);
             builder.TryShow();

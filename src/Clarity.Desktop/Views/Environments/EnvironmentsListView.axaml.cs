@@ -37,8 +37,15 @@ public partial class EnvironmentsListView : UserControl
         formVm.Initialize(environment, customerId: listVm.SelectedCustomer.Id);
         formVm.SaveCompleted += async () =>
         {
-            if (DataContext is EnvironmentsListViewModel lvm)
-                await lvm.LoadAsync();
+            try
+            {
+                if (DataContext is EnvironmentsListViewModel lvm)
+                    await lvm.LoadAsync();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Failed to reload environments: {ex.Message}");
+            }
         };
         form.ShowDialog(VisualRoot as Avalonia.Controls.Window
             ?? throw new InvalidOperationException());
@@ -63,8 +70,15 @@ public partial class EnvironmentsListView : UserControl
                 builder.SetContent(authView);
                 builder.AddActionButton("Close", async _ =>
                 {
-                    if (DataContext is EnvironmentsListViewModel lvm)
-                        await lvm.LoadAsync();
+                    try
+                    {
+                        if (DataContext is EnvironmentsListViewModel lvm)
+                            await lvm.LoadAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Failed to reload environments: {ex.Message}");
+                    }
                 }, true, ["Flat"]);
                 builder.TryShow();
             }
