@@ -7,7 +7,7 @@
              xmlns:suki="https://github.com/kikipoulet/SukiUI"
              x:Class="Clarity.Desktop.Views.Environments.EnvironmentSetupWizardView"
              x:DataType="vm:EnvironmentSetupWizardViewModel"
-             MinWidth="620" MinHeight="520">
+             Width="720" Height="620">
 
   <UserControl.Styles>
     <StyleInclude Source="/Styles/ClarityTheme.axaml"/>

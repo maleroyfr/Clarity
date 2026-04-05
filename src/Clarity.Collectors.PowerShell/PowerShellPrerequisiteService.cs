@@ -185,24 +185,28 @@ public sealed class PowerShellPrerequisiteService(
 
             if (output.StartsWith("OK|", StringComparison.Ordinal))
             {
+                var parts = output[3..].Split('|', 2);
                 return new ModuleStatus(
                     requirement.ModuleName,
                     requirement.MinimumVersion,
                     requirement.Purpose,
                     Installed: true,
-                    InstalledVersion: output[3..],
-                    NeedsUpgrade: false);
+                    InstalledVersion: parts[0],
+                    NeedsUpgrade: false,
+                    Scope: parts.Length > 1 ? parts[1] : null);
             }
 
             if (output.StartsWith("OLD|", StringComparison.Ordinal))
             {
+                var parts = output[4..].Split('|', 2);
                 return new ModuleStatus(
                     requirement.ModuleName,
                     requirement.MinimumVersion,
                     requirement.Purpose,
                     Installed: false,
-                    InstalledVersion: output[4..],
-                    NeedsUpgrade: true);
+                    InstalledVersion: parts[0],
+                    NeedsUpgrade: true,
+                    Scope: parts.Length > 1 ? parts[1] : null);
             }
 
             return new ModuleStatus(
@@ -234,12 +238,14 @@ public sealed class PowerShellPrerequisiteService(
             Where-Object { $_.Version -ge [version]'{{minVersion}}' } |
             Sort-Object Version -Descending | Select-Object -First 1
         if ($mod) {
-            Write-Output "OK|$($mod.Version)"
+            $scope = if ($mod.ModuleBase -like "$env:USERPROFILE*") { 'User' } elseif ($mod.ModuleBase -like "$env:ProgramFiles\PowerShell\Modules*" -or $mod.ModuleBase -like "$env:ProgramFiles\WindowsPowerShell\Modules*") { 'AllUsers' } else { 'System' }
+            Write-Output "OK|$($mod.Version)|$scope"
         } else {
             $any = Get-Module -ListAvailable -Name '{{moduleName}}' |
                 Sort-Object Version -Descending | Select-Object -First 1
             if ($any) {
-                Write-Output "OLD|$($any.Version)"
+                $scope = if ($any.ModuleBase -like "$env:USERPROFILE*") { 'User' } elseif ($any.ModuleBase -like "$env:ProgramFiles\PowerShell\Modules*" -or $any.ModuleBase -like "$env:ProgramFiles\WindowsPowerShell\Modules*") { 'AllUsers' } else { 'System' }
+                Write-Output "OLD|$($any.Version)|$scope"
             } else {
                 Write-Output "MISSING"
             }
@@ -311,6 +317,7 @@ public sealed record ModuleStatus(
     bool Installed,
     string? InstalledVersion,
     bool NeedsUpgrade,
+    string? Scope = null,
     string? Error = null);
 
 public sealed record ModuleInstallResult(bool Success, string? InstalledVersion, string? Error);
