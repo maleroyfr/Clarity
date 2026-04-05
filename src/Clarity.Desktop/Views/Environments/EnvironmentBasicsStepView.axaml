@@ -1,0 +1,59 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:Clarity.Desktop.ViewModels.Environments"
+             x:Class="Clarity.Desktop.Views.Environments.EnvironmentBasicsStepView"
+             x:DataType="vm:EnvironmentBasicsStepViewModel">
+
+  <UserControl.Styles>
+    <StyleInclude Source="/Styles/ClarityTheme.axaml"/>
+  </UserControl.Styles>
+
+  <StackPanel Spacing="8">
+    <TextBlock Text="Environment Details" Classes="PageTitle" Margin="0,0,0,4"/>
+    <TextBlock Text="Provide the basic information for this environment."
+               Classes="PageSubtitle" Margin="0,0,0,16" TextWrapping="Wrap"/>
+
+    <StackPanel Spacing="4">
+      <TextBlock Text="Environment name *" Classes="FormLabel"/>
+      <TextBox Text="{Binding Name}"
+               Watermark="e.g. Contoso Production"
+               Classes="FormInput"/>
+    </StackPanel>
+
+    <StackPanel Spacing="4">
+      <TextBlock Text="Description" Classes="FormLabel"/>
+      <TextBox Text="{Binding Description}"
+               Watermark="Optional description"
+               AcceptsReturn="True"
+               Height="70"
+               Classes="FormInput"/>
+    </StackPanel>
+
+    <StackPanel Spacing="4">
+      <TextBlock Text="Type *" Classes="FormLabel"/>
+      <ComboBox ItemsSource="{Binding AvailableTypes}"
+                SelectedItem="{Binding SelectedTypeOption}"
+                HorizontalAlignment="Stretch">
+        <ComboBox.ItemTemplate>
+          <DataTemplate>
+            <TextBlock Text="{Binding DisplayName}"/>
+          </DataTemplate>
+        </ComboBox.ItemTemplate>
+      </ComboBox>
+    </StackPanel>
+
+    <StackPanel Spacing="4">
+      <TextBlock Text="Tenant ID (optional)" Classes="FormLabel"/>
+      <TextBox Text="{Binding TenantId}"
+               Watermark="e.g. xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+               Classes="FormInput"/>
+    </StackPanel>
+
+    <StackPanel Spacing="4">
+      <TextBlock Text="Tenant Domain (optional)" Classes="FormLabel"/>
+      <TextBox Text="{Binding TenantDomain}"
+               Watermark="e.g. contoso.onmicrosoft.com"
+               Classes="FormInput"/>
+    </StackPanel>
+  </StackPanel>
+</UserControl>

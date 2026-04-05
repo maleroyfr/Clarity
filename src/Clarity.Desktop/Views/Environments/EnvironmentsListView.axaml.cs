@@ -32,13 +32,24 @@ public partial class EnvironmentsListView : UserControl
         if (DataContext is not EnvironmentsListViewModel listVm) return;
         if (listVm.SelectedCustomer is null) return;
 
-        var form = new EnvironmentFormView();
-        var formVm = (EnvironmentFormViewModel)form.DataContext!;
-        formVm.Initialize(environment, customerId: listVm.SelectedCustomer.Id);
-        formVm.SaveCompleted += async () =>
+        if (VisualRoot is not SukiWindow window) return;
+        if (window.DataContext is not Clarity.Desktop.ViewModels.Shell.AppShellViewModel shell) return;
+
+        var wizardVm = AppServiceLocator.Get<EnvironmentSetupWizardViewModel>();
+        wizardVm.Initialize(environment, listVm.SelectedCustomer.Id);
+
+        var wizardView = new EnvironmentSetupWizardView { DataContext = wizardVm };
+
+        var builder = new SukiDialogBuilder(shell.DialogManager);
+        builder.SetTitle(wizardVm.WizardTitle);
+        builder.SetContent(wizardView);
+        builder.Dismiss().ByClickingBackground();
+
+        wizardVm.Completed += async () =>
         {
             try
             {
+                shell.DialogManager.DismissDialog();
                 if (DataContext is EnvironmentsListViewModel lvm)
                     await lvm.LoadAsync();
             }
@@ -47,8 +58,14 @@ public partial class EnvironmentsListView : UserControl
                 System.Diagnostics.Debug.WriteLine($"Failed to reload environments: {ex.Message}");
             }
         };
-        form.ShowDialog(VisualRoot as Avalonia.Controls.Window
-            ?? throw new InvalidOperationException());
+
+        wizardVm.Cancelled += () =>
+        {
+            try { shell.DialogManager.DismissDialog(); }
+            catch { /* dismissal is best-effort */ }
+        };
+
+        builder.TryShow();
     }
 
     private async void OnConfigureAuthRequested(EnvironmentDto environment)

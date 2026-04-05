@@ -8,7 +8,6 @@ using Clarity.Desktop.ViewModels.Exports;
 using Clarity.Desktop.ViewModels.Inventory;
 using Clarity.Desktop.ViewModels.Relations;
 using Clarity.Desktop.ViewModels.Snapshots;
-using Clarity.Desktop.ViewModels.Onboarding;
 using Avalonia.Controls.Notifications;
 using SukiUI.Dialogs;
 using SukiUI.Toasts;
@@ -46,7 +45,6 @@ public sealed partial class AppShellViewModel : ObservableObject
             MakePage("Inventory",    Icons.AllApps,      NavSection.Inventory),
             MakePage("Comparisons",  Icons.Library,      NavSection.Comparisons),
             MakePage("Exports",      Icons.Download,     NavSection.Exports),
-            MakePage("Onboarding",   Icons.Wizard,       NavSection.Onboarding),
             MakePage("Settings",     Icons.Settings,     NavSection.Settings),
         };
 
@@ -129,7 +127,6 @@ public sealed partial class AppShellViewModel : ObservableObject
         NavSection.Inventory    => AppServiceLocator.Get<InventoryExplorerViewModel>(),
         NavSection.Comparisons  => AppServiceLocator.Get<ComparisonViewModel>(),
         NavSection.Exports      => AppServiceLocator.Get<ExportsViewModel>(),
-        NavSection.Onboarding   => AppServiceLocator.Get<OnboardingWizardViewModel>(),
         NavSection.Settings     => AppServiceLocator.Get<SettingsViewModel>(),
         _                       => null
     };
