@@ -9,7 +9,7 @@
     <StackPanel Spacing="8" MaxWidth="800">
       <TextBlock Text="{Binding Title}" FontSize="22" FontWeight="SemiBold"/>
       <TextBlock Text="Configure authentication for each workload"
-                 Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,16"/>
+                 Foreground="{DynamicResource SukiMediumColor}" Margin="0,0,0,16"/>
 
       <ItemsControl ItemsSource="{Binding Workloads}" x:CompileBindings="False">
         <ItemsControl.ItemTemplate>
@@ -20,9 +20,9 @@
                   <!-- Status -->
                   <StackPanel Orientation="Horizontal" Spacing="8">
                     <TextBlock Text="{Binding StatusText}" FontSize="12"
-                               Foreground="{DynamicResource SystemBaseMediumColor}"/>
+                               Foreground="{DynamicResource SukiMediumColor}"/>
                     <Border CornerRadius="4" Padding="6,2"
-                            Background="{DynamicResource SystemBaseLowColor}">
+                            Background="{DynamicResource SukiLowColor}">
                       <TextBlock Text="{Binding StatusLabel}" FontSize="11"/>
                     </Border>
                   </StackPanel>

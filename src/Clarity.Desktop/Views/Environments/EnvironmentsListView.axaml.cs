@@ -61,7 +61,11 @@ public partial class EnvironmentsListView : UserControl
                 var builder = new SukiDialogBuilder(shell.DialogManager);
                 builder.SetTitle("Authentication Configuration");
                 builder.SetContent(authView);
-                builder.AddActionButton("Close", _ => { }, true, ["Flat"]);
+                builder.AddActionButton("Close", async _ =>
+                {
+                    if (DataContext is EnvironmentsListViewModel lvm)
+                        await lvm.LoadAsync();
+                });
                 builder.TryShow();
             }
         }

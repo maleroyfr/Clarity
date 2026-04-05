@@ -8,27 +8,23 @@
         CanResize="False"
         WindowStartupLocation="CenterOwner">
 
-  <Window.Styles>
-    <StyleInclude Source="/Styles/ClarityTheme.axaml"/>
-  </Window.Styles>
-
   <Grid RowDefinitions="*,Auto" Margin="32">
     <StackPanel Grid.Row="0" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
       <TextBlock Text="✦" FontSize="48" HorizontalAlignment="Center"
-                 Foreground="{DynamicResource SystemAccentColor}"/>
+                 Foreground="{DynamicResource SukiPrimaryColor}"/>
       <TextBlock Text="{Binding AppName}" FontSize="24" FontWeight="Bold"
                  HorizontalAlignment="Center"/>
       <TextBlock Text="{Binding Description}" FontSize="13"
-                 Foreground="{DynamicResource SystemBaseMediumColor}"
+                 Foreground="{DynamicResource SukiMediumColor}"
                  HorizontalAlignment="Center" TextAlignment="Center"/>
       <StackPanel Spacing="4" Margin="0,8,0,0">
         <TextBlock HorizontalAlignment="Center" FontSize="12"
-                   Foreground="{DynamicResource SystemBaseMediumColor}">
+                   Foreground="{DynamicResource SukiMediumColor}">
           <Run Text="Version "/>
           <Run Text="{Binding Version}"/>
         </TextBlock>
         <TextBlock HorizontalAlignment="Center" FontSize="12"
-                   Foreground="{DynamicResource SystemBaseMediumColor}">
+                   Foreground="{DynamicResource SukiMediumColor}">
           <Run Text="Runtime: "/>
           <Run Text="{Binding Framework}"/>
         </TextBlock>

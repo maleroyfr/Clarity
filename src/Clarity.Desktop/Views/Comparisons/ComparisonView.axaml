@@ -5,7 +5,7 @@
              x:Class="Clarity.Desktop.Views.Comparisons.ComparisonView"
              x:DataType="vm:ComparisonViewModel">
 
-<Grid RowDefinitions="Auto,Auto,Auto,*,Auto">
+  <Grid RowDefinitions="Auto,Auto,Auto,*,Auto">
 
     <!-- Page Header -->
     <Border Grid.Row="0" Padding="24,20,24,16"
@@ -59,7 +59,6 @@
         <StackPanel Orientation="Horizontal" Spacing="12"
                     IsVisible="{Binding HasSelectedCustomer}">
 
-          <!-- Loading snapshots indicator -->
           <StackPanel Orientation="Horizontal" Spacing="6"
                       VerticalAlignment="Bottom" Margin="0,0,0,4"
                       IsVisible="{Binding IsLoadingSnapshots}">
@@ -162,11 +161,9 @@
       <ScrollViewer IsVisible="{Binding HasResults}" Padding="24,12">
         <StackPanel Spacing="16">
 
-          <!-- Summary stat cards -->
           <TextBlock Text="Summary" Classes="CardTitle" Margin="0,0,0,4"/>
           <WrapPanel Orientation="Horizontal" HorizontalAlignment="Left">
 
-            <!-- Total Left -->
             <Border Background="#F0F4FF" CornerRadius="8" Padding="16,12" Margin="0,0,12,8" MinWidth="130">
               <StackPanel Spacing="2">
                 <TextBlock Text="Total Left" FontSize="12"
@@ -176,7 +173,6 @@
               </StackPanel>
             </Border>
 
-            <!-- Total Right -->
             <Border Background="#F0F4FF" CornerRadius="8" Padding="16,12" Margin="0,0,12,8" MinWidth="130">
               <StackPanel Spacing="2">
                 <TextBlock Text="Total Right" FontSize="12"
@@ -186,7 +182,6 @@
               </StackPanel>
             </Border>
 
-            <!-- Added -->
             <Border Background="#E8F5E9" CornerRadius="8" Padding="16,12" Margin="0,0,12,8" MinWidth="130">
               <StackPanel Spacing="2">
                 <TextBlock Text="Added" FontSize="12" Foreground="#2E7D32"/>
@@ -195,7 +190,6 @@
               </StackPanel>
             </Border>
 
-            <!-- Removed -->
             <Border Background="#FFEBEE" CornerRadius="8" Padding="16,12" Margin="0,0,12,8" MinWidth="130">
               <StackPanel Spacing="2">
                 <TextBlock Text="Removed" FontSize="12" Foreground="#C62828"/>
@@ -204,7 +198,6 @@
               </StackPanel>
             </Border>
 
-            <!-- Modified -->
             <Border Background="#FFF3E0" CornerRadius="8" Padding="16,12" Margin="0,0,12,8" MinWidth="130">
               <StackPanel Spacing="2">
                 <TextBlock Text="Modified" FontSize="12" Foreground="#E65100"/>
@@ -213,7 +206,6 @@
               </StackPanel>
             </Border>
 
-            <!-- Unchanged -->
             <Border Background="#F5F5F5" CornerRadius="8" Padding="16,12" Margin="0,0,12,8" MinWidth="130">
               <StackPanel Spacing="2">
                 <TextBlock Text="Unchanged" FontSize="12" Foreground="#757575"/>
@@ -228,7 +220,6 @@
           <Border Background="{DynamicResource SystemBaseLowColor}" CornerRadius="8" Padding="0">
             <Grid>
               <StackPanel>
-                <!-- Header row -->
                 <Border Padding="12,8" BorderThickness="0,0,0,1"
                         BorderBrush="{DynamicResource SystemBaseMediumColor}">
                   <Grid ColumnDefinitions="*,80,80,80,80">
@@ -244,7 +235,6 @@
                   </Grid>
                 </Border>
 
-                <!-- Data rows -->
                 <ItemsControl ItemsSource="{Binding WorkloadBreakdown}">
                   <ItemsControl.ItemTemplate>
                     <DataTemplate x:CompileBindings="False">

@@ -6,9 +6,9 @@
              x:Class="Clarity.Desktop.Views.Exports.ExportsView"
              x:DataType="vm:ExportsViewModel">
 
-<Grid RowDefinitions="Auto,*,Auto">
+  <Grid RowDefinitions="Auto,*,Auto">
 
-    <!-- ═══ Page Header ═══ -->
+    <!-- Page Header -->
     <Border Grid.Row="0" Padding="24,20,24,16"
             BorderBrush="{DynamicResource SystemBaseLowColor}"
             BorderThickness="0,0,0,1">
@@ -21,11 +21,11 @@
       </StackPanel>
     </Border>
 
-    <!-- ═══ Main Content ═══ -->
+    <!-- Main Content -->
     <ScrollViewer Grid.Row="1" Padding="24,16">
       <StackPanel Spacing="24">
 
-        <!-- ── Loading State ── -->
+        <!-- Loading State -->
         <StackPanel IsVisible="{Binding IsLoading}"
                     HorizontalAlignment="Center" Spacing="12" Margin="0,24">
           <ProgressBar IsIndeterminate="True" Width="200"/>
@@ -33,7 +33,7 @@
                      Foreground="{DynamicResource SystemBaseMediumColor}"/>
         </StackPanel>
 
-        <!-- ── Empty State ── -->
+        <!-- Empty State -->
         <StackPanel IsVisible="{Binding IsEmpty}"
                     HorizontalAlignment="Center" VerticalAlignment="Center"
                     Spacing="8" Margin="0,32">
@@ -43,7 +43,7 @@
                      Classes="EmptyStateSubtitle"/>
         </StackPanel>
 
-        <!-- ── Configuration Section (visible when customers are loaded) ── -->
+        <!-- Configuration Section -->
         <StackPanel Spacing="20"
                     IsVisible="{Binding !IsLoading}">
 
@@ -168,32 +168,28 @@
             </Panel>
           </Button>
 
-          <!-- ── Result Panel ── -->
+          <!-- Result Panel -->
           <!-- Success -->
           <suki:InfoBar IsOpen="{Binding IsResultSuccess}"
-                      Severity="Success" Title="Export completed successfully" IsClosable="True">
-            <suki:InfoBar.Content>
-              <StackPanel Spacing="4">
-                <TextBlock Text="{Binding ResultFilePath, StringFormat='File: {0}'}"
-                           TextWrapping="Wrap" FontSize="12"/>
-                <TextBlock Text="{Binding ResultSizeDisplay, StringFormat='Size: {0}'}"
-                           FontSize="12"
-                           Foreground="{DynamicResource SystemBaseMediumColor}"/>
-                <Button Classes="SecondaryButton" Content="Open File"
-                        Command="{Binding OpenFileCommand}"
-                        HorizontalAlignment="Left" Margin="0,4,0,0"/>
-              </StackPanel>
-            </suki:InfoBar.Content>
-          </suki:InfoBar>
+                      Severity="Success" Title="Export completed successfully" IsClosable="True"
+                      Message="{Binding ResultFilePath, StringFormat='File: {0}'}"/>
+          <StackPanel IsVisible="{Binding IsResultSuccess}" Spacing="4" Margin="0,4,0,0">
+            <TextBlock Text="{Binding ResultSizeDisplay, StringFormat='Size: {0}'}"
+                       FontSize="12"
+                       Foreground="{DynamicResource SystemBaseMediumColor}"/>
+            <Button Classes="SecondaryButton" Content="Open File"
+                    Command="{Binding OpenFileCommand}"
+                    HorizontalAlignment="Left"/>
+          </StackPanel>
 
           <!-- Error -->
           <suki:InfoBar IsOpen="{Binding IsResultError}"
                       Severity="Error" Title="Export Failed" Message="{Binding ResultErrorMessage}" IsClosable="True"/>
 
-          <!-- ── Divider ── -->
+          <!-- Divider -->
           <Border Classes="Divider" IsVisible="{Binding HasHistory}"/>
 
-          <!-- ── Export History ── -->
+          <!-- Export History -->
           <StackPanel Spacing="12" IsVisible="{Binding HasHistory}">
             <TextBlock Text="Export History" Classes="SectionTitle"/>
 
@@ -242,7 +238,7 @@
       </StackPanel>
     </ScrollViewer>
 
-    <!-- ═══ Error Bar ═══ -->
+    <!-- Error Bar -->
     <suki:InfoBar Grid.Row="2"
                 IsOpen="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                 Severity="Error" Title="Error" Message="{Binding ErrorMessage}" IsClosable="True"

@@ -1,6 +1,12 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
+  <!-- Theme-aware semantic color resources -->
+  <Styles.Resources>
+    <SolidColorBrush x:Key="SukiLowColor" Color="#20808080"/>
+    <SolidColorBrush x:Key="SukiMediumColor" Color="#80808080"/>
+  </Styles.Resources>
+
   <!-- Typography — SukiUI compatible resources -->
   <Style Selector="TextBlock.PageTitle">
     <Setter Property="FontSize" Value="22"/>

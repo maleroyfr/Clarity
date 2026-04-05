@@ -42,11 +42,11 @@ public partial class CustomersListView : UserControl
             var builder = new SukiDialogBuilder(shell.DialogManager);
             builder.SetTitle(formVm.Title);
             builder.SetContent(form);
-            builder.AddActionButton("Save", dialog =>
+            builder.AddActionButton("Save", async _ =>
             {
-                formVm.SaveCommand.ExecuteAsync(null);
-            }, true, ["Flat"]);
-            builder.AddActionButton("Cancel", _ => { }, true, ["Flat"]);
+                await formVm.SaveCommand.ExecuteAsync(null);
+            }, true);
+            builder.AddActionButton("Cancel", _ => { });
             builder.TryShow();
         }
     }
