@@ -5,7 +5,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Clarity.Application.Customers.Commands;
 using Clarity.Application.Customers.Queries;
-using Clarity.Application.Environments;
 using Clarity.Application.Environments.Queries;
 using Clarity.Application.Exports;
 using Clarity.Application.Snapshots;

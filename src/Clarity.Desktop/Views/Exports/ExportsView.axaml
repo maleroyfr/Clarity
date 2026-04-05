@@ -10,7 +10,7 @@
 
     <!-- Page Header -->
     <Border Grid.Row="0" Padding="24,20,24,16"
-            BorderBrush="{DynamicResource SystemBaseLowColor}"
+            BorderBrush="{DynamicResource SukiLowColor}"
             BorderThickness="0,0,0,1">
       <StackPanel>
         <StackPanel Orientation="Horizontal" Spacing="8">
@@ -30,7 +30,7 @@
                     HorizontalAlignment="Center" Spacing="12" Margin="0,24">
           <ProgressBar IsIndeterminate="True" Width="200"/>
           <TextBlock Text="Loading customers…" HorizontalAlignment="Center"
-                     Foreground="{DynamicResource SystemBaseMediumColor}"/>
+                     Foreground="{DynamicResource SukiMediumColor}"/>
         </StackPanel>
 
         <!-- Empty State -->
@@ -76,7 +76,7 @@
                     <StackPanel Orientation="Horizontal" Spacing="8">
                       <TextBlock Text="{Binding Name}"/>
                       <TextBlock Text="{Binding Status}"
-                                 Foreground="{DynamicResource SystemBaseMediumColor}"
+                                 Foreground="{DynamicResource SukiMediumColor}"
                                  FontSize="12"
                                  VerticalAlignment="Center"/>
                     </StackPanel>
@@ -100,7 +100,7 @@
                     <PathIcon Data="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zM13 9V3.5L18.5 9H13z" Width="24" Height="24" HorizontalAlignment="Center"/>
                     <TextBlock Text="CSV" FontWeight="SemiBold" HorizontalAlignment="Center"/>
                     <TextBlock Text="Comma-separated" FontSize="11"
-                               Foreground="{DynamicResource SystemBaseMediumColor}"
+                               Foreground="{DynamicResource SukiMediumColor}"
                                HorizontalAlignment="Center"/>
                   </StackPanel>
                 </Border>
@@ -113,7 +113,7 @@
                     <PathIcon Data="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zM13 9V3.5L18.5 9H13z" Width="24" Height="24" HorizontalAlignment="Center"/>
                     <TextBlock Text="XLSX" FontWeight="SemiBold" HorizontalAlignment="Center"/>
                     <TextBlock Text="Excel workbook" FontSize="11"
-                               Foreground="{DynamicResource SystemBaseMediumColor}"
+                               Foreground="{DynamicResource SukiMediumColor}"
                                HorizontalAlignment="Center"/>
                   </StackPanel>
                 </Border>
@@ -126,7 +126,7 @@
                     <PathIcon Data="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zM13 9V3.5L18.5 9H13z" Width="24" Height="24" HorizontalAlignment="Center"/>
                     <TextBlock Text="JSON" FontWeight="SemiBold" HorizontalAlignment="Center"/>
                     <TextBlock Text="Structured data" FontSize="11"
-                               Foreground="{DynamicResource SystemBaseMediumColor}"
+                               Foreground="{DynamicResource SukiMediumColor}"
                                HorizontalAlignment="Center"/>
                   </StackPanel>
                 </Border>
@@ -176,7 +176,7 @@
           <StackPanel IsVisible="{Binding IsResultSuccess}" Spacing="4" Margin="0,4,0,0">
             <TextBlock Text="{Binding ResultSizeDisplay, StringFormat='Size: {0}'}"
                        FontSize="12"
-                       Foreground="{DynamicResource SystemBaseMediumColor}"/>
+                       Foreground="{DynamicResource SukiMediumColor}"/>
             <Button Classes="SecondaryButton" Content="Open File"
                     Command="{Binding OpenFileCommand}"
                     HorizontalAlignment="Left"/>

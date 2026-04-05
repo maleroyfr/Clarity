@@ -30,7 +30,7 @@
         </TextBlock>
       </StackPanel>
       <TextBlock Text="{Binding Copyright}" FontSize="11"
-                 Foreground="{DynamicResource SystemBaseMediumLowColor}"
+                 Foreground="{DynamicResource SukiLowColor}"
                  HorizontalAlignment="Center" Margin="0,8,0,0"/>
     </StackPanel>
 

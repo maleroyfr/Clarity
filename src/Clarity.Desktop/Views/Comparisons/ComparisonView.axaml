@@ -9,7 +9,7 @@
 
     <!-- Page Header -->
     <Border Grid.Row="0" Padding="24,20,24,16"
-            BorderBrush="{DynamicResource SystemBaseLowColor}"
+            BorderBrush="{DynamicResource SukiLowColor}"
             BorderThickness="0,0,0,1">
       <StackPanel>
         <StackPanel Orientation="Horizontal" Spacing="8">
@@ -27,7 +27,7 @@
         <StackPanel Orientation="Horizontal" Spacing="12">
           <StackPanel Spacing="4">
             <TextBlock Text="Customer" FontSize="12"
-                       Foreground="{DynamicResource SystemBaseMediumColor}"/>
+                       Foreground="{DynamicResource SukiMediumColor}"/>
             <ComboBox ItemsSource="{Binding Customers}"
                       SelectedItem="{Binding SelectedCustomer}"
                       PlaceholderText="Select a customer…"
@@ -42,7 +42,7 @@
 
           <StackPanel Spacing="4" IsVisible="{Binding HasSelectedCustomer}">
             <TextBlock Text="Comparison Mode" FontSize="12"
-                       Foreground="{DynamicResource SystemBaseMediumColor}"/>
+                       Foreground="{DynamicResource SukiMediumColor}"/>
             <ComboBox ItemsSource="{Binding ComparisonModes}"
                       SelectedItem="{Binding SelectedMode}"
                       Width="220">
@@ -64,12 +64,12 @@
                       IsVisible="{Binding IsLoadingSnapshots}">
             <ProgressBar IsIndeterminate="True" Width="80" Height="4"/>
             <TextBlock Text="Loading snapshots…" FontSize="12"
-                       Foreground="{DynamicResource SystemBaseMediumColor}"/>
+                       Foreground="{DynamicResource SukiMediumColor}"/>
           </StackPanel>
 
           <StackPanel Spacing="4" IsVisible="{Binding !IsLoadingSnapshots}">
             <TextBlock Text="Left Snapshot" FontSize="12"
-                       Foreground="{DynamicResource SystemBaseMediumColor}"/>
+                       Foreground="{DynamicResource SukiMediumColor}"/>
             <ComboBox ItemsSource="{Binding Snapshots}"
                       SelectedItem="{Binding SelectedLeftSnapshot}"
                       PlaceholderText="Select left snapshot…"
@@ -79,7 +79,7 @@
                   <StackPanel Orientation="Horizontal" Spacing="6">
                     <TextBlock Text="{Binding Name}"/>
                     <TextBlock Text="{Binding EnvironmentName, StringFormat='({0})'}"
-                               Foreground="{DynamicResource SystemBaseMediumColor}" FontSize="12"/>
+                               Foreground="{DynamicResource SukiMediumColor}" FontSize="12"/>
                   </StackPanel>
                 </DataTemplate>
               </ComboBox.ItemTemplate>
@@ -88,7 +88,7 @@
 
           <StackPanel Spacing="4" IsVisible="{Binding !IsLoadingSnapshots}">
             <TextBlock Text="Right Snapshot" FontSize="12"
-                       Foreground="{DynamicResource SystemBaseMediumColor}"/>
+                       Foreground="{DynamicResource SukiMediumColor}"/>
             <ComboBox ItemsSource="{Binding Snapshots}"
                       SelectedItem="{Binding SelectedRightSnapshot}"
                       PlaceholderText="Select right snapshot…"
@@ -98,7 +98,7 @@
                   <StackPanel Orientation="Horizontal" Spacing="6">
                     <TextBlock Text="{Binding Name}"/>
                     <TextBlock Text="{Binding EnvironmentName, StringFormat='({0})'}"
-                               Foreground="{DynamicResource SystemBaseMediumColor}" FontSize="12"/>
+                               Foreground="{DynamicResource SukiMediumColor}" FontSize="12"/>
                   </StackPanel>
                 </DataTemplate>
               </ComboBox.ItemTemplate>
@@ -124,7 +124,7 @@
       <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center">
         <ProgressBar IsIndeterminate="True" Width="200"/>
         <TextBlock Text="Running comparison…"
-                   Foreground="{DynamicResource SystemBaseMediumColor}"
+                   Foreground="{DynamicResource SukiMediumColor}"
                    VerticalAlignment="Center"/>
       </StackPanel>
     </Border>
@@ -167,7 +167,7 @@
             <Border Background="#F0F4FF" CornerRadius="8" Padding="16,12" Margin="0,0,12,8" MinWidth="130">
               <StackPanel Spacing="2">
                 <TextBlock Text="Total Left" FontSize="12"
-                           Foreground="{DynamicResource SystemBaseMediumColor}"/>
+                           Foreground="{DynamicResource SukiMediumColor}"/>
                 <TextBlock Text="{Binding TotalLeft}" FontSize="24" FontWeight="Bold"
                            Foreground="#3366CC"/>
               </StackPanel>
@@ -176,7 +176,7 @@
             <Border Background="#F0F4FF" CornerRadius="8" Padding="16,12" Margin="0,0,12,8" MinWidth="130">
               <StackPanel Spacing="2">
                 <TextBlock Text="Total Right" FontSize="12"
-                           Foreground="{DynamicResource SystemBaseMediumColor}"/>
+                           Foreground="{DynamicResource SukiMediumColor}"/>
                 <TextBlock Text="{Binding TotalRight}" FontSize="24" FontWeight="Bold"
                            Foreground="#3366CC"/>
               </StackPanel>
@@ -217,11 +217,11 @@
 
           <!-- Per-workload breakdown -->
           <TextBlock Text="Per-Workload Breakdown" Classes="CardTitle" Margin="0,8,0,4"/>
-          <Border Background="{DynamicResource SystemBaseLowColor}" CornerRadius="8" Padding="0">
+          <Border Background="{DynamicResource SukiLowColor}" CornerRadius="8" Padding="0">
             <Grid>
               <StackPanel>
                 <Border Padding="12,8" BorderThickness="0,0,0,1"
-                        BorderBrush="{DynamicResource SystemBaseMediumColor}">
+                        BorderBrush="{DynamicResource SukiMediumColor}">
                   <Grid ColumnDefinitions="*,80,80,80,80">
                     <TextBlock Grid.Column="0" Text="Workload" FontWeight="SemiBold" FontSize="13"/>
                     <TextBlock Grid.Column="1" Text="Added" FontWeight="SemiBold" FontSize="13"
@@ -239,7 +239,7 @@
                   <ItemsControl.ItemTemplate>
                     <DataTemplate x:CompileBindings="False">
                       <Border Padding="12,6" BorderThickness="0,0,0,1"
-                              BorderBrush="{DynamicResource SystemBaseLowColor}">
+                              BorderBrush="{DynamicResource SukiLowColor}">
                         <Grid ColumnDefinitions="*,80,80,80,80">
                           <TextBlock Grid.Column="0" Text="{Binding WorkloadArea}" FontSize="13"/>
                           <TextBlock Grid.Column="1" Text="{Binding Added}" FontSize="13"
