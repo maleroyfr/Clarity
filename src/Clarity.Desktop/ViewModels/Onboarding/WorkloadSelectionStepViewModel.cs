@@ -22,18 +22,47 @@ public sealed partial class WorkloadItemVm : ObservableObject
     }
 }
 
+public sealed class WorkloadGroupVm
+{
+    public string GroupName { get; }
+    public string GroupIcon { get; }
+    public ObservableCollection<WorkloadItemVm> Workloads { get; }
+
+    public WorkloadGroupVm(string name, string icon, ObservableCollection<WorkloadItemVm> workloads)
+    {
+        GroupName = name;
+        GroupIcon = icon;
+        Workloads = workloads;
+    }
+}
+
 public sealed partial class WorkloadSelectionStepViewModel : ObservableObject
 {
-    public ObservableCollection<WorkloadItemVm> Workloads { get; } =
+    public ObservableCollection<WorkloadGroupVm> WorkloadGroups { get; } =
     [
-        new(WorkloadArea.EntraId,          "Entra ID",           "Azure AD users, groups, roles and conditional access"),
-        new(WorkloadArea.Intune,           "Intune",             "Device management, compliance policies and configuration profiles"),
-        new(WorkloadArea.ExchangeOnline,   "Exchange Online",    "Mailboxes, distribution groups and mail-flow rules"),
-        new(WorkloadArea.SharePointOnline, "SharePoint Online",  "Sites, libraries, permissions and sharing settings"),
-        new(WorkloadArea.Teams,            "Microsoft Teams",    "Teams, channels, policies and calling configuration"),
-        new(WorkloadArea.OnPremAD,         "On-Premises AD",     "Active Directory users, OUs, GPOs and trusts"),
-        new(WorkloadArea.OnPremExchange,   "On-Premises Exchange", "On-prem mailboxes, connectors and transport rules"),
+        new("Microsoft 365 Cloud", "☁️",
+        [
+            new(WorkloadArea.EntraId,          "Microsoft Entra ID",         "Users, groups, roles, applications, devices, and conditional access policies"),
+            new(WorkloadArea.Intune,           "Microsoft Intune",           "Device management, compliance policies, configuration profiles, and app inventory"),
+            new(WorkloadArea.ExchangeOnline,   "Exchange Online",            "Mailboxes, distribution groups, mail-flow rules, and transport settings"),
+            new(WorkloadArea.SharePointOnline, "SharePoint Online",          "Sites, libraries, permissions, sharing settings, and storage quotas"),
+            new(WorkloadArea.Teams,            "Microsoft Teams",            "Teams, channels, policies, calling configuration, and meeting settings"),
+        ]),
+        new("On-Premises Infrastructure", "🏢",
+        [
+            new(WorkloadArea.OnPremAD,         "Active Directory",           "AD users, groups, OUs, GPOs, trusts, and domain controllers"),
+            new(WorkloadArea.OnPremExchange,   "Exchange Server",            "On-premises mailboxes, connectors, transport rules, and recipient configuration"),
+        ])
     ];
+
+    public ObservableCollection<WorkloadItemVm> Workloads { get; } = [];
+
+    public WorkloadSelectionStepViewModel()
+    {
+        foreach (var group in WorkloadGroups)
+            foreach (var item in group.Workloads)
+                Workloads.Add(item);
+    }
 
     public bool HasSelection => Workloads.Any(w => w.IsSelected);
 
