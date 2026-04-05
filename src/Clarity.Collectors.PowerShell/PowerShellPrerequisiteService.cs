@@ -175,7 +175,7 @@ public sealed class PowerShellPrerequisiteService(
         try
         {
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            cts.CancelAfter(TimeSpan.FromSeconds(30));
+            cts.CancelAfter(TimeSpan.FromSeconds(45));
 
             var result = await runner.RunAsync(
                 BuildCheckScript(requirement.ModuleName, requirement.MinimumVersion.ToString()),
@@ -234,17 +234,69 @@ public sealed class PowerShellPrerequisiteService(
     private static string BuildCheckScript(string moduleName, string minVersion) =>
         $$"""
         $ProgressPreference = 'SilentlyContinue'
-        $mod = Get-Module -ListAvailable -Name '{{moduleName}}' |
-            Where-Object { $_.Version -ge [version]'{{minVersion}}' } |
-            Sort-Object Version -Descending | Select-Object -First 1
-        if ($mod) {
-            $scope = if ($mod.ModuleBase -like "$env:USERPROFILE*") { 'User' } elseif ($mod.ModuleBase -like "$env:ProgramFiles\PowerShell\Modules*" -or $mod.ModuleBase -like "$env:ProgramFiles\WindowsPowerShell\Modules*") { 'AllUsers' } else { 'System' }
-            Write-Output "OK|$($mod.Version)|$scope"
+        $ErrorActionPreference = 'SilentlyContinue'
+
+        # Search in all standard module paths (PS7 + WindowsPowerShell + user scopes)
+        $searchPaths = @(
+            $env:PSModulePath -split [IO.Path]::PathSeparator
+        )
+        # Also explicitly add WindowsPowerShell paths if not already included
+        $wpsPaths = @(
+            "$env:ProgramFiles\WindowsPowerShell\Modules",
+            "$env:USERPROFILE\Documents\WindowsPowerShell\Modules"
+        )
+        foreach ($p in $wpsPaths) {
+            if ($searchPaths -notcontains $p -and (Test-Path $p -ErrorAction SilentlyContinue)) {
+                $searchPaths += $p
+            }
+        }
+
+        $allModules = @()
+        foreach ($searchPath in $searchPaths) {
+            if (-not (Test-Path $searchPath -ErrorAction SilentlyContinue)) { continue }
+            $found = Get-ChildItem -Path $searchPath -Directory -Filter '{{moduleName}}' -ErrorAction SilentlyContinue
+            foreach ($dir in $found) {
+                $manifests = Get-ChildItem -Path $dir.FullName -Filter '*.psd1' -Recurse -Depth 2 -ErrorAction SilentlyContinue
+                foreach ($manifest in $manifests) {
+                    try {
+                        $info = Import-PowerShellDataFile -Path $manifest.FullName -ErrorAction Stop
+                        if ($info.ModuleVersion) {
+                            $allModules += [PSCustomObject]@{
+                                Version    = [version]$info.ModuleVersion
+                                ModuleBase = $dir.FullName
+                            }
+                        }
+                    } catch { }
+                }
+            }
+        }
+
+        # Also try standard Get-Module (catches modules the above might miss)
+        $standardModules = Get-Module -ListAvailable -Name '{{moduleName}}' -ErrorAction SilentlyContinue
+        foreach ($sm in $standardModules) {
+            $allModules += [PSCustomObject]@{
+                Version    = $sm.Version
+                ModuleBase = $sm.ModuleBase
+            }
+        }
+
+        # Deduplicate by path and pick best version
+        $unique = $allModules | Sort-Object { $_.ModuleBase } -Unique | Sort-Object Version -Descending
+        $best = $unique | Where-Object { $_.Version -ge [version]'{{minVersion}}' } | Select-Object -First 1
+
+        function Get-Scope($base) {
+            if ($base -like "$env:USERPROFILE*") { return 'User' }
+            if ($base -like "$env:ProgramFiles\PowerShell\Modules*" -or $base -like "$env:ProgramFiles\WindowsPowerShell\Modules*") { return 'AllUsers' }
+            return 'System'
+        }
+
+        if ($best) {
+            $scope = Get-Scope $best.ModuleBase
+            Write-Output "OK|$($best.Version)|$scope"
         } else {
-            $any = Get-Module -ListAvailable -Name '{{moduleName}}' |
-                Sort-Object Version -Descending | Select-Object -First 1
+            $any = $unique | Select-Object -First 1
             if ($any) {
-                $scope = if ($any.ModuleBase -like "$env:USERPROFILE*") { 'User' } elseif ($any.ModuleBase -like "$env:ProgramFiles\PowerShell\Modules*" -or $any.ModuleBase -like "$env:ProgramFiles\WindowsPowerShell\Modules*") { 'AllUsers' } else { 'System' }
+                $scope = Get-Scope $any.ModuleBase
                 Write-Output "OLD|$($any.Version)|$scope"
             } else {
                 Write-Output "MISSING"

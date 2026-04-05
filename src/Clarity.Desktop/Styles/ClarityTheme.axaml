@@ -1,10 +1,22 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-  <!-- Theme-aware semantic color resources -->
+  <!-- Theme-aware semantic color resources (light/dark variants aligned with SukiUI) -->
   <Styles.Resources>
-    <SolidColorBrush x:Key="SukiLowColor" Color="#20808080"/>
-    <SolidColorBrush x:Key="SukiMediumColor" Color="#80808080"/>
+    <ResourceDictionary>
+      <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Light">
+          <SolidColorBrush x:Key="SukiLowColor" Color="#15000000"/>
+          <SolidColorBrush x:Key="SukiMediumColor" Color="#666666"/>
+          <SolidColorBrush x:Key="ClaritySubtleBackground" Color="#f5f5f5"/>
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="Dark">
+          <SolidColorBrush x:Key="SukiLowColor" Color="#25ffffff"/>
+          <SolidColorBrush x:Key="SukiMediumColor" Color="#b4b4b4"/>
+          <SolidColorBrush x:Key="ClaritySubtleBackground" Color="#2a2a2a"/>
+        </ResourceDictionary>
+      </ResourceDictionary.ThemeDictionaries>
+    </ResourceDictionary>
   </Styles.Resources>
 
   <!-- Typography — SukiUI compatible resources -->

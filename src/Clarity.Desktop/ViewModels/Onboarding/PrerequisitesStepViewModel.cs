@@ -110,73 +110,76 @@ public sealed partial class PrerequisitesStepViewModel : ObservableObject
             })
             .ToList();
 
-        // Build grouped items
-        var graphItems = mergedItems
-            .Where(i => i.Category == PrerequisiteCategory.GraphPermission)
-            .OrderBy(i => !i.IsRequired)
-            .ThenBy(i => i.Label, StringComparer.OrdinalIgnoreCase)
-            .ToList();
-
-        var authItems = mergedItems
-            .Where(i => i.Category is PrerequisiteCategory.Certificate or PrerequisiteCategory.AdminConsent
-                     || i.Key.StartsWith("cloud:", StringComparison.OrdinalIgnoreCase)
-                     || i.Key.StartsWith("auth:exchange", StringComparison.OrdinalIgnoreCase)
-                     || i.Key.StartsWith("role:", StringComparison.OrdinalIgnoreCase))
-            .Where(i => i.Category != PrerequisiteCategory.GraphPermission)
-            .OrderBy(i => !i.IsRequired)
-            .ThenBy(i => i.Label, StringComparer.OrdinalIgnoreCase)
-            .ToList();
-
-        var psItems = mergedItems
-            .Where(i => i.Category == PrerequisiteCategory.PowerShellModule)
-            .OrderBy(i => !i.IsRequired)
-            .ThenBy(i => i.Label, StringComparer.OrdinalIgnoreCase)
-            .ToList();
-
-        var networkItems = mergedItems
-            .Where(i => i.Category == PrerequisiteCategory.NetworkAccess)
-            .ToList();
-
-        var onPremAuthItems = mergedItems
-            .Where(i => i.Key.StartsWith("auth:ad", StringComparison.OrdinalIgnoreCase))
-            .ToList();
-
-        // Remaining items not caught by the filters above
-        var categorized = new HashSet<string>(
-            graphItems.Concat(authItems).Concat(psItems).Concat(networkItems).Concat(onPremAuthItems)
-                .Select(i => i.Key), StringComparer.OrdinalIgnoreCase);
-        var otherItems = mergedItems.Where(i => !categorized.Contains(i.Key)).ToList();
-
-        // Determine workload hints per group
         var cloudWorkloads = _selectedAreas.Where(AuthTypeHelper.IsCloudWorkload).ToList();
         var onPremWorkloads = _selectedAreas.Where(AuthTypeHelper.IsOnPremWorkload).ToList();
-        var psWorkloads = _selectedAreas
-            .Where(a => WorkloadCapabilityCatalog.GetDefinition(a).RequiredPowerShellModules.Count > 0)
-            .ToList();
 
-        string FormatWorkloadHints(IEnumerable<WorkloadArea> areas) =>
-            string.Join(", ", areas.Select(GetWorkloadShortName));
+        // Group by area: Microsoft 365 Cloud prerequisites
+        if (cloudWorkloads.Count > 0)
+        {
+            var cloudGraphItems = mergedItems
+                .Where(i => i.Category == PrerequisiteCategory.GraphPermission)
+                .OrderBy(i => !i.IsRequired).ThenBy(i => i.Label, StringComparer.OrdinalIgnoreCase)
+                .ToList();
 
-        // Create groups
-        if (graphItems.Count > 0)
-            AddGroup("Microsoft Graph API Permissions", "Required application permissions for the Azure AD app registration.",
-                "🔑", false, FormatWorkloadHints(cloudWorkloads), graphItems);
+            var cloudAuthItems = mergedItems
+                .Where(i => i.Category is PrerequisiteCategory.Certificate or PrerequisiteCategory.AdminConsent
+                         || i.Key.StartsWith("cloud:", StringComparison.OrdinalIgnoreCase)
+                         || i.Key.StartsWith("auth:exchange", StringComparison.OrdinalIgnoreCase)
+                         || i.Key.StartsWith("role:", StringComparison.OrdinalIgnoreCase))
+                .Where(i => i.Category != PrerequisiteCategory.GraphPermission)
+                .OrderBy(i => !i.IsRequired).ThenBy(i => i.Label, StringComparer.OrdinalIgnoreCase)
+                .ToList();
 
-        if (authItems.Count > 0)
-            AddGroup("Authentication & App Registration", "App registration, admin consent, and authentication method configuration.",
-                "🛡️", false, FormatWorkloadHints(cloudWorkloads), authItems);
+            var cloudPsItems = mergedItems
+                .Where(i => i.Category == PrerequisiteCategory.PowerShellModule
+                    && !i.Key.StartsWith("auth:ad", StringComparison.OrdinalIgnoreCase))
+                .OrderBy(i => !i.IsRequired).ThenBy(i => i.Label, StringComparer.OrdinalIgnoreCase)
+                .ToList();
 
-        if (psItems.Count > 0)
-            AddGroup("PowerShell Runtime & Modules", "Optional PowerShell modules for workloads that require deeper collection beyond Graph API.",
-                "⚡", true, FormatWorkloadHints(psWorkloads), psItems);
+            var allCloudItems = new List<WorkloadChecklistItemDefinition>();
+            allCloudItems.AddRange(cloudAuthItems);
+            allCloudItems.AddRange(cloudGraphItems);
+            allCloudItems.AddRange(cloudPsItems);
 
-        if (networkItems.Count > 0 || onPremAuthItems.Count > 0)
-            AddGroup("Network & On-Premises Access", "Network connectivity and on-premises authentication requirements.",
-                "🌐", false, FormatWorkloadHints(onPremWorkloads), [.. networkItems, .. onPremAuthItems]);
+            if (allCloudItems.Count > 0)
+                AddGroup("Microsoft 365 Cloud",
+                    "App registration, Graph API permissions, and PowerShell modules for cloud workloads.",
+                    "☁️", false, FormatWorkloadHints(cloudWorkloads), allCloudItems);
+        }
 
-        if (otherItems.Count > 0)
-            AddGroup("Additional Requirements", "Other prerequisites specific to selected workloads.",
-                "📋", false, "", otherItems);
+        // On-Premises prerequisites
+        if (onPremWorkloads.Count > 0)
+        {
+            var networkItems = mergedItems
+                .Where(i => i.Category == PrerequisiteCategory.NetworkAccess)
+                .ToList();
+
+            var onPremAuthItems = mergedItems
+                .Where(i => i.Key.StartsWith("auth:ad", StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            var onPremPsRuntime = mergedItems
+                .Where(i => i.Key.Equals("tool:pwsh", StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            var allOnPremItems = new List<WorkloadChecklistItemDefinition>();
+            allOnPremItems.AddRange(onPremPsRuntime);
+            allOnPremItems.AddRange(networkItems);
+            allOnPremItems.AddRange(onPremAuthItems);
+
+            if (allOnPremItems.Count > 0)
+                AddGroup("On-Premises Infrastructure",
+                    "Network connectivity, LDAP access, and authentication for on-premises workloads.",
+                    "🏢", false, FormatWorkloadHints(onPremWorkloads), allOnPremItems);
+        }
+
+        // Remaining items not covered
+        var categorizedKeys = new HashSet<string>(
+            Groups.SelectMany(g => g.Items).Select(i => i.Key), StringComparer.OrdinalIgnoreCase);
+        var remainingItems = mergedItems.Where(i => !categorizedKeys.Contains(i.Key)).ToList();
+        if (remainingItems.Count > 0)
+            AddGroup("Additional Requirements", "Other prerequisites for selected workloads.",
+                "📋", false, "", remainingItems);
 
         OnPropertyChanged(nameof(TotalCount));
         OnPropertyChanged(nameof(RequiredCount));
@@ -185,6 +188,9 @@ public sealed partial class PrerequisitesStepViewModel : ObservableObject
 
         await RefreshAsync();
     }
+
+    private static string FormatWorkloadHints(IEnumerable<WorkloadArea> areas) =>
+        string.Join(", ", areas.Select(GetWorkloadShortName));
 
     private void AddGroup(string name, string description, string icon, bool isOptional,
         string workloadHints, IReadOnlyList<WorkloadChecklistItemDefinition> items)
@@ -349,13 +355,13 @@ public sealed partial class PrerequisitesStepViewModel : ObservableObject
 
     private static string GetWorkloadShortName(WorkloadArea area) => area switch
     {
-        WorkloadArea.EntraId => "Entra ID",
-        WorkloadArea.Intune => "Intune",
+        WorkloadArea.EntraId => "Microsoft Entra ID",
+        WorkloadArea.Intune => "Microsoft Intune",
         WorkloadArea.ExchangeOnline => "Exchange Online",
-        WorkloadArea.SharePointOnline => "SharePoint",
-        WorkloadArea.Teams => "Teams",
-        WorkloadArea.OnPremAD => "AD",
-        WorkloadArea.OnPremExchange => "Exchange On-Prem",
+        WorkloadArea.SharePointOnline => "SharePoint Online",
+        WorkloadArea.Teams => "Microsoft Teams",
+        WorkloadArea.OnPremAD => "Active Directory",
+        WorkloadArea.OnPremExchange => "Exchange Server",
         _ => area.ToString()
     };
 

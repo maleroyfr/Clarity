@@ -1,5 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:suki="https://github.com/kikipoulet/SukiUI"
              xmlns:vm="clr-namespace:Clarity.Desktop.ViewModels.Onboarding"
              x:Class="Clarity.Desktop.Views.Onboarding.WorkloadSelectionStepView"
              x:DataType="vm:WorkloadSelectionStepViewModel">
@@ -10,24 +11,39 @@
 
   <StackPanel Spacing="8">
     <TextBlock Text="Select Workloads" Classes="PageTitle" Margin="0,0,0,4"/>
-    <TextBlock Text="Choose the workloads you want to collect data for in this environment."
-               Classes="PageSubtitle" Margin="0,0,0,16" TextWrapping="Wrap"/>
+    <TextBlock Text="Choose the workload areas relevant to this audit mission. This determines permissions and prerequisites."
+               Classes="PageSubtitle" Margin="0,0,0,12" TextWrapping="Wrap"/>
 
-    <ItemsControl ItemsSource="{Binding Workloads}">
+    <ItemsControl ItemsSource="{Binding WorkloadGroups}">
       <ItemsControl.ItemTemplate>
-        <DataTemplate x:DataType="vm:WorkloadItemVm">
-          <Border Background="{DynamicResource SystemAltHighColor}"
-                  BorderBrush="{DynamicResource SukiLowColor}"
-                  BorderThickness="1" CornerRadius="8"
-                  Padding="16,12" Margin="0,0,0,6">
-            <CheckBox IsChecked="{Binding IsSelected}">
-              <StackPanel Spacing="2">
-                <TextBlock Text="{Binding Label}" Classes="CardTitle"/>
-                <TextBlock Text="{Binding Description}" Classes="CardSubtitle"
-                           TextWrapping="Wrap"/>
+        <DataTemplate x:DataType="vm:WorkloadGroupVm">
+          <suki:GroupBox Margin="0,0,0,12">
+            <suki:GroupBox.Header>
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <TextBlock Text="{Binding GroupIcon}" FontSize="16" VerticalAlignment="Center"/>
+                <TextBlock Text="{Binding GroupName}" FontWeight="SemiBold" FontSize="14" VerticalAlignment="Center"/>
               </StackPanel>
-            </CheckBox>
-          </Border>
+            </suki:GroupBox.Header>
+
+            <ItemsControl ItemsSource="{Binding Workloads}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:WorkloadItemVm">
+                  <Border Background="{DynamicResource ClaritySubtleBackground}"
+                          BorderBrush="{DynamicResource SukiLowColor}"
+                          BorderThickness="1" CornerRadius="8"
+                          Padding="14,10" Margin="0,0,0,6">
+                    <CheckBox IsChecked="{Binding IsSelected}">
+                      <StackPanel Spacing="2">
+                        <TextBlock Text="{Binding Label}" Classes="CardTitle"/>
+                        <TextBlock Text="{Binding Description}" Classes="CardSubtitle"
+                                   TextWrapping="Wrap"/>
+                      </StackPanel>
+                    </CheckBox>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </suki:GroupBox>
         </DataTemplate>
       </ItemsControl.ItemTemplate>
     </ItemsControl>
