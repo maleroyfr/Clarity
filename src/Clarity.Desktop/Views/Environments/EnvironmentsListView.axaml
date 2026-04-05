@@ -142,6 +142,13 @@
                         <TextBlock Text="Edit" VerticalAlignment="Center"/>
                       </StackPanel>
                     </Button>
+                    <Button Classes="SecondaryButton"
+                            Command="{Binding ConfigureAuthCommand}">
+                      <StackPanel Orientation="Horizontal" Spacing="6">
+                        <ui:SymbolIcon Symbol="Setting" FontSize="14"/>
+                        <TextBlock Text="Configure" VerticalAlignment="Center"/>
+                      </StackPanel>
+                    </Button>
                     <Button Classes="DangerButton"
                             IsVisible="{Binding !IsArchived}"
                             Command="{Binding ArchiveCommand}"
