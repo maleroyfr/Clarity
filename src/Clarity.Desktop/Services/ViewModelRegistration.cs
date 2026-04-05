@@ -3,7 +3,6 @@ using Clarity.Desktop.ViewModels.Customers;
 using Clarity.Desktop.ViewModels.Environments;
 using Clarity.Desktop.ViewModels.Exports;
 using Clarity.Desktop.ViewModels.Inventory;
-using Clarity.Desktop.ViewModels.Onboarding;
 using Clarity.Desktop.ViewModels.Relations;
 using Clarity.Desktop.ViewModels.Shell;
 using Clarity.Desktop.ViewModels.Snapshots;
@@ -27,8 +26,8 @@ public static class ViewModelRegistration
         // Environments
         services.AddTransient<EnvironmentsListViewModel>();
         services.AddTransient<EnvironmentFormViewModel>();
+        services.AddTransient<EnvironmentSetupWizardViewModel>();
         services.AddTransient<AuthConfigViewModel>();
-        services.AddTransient<OnboardingWizardViewModel>();
 
         // Snapshots & Inventory
         services.AddTransient<SnapshotsViewModel>();

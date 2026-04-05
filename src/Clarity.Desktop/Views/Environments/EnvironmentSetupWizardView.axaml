@@ -1,0 +1,102 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:Clarity.Desktop.ViewModels.Environments"
+             xmlns:envViews="clr-namespace:Clarity.Desktop.Views.Environments"
+             xmlns:onbViews="clr-namespace:Clarity.Desktop.Views.Onboarding"
+             xmlns:onbVm="clr-namespace:Clarity.Desktop.ViewModels.Onboarding"
+             xmlns:suki="https://github.com/kikipoulet/SukiUI"
+             x:Class="Clarity.Desktop.Views.Environments.EnvironmentSetupWizardView"
+             x:DataType="vm:EnvironmentSetupWizardViewModel"
+             MinWidth="620" MinHeight="520">
+
+  <UserControl.Styles>
+    <StyleInclude Source="/Styles/ClarityTheme.axaml"/>
+
+    <!-- Step indicator circle: completed -->
+    <Style Selector="Border.StepDone">
+      <Setter Property="Background" Value="{DynamicResource SukiPrimaryColor}"/>
+      <Setter Property="Width" Value="32"/>
+      <Setter Property="Height" Value="32"/>
+      <Setter Property="CornerRadius" Value="16"/>
+    </Style>
+    <!-- Step indicator circle: active -->
+    <Style Selector="Border.StepActive">
+      <Setter Property="Background" Value="{DynamicResource SukiPrimaryColor}"/>
+      <Setter Property="Width" Value="32"/>
+      <Setter Property="Height" Value="32"/>
+      <Setter Property="CornerRadius" Value="16"/>
+    </Style>
+    <!-- Step indicator circle: upcoming -->
+    <Style Selector="Border.StepPending">
+      <Setter Property="Background" Value="{DynamicResource SukiLowColor}"/>
+      <Setter Property="Width" Value="32"/>
+      <Setter Property="Height" Value="32"/>
+      <Setter Property="CornerRadius" Value="16"/>
+    </Style>
+    <!-- Connector line -->
+    <Style Selector="Border.StepConnector">
+      <Setter Property="Height" Value="2"/>
+      <Setter Property="Width" Value="48"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+  </UserControl.Styles>
+
+  <Grid RowDefinitions="Auto,*,Auto,Auto" Margin="28,20">
+
+    <!-- Step indicator bar -->
+    <Border Grid.Row="0" Margin="0,0,0,24" HorizontalAlignment="Center">
+      <StackPanel x:Name="StepIndicatorPanel" Orientation="Horizontal" Spacing="0"
+                  HorizontalAlignment="Center"/>
+    </Border>
+
+    <!-- Step content -->
+    <ScrollViewer Grid.Row="1" Padding="0,0,16,0">
+      <ContentControl Content="{Binding CurrentStepViewModel}">
+        <ContentControl.DataTemplates>
+          <DataTemplate DataType="vm:EnvironmentBasicsStepViewModel">
+            <envViews:EnvironmentBasicsStepView/>
+          </DataTemplate>
+          <DataTemplate DataType="onbVm:WorkloadSelectionStepViewModel">
+            <onbViews:WorkloadSelectionStepView/>
+          </DataTemplate>
+          <DataTemplate DataType="onbVm:PrerequisitesStepViewModel">
+            <onbViews:PrerequisitesStepView/>
+          </DataTemplate>
+          <DataTemplate DataType="onbVm:SummaryStepViewModel">
+            <onbViews:SummaryStepView/>
+          </DataTemplate>
+        </ContentControl.DataTemplates>
+      </ContentControl>
+    </ScrollViewer>
+
+    <!-- Error message -->
+    <suki:InfoBar Grid.Row="2"
+                  IsOpen="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                  Severity="Error" Title="Error" Message="{Binding ErrorMessage}" IsClosable="True"
+                  Margin="0,8,0,0"/>
+
+    <!-- Navigation buttons -->
+    <Grid Grid.Row="3" ColumnDefinitions="Auto,*,Auto,Auto" Margin="0,16,0,0">
+      <Button Grid.Column="0" Classes="SecondaryButton" Content="Cancel"
+              Command="{Binding CancelCommand}"/>
+      <Button Grid.Column="2" Classes="SecondaryButton" Content="← Back"
+              IsVisible="{Binding !IsFirstStep}"
+              Command="{Binding PrevCommand}"
+              Margin="0,0,8,0"/>
+      <Button Grid.Column="3" Classes="PrimaryButton"
+              IsVisible="{Binding !IsLastStep}"
+              IsEnabled="{Binding CanGoNext}"
+              Content="Next →"
+              Command="{Binding NextCommand}"/>
+      <Button Grid.Column="3" Classes="PrimaryButton"
+              IsVisible="{Binding IsLastStep}"
+              IsEnabled="{Binding !IsSaving}"
+              Command="{Binding FinishCommand}">
+        <Panel>
+          <TextBlock Text="Saving…" IsVisible="{Binding IsSaving}"/>
+          <TextBlock Text="✓ Save Environment" IsVisible="{Binding !IsSaving}"/>
+        </Panel>
+      </Button>
+    </Grid>
+  </Grid>
+</UserControl>
