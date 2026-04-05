@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using Avalonia.Controls.Notifications;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Clarity.Application.Customers.Commands;
@@ -9,6 +10,8 @@ using Clarity.Application.Environments.Queries;
 using Clarity.Application.Exports;
 using Clarity.Application.Snapshots;
 using Clarity.Application.Snapshots.Queries;
+using Clarity.Desktop.Services;
+using Clarity.Desktop.ViewModels.Shell;
 using Clarity.SharedContracts.Enums;
 using MediatR;
 
@@ -263,6 +266,11 @@ public sealed partial class ExportsViewModel : ObservableObject
                 WorkloadFilter: null));
 
             LastResult = result;
+
+            if (result.Status == JobStatus.Completed)
+                AppServiceLocator.Get<AppShellViewModel>().ShowToast("Export Complete", $"{SelectedFormat.ToString().ToUpperInvariant()} export saved to {result.OutputPath}", NotificationType.Success);
+            else if (result.Status == JobStatus.Failed)
+                AppServiceLocator.Get<AppShellViewModel>().ShowToast("Export Failed", result.ErrorMessage ?? "Unknown error", NotificationType.Error);
 
             ExportHistory.Insert(0, new ExportHistoryItem
             {

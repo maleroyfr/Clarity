@@ -150,7 +150,7 @@ public sealed partial class CustomersListViewModel : ObservableObject
         {
             await _mediator.Send(new ArchiveCustomerCommand(dto.Id));
             await LoadAsync();
-            AppServiceLocator.Get<AppShellViewModel>().ShowToast("Customer Archived", $""{dto.Name}" has been archived.", NotificationType.Success);
+            AppServiceLocator.Get<AppShellViewModel>().ShowToast("Customer Archived", $"\"{dto.Name}\" has been archived.", NotificationType.Success);
         }
         catch (Exception ex)
         {
@@ -164,7 +164,7 @@ public sealed partial class CustomersListViewModel : ObservableObject
         {
             await _mediator.Send(new RestoreCustomerCommand(dto.Id));
             await LoadAsync();
-            AppServiceLocator.Get<AppShellViewModel>().ShowToast("Customer Restored", $""{dto.Name}" has been restored.", NotificationType.Success);
+            AppServiceLocator.Get<AppShellViewModel>().ShowToast("Customer Restored", $"\"{dto.Name}\" has been restored.", NotificationType.Success);
         }
         catch (Exception ex)
         {
@@ -178,7 +178,7 @@ public sealed partial class CustomersListViewModel : ObservableObject
         {
             await _mediator.Send(new DeleteCustomerCommand(dto.Id));
             await LoadAsync();
-            AppServiceLocator.Get<AppShellViewModel>().ShowToast("Customer Deleted", $""{dto.Name}" has been permanently deleted.", NotificationType.Warning);
+            AppServiceLocator.Get<AppShellViewModel>().ShowToast("Customer Deleted", $"\"{dto.Name}\" has been permanently deleted.", NotificationType.Warning);
         }
         catch (Exception ex)
         {

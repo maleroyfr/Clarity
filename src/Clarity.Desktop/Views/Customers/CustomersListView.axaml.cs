@@ -45,8 +45,8 @@ public partial class CustomersListView : UserControl
             builder.AddActionButton("Save", async _ =>
             {
                 await formVm.SaveCommand.ExecuteAsync(null);
-            }, true);
-            builder.AddActionButton("Cancel", _ => { });
+            }, true, ["Flat"]);
+            builder.AddActionButton("Cancel", _ => { }, true, ["Flat"]);
             builder.TryShow();
         }
     }

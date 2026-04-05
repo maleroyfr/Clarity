@@ -65,7 +65,7 @@ public partial class EnvironmentsListView : UserControl
                 {
                     if (DataContext is EnvironmentsListViewModel lvm)
                         await lvm.LoadAsync();
-                });
+                }, true, ["Flat"]);
                 builder.TryShow();
             }
         }

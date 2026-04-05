@@ -1,6 +1,9 @@
+using Avalonia.Controls.Notifications;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Clarity.Application.Customers.Commands;
+using Clarity.Desktop.Services;
+using Clarity.Desktop.ViewModels.Shell;
 using MediatR;
 
 namespace Clarity.Desktop.ViewModels.Customers;
@@ -74,6 +77,8 @@ public sealed partial class CustomerFormViewModel : ObservableObject
             else
                 await _mediator.Send(new CreateCustomerCommand(Name.Trim(), Description.TrimOrNull()));
 
+            var action = IsEditMode ? "updated" : "created";
+            AppServiceLocator.Get<AppShellViewModel>().ShowToast("Customer Saved", $"\"{Name.Trim()}\" has been {action}.", NotificationType.Success);
             SaveCompleted?.Invoke();
         }
         catch (Exception ex)

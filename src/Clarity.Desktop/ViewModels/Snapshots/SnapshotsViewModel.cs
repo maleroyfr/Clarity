@@ -1,3 +1,4 @@
+using Avalonia.Controls.Notifications;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Clarity.Application.Customers.Queries;
@@ -6,6 +7,8 @@ using Clarity.Application.Environments.Queries;
 using Clarity.Application.Snapshots;
 using Clarity.Application.Snapshots.Commands;
 using Clarity.Application.Snapshots.Queries;
+using Clarity.Desktop.Services;
+using Clarity.Desktop.ViewModels.Shell;
 using Clarity.Domain.Environments;
 using Clarity.SharedContracts.Enums;
 using MediatR;
@@ -342,6 +345,7 @@ public sealed partial class SnapshotsViewModel : ObservableObject
                 Description: null));
 
             await LoadSnapshotsAsync();
+            AppServiceLocator.Get<AppShellViewModel>().ShowToast("Snapshot Created", $"\"{name}\" is now running.", NotificationType.Success);
         }
         catch (Exception ex)
         {
@@ -360,6 +364,7 @@ public sealed partial class SnapshotsViewModel : ObservableObject
         {
             await _mediator.Send(new SealSnapshotCommand(dto.Id));
             await LoadSnapshotsAsync();
+            AppServiceLocator.Get<AppShellViewModel>().ShowToast("Snapshot Sealed", $"\"{dto.Name}\" is now immutable.", NotificationType.Success);
         }
         catch (Exception ex)
         {
@@ -374,6 +379,7 @@ public sealed partial class SnapshotsViewModel : ObservableObject
         {
             await _mediator.Send(new DeleteSnapshotCommand(snapshotId));
             await LoadSnapshotsAsync();
+            AppServiceLocator.Get<AppShellViewModel>().ShowToast("Snapshot Deleted", "Snapshot has been permanently deleted.", NotificationType.Warning);
         }
         catch (Exception ex)
         {
