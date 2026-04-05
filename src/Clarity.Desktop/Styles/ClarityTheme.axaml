@@ -57,6 +57,11 @@
     <Setter Property="FontSize" Value="12"/>
     <Setter Property="Opacity" Value="0.6"/>
   </Style>
+  <Style Selector="TextBlock.KeyboardHint">
+    <Setter Property="FontSize" Value="10"/>
+    <Setter Property="Opacity" Value="0.35"/>
+    <Setter Property="FontFamily" Value="Consolas, monospace"/>
+  </Style>
 
   <!-- Buttons -->
   <Style Selector="Button.PrimaryButton">
@@ -67,7 +72,22 @@
     <Setter Property="FontSize" Value="13"/>
     <Setter Property="FontWeight" Value="SemiBold"/>
     <Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="Transitions">
+      <Transitions>
+        <DoubleTransition Property="Opacity" Duration="0:0:0.15"/>
+      </Transitions>
+    </Setter>
   </Style>
+  <Style Selector="Button.PrimaryButton:pointerover">
+    <Setter Property="Opacity" Value="0.9"/>
+  </Style>
+  <Style Selector="Button.PrimaryButton:pressed">
+    <Setter Property="Opacity" Value="0.75"/>
+  </Style>
+  <Style Selector="Button.PrimaryButton:disabled">
+    <Setter Property="Opacity" Value="0.4"/>
+  </Style>
+
   <Style Selector="Button.SecondaryButton">
     <Setter Property="Background" Value="Transparent"/>
     <Setter Property="BorderThickness" Value="1"/>
@@ -75,7 +95,16 @@
     <Setter Property="CornerRadius" Value="6"/>
     <Setter Property="FontSize" Value="13"/>
     <Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="Transitions">
+      <Transitions>
+        <BrushTransition Property="Background" Duration="0:0:0.15"/>
+      </Transitions>
+    </Setter>
   </Style>
+  <Style Selector="Button.SecondaryButton:pointerover">
+    <Setter Property="Background" Value="{DynamicResource SukiLowColor}"/>
+  </Style>
+
   <Style Selector="Button.DangerButton">
     <Setter Property="Background" Value="Transparent"/>
     <Setter Property="BorderBrush" Value="#E74C3C"/>
@@ -85,7 +114,19 @@
     <Setter Property="CornerRadius" Value="6"/>
     <Setter Property="FontSize" Value="13"/>
     <Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="Transitions">
+      <Transitions>
+        <BrushTransition Property="Background" Duration="0:0:0.15"/>
+      </Transitions>
+    </Setter>
   </Style>
+  <Style Selector="Button.DangerButton:pointerover">
+    <Setter Property="Background" Value="#15E74C3C"/>
+  </Style>
+  <Style Selector="Button.DangerButton:pressed">
+    <Setter Property="Background" Value="#25E74C3C"/>
+  </Style>
+
   <Style Selector="Button.SuccessButton">
     <Setter Property="Background" Value="#2ECC71"/>
     <Setter Property="Foreground" Value="White"/>
@@ -94,7 +135,16 @@
     <Setter Property="FontSize" Value="13"/>
     <Setter Property="FontWeight" Value="SemiBold"/>
     <Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="Transitions">
+      <Transitions>
+        <DoubleTransition Property="Opacity" Duration="0:0:0.15"/>
+      </Transitions>
+    </Setter>
   </Style>
+  <Style Selector="Button.SuccessButton:pointerover">
+    <Setter Property="Opacity" Value="0.9"/>
+  </Style>
+
   <Style Selector="Button.IconButton">
     <Setter Property="Background" Value="Transparent"/>
     <Setter Property="BorderThickness" Value="0"/>
@@ -103,6 +153,14 @@
     <Setter Property="Cursor" Value="Hand"/>
     <Setter Property="MinWidth" Value="32"/>
     <Setter Property="MinHeight" Value="32"/>
+    <Setter Property="Transitions">
+      <Transitions>
+        <BrushTransition Property="Background" Duration="0:0:0.15"/>
+      </Transitions>
+    </Setter>
+  </Style>
+  <Style Selector="Button.IconButton:pointerover">
+    <Setter Property="Background" Value="{DynamicResource SukiLowColor}"/>
   </Style>
 
   <!-- Inputs -->
@@ -117,27 +175,55 @@
     <Setter Property="Padding" Value="14,8"/>
   </Style>
 
-  <!-- Cards — SukiUI compatible -->
+  <!-- Cards — SukiUI compatible with hover transitions -->
   <Style Selector="Border.CustomerCard">
     <Setter Property="Background" Value="{DynamicResource SukiCardBackground}"/>
     <Setter Property="CornerRadius" Value="8"/>
     <Setter Property="Padding" Value="16,14"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="BorderBrush" Value="Transparent"/>
+    <Setter Property="Transitions">
+      <Transitions>
+        <BrushTransition Property="BorderBrush" Duration="0:0:0.2"/>
+      </Transitions>
+    </Setter>
   </Style>
+  <Style Selector="Border.CustomerCard:pointerover">
+    <Setter Property="BorderBrush" Value="{DynamicResource SukiPrimaryColor}"/>
+  </Style>
+
   <Style Selector="Border.StatCard">
     <Setter Property="Background" Value="{DynamicResource SukiCardBackground}"/>
     <Setter Property="CornerRadius" Value="10"/>
     <Setter Property="Padding" Value="20,16"/>
     <Setter Property="MinWidth" Value="160"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="BorderBrush" Value="Transparent"/>
+    <Setter Property="Transitions">
+      <Transitions>
+        <BrushTransition Property="BorderBrush" Duration="0:0:0.2"/>
+      </Transitions>
+    </Setter>
   </Style>
+  <Style Selector="Border.StatCard:pointerover">
+    <Setter Property="BorderBrush" Value="{DynamicResource SukiPrimaryColor}"/>
+  </Style>
+
   <Style Selector="Border.ActionCard">
     <Setter Property="Background" Value="{DynamicResource SukiCardBackground}"/>
     <Setter Property="CornerRadius" Value="10"/>
     <Setter Property="Padding" Value="20,16"/>
     <Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="BorderBrush" Value="Transparent"/>
+    <Setter Property="Transitions">
+      <Transitions>
+        <BrushTransition Property="BorderBrush" Duration="0:0:0.2"/>
+      </Transitions>
+    </Setter>
   </Style>
   <Style Selector="Border.ActionCard:pointerover">
     <Setter Property="BorderBrush" Value="{DynamicResource SukiPrimaryColor}"/>
-    <Setter Property="BorderThickness" Value="1"/>
   </Style>
 
   <!-- Badges -->
@@ -161,6 +247,11 @@
     <Setter Property="CornerRadius" Value="4"/>
     <Setter Property="Padding" Value="8,3"/>
   </Style>
+  <Style Selector="Border.BadgeArchived">
+    <Setter Property="Background" Value="#1AE74C3C"/>
+    <Setter Property="CornerRadius" Value="4"/>
+    <Setter Property="Padding" Value="8,3"/>
+  </Style>
   <Style Selector="TextBlock.BadgeText">
     <Setter Property="FontSize" Value="11"/>
     <Setter Property="FontWeight" Value="SemiBold"/>
@@ -172,6 +263,12 @@
     <Setter Property="Height" Value="1"/>
     <Setter Property="Opacity" Value="0.2"/>
     <Setter Property="Margin" Value="0,8"/>
+  </Style>
+
+  <!-- Focus indicators for accessibility -->
+  <Style Selector="Button:focus-visible">
+    <Setter Property="BorderBrush" Value="{DynamicResource SukiPrimaryColor}"/>
+    <Setter Property="BorderThickness" Value="2"/>
   </Style>
 
 </Styles>

@@ -74,7 +74,8 @@
         <WrapPanel Orientation="Horizontal" HorizontalAlignment="Left">
 
           <Button Classes="IconButton" Margin="0,0,12,12"
-                  Command="{Binding QuickNavigateCommand}" CommandParameter="Customers">
+                  Command="{Binding QuickNavigateCommand}" CommandParameter="Customers"
+                  ToolTip.Tip="Manage Customers (Ctrl+2)">
             <Border Classes="ActionCard" MinWidth="200">
               <StackPanel Spacing="6">
                 <StackPanel Orientation="Horizontal" Spacing="8">
@@ -87,7 +88,8 @@
           </Button>
 
           <Button Classes="IconButton" Margin="0,0,12,12"
-                  Command="{Binding QuickNavigateCommand}" CommandParameter="Environments">
+                  Command="{Binding QuickNavigateCommand}" CommandParameter="Environments"
+                  ToolTip.Tip="Manage Environments (Ctrl+3)">
             <Border Classes="ActionCard" MinWidth="200">
               <StackPanel Spacing="6">
                 <StackPanel Orientation="Horizontal" Spacing="8">
@@ -100,7 +102,8 @@
           </Button>
 
           <Button Classes="IconButton" Margin="0,0,12,12"
-                  Command="{Binding QuickNavigateCommand}" CommandParameter="Snapshots">
+                  Command="{Binding QuickNavigateCommand}" CommandParameter="Snapshots"
+                  ToolTip.Tip="Run Discovery (Ctrl+5)">
             <Border Classes="ActionCard" MinWidth="200">
               <StackPanel Spacing="6">
                 <StackPanel Orientation="Horizontal" Spacing="8">
@@ -113,7 +116,8 @@
           </Button>
 
           <Button Classes="IconButton" Margin="0,0,12,12"
-                  Command="{Binding QuickNavigateCommand}" CommandParameter="Inventory">
+                  Command="{Binding QuickNavigateCommand}" CommandParameter="Inventory"
+                  ToolTip.Tip="Browse Inventory (Ctrl+6)">
             <Border Classes="ActionCard" MinWidth="200">
               <StackPanel Spacing="6">
                 <StackPanel Orientation="Horizontal" Spacing="8">
@@ -126,7 +130,8 @@
           </Button>
 
           <Button Classes="IconButton" Margin="0,0,12,12"
-                  Command="{Binding QuickNavigateCommand}" CommandParameter="Comparisons">
+                  Command="{Binding QuickNavigateCommand}" CommandParameter="Comparisons"
+                  ToolTip.Tip="Compare Snapshots (Ctrl+7)">
             <Border Classes="ActionCard" MinWidth="200">
               <StackPanel Spacing="6">
                 <StackPanel Orientation="Horizontal" Spacing="8">
@@ -139,7 +144,8 @@
           </Button>
 
           <Button Classes="IconButton" Margin="0,0,12,12"
-                  Command="{Binding QuickNavigateCommand}" CommandParameter="Exports">
+                  Command="{Binding QuickNavigateCommand}" CommandParameter="Exports"
+                  ToolTip.Tip="Export Data (Ctrl+8)">
             <Border Classes="ActionCard" MinWidth="200">
               <StackPanel Spacing="6">
                 <StackPanel Orientation="Horizontal" Spacing="8">

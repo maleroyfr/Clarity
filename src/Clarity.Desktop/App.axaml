@@ -7,9 +7,14 @@
 
     <Application.DataTemplates>
         <!-- SukiSideMenu sets its content to the selected NavPageItem data item.
-             This template extracts PageVm so the ViewLocator resolves the real view. -->
+             This template extracts PageVm so the ViewLocator resolves the real view.
+             TransitioningContentControl gives smooth cross-fade on page switch. -->
         <DataTemplate DataType="{x:Type shell:NavPageItem}">
-            <ContentControl Content="{Binding PageVm}"/>
+            <TransitioningContentControl Content="{Binding PageVm}">
+                <TransitioningContentControl.PageTransition>
+                    <CrossFade Duration="0:0:0.2"/>
+                </TransitioningContentControl.PageTransition>
+            </TransitioningContentControl>
         </DataTemplate>
         <local:ViewLocator/>
     </Application.DataTemplates>

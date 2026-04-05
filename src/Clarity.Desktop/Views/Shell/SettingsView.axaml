@@ -54,6 +54,26 @@
         </StackPanel>
       </suki:GroupBox>
 
+      <!-- Keyboard Shortcuts -->
+      <suki:GroupBox Header="Keyboard Shortcuts">
+        <StackPanel Spacing="8" Margin="4">
+          <Grid ColumnDefinitions="160,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="0,0,0,4">
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="Ctrl + 1–8" FontFamily="Consolas, monospace" FontSize="12" Opacity="0.7"/>
+            <TextBlock Grid.Row="0" Grid.Column="1" Text="Navigate to section" FontSize="12"/>
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="Ctrl + ," FontFamily="Consolas, monospace" FontSize="12" Opacity="0.7"/>
+            <TextBlock Grid.Row="1" Grid.Column="1" Text="Settings" FontSize="12"/>
+            <TextBlock Grid.Row="2" Grid.Column="0" Text="Ctrl + N" FontFamily="Consolas, monospace" FontSize="12" Opacity="0.7"/>
+            <TextBlock Grid.Row="2" Grid.Column="1" Text="Create new item" FontSize="12"/>
+            <TextBlock Grid.Row="3" Grid.Column="0" Text="Ctrl + B" FontFamily="Consolas, monospace" FontSize="12" Opacity="0.7"/>
+            <TextBlock Grid.Row="3" Grid.Column="1" Text="Toggle sidebar" FontSize="12"/>
+            <TextBlock Grid.Row="4" Grid.Column="0" Text="F5" FontFamily="Consolas, monospace" FontSize="12" Opacity="0.7"/>
+            <TextBlock Grid.Row="4" Grid.Column="1" Text="Refresh current page" FontSize="12"/>
+            <TextBlock Grid.Row="5" Grid.Column="0" Text="F1" FontFamily="Consolas, monospace" FontSize="12" Opacity="0.7"/>
+            <TextBlock Grid.Row="5" Grid.Column="1" Text="About Clarity" FontSize="12"/>
+          </Grid>
+        </StackPanel>
+      </suki:GroupBox>
+
       <!-- About -->
       <suki:GroupBox Header="About">
         <StackPanel Spacing="8" Margin="4">

@@ -7,20 +7,42 @@
                Title="Clarity — Audit &amp; Discovery Platform"
                Width="1360" Height="860"
                MinWidth="1024" MinHeight="680"
-               BackgroundStyle="Flat"
-               BackgroundAnimationEnabled="False">
+               BackgroundStyle="Bubble"
+               BackgroundAnimationEnabled="True">
 
   <suki:SukiWindow.LogoContent>
-    <TextBlock Text="Clarity" FontWeight="Bold" FontSize="16"
-               VerticalAlignment="Center" Margin="8,0"/>
+    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" Margin="8,0">
+      <PathIcon Data="M12 2L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3z"
+                Width="18" Height="18"
+                Foreground="{DynamicResource SukiPrimaryColor}"/>
+      <TextBlock Text="Clarity" FontWeight="Bold" FontSize="16" VerticalAlignment="Center"/>
+    </StackPanel>
   </suki:SukiWindow.LogoContent>
 
   <suki:SukiWindow.MenuItems>
-    <MenuItem Header="File">
-      <MenuItem Header="Exit" Click="OnExitClick"/>
+    <MenuItem Header="_File">
+      <MenuItem Header="_New…" Click="OnNewClick" InputGesture="Ctrl+N"/>
+      <Separator/>
+      <MenuItem Header="E_xit" Click="OnExitClick" InputGesture="Alt+F4"/>
     </MenuItem>
-    <MenuItem Header="Help">
-      <MenuItem Header="About Clarity" Click="OnAboutClick"/>
+    <MenuItem Header="_Navigate">
+      <MenuItem Header="_Home" Click="OnNavigateClick" Tag="Home" InputGesture="Ctrl+1"/>
+      <MenuItem Header="_Customers" Click="OnNavigateClick" Tag="Customers" InputGesture="Ctrl+2"/>
+      <MenuItem Header="_Environments" Click="OnNavigateClick" Tag="Environments" InputGesture="Ctrl+3"/>
+      <MenuItem Header="_Relations" Click="OnNavigateClick" Tag="Relations" InputGesture="Ctrl+4"/>
+      <MenuItem Header="_Snapshots" Click="OnNavigateClick" Tag="Snapshots" InputGesture="Ctrl+5"/>
+      <MenuItem Header="I_nventory" Click="OnNavigateClick" Tag="Inventory" InputGesture="Ctrl+6"/>
+      <MenuItem Header="Co_mparisons" Click="OnNavigateClick" Tag="Comparisons" InputGesture="Ctrl+7"/>
+      <MenuItem Header="E_xports" Click="OnNavigateClick" Tag="Exports" InputGesture="Ctrl+8"/>
+      <Separator/>
+      <MenuItem Header="Se_ttings" Click="OnNavigateClick" Tag="Settings" InputGesture="Ctrl+OemComma"/>
+    </MenuItem>
+    <MenuItem Header="_View">
+      <MenuItem Header="_Refresh" Click="OnRefreshClick" InputGesture="F5"/>
+      <MenuItem Header="_Toggle Sidebar" Click="OnToggleSidebarClick" InputGesture="Ctrl+B"/>
+    </MenuItem>
+    <MenuItem Header="_Help">
+      <MenuItem Header="_About Clarity" Click="OnAboutClick" InputGesture="F1"/>
     </MenuItem>
   </suki:SukiWindow.MenuItems>
 
@@ -29,7 +51,8 @@
     <suki:SukiToastHost Manager="{Binding ToastManager}" MaxToasts="5"/>
   </suki:SukiWindow.Hosts>
 
-  <suki:SukiSideMenu ItemsSource="{Binding Pages}"
+  <suki:SukiSideMenu x:Name="SideMenu"
+                      ItemsSource="{Binding Pages}"
                       SelectedItem="{Binding ActivePage}"
                       IsSearchEnabled="False"
                       IsToggleButtonVisible="True">
@@ -44,11 +67,10 @@
       </StackPanel>
     </suki:SukiSideMenu.HeaderContent>
 
-    <!-- ItemTemplate: only defines sidebar appearance (Header + Icon).
-         Page content is resolved by the NavPageItem DataTemplate in App.axaml. -->
     <suki:SukiSideMenu.ItemTemplate>
       <DataTemplate>
-        <suki:SukiSideMenuItem Header="{Binding Title}">
+        <suki:SukiSideMenuItem Header="{Binding Title}"
+                               ToolTip.Tip="{Binding Title}">
           <suki:SukiSideMenuItem.Icon>
             <PathIcon Data="{Binding IconData}"/>
           </suki:SukiSideMenuItem.Icon>

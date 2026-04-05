@@ -24,7 +24,8 @@
         </StackPanel>
         <Button Grid.Column="1" Classes="PrimaryButton"
                 Command="{Binding CreateNewCommand}"
-                VerticalAlignment="Center">
+                VerticalAlignment="Center"
+                ToolTip.Tip="Create a new customer (Ctrl+N)">
           <StackPanel Orientation="Horizontal" Spacing="6">
             <PathIcon Data="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
             <TextBlock Text="New Customer" VerticalAlignment="Center"/>

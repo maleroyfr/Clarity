@@ -109,6 +109,24 @@ public sealed partial class AppShellViewModel : ObservableObject
             ActivePage = page;
     }
 
+    /// <summary>Requests the active page to create a new item (Ctrl+N).</summary>
+    public void RequestCreateNew()
+    {
+        CreateNewRequested?.Invoke();
+    }
+
+    /// <summary>Requests the active page to refresh its data (F5).</summary>
+    public void RequestRefresh()
+    {
+        RefreshRequested?.Invoke();
+    }
+
+    /// <summary>Raised when user presses Ctrl+N — pages should listen and create a new item.</summary>
+    public event Action? CreateNewRequested;
+
+    /// <summary>Raised when user presses F5 — pages should listen and refresh.</summary>
+    public event Action? RefreshRequested;
+
     // ─── Private helpers ────────────────────────────────────────────
 
     private static NavPageItem MakePage(string title, string iconData, NavSection section)
