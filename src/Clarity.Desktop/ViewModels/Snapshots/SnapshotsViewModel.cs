@@ -37,6 +37,14 @@ public sealed partial class SnapshotListItemVm : ObservableObject
     public bool IsCompleted => Status == SnapshotStatus.Completed;
     public bool IsFailed => Status == SnapshotStatus.Failed;
 
+    public string StatusColor => Status switch
+    {
+        SnapshotStatus.Completed => "#4CAF50",
+        SnapshotStatus.Running or SnapshotStatus.Partial => "#FF9800",
+        SnapshotStatus.Failed => "#F44336",
+        _ => "#9E9E9E"
+    };
+
     public SnapshotListItemVm(
         SnapshotDto dto,
         Func<SnapshotDto, Task> onSeal,

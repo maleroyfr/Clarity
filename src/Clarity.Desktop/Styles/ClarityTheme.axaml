@@ -1,14 +1,14 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-  <!-- Typography — uses FluentAvalonia / WinUI resource names -->
+  <!-- Typography — SukiUI compatible resources -->
   <Style Selector="TextBlock.PageTitle">
     <Setter Property="FontSize" Value="22"/>
     <Setter Property="FontWeight" Value="SemiBold"/>
   </Style>
   <Style Selector="TextBlock.PageSubtitle">
     <Setter Property="FontSize" Value="13"/>
-    <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
+    <Setter Property="Opacity" Value="0.6"/>
   </Style>
   <Style Selector="TextBlock.SectionTitle">
     <Setter Property="FontSize" Value="16"/>
@@ -21,16 +21,16 @@
   </Style>
   <Style Selector="TextBlock.CardSubtitle">
     <Setter Property="FontSize" Value="13"/>
-    <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
+    <Setter Property="Opacity" Value="0.6"/>
   </Style>
   <Style Selector="TextBlock.CardMeta">
     <Setter Property="FontSize" Value="11"/>
-    <Setter Property="Foreground" Value="{DynamicResource TextFillColorTertiaryBrush}"/>
+    <Setter Property="Opacity" Value="0.4"/>
   </Style>
   <Style Selector="TextBlock.FormLabel">
     <Setter Property="FontSize" Value="12"/>
     <Setter Property="FontWeight" Value="SemiBold"/>
-    <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
+    <Setter Property="Opacity" Value="0.6"/>
     <Setter Property="Margin" Value="0,0,0,2"/>
   </Style>
   <Style Selector="TextBlock.EmptyStateTitle">
@@ -40,7 +40,7 @@
   </Style>
   <Style Selector="TextBlock.EmptyStateSubtitle">
     <Setter Property="FontSize" Value="13"/>
-    <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
+    <Setter Property="Opacity" Value="0.6"/>
     <Setter Property="HorizontalAlignment" Value="Center"/>
   </Style>
   <Style Selector="TextBlock.StatValue">
@@ -49,13 +49,13 @@
   </Style>
   <Style Selector="TextBlock.StatLabel">
     <Setter Property="FontSize" Value="12"/>
-    <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
+    <Setter Property="Opacity" Value="0.6"/>
   </Style>
 
   <!-- Buttons -->
   <Style Selector="Button.PrimaryButton">
-    <Setter Property="Background" Value="{DynamicResource AccentFillColorDefaultBrush}"/>
-    <Setter Property="Foreground" Value="{DynamicResource TextOnAccentFillColorPrimaryBrush}"/>
+    <Setter Property="Background" Value="{DynamicResource SukiPrimaryColor}"/>
+    <Setter Property="Foreground" Value="White"/>
     <Setter Property="Padding" Value="16,8"/>
     <Setter Property="CornerRadius" Value="6"/>
     <Setter Property="FontSize" Value="13"/>
@@ -64,7 +64,6 @@
   </Style>
   <Style Selector="Button.SecondaryButton">
     <Setter Property="Background" Value="Transparent"/>
-    <Setter Property="BorderBrush" Value="{DynamicResource CardStrokeColorDefaultBrush}"/>
     <Setter Property="BorderThickness" Value="1"/>
     <Setter Property="Padding" Value="14,7"/>
     <Setter Property="CornerRadius" Value="6"/>
@@ -73,16 +72,16 @@
   </Style>
   <Style Selector="Button.DangerButton">
     <Setter Property="Background" Value="Transparent"/>
-    <Setter Property="BorderBrush" Value="{DynamicResource SystemFillColorCriticalBrush}"/>
+    <Setter Property="BorderBrush" Value="#E74C3C"/>
     <Setter Property="BorderThickness" Value="1"/>
-    <Setter Property="Foreground" Value="{DynamicResource SystemFillColorCriticalBrush}"/>
+    <Setter Property="Foreground" Value="#E74C3C"/>
     <Setter Property="Padding" Value="14,7"/>
     <Setter Property="CornerRadius" Value="6"/>
     <Setter Property="FontSize" Value="13"/>
     <Setter Property="Cursor" Value="Hand"/>
   </Style>
   <Style Selector="Button.SuccessButton">
-    <Setter Property="Background" Value="{DynamicResource SystemFillColorSuccessBrush}"/>
+    <Setter Property="Background" Value="#2ECC71"/>
     <Setter Property="Foreground" Value="White"/>
     <Setter Property="Padding" Value="16,8"/>
     <Setter Property="CornerRadius" Value="6"/>
@@ -112,70 +111,60 @@
     <Setter Property="Padding" Value="14,8"/>
   </Style>
 
-  <!-- Cards — use FluentAvalonia card resources -->
+  <!-- Cards — SukiUI compatible -->
   <Style Selector="Border.CustomerCard">
-    <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorDefaultBrush}"/>
-    <Setter Property="BorderBrush" Value="{DynamicResource CardStrokeColorDefaultBrush}"/>
-    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="Background" Value="{DynamicResource SukiCardBackground}"/>
     <Setter Property="CornerRadius" Value="8"/>
     <Setter Property="Padding" Value="16,14"/>
   </Style>
   <Style Selector="Border.StatCard">
-    <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorDefaultBrush}"/>
-    <Setter Property="BorderBrush" Value="{DynamicResource CardStrokeColorDefaultBrush}"/>
-    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="Background" Value="{DynamicResource SukiCardBackground}"/>
     <Setter Property="CornerRadius" Value="10"/>
     <Setter Property="Padding" Value="20,16"/>
     <Setter Property="MinWidth" Value="160"/>
   </Style>
   <Style Selector="Border.ActionCard">
-    <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorDefaultBrush}"/>
-    <Setter Property="BorderBrush" Value="{DynamicResource CardStrokeColorDefaultBrush}"/>
-    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="Background" Value="{DynamicResource SukiCardBackground}"/>
     <Setter Property="CornerRadius" Value="10"/>
     <Setter Property="Padding" Value="20,16"/>
     <Setter Property="Cursor" Value="Hand"/>
   </Style>
   <Style Selector="Border.ActionCard:pointerover">
-    <Setter Property="BorderBrush" Value="{DynamicResource AccentFillColorDefaultBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource SukiPrimaryColor}"/>
+    <Setter Property="BorderThickness" Value="1"/>
   </Style>
 
   <!-- Badges -->
-  <Style Selector="Border.BadgeArchived">
-    <Setter Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}"/>
-    <Setter Property="CornerRadius" Value="4"/>
-    <Setter Property="Padding" Value="6,2"/>
-  </Style>
   <Style Selector="Border.BadgeSuccess">
-    <Setter Property="Background" Value="{DynamicResource SystemFillColorSuccessBackgroundBrush}"/>
+    <Setter Property="Background" Value="#1A2ECC71"/>
     <Setter Property="CornerRadius" Value="4"/>
     <Setter Property="Padding" Value="8,3"/>
   </Style>
   <Style Selector="Border.BadgeWarning">
-    <Setter Property="Background" Value="{DynamicResource SystemFillColorCautionBackgroundBrush}"/>
+    <Setter Property="Background" Value="#1AF39C12"/>
     <Setter Property="CornerRadius" Value="4"/>
     <Setter Property="Padding" Value="8,3"/>
   </Style>
   <Style Selector="Border.BadgeError">
-    <Setter Property="Background" Value="{DynamicResource SystemFillColorCriticalBackgroundBrush}"/>
+    <Setter Property="Background" Value="#1AE74C3C"/>
     <Setter Property="CornerRadius" Value="4"/>
     <Setter Property="Padding" Value="8,3"/>
   </Style>
   <Style Selector="Border.BadgeInfo">
-    <Setter Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}"/>
+    <Setter Property="Background" Value="{DynamicResource SukiCardBackground}"/>
     <Setter Property="CornerRadius" Value="4"/>
     <Setter Property="Padding" Value="8,3"/>
   </Style>
   <Style Selector="TextBlock.BadgeText">
     <Setter Property="FontSize" Value="11"/>
     <Setter Property="FontWeight" Value="SemiBold"/>
-    <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
+    <Setter Property="Opacity" Value="0.7"/>
   </Style>
 
   <!-- Separators -->
   <Style Selector="Border.Divider">
     <Setter Property="Height" Value="1"/>
-    <Setter Property="Background" Value="{DynamicResource DividerStrokeColorDefaultBrush}"/>
+    <Setter Property="Opacity" Value="0.2"/>
     <Setter Property="Margin" Value="0,8"/>
   </Style>
 

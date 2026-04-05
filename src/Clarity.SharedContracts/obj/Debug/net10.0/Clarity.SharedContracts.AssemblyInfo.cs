@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Clarity.SharedContracts")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+81bb2c169d29724ee4d0bb45088dcc815a9935e3")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+158599b12ddb46d7e61e6f71fa6f255c6c15fdb4")]
 [assembly: System.Reflection.AssemblyProductAttribute("Clarity.SharedContracts")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Clarity.SharedContracts")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

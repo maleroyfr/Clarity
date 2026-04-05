@@ -2,7 +2,8 @@ using Avalonia.Controls;
 using Clarity.Application.Customers.Commands;
 using Clarity.Desktop.Services;
 using Clarity.Desktop.ViewModels.Customers;
-using FluentAvalonia.UI.Controls;
+using SukiUI.Controls;
+using SukiUI.Dialogs;
 
 namespace Clarity.Desktop.Views.Customers;
 
@@ -24,23 +25,35 @@ public partial class CustomersListView : UserControl
         }
     }
 
-    private async void OnEditRequested(CustomerDto? customer)
+    private void OnEditRequested(CustomerDto? customer)
     {
         var form = new CustomerFormView();
         var formVm = (CustomerFormViewModel)form.DataContext!;
         formVm.Initialize(customer);
 
-        var result = await form.ShowAsync();
-        if (result == ContentDialogResult.Primary)
+        if (VisualRoot is SukiWindow window && window.DataContext is Clarity.Desktop.ViewModels.Shell.AppShellViewModel shell)
         {
-            if (DataContext is CustomersListViewModel listVm)
-                await listVm.LoadAsync();
+            formVm.SaveCompleted += async () =>
+            {
+                if (DataContext is CustomersListViewModel listVm)
+                    await listVm.LoadAsync();
+            };
+
+            var builder = new SukiDialogBuilder(shell.DialogManager);
+            builder.SetTitle(formVm.Title);
+            builder.SetContent(form);
+            builder.AddActionButton("Save", dialog =>
+            {
+                formVm.SaveCommand.ExecuteAsync(null);
+            }, true, ["Flat"]);
+            builder.AddActionButton("Cancel", _ => { }, true, ["Flat"]);
+            builder.TryShow();
         }
     }
 
     private void OnViewEnvironmentsRequested(Guid customerId)
     {
-        if (VisualRoot is Window window && window.DataContext is Clarity.Desktop.ViewModels.Shell.AppShellViewModel shell)
+        if (VisualRoot is SukiWindow window && window.DataContext is Clarity.Desktop.ViewModels.Shell.AppShellViewModel shell)
         {
             shell.NavigateToCustomerEnvironments(customerId);
         }

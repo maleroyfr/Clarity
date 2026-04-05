@@ -1,11 +1,12 @@
 using Avalonia.Controls;
-using FluentAvalonia.UI.Controls;
+using Avalonia.Interactivity;
+using SukiUI.Controls;
 using Clarity.Desktop.Services;
 using Clarity.Desktop.ViewModels.Shell;
 
 namespace Clarity.Desktop.Views.Shell;
 
-public partial class AppShell : Window
+public partial class AppShell : SukiWindow
 {
     public AppShell()
     {
@@ -13,20 +14,14 @@ public partial class AppShell : Window
         DataContext = AppServiceLocator.Get<AppShellViewModel>();
     }
 
-    private void NavView_SelectionChanged(object? sender, NavigationViewSelectionChangedEventArgs e)
+    private void OnExitClick(object? sender, RoutedEventArgs e)
     {
-        if (DataContext is not AppShellViewModel vm) return;
+        Close();
+    }
 
-        if (e.IsSettingsSelected)
-        {
-            vm.NavigateTo(NavSection.Settings);
-            return;
-        }
-
-        if (e.SelectedItem is NavigationViewItem nvi && nvi.Tag is string tag)
-        {
-            if (Enum.TryParse<NavSection>(tag, out var section))
-                vm.NavigateTo(section);
-        }
+    private void OnAboutClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is AppShellViewModel vm)
+            vm.ShowAboutDialog();
     }
 }

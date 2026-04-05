@@ -24,6 +24,6 @@ public partial class HomeView : UserControl
     private void OnNavigateRequested(NavSection section)
     {
         var shell = AppServiceLocator.Get<AppShellViewModel>();
-        shell.NavigateTo(section);
+        shell.NavigateToSection(section);
     }
 }

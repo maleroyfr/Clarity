@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Clarity.Domain")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+81bb2c169d29724ee4d0bb45088dcc815a9935e3")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+57bc30fb070387ef3b7d52e2db93c0ba4bd5512b")]
 [assembly: System.Reflection.AssemblyProductAttribute("Clarity.Domain")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Clarity.Domain")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

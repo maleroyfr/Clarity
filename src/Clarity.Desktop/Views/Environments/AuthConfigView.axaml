@@ -1,13 +1,9 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:ui="using:FluentAvalonia.UI.Controls"
+             xmlns:suki="https://github.com/kikipoulet/SukiUI"
              xmlns:vm="clr-namespace:Clarity.Desktop.ViewModels.Environments"
              x:Class="Clarity.Desktop.Views.Environments.AuthConfigView"
              x:DataType="vm:AuthConfigViewModel">
-
-  <UserControl.Styles>
-    <StyleInclude Source="/Styles/ClarityTheme.axaml"/>
-  </UserControl.Styles>
 
   <ScrollViewer Padding="32,24">
     <StackPanel Spacing="8" MaxWidth="800">
@@ -19,85 +15,72 @@
         <ItemsControl.ItemTemplate>
           <DataTemplate>
             <StackPanel Spacing="4" Margin="0,0,0,8">
-              <ui:SettingsExpander Header="{Binding WorkloadDisplayName}"
-                                   Description="{Binding StatusText}"
-                                   Margin="0,0,0,0">
-                <ui:SettingsExpander.IconSource>
-                  <ui:SymbolIconSource Symbol="{Binding WorkloadIcon}"/>
-                </ui:SettingsExpander.IconSource>
-                <ui:SettingsExpander.Footer>
-                  <Border CornerRadius="4" Padding="6,2"
-                          Background="{DynamicResource SystemBaseLowColor}">
-                    <TextBlock Text="{Binding StatusLabel}" FontSize="11"/>
-                  </Border>
-                </ui:SettingsExpander.Footer>
+              <suki:GroupBox Header="{Binding WorkloadDisplayName}">
+                <StackPanel Spacing="12" Margin="12">
+                  <!-- Status -->
+                  <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock Text="{Binding StatusText}" FontSize="12"
+                               Foreground="{DynamicResource SystemBaseMediumColor}"/>
+                    <Border CornerRadius="4" Padding="6,2"
+                            Background="{DynamicResource SystemBaseLowColor}">
+                      <TextBlock Text="{Binding StatusLabel}" FontSize="11"/>
+                    </Border>
+                  </StackPanel>
 
-                <!-- Auth type selector -->
-                <ui:SettingsExpanderItem Content="Authentication Type">
-                  <ui:SettingsExpanderItem.Footer>
-                    <ComboBox SelectedIndex="{Binding SelectedAuthTypeIndex}" MinWidth="180">
+                  <!-- Auth type selector -->
+                  <Grid ColumnDefinitions="Auto,*">
+                    <TextBlock Text="Authentication Type" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                    <ComboBox Grid.Column="1" SelectedIndex="{Binding SelectedAuthTypeIndex}" MinWidth="180">
                       <ComboBoxItem Content="Certificate"/>
                       <ComboBoxItem Content="Client Secret"/>
                       <ComboBoxItem Content="Windows Integrated"/>
                     </ComboBox>
-                  </ui:SettingsExpanderItem.Footer>
-                </ui:SettingsExpanderItem>
+                  </Grid>
 
-                <!-- App fields (not for WindowsIntegrated) -->
-                <ui:SettingsExpanderItem Content="Application (Client) ID"
-                                         IsVisible="{Binding ShowAppFields}">
-                  <ui:SettingsExpanderItem.Footer>
-                    <TextBox Text="{Binding ClientId}" Watermark="00000000-0000-0000-0000-000000000000" Width="320"/>
-                  </ui:SettingsExpanderItem.Footer>
-                </ui:SettingsExpanderItem>
+                  <!-- App fields -->
+                  <Grid ColumnDefinitions="Auto,*" IsVisible="{Binding ShowAppFields}">
+                    <TextBlock Text="Application (Client) ID" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                    <TextBox Grid.Column="1" Text="{Binding ClientId}" Watermark="00000000-0000-0000-0000-000000000000" Width="320"/>
+                  </Grid>
 
-                <ui:SettingsExpanderItem Content="Directory (Tenant) ID"
-                                         IsVisible="{Binding ShowAppFields}">
-                  <ui:SettingsExpanderItem.Footer>
-                    <TextBox Text="{Binding TenantId}" Watermark="00000000-0000-0000-0000-000000000000" Width="320"/>
-                  </ui:SettingsExpanderItem.Footer>
-                </ui:SettingsExpanderItem>
+                  <Grid ColumnDefinitions="Auto,*" IsVisible="{Binding ShowAppFields}">
+                    <TextBlock Text="Directory (Tenant) ID" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                    <TextBox Grid.Column="1" Text="{Binding TenantId}" Watermark="00000000-0000-0000-0000-000000000000" Width="320"/>
+                  </Grid>
 
-                <!-- Certificate thumbprint -->
-                <ui:SettingsExpanderItem Content="Certificate Thumbprint"
-                                         IsVisible="{Binding ShowCertificateField}">
-                  <ui:SettingsExpanderItem.Footer>
-                    <TextBox Text="{Binding CertificateThumbprint}" Watermark="Thumbprint from certificate store" Width="320"/>
-                  </ui:SettingsExpanderItem.Footer>
-                </ui:SettingsExpanderItem>
+                  <!-- Certificate thumbprint -->
+                  <Grid ColumnDefinitions="Auto,*" IsVisible="{Binding ShowCertificateField}">
+                    <TextBlock Text="Certificate Thumbprint" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                    <TextBox Grid.Column="1" Text="{Binding CertificateThumbprint}" Watermark="Thumbprint from certificate store" Width="320"/>
+                  </Grid>
 
-                <!-- Secret reference -->
-                <ui:SettingsExpanderItem Content="Secret Reference"
-                                         IsVisible="{Binding ShowSecretField}">
-                  <ui:SettingsExpanderItem.Footer>
-                    <TextBox Text="{Binding SecretReference}" Watermark="Key Vault URI or DPAPI reference" Width="320"/>
-                  </ui:SettingsExpanderItem.Footer>
-                </ui:SettingsExpanderItem>
+                  <!-- Secret reference -->
+                  <Grid ColumnDefinitions="Auto,*" IsVisible="{Binding ShowSecretField}">
+                    <TextBlock Text="Secret Reference" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                    <TextBox Grid.Column="1" Text="{Binding SecretReference}" Watermark="Key Vault URI or DPAPI reference" Width="320"/>
+                  </Grid>
 
-                <!-- Save button -->
-                <ui:SettingsExpanderItem>
-                  <ui:SettingsExpanderItem.Footer>
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                      <Button Classes="PrimaryButton" Command="{Binding SaveCommand}"
-                              IsEnabled="{Binding !IsSaving}">
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                          <ui:SymbolIcon Symbol="Save" FontSize="14"/>
-                          <TextBlock Text="Save" VerticalAlignment="Center"/>
-                        </StackPanel>
-                      </Button>
-                      <ui:ProgressRing IsVisible="{Binding IsSaving}" Width="20" Height="20"/>
-                    </StackPanel>
-                  </ui:SettingsExpanderItem.Footer>
-                </ui:SettingsExpanderItem>
-              </ui:SettingsExpander>
+                  <!-- Save button -->
+                  <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                    <Button Classes="PrimaryButton" Command="{Binding SaveCommand}"
+                            IsEnabled="{Binding !IsSaving}">
+                      <StackPanel Orientation="Horizontal" Spacing="6">
+                        <PathIcon Data="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z" Width="14" Height="14"/>
+                        <TextBlock Text="Save" VerticalAlignment="Center"/>
+                      </StackPanel>
+                    </Button>
+                    <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsSaving}" Width="20" Height="20"/>
+                  </StackPanel>
+                </StackPanel>
+              </suki:GroupBox>
 
               <!-- Success message -->
-              <ui:InfoBar IsOpen="{Binding SuccessMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+              <suki:InfoBar IsOpen="{Binding SuccessMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                           Severity="Success" Title="Saved" Message="{Binding SuccessMessage}" IsClosable="True"
                           Margin="0,2,0,0"/>
 
               <!-- Error message -->
-              <ui:InfoBar IsOpen="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+              <suki:InfoBar IsOpen="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                           Severity="Error" Title="Error" Message="{Binding ErrorMessage}" IsClosable="True"
                           Margin="0,2,0,0"/>
             </StackPanel>
@@ -106,7 +89,7 @@
       </ItemsControl>
 
       <!-- Global error -->
-      <ui:InfoBar IsOpen="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+      <suki:InfoBar IsOpen="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                   Severity="Error" Title="Error" Message="{Binding ErrorMessage}" IsClosable="True"
                   Margin="0,8,0,0"/>
     </StackPanel>
