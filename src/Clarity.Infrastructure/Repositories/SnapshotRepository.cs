@@ -13,24 +13,30 @@ internal sealed class SnapshotRepository(ClarityDbContext db) : ISnapshotReposit
             .Include(s => s.CollectorRuns)
             .FirstOrDefaultAsync(s => s.Id == id, ct);
 
-    public async Task<IReadOnlyList<Snapshot>> GetAllAsync(CancellationToken ct = default) =>
-        await db.Snapshots
-            .OrderByDescending(s => s.CreatedAt)
-            .ToListAsync(ct);
+    public async Task<IReadOnlyList<Snapshot>> GetAllAsync(CancellationToken ct = default)
+    {
+        // Client-side ordering: SQLite does not support ORDER BY on DateTimeOffset columns
+        var snapshots = await db.Snapshots.ToListAsync(ct);
+        return snapshots.OrderByDescending(s => s.CreatedAt).ToList();
+    }
 
     public async Task<IReadOnlyList<Snapshot>> GetByEnvironmentAsync(
-        Guid environmentId, CancellationToken ct = default) =>
-        await db.Snapshots
+        Guid environmentId, CancellationToken ct = default)
+    {
+        var snapshots = await db.Snapshots
             .Where(s => s.EnvironmentId == environmentId)
-            .OrderByDescending(s => s.CreatedAt)
             .ToListAsync(ct);
+        return snapshots.OrderByDescending(s => s.CreatedAt).ToList();
+    }
 
     public async Task<IReadOnlyList<Snapshot>> GetByCustomerAsync(
-        Guid customerId, CancellationToken ct = default) =>
-        await db.Snapshots
+        Guid customerId, CancellationToken ct = default)
+    {
+        var snapshots = await db.Snapshots
             .Where(s => s.CustomerId == customerId)
-            .OrderByDescending(s => s.CreatedAt)
             .ToListAsync(ct);
+        return snapshots.OrderByDescending(s => s.CreatedAt).ToList();
+    }
 
     public async Task AddAsync(Snapshot snapshot, CancellationToken ct = default) =>
         await db.Snapshots.AddAsync(snapshot, ct);
