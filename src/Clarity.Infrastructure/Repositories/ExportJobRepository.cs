@@ -1,3 +1,4 @@
+using Clarity.Application.Common.Exceptions;
 using Clarity.Domain.Exports;
 using Clarity.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -19,4 +20,12 @@ internal sealed class ExportJobRepository(ClarityDbContext db) : IExportJobRepos
     }
 
     public Task<int> SaveChangesAsync(CancellationToken ct = default) => db.SaveChangesAsync(ct);
+
+    public async Task DeleteAsync(Guid id, CancellationToken ct = default)
+    {
+        var entity = await db.ExportJobs.FindAsync([id], ct)
+            ?? throw new NotFoundException(nameof(ExportJob), id);
+        db.ExportJobs.Remove(entity);
+        await db.SaveChangesAsync(ct);
+    }
 }

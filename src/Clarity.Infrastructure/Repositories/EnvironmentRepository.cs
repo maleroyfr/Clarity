@@ -1,3 +1,4 @@
+using Clarity.Application.Common.Exceptions;
 using Clarity.Domain.Environments;
 using Clarity.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -27,6 +28,12 @@ internal sealed class EnvironmentRepository(ClarityDbContext db) : IEnvironmentR
     {
         db.Environments.Update(environment);
         return Task.CompletedTask;
+    }
+
+    public async Task DeleteAsync(Guid id, CancellationToken ct = default)
+    {
+        var env = await db.Environments.FindAsync([id], ct);
+        if (env != null) db.Environments.Remove(env);
     }
 
     public Task<int> SaveChangesAsync(CancellationToken ct = default) => db.SaveChangesAsync(ct);

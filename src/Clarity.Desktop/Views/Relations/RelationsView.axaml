@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:Clarity.Desktop.ViewModels.Relations"
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
              x:Class="Clarity.Desktop.Views.Relations.RelationsView"
              x:DataType="vm:RelationsViewModel">
 
@@ -17,7 +18,7 @@
       <Grid ColumnDefinitions="*,Auto">
         <StackPanel Grid.Column="0">
           <StackPanel Orientation="Horizontal" Spacing="8">
-            <TextBlock Text="🔗" FontSize="22" VerticalAlignment="Center"/>
+            <ui:SymbolIcon Symbol="Link" FontSize="22" VerticalAlignment="Center"/>
             <TextBlock Text="Environment Relations" Classes="PageTitle"/>
           </StackPanel>
           <TextBlock Text="Manage relationships between environments" Classes="PageSubtitle"/>
@@ -25,8 +26,12 @@
         <Button Grid.Column="1" Classes="PrimaryButton"
                 Command="{Binding ShowFormCommand}"
                 IsEnabled="{Binding HasSelectedCustomer}"
-                Content="+ Add Relation"
-                VerticalAlignment="Center"/>
+                VerticalAlignment="Center">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <ui:SymbolIcon Symbol="Add" FontSize="14"/>
+            <TextBlock Text="Add Relation" VerticalAlignment="Center"/>
+          </StackPanel>
+        </Button>
       </Grid>
     </Border>
 
@@ -56,7 +61,7 @@
       <!-- No customer selected -->
       <StackPanel IsVisible="{Binding !HasSelectedCustomer}"
                   HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
-        <TextBlock Text="🔗" FontSize="48" HorizontalAlignment="Center"/>
+        <ui:SymbolIcon Symbol="Link" FontSize="48" HorizontalAlignment="Center"/>
         <TextBlock Text="Select a customer" Classes="EmptyStateTitle"/>
         <TextBlock Text="Choose a customer above to view and manage environment relations."
                    Classes="EmptyStateSubtitle" TextAlignment="Center"/>
@@ -78,13 +83,18 @@
             <Binding Path="!IsFormVisible"/>
           </MultiBinding>
         </StackPanel.IsVisible>
-        <TextBlock Text="🔗" FontSize="48" HorizontalAlignment="Center"/>
+        <ui:SymbolIcon Symbol="Link" FontSize="48" HorizontalAlignment="Center"/>
         <TextBlock Text="No relations yet" Classes="EmptyStateTitle"/>
         <TextBlock Text="Create your first environment relation to get started."
                    Classes="EmptyStateSubtitle"/>
-        <Button Classes="PrimaryButton" Content="+ Add Relation"
+        <Button Classes="PrimaryButton"
                 Command="{Binding ShowFormCommand}"
-                HorizontalAlignment="Center" Margin="0,8,0,0"/>
+                HorizontalAlignment="Center" Margin="0,8,0,0">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <ui:SymbolIcon Symbol="Add" FontSize="14"/>
+            <TextBlock Text="Add Relation" VerticalAlignment="Center"/>
+          </StackPanel>
+        </Button>
       </StackPanel>
 
       <!-- Relations list + inline form -->
@@ -170,7 +180,10 @@
                           Command="{Binding SaveRelationCommand}">
                     <Panel>
                       <TextBlock Text="Saving…" IsVisible="{Binding IsSaving}"/>
-                      <TextBlock Text="Save Relation" IsVisible="{Binding !IsSaving}"/>
+                      <StackPanel Orientation="Horizontal" Spacing="6" IsVisible="{Binding !IsSaving}">
+                        <ui:SymbolIcon Symbol="Save" FontSize="14"/>
+                        <TextBlock Text="Save Relation" VerticalAlignment="Center"/>
+                      </StackPanel>
                     </Panel>
                   </Button>
                 </StackPanel>
@@ -216,8 +229,13 @@
 
                     <!-- Delete action -->
                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                      <Button Classes="DangerButton" Content="Delete"
-                              Command="{Binding DeleteCommand}"/>
+                      <Button Classes="DangerButton"
+                              Command="{Binding DeleteCommand}">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                          <ui:SymbolIcon Symbol="Delete" FontSize="14"/>
+                          <TextBlock Text="Delete" VerticalAlignment="Center"/>
+                        </StackPanel>
+                      </Button>
                     </StackPanel>
                   </Grid>
                 </Border>
@@ -229,10 +247,9 @@
     </Panel>
 
     <!-- Error bar -->
-    <Border Grid.Row="3"
-            IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-            Background="#FFF0F0" Padding="16,10" Margin="24,0,24,16" CornerRadius="6">
-      <TextBlock Text="{Binding ErrorMessage}" Foreground="#C0392B" TextWrapping="Wrap"/>
-    </Border>
+    <ui:InfoBar Grid.Row="3"
+                IsOpen="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                Severity="Error" Title="Error" Message="{Binding ErrorMessage}" IsClosable="True"
+                Margin="24,0,24,16"/>
   </Grid>
 </UserControl>

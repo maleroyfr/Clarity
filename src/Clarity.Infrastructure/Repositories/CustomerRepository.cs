@@ -1,3 +1,4 @@
+using Clarity.Application.Common.Exceptions;
 using Clarity.Domain.Customers;
 using Clarity.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -30,4 +31,12 @@ internal sealed class CustomerRepository(ClarityDbContext db) : ICustomerReposit
 
     public Task<int> SaveChangesAsync(CancellationToken ct = default) =>
         db.SaveChangesAsync(ct);
+
+    public async Task DeleteAsync(Guid id, CancellationToken ct = default)
+    {
+        var entity = await db.Customers.FindAsync([id], ct)
+            ?? throw new NotFoundException(nameof(Customer), id);
+        db.Customers.Remove(entity);
+        await db.SaveChangesAsync(ct);
+    }
 }

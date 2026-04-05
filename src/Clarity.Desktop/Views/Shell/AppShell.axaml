@@ -1,117 +1,88 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="using:FluentAvalonia.UI.Controls"
         xmlns:shell="clr-namespace:Clarity.Desktop.ViewModels.Shell"
         xmlns:local="clr-namespace:Clarity.Desktop"
         x:Class="Clarity.Desktop.Views.Shell.AppShell"
         x:DataType="shell:AppShellViewModel"
         Title="Clarity — Audit &amp; Discovery Platform"
         Width="1360" Height="860"
-        MinWidth="1024" MinHeight="680"
-        Background="{DynamicResource SystemChromeLowColor}">
+        MinWidth="1024" MinHeight="680">
 
   <Window.Styles>
     <StyleInclude Source="/Styles/ClarityTheme.axaml"/>
   </Window.Styles>
 
-  <Grid x:Name="RootGrid" ColumnDefinitions="Auto,*">
+  <ui:NavigationView x:Name="NavView"
+                     PaneTitle="Clarity"
+                     IsSettingsVisible="True"
+                     IsPaneOpen="True"
+                     IsBackButtonVisible="False"
+                     PaneDisplayMode="Left"
+                     SelectionChanged="NavView_SelectionChanged">
 
-    <!-- Navigation Rail -->
-    <Border Grid.Column="0"
-            Background="{DynamicResource SystemAltHighColor}"
-            BorderBrush="{DynamicResource SystemBaseLowColor}"
-            BorderThickness="0,0,1,0"
-            MinWidth="52">
-      <Grid RowDefinitions="Auto,*,Auto">
+    <ui:NavigationView.MenuItems>
+      <ui:NavigationViewItem Content="Home" Tag="Home"
+                             IsSelected="True">
+        <ui:NavigationViewItem.IconSource>
+          <ui:SymbolIconSource Symbol="Home"/>
+        </ui:NavigationViewItem.IconSource>
+      </ui:NavigationViewItem>
 
-        <!-- App Logo -->
-        <StackPanel Grid.Row="0" Margin="0,16,0,4" HorizontalAlignment="Center">
-          <TextBlock Text="✦" FontSize="28" HorizontalAlignment="Center"
-                     Foreground="{DynamicResource SystemAccentColor}"/>
-          <TextBlock Text="Clarity" FontSize="12" FontWeight="Bold"
-                     HorizontalAlignment="Center" Margin="0,2,0,0"
-                     IsVisible="{Binding IsNavExpanded}"
-                     Foreground="{DynamicResource SystemAccentColor}"/>
-          <TextBlock Text="Audit Platform" FontSize="9" Opacity="0.6"
-                     HorizontalAlignment="Center" Margin="0,0,0,0"
-                     IsVisible="{Binding IsNavExpanded}"/>
-        </StackPanel>
+      <ui:NavigationViewItemHeader Content="MANAGE"/>
 
-        <!-- Nav Groups -->
-        <ScrollViewer Grid.Row="1" Margin="6,4,6,0"
-                      HorizontalScrollBarVisibility="Disabled"
-                      VerticalScrollBarVisibility="Auto">
-          <ItemsControl ItemsSource="{Binding NavGroups}">
-            <ItemsControl.ItemTemplate>
-              <DataTemplate x:DataType="shell:NavGroup" x:CompileBindings="False">
-                <StackPanel Margin="0,2,0,4">
-                  <!-- Group header -->
-                  <TextBlock Text="{Binding Header}"
-                             FontSize="10" FontWeight="SemiBold" Opacity="0.5"
-                             Margin="14,8,0,4"
-                             IsVisible="{Binding Header, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
-                  <ItemsControl ItemsSource="{Binding Items}">
-                    <ItemsControl.ItemTemplate>
-                      <DataTemplate x:DataType="shell:NavItem" x:CompileBindings="False">
-                        <Button Classes="NavButton"
-                                Classes.active="{Binding IsActive}"
-                                Command="{Binding $parent[Window].DataContext.NavigateToCommand}"
-                                CommandParameter="{Binding Section}"
-                                ToolTip.Tip="{Binding Label}"
-                                Margin="0,1">
-                          <StackPanel Orientation="Horizontal" Spacing="10">
-                            <TextBlock Text="{Binding Icon}" FontSize="17" Width="22" TextAlignment="Center"/>
-                            <TextBlock Text="{Binding Label}" FontSize="13"
-                                       IsVisible="{Binding $parent[Window].DataContext.IsNavExpanded}"
-                                       VerticalAlignment="Center"/>
-                          </StackPanel>
-                        </Button>
-                      </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                  </ItemsControl>
-                </StackPanel>
-              </DataTemplate>
-            </ItemsControl.ItemTemplate>
-          </ItemsControl>
-        </ScrollViewer>
+      <ui:NavigationViewItem Content="Customers" Tag="Customers">
+        <ui:NavigationViewItem.IconSource>
+          <ui:SymbolIconSource Symbol="People"/>
+        </ui:NavigationViewItem.IconSource>
+      </ui:NavigationViewItem>
 
-        <!-- Bottom Actions -->
-        <StackPanel Grid.Row="2" Margin="6,4,6,12" Spacing="1">
-          <Border Height="1" Background="{DynamicResource SystemBaseLowColor}" Margin="6,0,6,6"/>
-          <Button Classes="NavButton"
-                  x:Name="AboutButton"
-                  ToolTip.Tip="About Clarity">
-            <StackPanel Orientation="Horizontal" Spacing="10">
-              <TextBlock Text="ℹ️" FontSize="17" Width="22" TextAlignment="Center"/>
-              <TextBlock Text="About" FontSize="13" IsVisible="{Binding IsNavExpanded}" VerticalAlignment="Center"/>
-            </StackPanel>
-          </Button>
-          <Button Classes="NavButton"
-                  Command="{Binding ToggleThemeCommand}"
-                  ToolTip.Tip="{Binding ThemeLabel}">
-            <StackPanel Orientation="Horizontal" Spacing="10">
-              <TextBlock Text="{Binding ThemeIcon}" FontSize="17" Width="22" TextAlignment="Center"/>
-              <TextBlock Text="{Binding ThemeLabel}" FontSize="13" IsVisible="{Binding IsNavExpanded}" VerticalAlignment="Center"/>
-            </StackPanel>
-          </Button>
-          <Button Classes="NavButton"
-                  Command="{Binding ToggleNavCommand}"
-                  ToolTip.Tip="Toggle navigation">
-            <StackPanel Orientation="Horizontal" Spacing="10">
-              <TextBlock Text="◀" FontSize="13" Width="22" TextAlignment="Center"/>
-              <TextBlock Text="Collapse" FontSize="13" IsVisible="{Binding IsNavExpanded}" VerticalAlignment="Center"/>
-            </StackPanel>
-          </Button>
-        </StackPanel>
-      </Grid>
-    </Border>
+      <ui:NavigationViewItem Content="Environments" Tag="Environments">
+        <ui:NavigationViewItem.IconSource>
+          <ui:SymbolIconSource Symbol="Globe"/>
+        </ui:NavigationViewItem.IconSource>
+      </ui:NavigationViewItem>
+
+      <ui:NavigationViewItem Content="Relations" Tag="Relations">
+        <ui:NavigationViewItem.IconSource>
+          <ui:SymbolIconSource Symbol="Link"/>
+        </ui:NavigationViewItem.IconSource>
+      </ui:NavigationViewItem>
+
+      <ui:NavigationViewItemHeader Content="DISCOVER"/>
+
+      <ui:NavigationViewItem Content="Snapshots" Tag="Snapshots">
+        <ui:NavigationViewItem.IconSource>
+          <ui:SymbolIconSource Symbol="Camera"/>
+        </ui:NavigationViewItem.IconSource>
+      </ui:NavigationViewItem>
+
+      <ui:NavigationViewItem Content="Inventory" Tag="Inventory">
+        <ui:NavigationViewItem.IconSource>
+          <ui:SymbolIconSource Symbol="AllApps"/>
+        </ui:NavigationViewItem.IconSource>
+      </ui:NavigationViewItem>
+
+      <ui:NavigationViewItemHeader Content="ANALYZE"/>
+
+      <ui:NavigationViewItem Content="Comparisons" Tag="Comparisons">
+        <ui:NavigationViewItem.IconSource>
+          <ui:SymbolIconSource Symbol="Library"/>
+        </ui:NavigationViewItem.IconSource>
+      </ui:NavigationViewItem>
+
+      <ui:NavigationViewItem Content="Exports" Tag="Exports">
+        <ui:NavigationViewItem.IconSource>
+          <ui:SymbolIconSource Symbol="Download"/>
+        </ui:NavigationViewItem.IconSource>
+      </ui:NavigationViewItem>
+    </ui:NavigationView.MenuItems>
 
     <!-- Page content area -->
-    <ContentControl Grid.Column="1"
-                    Content="{Binding CurrentPage}"
-                    Margin="0">
+    <ContentControl Content="{Binding CurrentPage}">
       <ContentControl.DataTemplates>
         <local:ViewLocator/>
       </ContentControl.DataTemplates>
     </ContentControl>
-  </Grid>
+  </ui:NavigationView>
 </Window>

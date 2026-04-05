@@ -15,7 +15,9 @@ namespace Clarity.Desktop.ViewModels.Environments;
 public sealed partial class EnvironmentListItemVm : ObservableObject
 {
     private readonly Action<EnvironmentDto> _onEdit;
+    private readonly Action<EnvironmentDto> _onConfigureAuth;
     private readonly Func<EnvironmentDto, Task> _onArchive;
+    private readonly Func<EnvironmentDto, Task> _onDelete;
     private readonly EnvironmentDto _dto;
 
     public Guid Id { get; }
@@ -32,7 +34,9 @@ public sealed partial class EnvironmentListItemVm : ObservableObject
     public EnvironmentListItemVm(
         EnvironmentDto dto,
         Action<EnvironmentDto> onEdit,
-        Func<EnvironmentDto, Task> onArchive)
+        Action<EnvironmentDto> onConfigureAuth,
+        Func<EnvironmentDto, Task> onArchive,
+        Func<EnvironmentDto, Task> onDelete)
     {
         _dto = dto;
         Id = dto.Id;
@@ -43,14 +47,22 @@ public sealed partial class EnvironmentListItemVm : ObservableObject
         IsArchived = dto.IsArchived;
         WorkloadCount = dto.WorkloadAreas.Count;
         _onEdit = onEdit;
+        _onConfigureAuth = onConfigureAuth;
         _onArchive = onArchive;
+        _onDelete = onDelete;
     }
 
     [RelayCommand]
     public void Edit() => _onEdit(_dto);
 
     [RelayCommand]
+    public void ConfigureAuth() => _onConfigureAuth(_dto);
+
+    [RelayCommand]
     public async Task Archive() => await _onArchive(_dto);
+
+    [RelayCommand]
+    public async Task Delete() => await _onDelete(_dto);
 }
 
 /// <summary>Selectable customer item for the customer picker.</summary>
@@ -108,6 +120,7 @@ public sealed partial class EnvironmentsListViewModel : ObservableObject
     private List<EnvironmentDto> _allEnvironments = [];
 
     public event Action<EnvironmentDto?>? EditRequested;
+    public event Action<EnvironmentDto>? ConfigureAuthRequested;
 
     public EnvironmentsListViewModel(IMediator mediator)
     {
@@ -192,13 +205,15 @@ public sealed partial class EnvironmentsListViewModel : ObservableObject
                 e.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase)).ToList();
 
         FilteredEnvironments = new ObservableCollection<EnvironmentListItemVm>(
-            filtered.Select(d => new EnvironmentListItemVm(d, OnEditItem, OnArchiveItem)));
+            filtered.Select(d => new EnvironmentListItemVm(d, OnEditItem, OnConfigureAuthItem, OnArchiveItem, OnDeleteItem)));
 
         OnPropertyChanged(nameof(IsEmpty));
         OnPropertyChanged(nameof(HasEnvironments));
     }
 
     private void OnEditItem(EnvironmentDto dto) => EditRequested?.Invoke(dto);
+
+    private void OnConfigureAuthItem(EnvironmentDto dto) => ConfigureAuthRequested?.Invoke(dto);
 
     private async Task OnArchiveItem(EnvironmentDto dto)
     {
@@ -210,6 +225,19 @@ public sealed partial class EnvironmentsListViewModel : ObservableObject
         catch (Exception ex)
         {
             ErrorMessage = $"Failed to archive: {ex.Message}";
+        }
+    }
+
+    private async Task OnDeleteItem(EnvironmentDto dto)
+    {
+        try
+        {
+            await _mediator.Send(new DeleteEnvironmentCommand(dto.Id));
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Failed to delete: {ex.Message}";
         }
     }
 

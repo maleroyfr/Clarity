@@ -94,6 +94,19 @@ public sealed class RestoreCustomerHandler(ICustomerRepository repo)
     }
 }
 
+// ─── Delete ───────────────────────────────────────────────────────────────────
+
+public sealed record DeleteCustomerCommand(Guid Id) : ICommand;
+
+public sealed class DeleteCustomerHandler(ICustomerRepository repo)
+    : ICommandHandler<DeleteCustomerCommand>
+{
+    public async Task Handle(DeleteCustomerCommand cmd, CancellationToken ct)
+    {
+        await repo.DeleteAsync(cmd.Id, ct);
+    }
+}
+
 // ─── Mapper ───────────────────────────────────────────────────────────────────
 
 internal static class CustomerMappings

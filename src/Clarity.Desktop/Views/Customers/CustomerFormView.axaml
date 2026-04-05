@@ -1,59 +1,32 @@
-<Window xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="clr-namespace:Clarity.Desktop.ViewModels.Customers"
-        x:Class="Clarity.Desktop.Views.Customers.CustomerFormView"
-        x:DataType="vm:CustomerFormViewModel"
-        Title="{Binding Title}"
-        Width="520" Height="400"
-        CanResize="False"
-        WindowStartupLocation="CenterOwner">
+<ui:ContentDialog xmlns="https://github.com/avaloniaui"
+                  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                  xmlns:ui="using:FluentAvalonia.UI.Controls"
+                  xmlns:vm="clr-namespace:Clarity.Desktop.ViewModels.Customers"
+                  x:Class="Clarity.Desktop.Views.Customers.CustomerFormView"
+                  x:DataType="vm:CustomerFormViewModel"
+                  Title="{Binding Title}"
+                  PrimaryButtonText="Save"
+                  CloseButtonText="Cancel"
+                  IsPrimaryButtonEnabled="{Binding !IsSaving}">
 
-  <Window.Styles>
-    <StyleInclude Source="/Styles/ClarityTheme.axaml"/>
-  </Window.Styles>
+  <StackPanel Spacing="16" MinWidth="400">
 
-  <Grid RowDefinitions="Auto,*,Auto" Margin="24">
-
-    <!-- Header -->
-    <TextBlock Grid.Row="0" Text="{Binding Title}" Classes="PageTitle" Margin="0,0,0,20"/>
-
-    <!-- Form -->
-    <StackPanel Grid.Row="1" Spacing="16">
-
-      <StackPanel Spacing="4">
-        <TextBlock Text="Customer name *" Classes="FormLabel"/>
-        <TextBox Text="{Binding Name}" Watermark="e.g. Contoso Ltd" Classes="FormInput"/>
-      </StackPanel>
-
-      <StackPanel Spacing="4">
-        <TextBlock Text="Description" Classes="FormLabel"/>
-        <TextBox Text="{Binding Description}"
-                 Watermark="Optional description"
-                 AcceptsReturn="True"
-                 Height="80"
-                 Classes="FormInput"/>
-      </StackPanel>
-
-      <!-- Error message -->
-      <Border IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-              Background="#FFF0F0" Padding="12,8" CornerRadius="4">
-        <TextBlock Text="{Binding ErrorMessage}" Foreground="#C0392B" TextWrapping="Wrap"/>
-      </Border>
+    <StackPanel Spacing="4">
+      <TextBlock Text="Customer name *" Classes="FormLabel"/>
+      <TextBox Text="{Binding Name}" Watermark="e.g. Contoso Ltd" Classes="FormInput"/>
     </StackPanel>
 
-    <!-- Footer actions -->
-    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right"
-                Spacing="12" Margin="0,20,0,0">
-      <Button Classes="SecondaryButton" Content="Cancel"
-              Command="{Binding CancelCommand}"/>
-      <Button Classes="PrimaryButton"
-              IsEnabled="{Binding !IsSaving}"
-              Command="{Binding SaveCommand}">
-        <Panel>
-          <TextBlock Text="Saving…" IsVisible="{Binding IsSaving}"/>
-          <TextBlock Text="Save" IsVisible="{Binding !IsSaving}"/>
-        </Panel>
-      </Button>
+    <StackPanel Spacing="4">
+      <TextBlock Text="Description" Classes="FormLabel"/>
+      <TextBox Text="{Binding Description}"
+               Watermark="Optional description"
+               AcceptsReturn="True"
+               Height="80"
+               Classes="FormInput"/>
     </StackPanel>
-  </Grid>
-</Window>
+
+    <!-- Error message -->
+    <ui:InfoBar IsOpen="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                Severity="Error" Title="Error" Message="{Binding ErrorMessage}" IsClosable="True"/>
+  </StackPanel>
+</ui:ContentDialog>

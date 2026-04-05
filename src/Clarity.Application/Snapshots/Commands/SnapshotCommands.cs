@@ -48,6 +48,23 @@ public sealed class SealSnapshotHandler(ISnapshotRepository repo)
     }
 }
 
+// ─── Delete ───────────────────────────────────────────────────────────────────
+
+public sealed record DeleteSnapshotCommand(Guid Id) : ICommand;
+
+public sealed class DeleteSnapshotHandler(ISnapshotRepository repo)
+    : ICommandHandler<DeleteSnapshotCommand>
+{
+    public async Task Handle(DeleteSnapshotCommand cmd, CancellationToken ct)
+    {
+        var snapshot = await repo.GetByIdAsync(cmd.Id, ct)
+            ?? throw new NotFoundException(nameof(Snapshot), cmd.Id);
+
+        await repo.DeleteAsync(snapshot.Id, ct);
+        await repo.SaveChangesAsync(ct);
+    }
+}
+
 // ─── Mapper ───────────────────────────────────────────────────────────────────
 
 internal static class SnapshotMappings

@@ -27,6 +27,7 @@ public static class ViewModelRegistration
         // Environments
         services.AddTransient<EnvironmentsListViewModel>();
         services.AddTransient<EnvironmentFormViewModel>();
+        services.AddTransient<AuthConfigViewModel>();
         services.AddTransient<OnboardingWizardViewModel>();
 
         // Snapshots & Inventory

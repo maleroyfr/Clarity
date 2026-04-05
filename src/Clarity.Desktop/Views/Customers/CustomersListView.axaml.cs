@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Clarity.Application.Customers.Commands;
 using Clarity.Desktop.Services;
 using Clarity.Desktop.ViewModels.Customers;
+using FluentAvalonia.UI.Controls;
 
 namespace Clarity.Desktop.Views.Customers;
 
@@ -23,18 +24,18 @@ public partial class CustomersListView : UserControl
         }
     }
 
-    private void OnEditRequested(CustomerDto? customer)
+    private async void OnEditRequested(CustomerDto? customer)
     {
         var form = new CustomerFormView();
         var formVm = (CustomerFormViewModel)form.DataContext!;
         formVm.Initialize(customer);
-        formVm.SaveCompleted += async () =>
+
+        var result = await form.ShowAsync();
+        if (result == ContentDialogResult.Primary)
         {
             if (DataContext is CustomersListViewModel listVm)
                 await listVm.LoadAsync();
-        };
-        // Show as dialog overlay — simplified for scaffold
-        form.ShowDialog(VisualRoot as Avalonia.Controls.Window ?? throw new InvalidOperationException());
+        }
     }
 
     private void OnViewEnvironmentsRequested(Guid customerId)

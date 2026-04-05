@@ -100,6 +100,23 @@ public sealed class ArchiveEnvironmentHandler(IEnvironmentRepository repo)
     }
 }
 
+// ─── Delete ───────────────────────────────────────────────────────────────────
+
+public sealed record DeleteEnvironmentCommand(Guid Id) : ICommand;
+
+public sealed class DeleteEnvironmentHandler(IEnvironmentRepository repo)
+    : ICommandHandler<DeleteEnvironmentCommand>
+{
+    public async Task Handle(DeleteEnvironmentCommand cmd, CancellationToken ct)
+    {
+        _ = await repo.GetByIdAsync(cmd.Id, ct)
+            ?? throw new NotFoundException(nameof(DomainEnv), cmd.Id);
+
+        await repo.DeleteAsync(cmd.Id, ct);
+        await repo.SaveChangesAsync(ct);
+    }
+}
+
 // ─── SetWorkloads ─────────────────────────────────────────────────────────────
 
 public sealed record SetEnvironmentWorkloadsCommand(
