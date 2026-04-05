@@ -13,8 +13,7 @@ public enum NavSection
     Comparisons,
     Exports,
     Relations,
-    Settings,
-    Onboarding
+    Settings
 }
 
 /// <summary>

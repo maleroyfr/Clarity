@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Clarity.Application.Customers.Commands;
 using Clarity.Desktop.Services;
 using Clarity.Desktop.ViewModels.Customers;
+using Clarity.Desktop.ViewModels.Shell;
 using SukiUI.Controls;
 using SukiUI.Dialogs;
 
@@ -21,6 +22,20 @@ public partial class CustomersListView : UserControl
         {
             vm.EditRequested += OnEditRequested;
             vm.ViewEnvironmentsRequested += OnViewEnvironmentsRequested;
+
+            // Wire global keyboard shortcuts
+            var shell = AppServiceLocator.Get<AppShellViewModel>();
+            shell.CreateNewRequested += () =>
+            {
+                if (shell.ActivePage?.Section == NavSection.Customers)
+                    vm.CreateNewCommand.Execute(null);
+            };
+            shell.RefreshRequested += () =>
+            {
+                if (shell.ActivePage?.Section == NavSection.Customers)
+                    _ = vm.LoadAsync();
+            };
+
             _ = vm.LoadAsync();
         }
     }
@@ -31,7 +46,7 @@ public partial class CustomersListView : UserControl
         var formVm = (CustomerFormViewModel)form.DataContext!;
         formVm.Initialize(customer);
 
-        if (VisualRoot is SukiWindow window && window.DataContext is Clarity.Desktop.ViewModels.Shell.AppShellViewModel shell)
+        if (VisualRoot is SukiWindow window && window.DataContext is AppShellViewModel shell)
         {
             formVm.SaveCompleted += async () =>
             {
@@ -67,7 +82,7 @@ public partial class CustomersListView : UserControl
 
     private void OnViewEnvironmentsRequested(Guid customerId)
     {
-        if (VisualRoot is SukiWindow window && window.DataContext is Clarity.Desktop.ViewModels.Shell.AppShellViewModel shell)
+        if (VisualRoot is SukiWindow window && window.DataContext is AppShellViewModel shell)
         {
             shell.NavigateToCustomerEnvironments(customerId);
         }

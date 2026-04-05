@@ -3,6 +3,7 @@ using Clarity.Application.Environments;
 using Clarity.Application.Environments.Queries;
 using Clarity.Desktop.Services;
 using Clarity.Desktop.ViewModels.Environments;
+using Clarity.Desktop.ViewModels.Shell;
 using SukiUI.Controls;
 using SukiUI.Dialogs;
 using MediatR;
@@ -23,6 +24,20 @@ public partial class EnvironmentsListView : UserControl
         {
             vm.EditRequested += OnEditRequested;
             vm.ConfigureAuthRequested += OnConfigureAuthRequested;
+
+            // Wire global keyboard shortcuts
+            var shell = AppServiceLocator.Get<AppShellViewModel>();
+            shell.CreateNewRequested += () =>
+            {
+                if (shell.ActivePage?.Section == NavSection.Environments && vm.HasSelectedCustomer)
+                    vm.CreateNewCommand.Execute(null);
+            };
+            shell.RefreshRequested += () =>
+            {
+                if (shell.ActivePage?.Section == NavSection.Environments)
+                    _ = vm.LoadAsync();
+            };
+
             _ = vm.LoadCustomersAsync();
         }
     }
@@ -33,7 +48,7 @@ public partial class EnvironmentsListView : UserControl
         if (listVm.SelectedCustomer is null) return;
 
         if (VisualRoot is not SukiWindow window) return;
-        if (window.DataContext is not Clarity.Desktop.ViewModels.Shell.AppShellViewModel shell) return;
+        if (window.DataContext is not AppShellViewModel shell) return;
 
         var wizardVm = AppServiceLocator.Get<EnvironmentSetupWizardViewModel>();
         wizardVm.Initialize(environment, listVm.SelectedCustomer.Id);
@@ -80,7 +95,7 @@ public partial class EnvironmentsListView : UserControl
 
             var authView = new AuthConfigView { DataContext = authVm };
 
-            if (VisualRoot is SukiWindow window && window.DataContext is Clarity.Desktop.ViewModels.Shell.AppShellViewModel shell)
+            if (VisualRoot is SukiWindow window && window.DataContext is AppShellViewModel shell)
             {
                 var builder = new SukiDialogBuilder(shell.DialogManager);
                 builder.SetTitle("Authentication Configuration");

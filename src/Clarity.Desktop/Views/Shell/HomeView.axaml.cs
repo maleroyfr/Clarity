@@ -17,6 +17,15 @@ public partial class HomeView : UserControl
         if (DataContext is HomeViewModel vm)
         {
             vm.NavigateRequested += OnNavigateRequested;
+
+            // F5 refreshes dashboard
+            var shell = AppServiceLocator.Get<AppShellViewModel>();
+            shell.RefreshRequested += () =>
+            {
+                if (shell.ActivePage?.Section == NavSection.Home)
+                    _ = vm.LoadAsync();
+            };
+
             _ = vm.LoadAsync();
         }
     }
