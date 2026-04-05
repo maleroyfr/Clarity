@@ -12,8 +12,10 @@ using Clarity.Desktop.ViewModels.Onboarding;
 using Avalonia.Controls.Notifications;
 using SukiUI.Dialogs;
 using SukiUI.Toasts;
-using SukiUI.Enums;
+using System;
 using System.Collections.ObjectModel;
+using System.Reflection;
+using System.Runtime.InteropServices;
 
 namespace Clarity.Desktop.ViewModels.Shell;
 
@@ -29,14 +31,10 @@ public sealed partial class AppShellViewModel : ObservableObject
     [ObservableProperty]
     private NavPageItem? _activePage;
 
-    // Settings lives in footer, tracked separately
-    public SettingsViewModel SettingsPage { get; }
-
     public AppShellViewModel()
     {
         DialogManager = new SukiDialogManager();
         ToastManager = new SukiToastManager();
-        SettingsPage = AppServiceLocator.Get<SettingsViewModel>();
 
         Pages = new ObservableCollection<NavPageItem>
         {
@@ -49,17 +47,23 @@ public sealed partial class AppShellViewModel : ObservableObject
             MakePage("Comparisons",  Icons.Library,      NavSection.Comparisons),
             MakePage("Exports",      Icons.Download,     NavSection.Exports),
             MakePage("Onboarding",   Icons.Wizard,       NavSection.Onboarding),
+            MakePage("Settings",     Icons.Settings,     NavSection.Settings),
         };
 
         ActivePage = Pages[0]; // Home
     }
 
-    /// <summary>Shows a simple About dialog.</summary>
+    /// <summary>Shows a rich About dialog with full application details.</summary>
     public void ShowAboutDialog()
     {
+        var version = Assembly.GetExecutingAssembly()
+            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
+            ?? Assembly.GetExecutingAssembly().GetName().Version?.ToString()
+            ?? "1.0.0";
+        var vm = new AboutViewModel();
         var builder = new SukiDialogBuilder(DialogManager);
         builder.SetTitle("About Clarity");
-        builder.SetContent("Clarity — Audit & Discovery Platform\nVersion 1.0.0\n\n© 2025 Clarity Team");
+        builder.SetContent(vm);
         builder.AddActionButton("Close", _ => { }, true, ["Flat"]);
         builder.TryShow();
     }
@@ -126,6 +130,7 @@ public sealed partial class AppShellViewModel : ObservableObject
         NavSection.Comparisons  => AppServiceLocator.Get<ComparisonViewModel>(),
         NavSection.Exports      => AppServiceLocator.Get<ExportsViewModel>(),
         NavSection.Onboarding   => AppServiceLocator.Get<OnboardingWizardViewModel>(),
+        NavSection.Settings     => AppServiceLocator.Get<SettingsViewModel>(),
         _                       => null
     };
 
@@ -147,5 +152,6 @@ public sealed partial class AppShellViewModel : ObservableObject
         public const string Library = "M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V9h10v2zm-4 4H9v-2h6v2zm4-8H9V5h10v2z";
         public const string Download = "M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z";
         public const string Wizard = "M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z";
+        public const string Settings = "M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z";
     }
 }
