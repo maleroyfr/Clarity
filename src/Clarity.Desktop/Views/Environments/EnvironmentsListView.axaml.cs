@@ -3,7 +3,8 @@ using Clarity.Application.Environments;
 using Clarity.Application.Environments.Queries;
 using Clarity.Desktop.Services;
 using Clarity.Desktop.ViewModels.Environments;
-using FluentAvalonia.UI.Controls;
+using SukiUI.Controls;
+using SukiUI.Dialogs;
 using MediatR;
 
 namespace Clarity.Desktop.Views.Environments;
@@ -53,19 +54,20 @@ public partial class EnvironmentsListView : UserControl
             var authVm = AppServiceLocator.Get<AuthConfigViewModel>();
             authVm.Initialize(detail);
 
-            var dialog = new ContentDialog
+            var authView = new AuthConfigView { DataContext = authVm };
+
+            if (VisualRoot is SukiWindow window && window.DataContext is Clarity.Desktop.ViewModels.Shell.AppShellViewModel shell)
             {
-                Title = "Authentication Configuration",
-                Content = new AuthConfigView { DataContext = authVm },
-                CloseButtonText = "Close",
-                DefaultButton = ContentDialogButton.Close
-            };
-
-            await dialog.ShowAsync();
-
-            // Refresh list after dialog closes
-            if (DataContext is EnvironmentsListViewModel lvm)
-                await lvm.LoadAsync();
+                var builder = new SukiDialogBuilder(shell.DialogManager);
+                builder.SetTitle("Authentication Configuration");
+                builder.SetContent(authView);
+                builder.AddActionButton("Close", async _ =>
+                {
+                    if (DataContext is EnvironmentsListViewModel lvm)
+                        await lvm.LoadAsync();
+                }, true, ["Flat"]);
+                builder.TryShow();
+            }
         }
         catch (Exception ex)
         {

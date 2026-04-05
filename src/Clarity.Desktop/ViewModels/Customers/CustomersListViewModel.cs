@@ -1,7 +1,10 @@
+using Avalonia.Controls.Notifications;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Clarity.Application.Customers.Commands;
 using Clarity.Application.Customers.Queries;
+using Clarity.Desktop.Services;
+using Clarity.Desktop.ViewModels.Shell;
 using MediatR;
 using System.Collections.ObjectModel;
 
@@ -147,6 +150,7 @@ public sealed partial class CustomersListViewModel : ObservableObject
         {
             await _mediator.Send(new ArchiveCustomerCommand(dto.Id));
             await LoadAsync();
+            AppServiceLocator.Get<AppShellViewModel>().ShowToast("Customer Archived", $"\"{dto.Name}\" has been archived.", NotificationType.Success);
         }
         catch (Exception ex)
         {
@@ -160,6 +164,7 @@ public sealed partial class CustomersListViewModel : ObservableObject
         {
             await _mediator.Send(new RestoreCustomerCommand(dto.Id));
             await LoadAsync();
+            AppServiceLocator.Get<AppShellViewModel>().ShowToast("Customer Restored", $"\"{dto.Name}\" has been restored.", NotificationType.Success);
         }
         catch (Exception ex)
         {
@@ -173,6 +178,7 @@ public sealed partial class CustomersListViewModel : ObservableObject
         {
             await _mediator.Send(new DeleteCustomerCommand(dto.Id));
             await LoadAsync();
+            AppServiceLocator.Get<AppShellViewModel>().ShowToast("Customer Deleted", $"\"{dto.Name}\" has been permanently deleted.", NotificationType.Warning);
         }
         catch (Exception ex)
         {

@@ -1,88 +1,60 @@
-<Window xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:ui="using:FluentAvalonia.UI.Controls"
-        xmlns:shell="clr-namespace:Clarity.Desktop.ViewModels.Shell"
-        xmlns:local="clr-namespace:Clarity.Desktop"
-        x:Class="Clarity.Desktop.Views.Shell.AppShell"
-        x:DataType="shell:AppShellViewModel"
-        Title="Clarity — Audit &amp; Discovery Platform"
-        Width="1360" Height="860"
-        MinWidth="1024" MinHeight="680">
+<suki:SukiWindow xmlns="https://github.com/avaloniaui"
+               xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+               xmlns:suki="https://github.com/kikipoulet/SukiUI"
+               xmlns:shell="clr-namespace:Clarity.Desktop.ViewModels.Shell"
+               x:Class="Clarity.Desktop.Views.Shell.AppShell"
+               x:DataType="shell:AppShellViewModel"
+               Title="Clarity — Audit &amp; Discovery Platform"
+               Width="1360" Height="860"
+               MinWidth="1024" MinHeight="680"
+               BackgroundStyle="Flat"
+               BackgroundAnimationEnabled="False">
 
-  <Window.Styles>
-    <StyleInclude Source="/Styles/ClarityTheme.axaml"/>
-  </Window.Styles>
+  <suki:SukiWindow.LogoContent>
+    <TextBlock Text="Clarity" FontWeight="Bold" FontSize="16"
+               VerticalAlignment="Center" Margin="8,0"/>
+  </suki:SukiWindow.LogoContent>
 
-  <ui:NavigationView x:Name="NavView"
-                     PaneTitle="Clarity"
-                     IsSettingsVisible="True"
-                     IsPaneOpen="True"
-                     IsBackButtonVisible="False"
-                     PaneDisplayMode="Left"
-                     SelectionChanged="NavView_SelectionChanged">
+  <suki:SukiWindow.MenuItems>
+    <MenuItem Header="File">
+      <MenuItem Header="Exit" Click="OnExitClick"/>
+    </MenuItem>
+    <MenuItem Header="Help">
+      <MenuItem Header="About Clarity" Click="OnAboutClick"/>
+    </MenuItem>
+  </suki:SukiWindow.MenuItems>
 
-    <ui:NavigationView.MenuItems>
-      <ui:NavigationViewItem Content="Home" Tag="Home"
-                             IsSelected="True">
-        <ui:NavigationViewItem.IconSource>
-          <ui:SymbolIconSource Symbol="Home"/>
-        </ui:NavigationViewItem.IconSource>
-      </ui:NavigationViewItem>
+  <suki:SukiWindow.Hosts>
+    <suki:SukiDialogHost Manager="{Binding DialogManager}"/>
+    <suki:SukiToastHost Manager="{Binding ToastManager}" MaxToasts="5"/>
+  </suki:SukiWindow.Hosts>
 
-      <ui:NavigationViewItemHeader Content="MANAGE"/>
+  <suki:SukiSideMenu ItemsSource="{Binding Pages}"
+                      SelectedItem="{Binding ActivePage}"
+                      IsSearchEnabled="False"
+                      IsToggleButtonVisible="True">
 
-      <ui:NavigationViewItem Content="Customers" Tag="Customers">
-        <ui:NavigationViewItem.IconSource>
-          <ui:SymbolIconSource Symbol="People"/>
-        </ui:NavigationViewItem.IconSource>
-      </ui:NavigationViewItem>
+    <suki:SukiSideMenu.HeaderContent>
+      <StackPanel Spacing="4" Margin="12,8">
+        <TextBlock Text="CLARITY" FontWeight="Bold" FontSize="14"
+                   Foreground="{DynamicResource SukiPrimaryColor}"
+                   LetterSpacing="2"/>
+        <TextBlock Text="Audit &amp; Discovery" FontSize="11"
+                   Opacity="0.6"/>
+      </StackPanel>
+    </suki:SukiSideMenu.HeaderContent>
 
-      <ui:NavigationViewItem Content="Environments" Tag="Environments">
-        <ui:NavigationViewItem.IconSource>
-          <ui:SymbolIconSource Symbol="Globe"/>
-        </ui:NavigationViewItem.IconSource>
-      </ui:NavigationViewItem>
+    <!-- ItemTemplate: only defines sidebar appearance (Header + Icon).
+         Page content is resolved by the NavPageItem DataTemplate in App.axaml. -->
+    <suki:SukiSideMenu.ItemTemplate>
+      <DataTemplate>
+        <suki:SukiSideMenuItem Header="{Binding Title}">
+          <suki:SukiSideMenuItem.Icon>
+            <PathIcon Data="{Binding IconData}"/>
+          </suki:SukiSideMenuItem.Icon>
+        </suki:SukiSideMenuItem>
+      </DataTemplate>
+    </suki:SukiSideMenu.ItemTemplate>
 
-      <ui:NavigationViewItem Content="Relations" Tag="Relations">
-        <ui:NavigationViewItem.IconSource>
-          <ui:SymbolIconSource Symbol="Link"/>
-        </ui:NavigationViewItem.IconSource>
-      </ui:NavigationViewItem>
-
-      <ui:NavigationViewItemHeader Content="DISCOVER"/>
-
-      <ui:NavigationViewItem Content="Snapshots" Tag="Snapshots">
-        <ui:NavigationViewItem.IconSource>
-          <ui:SymbolIconSource Symbol="Camera"/>
-        </ui:NavigationViewItem.IconSource>
-      </ui:NavigationViewItem>
-
-      <ui:NavigationViewItem Content="Inventory" Tag="Inventory">
-        <ui:NavigationViewItem.IconSource>
-          <ui:SymbolIconSource Symbol="AllApps"/>
-        </ui:NavigationViewItem.IconSource>
-      </ui:NavigationViewItem>
-
-      <ui:NavigationViewItemHeader Content="ANALYZE"/>
-
-      <ui:NavigationViewItem Content="Comparisons" Tag="Comparisons">
-        <ui:NavigationViewItem.IconSource>
-          <ui:SymbolIconSource Symbol="Library"/>
-        </ui:NavigationViewItem.IconSource>
-      </ui:NavigationViewItem>
-
-      <ui:NavigationViewItem Content="Exports" Tag="Exports">
-        <ui:NavigationViewItem.IconSource>
-          <ui:SymbolIconSource Symbol="Download"/>
-        </ui:NavigationViewItem.IconSource>
-      </ui:NavigationViewItem>
-    </ui:NavigationView.MenuItems>
-
-    <!-- Page content area -->
-    <ContentControl Content="{Binding CurrentPage}">
-      <ContentControl.DataTemplates>
-        <local:ViewLocator/>
-      </ContentControl.DataTemplates>
-    </ContentControl>
-  </ui:NavigationView>
-</Window>
+  </suki:SukiSideMenu>
+</suki:SukiWindow>

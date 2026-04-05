@@ -3,6 +3,8 @@ using CommunityToolkit.Mvvm.Input;
 using Clarity.Application.Onboarding;
 using Clarity.Collectors.PowerShell;
 using Clarity.Application.Environments.Commands;
+using Clarity.Desktop.Services;
+using Clarity.Desktop.ViewModels.Shell;
 using MediatR;
 
 namespace Clarity.Desktop.ViewModels.Onboarding;
@@ -92,6 +94,15 @@ public sealed partial class OnboardingWizardViewModel : ObservableObject
     {
         if (string.IsNullOrWhiteSpace(SummaryStep.EnvironmentName))
             return;
+
+        if (TargetCustomerId == Guid.Empty)
+        {
+            AppServiceLocator.Get<AppShellViewModel>().ShowToast(
+                "Customer Required",
+                "Please select a customer before completing onboarding. Navigate to Customers first.",
+                Avalonia.Controls.Notifications.NotificationType.Warning);
+            return;
+        }
 
         Guid? tenantId = Guid.TryParse(SummaryStep.TenantId, out var tid) ? tid : null;
 

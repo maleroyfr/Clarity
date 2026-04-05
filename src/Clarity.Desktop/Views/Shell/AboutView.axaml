@@ -1,46 +1,83 @@
-<Window xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="clr-namespace:Clarity.Desktop.ViewModels.Shell"
-        x:Class="Clarity.Desktop.Views.Shell.AboutView"
-        x:DataType="vm:AboutViewModel"
-        Title="About Clarity"
-        Width="420" Height="340"
-        CanResize="False"
-        WindowStartupLocation="CenterOwner">
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:Clarity.Desktop.ViewModels.Shell"
+             x:Class="Clarity.Desktop.Views.Shell.AboutView"
+             x:DataType="vm:AboutViewModel"
+             Width="480">
 
-  <Window.Styles>
-    <StyleInclude Source="/Styles/ClarityTheme.axaml"/>
-  </Window.Styles>
+  <StackPanel Spacing="16" Margin="8,0">
 
-  <Grid RowDefinitions="*,Auto" Margin="32">
-    <StackPanel Grid.Row="0" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
-      <TextBlock Text="✦" FontSize="48" HorizontalAlignment="Center"
-                 Foreground="{DynamicResource SystemAccentColor}"/>
-      <TextBlock Text="{Binding AppName}" FontSize="24" FontWeight="Bold"
+    <!-- Logo + Name -->
+    <StackPanel HorizontalAlignment="Center" Spacing="8">
+      <TextBlock Text="&#x2726;" FontSize="48" HorizontalAlignment="Center"
+                 Foreground="{DynamicResource SukiPrimaryColor}"/>
+      <TextBlock Text="{Binding AppName}" FontSize="28" FontWeight="Bold"
                  HorizontalAlignment="Center"/>
-      <TextBlock Text="{Binding Description}" FontSize="13"
-                 Foreground="{DynamicResource SystemBaseMediumColor}"
-                 HorizontalAlignment="Center" TextAlignment="Center"/>
-      <StackPanel Spacing="4" Margin="0,8,0,0">
-        <TextBlock HorizontalAlignment="Center" FontSize="12"
-                   Foreground="{DynamicResource SystemBaseMediumColor}">
-          <Run Text="Version "/>
-          <Run Text="{Binding Version}"/>
-        </TextBlock>
-        <TextBlock HorizontalAlignment="Center" FontSize="12"
-                   Foreground="{DynamicResource SystemBaseMediumColor}">
-          <Run Text="Runtime: "/>
-          <Run Text="{Binding Framework}"/>
-        </TextBlock>
-      </StackPanel>
-      <TextBlock Text="{Binding Copyright}" FontSize="11"
-                 Foreground="{DynamicResource SystemBaseMediumLowColor}"
-                 HorizontalAlignment="Center" Margin="0,8,0,0"/>
+      <TextBlock Text="{Binding Tagline}" FontSize="13"
+                 Foreground="{DynamicResource SukiMediumColor}"
+                 HorizontalAlignment="Center" TextAlignment="Center"
+                 TextWrapping="Wrap"/>
     </StackPanel>
 
-    <Button Grid.Row="1" Classes="PrimaryButton"
-            Content="Close" HorizontalAlignment="Center"
-            Command="{Binding CloseCommand}"
-            Width="100"/>
-  </Grid>
-</Window>
+    <Separator Margin="0,4"/>
+
+    <!-- Description -->
+    <TextBlock Text="{Binding Description}" FontSize="12"
+               Foreground="{DynamicResource SukiMediumColor}"
+               TextWrapping="Wrap" TextAlignment="Center"
+               Margin="16,0"/>
+
+    <Separator Margin="0,4"/>
+
+    <!-- Details grid -->
+    <Grid ColumnDefinitions="Auto,16,*" RowDefinitions="Auto,4,Auto,4,Auto,4,Auto,4,Auto,4,Auto,4,Auto,4,Auto"
+          Margin="24,0">
+      <TextBlock Grid.Row="0" Grid.Column="0" Text="Version" FontWeight="SemiBold" FontSize="12"/>
+      <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding Version}" FontSize="12"
+                 Foreground="{DynamicResource SukiMediumColor}"/>
+
+      <TextBlock Grid.Row="2" Grid.Column="0" Text="Runtime" FontWeight="SemiBold" FontSize="12"/>
+      <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding DotNetVersion}" FontSize="12"
+                 Foreground="{DynamicResource SukiMediumColor}"/>
+
+      <TextBlock Grid.Row="4" Grid.Column="0" Text="UI Framework" FontWeight="SemiBold" FontSize="12"/>
+      <TextBlock Grid.Row="4" Grid.Column="2" Text="{Binding UiFramework}" FontSize="12"
+                 Foreground="{DynamicResource SukiMediumColor}"/>
+
+      <TextBlock Grid.Row="6" Grid.Column="0" Text="Avalonia" FontWeight="SemiBold" FontSize="12"/>
+      <TextBlock Grid.Row="6" Grid.Column="2" Text="{Binding AvaloniaVersion}" FontSize="12"
+                 Foreground="{DynamicResource SukiMediumColor}"/>
+
+      <TextBlock Grid.Row="8" Grid.Column="0" Text="OS" FontWeight="SemiBold" FontSize="12"/>
+      <TextBlock Grid.Row="8" Grid.Column="2" Text="{Binding OsVersion}" FontSize="12"
+                 Foreground="{DynamicResource SukiMediumColor}" TextWrapping="Wrap"/>
+
+      <TextBlock Grid.Row="10" Grid.Column="0" Text="Language" FontWeight="SemiBold" FontSize="12"/>
+      <TextBlock Grid.Row="10" Grid.Column="2" Text="{Binding Language}" FontSize="12"
+                 Foreground="{DynamicResource SukiMediumColor}"/>
+
+      <TextBlock Grid.Row="12" Grid.Column="0" Text="Authors" FontWeight="SemiBold" FontSize="12"/>
+      <TextBlock Grid.Row="12" Grid.Column="2" Text="{Binding Authors}" FontSize="12"
+                 Foreground="{DynamicResource SukiMediumColor}"/>
+
+      <TextBlock Grid.Row="14" Grid.Column="0" Text="License" FontWeight="SemiBold" FontSize="12"/>
+      <TextBlock Grid.Row="14" Grid.Column="2" Text="{Binding License}" FontSize="12"
+                 Foreground="{DynamicResource SukiMediumColor}"/>
+    </Grid>
+
+    <!-- GitHub link -->
+    <Button Classes="Flat" HorizontalAlignment="Center"
+            Command="{Binding OpenGitHubCommand}" Cursor="Hand">
+      <StackPanel Orientation="Horizontal" Spacing="6">
+        <PathIcon Data="M12 0.297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385 0.6 0.113 0.82-0.258 0.82-0.577 0-0.285-0.01-1.04-0.015-2.04-3.338 0.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-0.744 0.084-0.729 0.084-0.729 1.205 0.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495 0.998 0.108-0.776 0.417-1.305 0.76-1.605-2.665-0.3-5.466-1.332-5.466-5.93 0-1.31 0.465-2.38 1.235-3.22-0.135-0.303-0.54-1.523 0.105-3.176 0 0 1.005-0.322 3.3 1.23 0.96-0.267 1.98-0.399 3-0.405 1.02 0.006 2.04 0.138 3 0.405 2.28-1.552 3.285-1.23 3.285-1.23 0.645 1.653 0.24 2.873 0.12 3.176 0.765 0.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92 0.42 0.36 0.81 1.096 0.81 2.22 0 1.606-0.015 2.896-0.015 3.286 0 0.315 0.21 0.69 0.825 0.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"
+                 Width="16" Height="16"/>
+        <TextBlock Text="{Binding GitHubUrl}" FontSize="12"/>
+      </StackPanel>
+    </Button>
+
+    <!-- Copyright -->
+    <TextBlock Text="{Binding Copyright}" FontSize="11"
+               Foreground="{DynamicResource SukiLowColor}"
+               HorizontalAlignment="Center"/>
+  </StackPanel>
+</UserControl>

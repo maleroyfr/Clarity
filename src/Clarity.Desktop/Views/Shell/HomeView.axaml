@@ -1,13 +1,9 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:Clarity.Desktop.ViewModels.Shell"
-             xmlns:ui="using:FluentAvalonia.UI.Controls"
+             xmlns:suki="https://github.com/kikipoulet/SukiUI"
              x:Class="Clarity.Desktop.Views.Shell.HomeView"
              x:DataType="vm:HomeViewModel">
-
-  <UserControl.Styles>
-    <StyleInclude Source="/Styles/ClarityTheme.axaml"/>
-  </UserControl.Styles>
 
   <ScrollViewer Padding="32,24">
     <StackPanel Spacing="28" MaxWidth="960">
@@ -15,9 +11,9 @@
       <!-- Welcome Header -->
       <StackPanel Spacing="4">
         <StackPanel Orientation="Horizontal" Spacing="12">
-          <ui:SymbolIcon Symbol="Home" FontSize="32"
-                         Foreground="{DynamicResource SystemAccentColor}"
-                         VerticalAlignment="Center"/>
+          <PathIcon Data="M10,20V14H14V20H19V12H22L12,3L2,12H5V20H10Z" Width="32" Height="32"
+                     Foreground="{DynamicResource SukiPrimaryColor}"
+                     VerticalAlignment="Center"/>
           <StackPanel>
             <TextBlock Text="{Binding WelcomeMessage}" Classes="PageTitle"/>
             <TextBlock Text="{Binding SubMessage}" Classes="PageSubtitle"/>
@@ -30,12 +26,12 @@
                   HorizontalAlignment="Center" Margin="0,20">
         <ProgressBar IsIndeterminate="True" Width="200"/>
         <TextBlock Text="Loading dashboard..." HorizontalAlignment="Center"
-                   Foreground="{DynamicResource SystemBaseMediumColor}"/>
+                   Foreground="{DynamicResource SukiMediumColor}"/>
       </StackPanel>
 
       <!-- Error -->
-      <ui:InfoBar IsOpen="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                  Severity="Error" Title="Error" Message="{Binding ErrorMessage}" IsClosable="True"/>
+      <suki:InfoBar IsOpen="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                    Severity="Error" Title="Error" Message="{Binding ErrorMessage}" IsClosable="True"/>
 
       <!-- Stats Cards Row -->
       <StackPanel IsVisible="{Binding !IsLoading}" Spacing="16">
@@ -43,28 +39,28 @@
         <WrapPanel Orientation="Horizontal" HorizontalAlignment="Left">
           <Border Classes="StatCard" Margin="0,0,12,12">
             <StackPanel Spacing="4">
-              <ui:SymbolIcon Symbol="People" FontSize="22"/>
+              <PathIcon Data="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" Width="22" Height="22"/>
               <TextBlock Text="{Binding TotalCustomers}" Classes="StatValue"/>
               <TextBlock Text="Customers" Classes="StatLabel"/>
             </StackPanel>
           </Border>
           <Border Classes="StatCard" Margin="0,0,12,12">
             <StackPanel Spacing="4">
-              <ui:SymbolIcon Symbol="Globe" FontSize="22"/>
+              <PathIcon Data="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" Width="22" Height="22"/>
               <TextBlock Text="{Binding TotalEnvironments}" Classes="StatValue"/>
               <TextBlock Text="Environments" Classes="StatLabel"/>
             </StackPanel>
           </Border>
           <Border Classes="StatCard" Margin="0,0,12,12">
             <StackPanel Spacing="4">
-              <ui:SymbolIcon Symbol="Camera" FontSize="22"/>
+              <PathIcon Data="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z" Width="22" Height="22"/>
               <TextBlock Text="{Binding TotalSnapshots}" Classes="StatValue"/>
               <TextBlock Text="Snapshots" Classes="StatLabel"/>
             </StackPanel>
           </Border>
           <Border Classes="StatCard" Margin="0,0,12,12">
             <StackPanel Spacing="4">
-              <ui:SymbolIcon Symbol="AllApps" FontSize="22"/>
+              <PathIcon Data="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z" Width="22" Height="22"/>
               <TextBlock Text="{Binding TotalInventoryObjects}" Classes="StatValue"/>
               <TextBlock Text="Inventory Objects" Classes="StatLabel"/>
             </StackPanel>
@@ -82,7 +78,7 @@
             <Border Classes="ActionCard" MinWidth="200">
               <StackPanel Spacing="6">
                 <StackPanel Orientation="Horizontal" Spacing="8">
-                  <ui:SymbolIcon Symbol="People" FontSize="16"/>
+                  <PathIcon Data="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" Width="16" Height="16"/>
                   <TextBlock Text="Manage Customers" Classes="CardTitle"/>
                 </StackPanel>
                 <TextBlock Text="Create and manage client organisations" Classes="CardSubtitle" TextWrapping="Wrap"/>
@@ -95,7 +91,7 @@
             <Border Classes="ActionCard" MinWidth="200">
               <StackPanel Spacing="6">
                 <StackPanel Orientation="Horizontal" Spacing="8">
-                  <ui:SymbolIcon Symbol="Globe" FontSize="16"/>
+                  <PathIcon Data="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" Width="16" Height="16"/>
                   <TextBlock Text="Manage Environments" Classes="CardTitle"/>
                 </StackPanel>
                 <TextBlock Text="Configure tenant and AD connections" Classes="CardSubtitle" TextWrapping="Wrap"/>
@@ -108,7 +104,7 @@
             <Border Classes="ActionCard" MinWidth="200">
               <StackPanel Spacing="6">
                 <StackPanel Orientation="Horizontal" Spacing="8">
-                  <ui:SymbolIcon Symbol="Camera" FontSize="16"/>
+                  <PathIcon Data="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z" Width="16" Height="16"/>
                   <TextBlock Text="Run Discovery" Classes="CardTitle"/>
                 </StackPanel>
                 <TextBlock Text="Create and manage inventory snapshots" Classes="CardSubtitle" TextWrapping="Wrap"/>
@@ -121,7 +117,7 @@
             <Border Classes="ActionCard" MinWidth="200">
               <StackPanel Spacing="6">
                 <StackPanel Orientation="Horizontal" Spacing="8">
-                  <ui:SymbolIcon Symbol="AllApps" FontSize="16"/>
+                  <PathIcon Data="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z" Width="16" Height="16"/>
                   <TextBlock Text="Browse Inventory" Classes="CardTitle"/>
                 </StackPanel>
                 <TextBlock Text="Explore collected objects and properties" Classes="CardSubtitle" TextWrapping="Wrap"/>
@@ -134,7 +130,7 @@
             <Border Classes="ActionCard" MinWidth="200">
               <StackPanel Spacing="6">
                 <StackPanel Orientation="Horizontal" Spacing="8">
-                  <ui:SymbolIcon Symbol="Library" FontSize="16"/>
+                  <PathIcon Data="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V9h10v2zm-4 4H9v-2h6v2zm4-8H9V5h10v2z" Width="16" Height="16"/>
                   <TextBlock Text="Compare Snapshots" Classes="CardTitle"/>
                 </StackPanel>
                 <TextBlock Text="Side-by-side snapshot comparison" Classes="CardSubtitle" TextWrapping="Wrap"/>
@@ -147,7 +143,7 @@
             <Border Classes="ActionCard" MinWidth="200">
               <StackPanel Spacing="6">
                 <StackPanel Orientation="Horizontal" Spacing="8">
-                  <ui:SymbolIcon Symbol="Download" FontSize="16"/>
+                  <PathIcon Data="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" Width="16" Height="16"/>
                   <TextBlock Text="Export Data" Classes="CardTitle"/>
                 </StackPanel>
                 <TextBlock Text="Export to CSV, XLSX, or JSON" Classes="CardSubtitle" TextWrapping="Wrap"/>
@@ -164,37 +160,37 @@
         <WrapPanel Orientation="Horizontal">
           <Border Classes="CustomerCard" Margin="0,0,8,8" Padding="12,8">
             <StackPanel Orientation="Horizontal" Spacing="6">
-              <ui:SymbolIcon Symbol="Setting" FontSize="14"/>
+              <PathIcon Data="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z" Width="14" Height="14"/>
               <TextBlock Text="Entra ID" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
             </StackPanel>
           </Border>
           <Border Classes="CustomerCard" Margin="0,0,8,8" Padding="12,8">
             <StackPanel Orientation="Horizontal" Spacing="6">
-              <ui:SymbolIcon Symbol="Document" FontSize="14"/>
+              <PathIcon Data="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zM13 9V3.5L18.5 9H13z" Width="14" Height="14"/>
               <TextBlock Text="Intune" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
             </StackPanel>
           </Border>
           <Border Classes="CustomerCard" Margin="0,0,8,8" Padding="12,8">
             <StackPanel Orientation="Horizontal" Spacing="6">
-              <ui:SymbolIcon Symbol="Mail" FontSize="14"/>
+              <PathIcon Data="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" Width="14" Height="14"/>
               <TextBlock Text="Exchange Online" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
             </StackPanel>
           </Border>
           <Border Classes="CustomerCard" Margin="0,0,8,8" Padding="12,8">
             <StackPanel Orientation="Horizontal" Spacing="6">
-              <ui:SymbolIcon Symbol="Document" FontSize="14"/>
+              <PathIcon Data="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zM13 9V3.5L18.5 9H13z" Width="14" Height="14"/>
               <TextBlock Text="SharePoint Online" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
             </StackPanel>
           </Border>
           <Border Classes="CustomerCard" Margin="0,0,8,8" Padding="12,8">
             <StackPanel Orientation="Horizontal" Spacing="6">
-              <ui:SymbolIcon Symbol="People" FontSize="14"/>
+              <PathIcon Data="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" Width="14" Height="14"/>
               <TextBlock Text="Teams" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
             </StackPanel>
           </Border>
           <Border Classes="CustomerCard" Margin="0,0,8,8" Padding="12,8">
             <StackPanel Orientation="Horizontal" Spacing="6">
-              <ui:SymbolIcon Symbol="Globe" FontSize="14"/>
+              <PathIcon Data="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" Width="14" Height="14"/>
               <TextBlock Text="Active Directory" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
             </StackPanel>
           </Border>

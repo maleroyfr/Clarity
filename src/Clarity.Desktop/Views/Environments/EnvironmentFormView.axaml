@@ -9,10 +9,6 @@
         CanResize="False"
         WindowStartupLocation="CenterOwner">
 
-  <Window.Styles>
-    <StyleInclude Source="/Styles/ClarityTheme.axaml"/>
-  </Window.Styles>
-
   <Grid RowDefinitions="Auto,*,Auto" Margin="24">
 
     <TextBlock Grid.Row="0" Text="{Binding Title}" Classes="PageTitle" Margin="0,0,0,20"/>

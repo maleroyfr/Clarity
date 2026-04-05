@@ -15,7 +15,7 @@
 
     <!-- Stats card -->
     <Border Background="{DynamicResource SystemAltHighColor}"
-            BorderBrush="{DynamicResource SystemBaseLowColor}"
+            BorderBrush="{DynamicResource SukiLowColor}"
             BorderThickness="1" CornerRadius="8" Padding="16,14">
       <StackPanel Spacing="8">
         <StackPanel Orientation="Horizontal" Spacing="8">

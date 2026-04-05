@@ -1,3 +1,4 @@
+using Avalonia.Controls.Notifications;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Clarity.Application.Customers.Queries;
@@ -6,6 +7,8 @@ using Clarity.Application.Environments.Queries;
 using Clarity.Application.Snapshots;
 using Clarity.Application.Snapshots.Commands;
 using Clarity.Application.Snapshots.Queries;
+using Clarity.Desktop.Services;
+using Clarity.Desktop.ViewModels.Shell;
 using Clarity.Domain.Environments;
 using Clarity.SharedContracts.Enums;
 using MediatR;
@@ -36,6 +39,14 @@ public sealed partial class SnapshotListItemVm : ObservableObject
     public bool IsRunningOrPartial => Status is SnapshotStatus.Running or SnapshotStatus.Partial;
     public bool IsCompleted => Status == SnapshotStatus.Completed;
     public bool IsFailed => Status == SnapshotStatus.Failed;
+
+    public string StatusColor => Status switch
+    {
+        SnapshotStatus.Completed => "#4CAF50",
+        SnapshotStatus.Running or SnapshotStatus.Partial => "#FF9800",
+        SnapshotStatus.Failed => "#F44336",
+        _ => "#9E9E9E"
+    };
 
     public SnapshotListItemVm(
         SnapshotDto dto,
@@ -334,6 +345,7 @@ public sealed partial class SnapshotsViewModel : ObservableObject
                 Description: null));
 
             await LoadSnapshotsAsync();
+            AppServiceLocator.Get<AppShellViewModel>().ShowToast("Snapshot Created", $"\"{name}\" is now running.", NotificationType.Success);
         }
         catch (Exception ex)
         {
@@ -352,6 +364,7 @@ public sealed partial class SnapshotsViewModel : ObservableObject
         {
             await _mediator.Send(new SealSnapshotCommand(dto.Id));
             await LoadSnapshotsAsync();
+            AppServiceLocator.Get<AppShellViewModel>().ShowToast("Snapshot Sealed", $"\"{dto.Name}\" is now immutable.", NotificationType.Success);
         }
         catch (Exception ex)
         {
@@ -366,6 +379,7 @@ public sealed partial class SnapshotsViewModel : ObservableObject
         {
             await _mediator.Send(new DeleteSnapshotCommand(snapshotId));
             await LoadSnapshotsAsync();
+            AppServiceLocator.Get<AppShellViewModel>().ShowToast("Snapshot Deleted", "Snapshot has been permanently deleted.", NotificationType.Warning);
         }
         catch (Exception ex)
         {

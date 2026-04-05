@@ -1,65 +1,68 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:ui="using:FluentAvalonia.UI.Controls"
+             xmlns:suki="https://github.com/kikipoulet/SukiUI"
              xmlns:vm="clr-namespace:Clarity.Desktop.ViewModels.Shell"
              x:Class="Clarity.Desktop.Views.Shell.SettingsView"
              x:DataType="vm:SettingsViewModel">
 
   <ScrollViewer Padding="32,24">
-    <StackPanel Spacing="4" MaxWidth="800">
-      <TextBlock Text="Settings" FontSize="28" FontWeight="SemiBold" Margin="0,0,0,24"/>
+    <StackPanel Spacing="16" MaxWidth="800">
+      <TextBlock Text="Settings" FontSize="28" FontWeight="SemiBold" Margin="0,0,0,16"/>
 
-      <!-- Appearance section -->
-      <TextBlock Text="Appearance" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,8"/>
+      <!-- Appearance -->
+      <suki:GroupBox Header="Appearance">
+        <StackPanel Spacing="12" Margin="4">
+          <StackPanel Spacing="4">
+            <TextBlock Text="App Theme" FontWeight="SemiBold"/>
+            <TextBlock Text="Select which app theme to display" Opacity="0.6" FontSize="12"/>
+            <ComboBox SelectedIndex="{Binding ThemeIndex}" MinWidth="180"
+                      ItemsSource="{Binding ThemeOptions}" Margin="0,4,0,0"/>
+          </StackPanel>
+          <StackPanel Spacing="4">
+            <TextBlock Text="Accent Color" FontWeight="SemiBold"/>
+            <TextBlock Text="Change the primary accent color" Opacity="0.6" FontSize="12"/>
+            <ComboBox SelectedIndex="{Binding ColorIndex}" MinWidth="180"
+                      ItemsSource="{Binding ColorOptions}" Margin="0,4,0,0"/>
+          </StackPanel>
+        </StackPanel>
+      </suki:GroupBox>
 
-      <ui:SettingsExpander Header="App Theme"
-                           Description="Select which app theme to display">
-        <ui:SettingsExpander.IconSource>
-          <ui:SymbolIconSource Symbol="DarkTheme"/>
-        </ui:SettingsExpander.IconSource>
-        <ui:SettingsExpander.Footer>
-          <ComboBox SelectedIndex="{Binding ThemeIndex}" MinWidth="150">
-            <ComboBoxItem Content="Use system setting"/>
-            <ComboBoxItem Content="Light"/>
-            <ComboBoxItem Content="Dark"/>
-          </ComboBox>
-        </ui:SettingsExpander.Footer>
-      </ui:SettingsExpander>
+      <!-- Data -->
+      <suki:GroupBox Header="Data">
+        <StackPanel Spacing="12" Margin="4">
+          <DockPanel>
+            <Button Content="Open folder" DockPanel.Dock="Right" VerticalAlignment="Center"
+                    Command="{Binding OpenDataFolderCommand}" Margin="12,0,0,0"/>
+            <StackPanel Spacing="2">
+              <TextBlock Text="Database" FontWeight="SemiBold"/>
+              <TextBlock Text="{Binding DatabaseInfo}" Opacity="0.6" FontSize="12"
+                         TextTrimming="CharacterEllipsis"/>
+            </StackPanel>
+          </DockPanel>
 
-      <!-- Data section -->
-      <TextBlock Text="Data" FontSize="16" FontWeight="SemiBold" Margin="0,16,0,8"/>
+          <Border Height="1" Opacity="0.15" Background="{DynamicResource ThemeForegroundBrush}"/>
 
-      <ui:SettingsExpander Header="Database"
-                           Description="{Binding DatabaseInfo}">
-        <ui:SettingsExpander.IconSource>
-          <ui:SymbolIconSource Symbol="Save"/>
-        </ui:SettingsExpander.IconSource>
-        <ui:SettingsExpander.Footer>
-          <Button Content="Open folder" Command="{Binding OpenDataFolderCommand}"/>
-        </ui:SettingsExpander.Footer>
-      </ui:SettingsExpander>
+          <DockPanel>
+            <Button Content="Open folder" DockPanel.Dock="Right" VerticalAlignment="Center"
+                    Command="{Binding OpenLogFolderCommand}" Margin="12,0,0,0"/>
+            <StackPanel Spacing="2">
+              <TextBlock Text="Logs" FontWeight="SemiBold"/>
+              <TextBlock Text="{Binding LogDirectoryInfo}" Opacity="0.6" FontSize="12"
+                         TextTrimming="CharacterEllipsis"/>
+            </StackPanel>
+          </DockPanel>
+        </StackPanel>
+      </suki:GroupBox>
 
-      <ui:SettingsExpander Header="Logs"
-                           Description="{Binding LogDirectoryInfo}">
-        <ui:SettingsExpander.IconSource>
-          <ui:SymbolIconSource Symbol="Document"/>
-        </ui:SettingsExpander.IconSource>
-        <ui:SettingsExpander.Footer>
-          <Button Content="Open folder" Command="{Binding OpenLogFolderCommand}"/>
-        </ui:SettingsExpander.Footer>
-      </ui:SettingsExpander>
-
-      <!-- About section -->
-      <TextBlock Text="About" FontSize="16" FontWeight="SemiBold" Margin="0,16,0,8"/>
-
-      <ui:SettingsExpander Header="Clarity — Audit &amp; Discovery Platform"
-                           Description="{Binding VersionInfo}">
-        <ui:SettingsExpander.IconSource>
-          <ui:FontIconSource Glyph="&#xE946;" FontFamily="{StaticResource SymbolThemeFontFamily}"/>
-        </ui:SettingsExpander.IconSource>
-        <ui:SettingsExpanderItem Content="{Binding RuntimeInfo}"/>
-        <ui:SettingsExpanderItem Content="{Binding OsInfo}"/>
-      </ui:SettingsExpander>
+      <!-- About -->
+      <suki:GroupBox Header="About">
+        <StackPanel Spacing="8" Margin="4">
+          <TextBlock Text="Clarity — Audit &amp; Discovery Platform" FontWeight="SemiBold" FontSize="15"/>
+          <TextBlock Text="{Binding VersionInfo, StringFormat='Version: {0}'}" Opacity="0.7"/>
+          <TextBlock Text="{Binding RuntimeInfo}" Opacity="0.6" FontSize="12"/>
+          <TextBlock Text="{Binding OsInfo}" Opacity="0.6" FontSize="12"/>
+        </StackPanel>
+      </suki:GroupBox>
     </StackPanel>
   </ScrollViewer>
 </UserControl>

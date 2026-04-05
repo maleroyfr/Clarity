@@ -1,23 +1,19 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:Clarity.Desktop.ViewModels.Comparisons"
-             xmlns:ui="using:FluentAvalonia.UI.Controls"
+             xmlns:suki="https://github.com/kikipoulet/SukiUI"
              x:Class="Clarity.Desktop.Views.Comparisons.ComparisonView"
              x:DataType="vm:ComparisonViewModel">
-
-  <UserControl.Styles>
-    <StyleInclude Source="/Styles/ClarityTheme.axaml"/>
-  </UserControl.Styles>
 
   <Grid RowDefinitions="Auto,Auto,Auto,*,Auto">
 
     <!-- Page Header -->
     <Border Grid.Row="0" Padding="24,20,24,16"
-            BorderBrush="{DynamicResource SystemBaseLowColor}"
+            BorderBrush="{DynamicResource SukiLowColor}"
             BorderThickness="0,0,0,1">
       <StackPanel>
         <StackPanel Orientation="Horizontal" Spacing="8">
-          <ui:SymbolIcon Symbol="Library" FontSize="22" VerticalAlignment="Center"/>
+          <PathIcon Data="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V9h10v2zm-4 4H9v-2h6v2zm4-8H9V5h10v2z" Width="22" Height="22" VerticalAlignment="Center"/>
           <TextBlock Text="Comparisons" Classes="PageTitle"/>
         </StackPanel>
         <TextBlock Text="Compare snapshots side by side" Classes="PageSubtitle"/>
@@ -31,7 +27,7 @@
         <StackPanel Orientation="Horizontal" Spacing="12">
           <StackPanel Spacing="4">
             <TextBlock Text="Customer" FontSize="12"
-                       Foreground="{DynamicResource SystemBaseMediumColor}"/>
+                       Foreground="{DynamicResource SukiMediumColor}"/>
             <ComboBox ItemsSource="{Binding Customers}"
                       SelectedItem="{Binding SelectedCustomer}"
                       PlaceholderText="Select a customer…"
@@ -46,7 +42,7 @@
 
           <StackPanel Spacing="4" IsVisible="{Binding HasSelectedCustomer}">
             <TextBlock Text="Comparison Mode" FontSize="12"
-                       Foreground="{DynamicResource SystemBaseMediumColor}"/>
+                       Foreground="{DynamicResource SukiMediumColor}"/>
             <ComboBox ItemsSource="{Binding ComparisonModes}"
                       SelectedItem="{Binding SelectedMode}"
                       Width="220">
@@ -63,18 +59,17 @@
         <StackPanel Orientation="Horizontal" Spacing="12"
                     IsVisible="{Binding HasSelectedCustomer}">
 
-          <!-- Loading snapshots indicator -->
           <StackPanel Orientation="Horizontal" Spacing="6"
                       VerticalAlignment="Bottom" Margin="0,0,0,4"
                       IsVisible="{Binding IsLoadingSnapshots}">
             <ProgressBar IsIndeterminate="True" Width="80" Height="4"/>
             <TextBlock Text="Loading snapshots…" FontSize="12"
-                       Foreground="{DynamicResource SystemBaseMediumColor}"/>
+                       Foreground="{DynamicResource SukiMediumColor}"/>
           </StackPanel>
 
           <StackPanel Spacing="4" IsVisible="{Binding !IsLoadingSnapshots}">
             <TextBlock Text="Left Snapshot" FontSize="12"
-                       Foreground="{DynamicResource SystemBaseMediumColor}"/>
+                       Foreground="{DynamicResource SukiMediumColor}"/>
             <ComboBox ItemsSource="{Binding Snapshots}"
                       SelectedItem="{Binding SelectedLeftSnapshot}"
                       PlaceholderText="Select left snapshot…"
@@ -84,7 +79,7 @@
                   <StackPanel Orientation="Horizontal" Spacing="6">
                     <TextBlock Text="{Binding Name}"/>
                     <TextBlock Text="{Binding EnvironmentName, StringFormat='({0})'}"
-                               Foreground="{DynamicResource SystemBaseMediumColor}" FontSize="12"/>
+                               Foreground="{DynamicResource SukiMediumColor}" FontSize="12"/>
                   </StackPanel>
                 </DataTemplate>
               </ComboBox.ItemTemplate>
@@ -93,7 +88,7 @@
 
           <StackPanel Spacing="4" IsVisible="{Binding !IsLoadingSnapshots}">
             <TextBlock Text="Right Snapshot" FontSize="12"
-                       Foreground="{DynamicResource SystemBaseMediumColor}"/>
+                       Foreground="{DynamicResource SukiMediumColor}"/>
             <ComboBox ItemsSource="{Binding Snapshots}"
                       SelectedItem="{Binding SelectedRightSnapshot}"
                       PlaceholderText="Select right snapshot…"
@@ -103,7 +98,7 @@
                   <StackPanel Orientation="Horizontal" Spacing="6">
                     <TextBlock Text="{Binding Name}"/>
                     <TextBlock Text="{Binding EnvironmentName, StringFormat='({0})'}"
-                               Foreground="{DynamicResource SystemBaseMediumColor}" FontSize="12"/>
+                               Foreground="{DynamicResource SukiMediumColor}" FontSize="12"/>
                   </StackPanel>
                 </DataTemplate>
               </ComboBox.ItemTemplate>
@@ -115,7 +110,7 @@
                     Command="{Binding RunComparisonCommand}"
                     IsEnabled="{Binding CanRunComparison}">
               <StackPanel Orientation="Horizontal" Spacing="6">
-                <ui:SymbolIcon Symbol="Play" FontSize="14"/>
+                <PathIcon Data="M8 5v14l11-7z" Width="14" Height="14"/>
                 <TextBlock Text="Run Comparison" VerticalAlignment="Center"/>
               </StackPanel>
             </Button>
@@ -129,7 +124,7 @@
       <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center">
         <ProgressBar IsIndeterminate="True" Width="200"/>
         <TextBlock Text="Running comparison…"
-                   Foreground="{DynamicResource SystemBaseMediumColor}"
+                   Foreground="{DynamicResource SukiMediumColor}"
                    VerticalAlignment="Center"/>
       </StackPanel>
     </Border>
@@ -140,7 +135,7 @@
       <!-- Empty state: no customer -->
       <StackPanel IsVisible="{Binding !HasSelectedCustomer}"
                   HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
-        <ui:SymbolIcon Symbol="Library" FontSize="48" HorizontalAlignment="Center"/>
+        <PathIcon Data="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V9h10v2zm-4 4H9v-2h6v2zm4-8H9V5h10v2z" Width="48" Height="48" HorizontalAlignment="Center"/>
         <TextBlock Text="Select a customer" Classes="EmptyStateTitle"/>
         <TextBlock Text="Choose a customer above to load snapshots for comparison."
                    Classes="EmptyStateSubtitle" TextAlignment="Center"/>
@@ -156,7 +151,7 @@
             <Binding Path="!IsRunning"/>
           </MultiBinding>
         </StackPanel.IsVisible>
-        <ui:SymbolIcon Symbol="Library" FontSize="48" HorizontalAlignment="Center"/>
+        <PathIcon Data="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V9h10v2zm-4 4H9v-2h6v2zm4-8H9V5h10v2z" Width="48" Height="48" HorizontalAlignment="Center"/>
         <TextBlock Text="No comparison results yet" Classes="EmptyStateTitle"/>
         <TextBlock Text="Select two snapshots and run a comparison to see results."
                    Classes="EmptyStateSubtitle" TextAlignment="Center"/>
@@ -166,31 +161,27 @@
       <ScrollViewer IsVisible="{Binding HasResults}" Padding="24,12">
         <StackPanel Spacing="16">
 
-          <!-- Summary stat cards -->
           <TextBlock Text="Summary" Classes="CardTitle" Margin="0,0,0,4"/>
           <WrapPanel Orientation="Horizontal" HorizontalAlignment="Left">
 
-            <!-- Total Left -->
             <Border Background="#F0F4FF" CornerRadius="8" Padding="16,12" Margin="0,0,12,8" MinWidth="130">
               <StackPanel Spacing="2">
                 <TextBlock Text="Total Left" FontSize="12"
-                           Foreground="{DynamicResource SystemBaseMediumColor}"/>
+                           Foreground="{DynamicResource SukiMediumColor}"/>
                 <TextBlock Text="{Binding TotalLeft}" FontSize="24" FontWeight="Bold"
                            Foreground="#3366CC"/>
               </StackPanel>
             </Border>
 
-            <!-- Total Right -->
             <Border Background="#F0F4FF" CornerRadius="8" Padding="16,12" Margin="0,0,12,8" MinWidth="130">
               <StackPanel Spacing="2">
                 <TextBlock Text="Total Right" FontSize="12"
-                           Foreground="{DynamicResource SystemBaseMediumColor}"/>
+                           Foreground="{DynamicResource SukiMediumColor}"/>
                 <TextBlock Text="{Binding TotalRight}" FontSize="24" FontWeight="Bold"
                            Foreground="#3366CC"/>
               </StackPanel>
             </Border>
 
-            <!-- Added -->
             <Border Background="#E8F5E9" CornerRadius="8" Padding="16,12" Margin="0,0,12,8" MinWidth="130">
               <StackPanel Spacing="2">
                 <TextBlock Text="Added" FontSize="12" Foreground="#2E7D32"/>
@@ -199,7 +190,6 @@
               </StackPanel>
             </Border>
 
-            <!-- Removed -->
             <Border Background="#FFEBEE" CornerRadius="8" Padding="16,12" Margin="0,0,12,8" MinWidth="130">
               <StackPanel Spacing="2">
                 <TextBlock Text="Removed" FontSize="12" Foreground="#C62828"/>
@@ -208,7 +198,6 @@
               </StackPanel>
             </Border>
 
-            <!-- Modified -->
             <Border Background="#FFF3E0" CornerRadius="8" Padding="16,12" Margin="0,0,12,8" MinWidth="130">
               <StackPanel Spacing="2">
                 <TextBlock Text="Modified" FontSize="12" Foreground="#E65100"/>
@@ -217,7 +206,6 @@
               </StackPanel>
             </Border>
 
-            <!-- Unchanged -->
             <Border Background="#F5F5F5" CornerRadius="8" Padding="16,12" Margin="0,0,12,8" MinWidth="130">
               <StackPanel Spacing="2">
                 <TextBlock Text="Unchanged" FontSize="12" Foreground="#757575"/>
@@ -229,12 +217,11 @@
 
           <!-- Per-workload breakdown -->
           <TextBlock Text="Per-Workload Breakdown" Classes="CardTitle" Margin="0,8,0,4"/>
-          <Border Background="{DynamicResource SystemBaseLowColor}" CornerRadius="8" Padding="0">
+          <Border Background="{DynamicResource SukiLowColor}" CornerRadius="8" Padding="0">
             <Grid>
               <StackPanel>
-                <!-- Header row -->
                 <Border Padding="12,8" BorderThickness="0,0,0,1"
-                        BorderBrush="{DynamicResource SystemBaseMediumColor}">
+                        BorderBrush="{DynamicResource SukiMediumColor}">
                   <Grid ColumnDefinitions="*,80,80,80,80">
                     <TextBlock Grid.Column="0" Text="Workload" FontWeight="SemiBold" FontSize="13"/>
                     <TextBlock Grid.Column="1" Text="Added" FontWeight="SemiBold" FontSize="13"
@@ -248,12 +235,11 @@
                   </Grid>
                 </Border>
 
-                <!-- Data rows -->
                 <ItemsControl ItemsSource="{Binding WorkloadBreakdown}">
                   <ItemsControl.ItemTemplate>
                     <DataTemplate x:CompileBindings="False">
                       <Border Padding="12,6" BorderThickness="0,0,0,1"
-                              BorderBrush="{DynamicResource SystemBaseLowColor}">
+                              BorderBrush="{DynamicResource SukiLowColor}">
                         <Grid ColumnDefinitions="*,80,80,80,80">
                           <TextBlock Grid.Column="0" Text="{Binding WorkloadArea}" FontSize="13"/>
                           <TextBlock Grid.Column="1" Text="{Binding Added}" FontSize="13"
@@ -278,7 +264,7 @@
     </Panel>
 
     <!-- Error bar -->
-    <ui:InfoBar Grid.Row="4"
+    <suki:InfoBar Grid.Row="4"
                 IsOpen="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                 Severity="Error" Title="Error" Message="{Binding ErrorMessage}" IsClosable="True"
                 Margin="24,0,24,16"/>

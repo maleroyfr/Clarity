@@ -1,24 +1,20 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:Clarity.Desktop.ViewModels.Relations"
-             xmlns:ui="using:FluentAvalonia.UI.Controls"
+             xmlns:suki="https://github.com/kikipoulet/SukiUI"
              x:Class="Clarity.Desktop.Views.Relations.RelationsView"
              x:DataType="vm:RelationsViewModel">
-
-  <UserControl.Styles>
-    <StyleInclude Source="/Styles/ClarityTheme.axaml"/>
-  </UserControl.Styles>
 
   <Grid RowDefinitions="Auto,Auto,*,Auto">
 
     <!-- Page Header -->
     <Border Grid.Row="0" Padding="24,20,24,16"
-            BorderBrush="{DynamicResource SystemBaseLowColor}"
+            BorderBrush="{DynamicResource SukiLowColor}"
             BorderThickness="0,0,0,1">
       <Grid ColumnDefinitions="*,Auto">
         <StackPanel Grid.Column="0">
           <StackPanel Orientation="Horizontal" Spacing="8">
-            <ui:SymbolIcon Symbol="Link" FontSize="22" VerticalAlignment="Center"/>
+            <PathIcon Data="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z" Width="22" Height="22" VerticalAlignment="Center"/>
             <TextBlock Text="Environment Relations" Classes="PageTitle"/>
           </StackPanel>
           <TextBlock Text="Manage relationships between environments" Classes="PageSubtitle"/>
@@ -28,7 +24,7 @@
                 IsEnabled="{Binding HasSelectedCustomer}"
                 VerticalAlignment="Center">
           <StackPanel Orientation="Horizontal" Spacing="6">
-            <ui:SymbolIcon Symbol="Add" FontSize="14"/>
+            <PathIcon Data="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" Width="14" Height="14"/>
             <TextBlock Text="Add Relation" VerticalAlignment="Center"/>
           </StackPanel>
         </Button>
@@ -40,7 +36,7 @@
       <StackPanel Orientation="Horizontal" Spacing="12">
         <StackPanel Spacing="4">
           <TextBlock Text="Customer" FontSize="12"
-                     Foreground="{DynamicResource SystemBaseMediumColor}"/>
+                     Foreground="{DynamicResource SukiMediumColor}"/>
           <ComboBox ItemsSource="{Binding Customers}"
                     SelectedItem="{Binding SelectedCustomer}"
                     PlaceholderText="Select a customer…"
@@ -61,7 +57,7 @@
       <!-- No customer selected -->
       <StackPanel IsVisible="{Binding !HasSelectedCustomer}"
                   HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
-        <ui:SymbolIcon Symbol="Link" FontSize="48" HorizontalAlignment="Center"/>
+        <PathIcon Data="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z" Width="48" Height="48" HorizontalAlignment="Center"/>
         <TextBlock Text="Select a customer" Classes="EmptyStateTitle"/>
         <TextBlock Text="Choose a customer above to view and manage environment relations."
                    Classes="EmptyStateSubtitle" TextAlignment="Center"/>
@@ -72,7 +68,7 @@
                   HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
         <ProgressBar IsIndeterminate="True" Width="200"/>
         <TextBlock Text="Loading relations…" HorizontalAlignment="Center"
-                   Foreground="{DynamicResource SystemBaseMediumColor}"/>
+                   Foreground="{DynamicResource SukiMediumColor}"/>
       </StackPanel>
 
       <!-- Empty state (hide when form is open) -->
@@ -83,7 +79,7 @@
             <Binding Path="!IsFormVisible"/>
           </MultiBinding>
         </StackPanel.IsVisible>
-        <ui:SymbolIcon Symbol="Link" FontSize="48" HorizontalAlignment="Center"/>
+        <PathIcon Data="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z" Width="48" Height="48" HorizontalAlignment="Center"/>
         <TextBlock Text="No relations yet" Classes="EmptyStateTitle"/>
         <TextBlock Text="Create your first environment relation to get started."
                    Classes="EmptyStateSubtitle"/>
@@ -91,7 +87,7 @@
                 Command="{Binding ShowFormCommand}"
                 HorizontalAlignment="Center" Margin="0,8,0,0">
           <StackPanel Orientation="Horizontal" Spacing="6">
-            <ui:SymbolIcon Symbol="Add" FontSize="14"/>
+            <PathIcon Data="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" Width="14" Height="14"/>
             <TextBlock Text="Add Relation" VerticalAlignment="Center"/>
           </StackPanel>
         </Button>
@@ -114,7 +110,6 @@
               <TextBlock Text="New Relation" Classes="SectionTitle" Margin="0"/>
 
               <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto">
-                <!-- Source environment -->
                 <StackPanel Grid.Row="0" Grid.Column="0" Spacing="4" Margin="0,0,8,8">
                   <TextBlock Text="Source Environment *" Classes="FormLabel"/>
                   <ComboBox ItemsSource="{Binding Environments}"
@@ -129,7 +124,6 @@
                   </ComboBox>
                 </StackPanel>
 
-                <!-- Target environment -->
                 <StackPanel Grid.Row="0" Grid.Column="1" Spacing="4" Margin="8,0,0,8">
                   <TextBlock Text="Target Environment *" Classes="FormLabel"/>
                   <ComboBox ItemsSource="{Binding Environments}"
@@ -144,7 +138,6 @@
                   </ComboBox>
                 </StackPanel>
 
-                <!-- Relation type -->
                 <StackPanel Grid.Row="1" Grid.Column="0" Spacing="4" Margin="0,0,8,8">
                   <TextBlock Text="Relation Type" Classes="FormLabel"/>
                   <ComboBox ItemsSource="{Binding RelationTypes}"
@@ -152,7 +145,6 @@
                             HorizontalAlignment="Stretch"/>
                 </StackPanel>
 
-                <!-- Direction -->
                 <StackPanel Grid.Row="1" Grid.Column="1" Spacing="4" Margin="8,0,0,8">
                   <TextBlock Text="Direction" Classes="FormLabel"/>
                   <ComboBox ItemsSource="{Binding RelationDirections}"
@@ -160,7 +152,6 @@
                             HorizontalAlignment="Stretch"/>
                 </StackPanel>
 
-                <!-- Notes -->
                 <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Spacing="4" Margin="0,0,0,8">
                   <TextBlock Text="Notes" Classes="FormLabel"/>
                   <TextBox Text="{Binding NewNotes}"
@@ -170,7 +161,6 @@
                            Classes="FormInput"/>
                 </StackPanel>
 
-                <!-- Form actions -->
                 <StackPanel Grid.Row="3" Grid.ColumnSpan="2"
                             Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
                   <Button Classes="SecondaryButton" Content="Cancel"
@@ -181,7 +171,7 @@
                     <Panel>
                       <TextBlock Text="Saving…" IsVisible="{Binding IsSaving}"/>
                       <StackPanel Orientation="Horizontal" Spacing="6" IsVisible="{Binding !IsSaving}">
-                        <ui:SymbolIcon Symbol="Save" FontSize="14"/>
+                        <PathIcon Data="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z" Width="14" Height="14"/>
                         <TextBlock Text="Save Relation" VerticalAlignment="Center"/>
                       </StackPanel>
                     </Panel>
@@ -198,41 +188,36 @@
                 <Border Classes="CustomerCard" Margin="0,0,0,8">
                   <Grid ColumnDefinitions="*,Auto">
                     <StackPanel Grid.Column="0" Spacing="4">
-                      <!-- Source → Target -->
                       <StackPanel Orientation="Horizontal" Spacing="8">
                         <TextBlock Text="{Binding SourceEnvironmentName}" Classes="CardTitle"/>
                         <TextBlock Text="{Binding DirectionArrow}" FontSize="16"
                                    VerticalAlignment="Center"
-                                   Foreground="{DynamicResource SystemBaseMediumColor}"/>
+                                   Foreground="{DynamicResource SukiMediumColor}"/>
                         <TextBlock Text="{Binding TargetEnvironmentName}" Classes="CardTitle"/>
                       </StackPanel>
 
-                      <!-- Type badge + direction -->
                       <StackPanel Orientation="Horizontal" Spacing="8">
                         <Border Classes="BadgeInfo" CornerRadius="4" Padding="6,2">
                           <TextBlock Text="{Binding RelationTypeDisplay}" Classes="BadgeText"/>
                         </Border>
-                        <Border Background="{DynamicResource SystemBaseLowColor}"
+                        <Border Background="{DynamicResource SukiLowColor}"
                                 CornerRadius="4" Padding="6,2">
                           <TextBlock Text="{Binding DirectionDisplay}" Classes="BadgeText"/>
                         </Border>
                       </StackPanel>
 
-                      <!-- Notes -->
                       <TextBlock Text="{Binding Notes}" Classes="CardSubtitle"
                                  IsVisible="{Binding HasNotes}"
                                  TextWrapping="Wrap"/>
 
-                      <!-- Created date -->
                       <TextBlock Text="{Binding CreatedAtDisplay}" Classes="CardMeta"/>
                     </StackPanel>
 
-                    <!-- Delete action -->
                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                       <Button Classes="DangerButton"
                               Command="{Binding DeleteCommand}">
                         <StackPanel Orientation="Horizontal" Spacing="6">
-                          <ui:SymbolIcon Symbol="Delete" FontSize="14"/>
+                          <PathIcon Data="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" Width="14" Height="14"/>
                           <TextBlock Text="Delete" VerticalAlignment="Center"/>
                         </StackPanel>
                       </Button>
@@ -247,7 +232,7 @@
     </Panel>
 
     <!-- Error bar -->
-    <ui:InfoBar Grid.Row="3"
+    <suki:InfoBar Grid.Row="3"
                 IsOpen="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                 Severity="Error" Title="Error" Message="{Binding ErrorMessage}" IsClosable="True"
                 Margin="24,0,24,16"/>

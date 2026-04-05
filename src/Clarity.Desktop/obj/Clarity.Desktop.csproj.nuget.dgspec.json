@@ -2290,6 +2290,10 @@
             "Serilog.Sinks.File": {
               "target": "Package",
               "version": "[*, )"
+            },
+            "SukiUI": {
+              "target": "Package",
+              "version": "[6.0.3, )"
             }
           },
           "imports": [

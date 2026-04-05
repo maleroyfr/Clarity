@@ -1,3 +1,4 @@
+using Avalonia.Controls.Notifications;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Clarity.Application.Comparisons;
@@ -5,6 +6,8 @@ using Clarity.Application.Customers.Queries;
 using Clarity.Application.Environments.Queries;
 using Clarity.Application.Snapshots;
 using Clarity.Application.Snapshots.Queries;
+using Clarity.Desktop.Services;
+using Clarity.Desktop.ViewModels.Shell;
 using Clarity.SharedContracts.Enums;
 using MediatR;
 using System.Collections.ObjectModel;
@@ -254,6 +257,9 @@ public sealed partial class ComparisonViewModel : ObservableObject
 
             if (result.Status == JobStatus.Failed)
                 ErrorMessage = "Comparison completed with failures. Check the results for details.";
+            else
+                AppServiceLocator.Get<AppShellViewModel>().ShowToast("Comparison Complete",
+                    $"+{Added} added, −{Removed} removed, ~{Modified} modified", NotificationType.Success);
         }
         catch (Exception ex)
         {

@@ -12,7 +12,7 @@
 
     <!-- Page Header -->
     <Border Grid.Row="0" Padding="24,20,24,16"
-            BorderBrush="{DynamicResource SystemBaseLowColor}"
+            BorderBrush="{DynamicResource SukiLowColor}"
             BorderThickness="0,0,0,1">
       <Grid ColumnDefinitions="Auto,*">
         <Button Grid.Column="0" Classes="SecondaryButton"
@@ -43,7 +43,7 @@
               <StackPanel Orientation="Horizontal" Spacing="6">
                 <TextBlock Text="{Binding DisplayName}"/>
                 <TextBlock Text="{Binding Count, StringFormat='({0})'}"
-                           Foreground="{DynamicResource SystemBaseMediumColor}"/>
+                           Foreground="{DynamicResource SukiMediumColor}"/>
               </StackPanel>
             </DataTemplate>
           </ComboBox.ItemTemplate>
@@ -58,7 +58,7 @@
                   HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
         <ProgressBar IsIndeterminate="True" Width="200"/>
         <TextBlock Text="Loading objects…" HorizontalAlignment="Center"
-                   Foreground="{DynamicResource SystemBaseMediumColor}"/>
+                   Foreground="{DynamicResource SukiMediumColor}"/>
       </StackPanel>
 
       <StackPanel IsVisible="{Binding IsEmpty}"
@@ -100,7 +100,7 @@
         <!-- Detail panel -->
         <Border Grid.Column="1" IsVisible="{Binding ShowDetail}"
                 Width="360" Padding="24,16"
-                BorderBrush="{DynamicResource SystemBaseLowColor}"
+                BorderBrush="{DynamicResource SukiLowColor}"
                 BorderThickness="1,0,0,0">
           <ScrollViewer>
             <StackPanel Spacing="12" DataContext="{Binding SelectedObject}"
@@ -120,18 +120,18 @@
               <!-- External ID -->
               <StackPanel Spacing="2">
                 <TextBlock Text="External ID" FontWeight="SemiBold" FontSize="12"
-                           Foreground="{DynamicResource SystemBaseMediumColor}"/>
+                           Foreground="{DynamicResource SukiMediumColor}"/>
                 <TextBlock Text="{Binding ExternalId}" TextWrapping="Wrap"/>
               </StackPanel>
 
               <!-- Properties list -->
               <StackPanel Spacing="2">
                 <TextBlock Text="Properties" FontWeight="SemiBold" FontSize="12"
-                           Foreground="{DynamicResource SystemBaseMediumColor}" Margin="0,0,0,4"/>
+                           Foreground="{DynamicResource SukiMediumColor}" Margin="0,0,0,4"/>
                 <ItemsControl ItemsSource="{Binding KeyProperties}">
                   <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                      <Border Padding="0,4" BorderBrush="{DynamicResource SystemBaseLowColor}"
+                      <Border Padding="0,4" BorderBrush="{DynamicResource SukiLowColor}"
                               BorderThickness="0,0,0,1">
                         <Grid ColumnDefinitions="Auto,*">
                           <TextBlock Grid.Column="0" Text="{Binding Key}" FontWeight="SemiBold"

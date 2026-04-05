@@ -1,13 +1,9 @@
-<ui:ContentDialog xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
                   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                  xmlns:ui="using:FluentAvalonia.UI.Controls"
+                  xmlns:suki="https://github.com/kikipoulet/SukiUI"
                   xmlns:vm="clr-namespace:Clarity.Desktop.ViewModels.Customers"
                   x:Class="Clarity.Desktop.Views.Customers.CustomerFormView"
-                  x:DataType="vm:CustomerFormViewModel"
-                  Title="{Binding Title}"
-                  PrimaryButtonText="Save"
-                  CloseButtonText="Cancel"
-                  IsPrimaryButtonEnabled="{Binding !IsSaving}">
+                  x:DataType="vm:CustomerFormViewModel">
 
   <StackPanel Spacing="16" MinWidth="400">
 
@@ -26,7 +22,7 @@
     </StackPanel>
 
     <!-- Error message -->
-    <ui:InfoBar IsOpen="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+    <suki:InfoBar IsOpen="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                 Severity="Error" Title="Error" Message="{Binding ErrorMessage}" IsClosable="True"/>
   </StackPanel>
-</ui:ContentDialog>
+</UserControl>

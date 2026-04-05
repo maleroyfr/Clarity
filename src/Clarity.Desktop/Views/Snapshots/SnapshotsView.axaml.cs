@@ -28,7 +28,7 @@ public partial class SnapshotsView : UserControl
         if (VisualRoot is Window)
         {
             var shell = AppServiceLocator.Get<AppShellViewModel>();
-            shell.NavigateTo(NavSection.Inventory);
+            shell.NavigateToSection(NavSection.Inventory);
         }
     }
 

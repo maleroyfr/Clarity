@@ -1,17 +1,9 @@
-<Window xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="clr-namespace:Clarity.Desktop.ViewModels.Onboarding"
-        xmlns:views="clr-namespace:Clarity.Desktop.Views.Onboarding"
-        x:Class="Clarity.Desktop.Views.Onboarding.OnboardingWizardView"
-        x:DataType="vm:OnboardingWizardViewModel"
-        Title="New Environment Wizard"
-        Width="680" Height="620"
-        CanResize="False"
-        WindowStartupLocation="CenterOwner">
-
-  <Window.Styles>
-    <StyleInclude Source="/Styles/ClarityTheme.axaml"/>
-  </Window.Styles>
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:Clarity.Desktop.ViewModels.Onboarding"
+             xmlns:views="clr-namespace:Clarity.Desktop.Views.Onboarding"
+             x:Class="Clarity.Desktop.Views.Onboarding.OnboardingWizardView"
+             x:DataType="vm:OnboardingWizardViewModel">
 
   <Grid RowDefinitions="Auto,*,Auto" Margin="28">
 
@@ -20,25 +12,25 @@
                 HorizontalAlignment="Center" Spacing="16" Margin="0,0,0,24">
       <StackPanel Orientation="Horizontal" Spacing="6">
         <Ellipse Width="10" Height="10"
-                 Fill="{DynamicResource SystemAccentColor}"/>
+                 Fill="{DynamicResource SukiPrimaryColor}"/>
         <TextBlock Text="Workloads" FontSize="12" VerticalAlignment="Center"
-                   Foreground="{DynamicResource SystemAccentColor}"/>
+                   Foreground="{DynamicResource SukiPrimaryColor}"/>
       </StackPanel>
-      <TextBlock Text="›" FontSize="16" Foreground="{DynamicResource SystemBaseMediumColor}"
+      <TextBlock Text="›" FontSize="16" Foreground="{DynamicResource SukiMediumColor}"
                  VerticalAlignment="Center"/>
       <StackPanel Orientation="Horizontal" Spacing="6">
         <Ellipse Width="10" Height="10"
-                 Fill="{DynamicResource SystemBaseMediumColor}"/>
+                 Fill="{DynamicResource SukiMediumColor}"/>
         <TextBlock Text="Prerequisites" FontSize="12" VerticalAlignment="Center"
-                   Foreground="{DynamicResource SystemBaseMediumColor}"/>
+                   Foreground="{DynamicResource SukiMediumColor}"/>
       </StackPanel>
-      <TextBlock Text="›" FontSize="16" Foreground="{DynamicResource SystemBaseMediumColor}"
+      <TextBlock Text="›" FontSize="16" Foreground="{DynamicResource SukiMediumColor}"
                  VerticalAlignment="Center"/>
       <StackPanel Orientation="Horizontal" Spacing="6">
         <Ellipse Width="10" Height="10"
-                 Fill="{DynamicResource SystemBaseMediumColor}"/>
+                 Fill="{DynamicResource SukiMediumColor}"/>
         <TextBlock Text="Summary" FontSize="12" VerticalAlignment="Center"
-                   Foreground="{DynamicResource SystemBaseMediumColor}"/>
+                   Foreground="{DynamicResource SukiMediumColor}"/>
       </StackPanel>
     </StackPanel>
 
@@ -78,4 +70,4 @@
               Command="{Binding FinishCommand}"/>
     </Grid>
   </Grid>
-</Window>
+</UserControl>

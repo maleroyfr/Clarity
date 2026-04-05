@@ -1,12 +1,12 @@
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using Avalonia;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using FluentAvalonia.Styling;
+using SukiUI;
+using SukiUI.Enums;
+using Avalonia.Styling;
 
 namespace Clarity.Desktop.ViewModels.Shell;
 
@@ -17,14 +17,15 @@ public sealed partial class SettingsViewModel : ObservableObject
         "Clarity");
 
     private static readonly string DbPath = Path.Combine(DataFolder, "clarity.db");
-
     private static readonly string LogFolder = Path.Combine(DataFolder, "logs");
 
     [ObservableProperty]
     private int _themeIndex;
 
-    public string DatabaseInfo { get; } = DbPath;
+    [ObservableProperty]
+    private int _colorIndex;
 
+    public string DatabaseInfo { get; } = DbPath;
     public string LogDirectoryInfo { get; } = LogFolder;
 
     public string VersionInfo { get; } = Assembly.GetExecutingAssembly()
@@ -33,22 +34,39 @@ public sealed partial class SettingsViewModel : ObservableObject
         ?? "1.0.0";
 
     public string RuntimeInfo { get; } = $".NET {System.Environment.Version}";
-
     public string OsInfo { get; } = RuntimeInformation.OSDescription;
+
+    public string[] ThemeOptions { get; } = ["System", "Light", "Dark"];
+    public string[] ColorOptions { get; } = ["Blue", "Green", "Orange", "Red"];
 
     partial void OnThemeIndexChanged(int value)
     {
-        var faTheme = Avalonia.Application.Current?.Styles.OfType<FluentAvaloniaTheme>().FirstOrDefault();
-        if (faTheme is not null)
-            faTheme.PreferSystemTheme = value == 0;
-
-        if (Avalonia.Application.Current is null) return;
-        Avalonia.Application.Current.RequestedThemeVariant = value switch
+        var theme = SukiTheme.GetInstance();
+        switch (value)
         {
-            1 => Avalonia.Styling.ThemeVariant.Light,
-            2 => Avalonia.Styling.ThemeVariant.Dark,
-            _ => Avalonia.Styling.ThemeVariant.Default
+            case 1:
+                theme.ChangeBaseTheme(ThemeVariant.Light);
+                break;
+            case 2:
+                theme.ChangeBaseTheme(ThemeVariant.Dark);
+                break;
+            default:
+                theme.ChangeBaseTheme(ThemeVariant.Default);
+                break;
+        }
+    }
+
+    partial void OnColorIndexChanged(int value)
+    {
+        var theme = SukiTheme.GetInstance();
+        var color = value switch
+        {
+            1 => SukiColor.Green,
+            2 => SukiColor.Orange,
+            3 => SukiColor.Red,
+            _ => SukiColor.Blue
         };
+        theme.ChangeColorTheme(color);
     }
 
     [RelayCommand]

@@ -15,8 +15,8 @@ public static class ViewModelRegistration
 {
     public static IServiceCollection AddDesktopViewModels(this IServiceCollection services)
     {
-        // Shell
-        services.AddTransient<AppShellViewModel>();
+        // Shell – singleton so toast/dialog managers are shared
+        services.AddSingleton<AppShellViewModel>();
         services.AddTransient<HomeViewModel>();
         services.AddTransient<SettingsViewModel>();
 
