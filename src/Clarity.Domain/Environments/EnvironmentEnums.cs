@@ -40,7 +40,8 @@ public enum AuthType
 {
     Certificate,
     ClientSecret,
-    WindowsIntegrated
+    WindowsIntegrated,
+    ServiceAccount
 }
 
 public enum RelationDirection

@@ -1,6 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Clarity.Application.Environments;
 using Clarity.Application.Environments.Commands;
 using Clarity.Application.Environments.Queries;
 using Clarity.Domain.Environments;
@@ -10,11 +9,30 @@ using System.Collections.ObjectModel;
 
 namespace Clarity.Desktop.ViewModels.Environments;
 
+/// <summary>Represents a selectable authentication type in the UI.</summary>
+public sealed class AuthTypeOption
+{
+    public AuthType Value { get; }
+    public string DisplayName { get; }
+    public string Description { get; }
+
+    public AuthTypeOption(AuthType value)
+    {
+        Value = value;
+        DisplayName = AuthTypeHelper.GetAuthTypeDisplayName(value);
+        Description = AuthTypeHelper.GetAuthTypeDescription(value);
+    }
+
+    public override string ToString() => DisplayName;
+}
+
 public sealed partial class WorkloadAuthItem : ObservableObject
 {
     private readonly Func<WorkloadAuthItem, Task> _onSave;
 
     public WorkloadArea WorkloadArea { get; }
+    public bool IsCloud { get; }
+    public bool IsOnPrem { get; }
 
     public string WorkloadDisplayName => WorkloadArea switch
     {
@@ -23,7 +41,7 @@ public sealed partial class WorkloadAuthItem : ObservableObject
         WorkloadArea.ExchangeOnline => "Exchange Online",
         WorkloadArea.SharePointOnline => "SharePoint Online",
         WorkloadArea.Teams => "Teams",
-        WorkloadArea.OnPremAD => "On-Premises AD",
+        WorkloadArea.OnPremAD => "On-Premises Active Directory",
         WorkloadArea.OnPremExchange => "On-Premises Exchange",
         _ => WorkloadArea.ToString()
     };
@@ -40,9 +58,13 @@ public sealed partial class WorkloadAuthItem : ObservableObject
         _ => "Settings"
     };
 
-    [ObservableProperty]
-    private int _selectedAuthTypeIndex; // 0=Certificate, 1=ClientSecret, 2=WindowsIntegrated
+    /// <summary>Valid auth types for this workload (filtered by cloud vs on-prem).</summary>
+    public ObservableCollection<AuthTypeOption> AvailableAuthTypes { get; }
 
+    [ObservableProperty]
+    private AuthTypeOption? _selectedAuthTypeOption;
+
+    // ── Cloud-specific fields ────────────────────────────────────────
     [ObservableProperty]
     private string _clientId = string.Empty;
 
@@ -55,6 +77,17 @@ public sealed partial class WorkloadAuthItem : ObservableObject
     [ObservableProperty]
     private string _secretReference = string.Empty;
 
+    // ── On-prem-specific fields ──────────────────────────────────────
+    [ObservableProperty]
+    private string _username = string.Empty;
+
+    [ObservableProperty]
+    private string _password = string.Empty;
+
+    [ObservableProperty]
+    private string _domainOrServer = string.Empty;
+
+    // ── State ────────────────────────────────────────────────────────
     [ObservableProperty]
     private bool _isConfigured;
 
@@ -67,42 +100,51 @@ public sealed partial class WorkloadAuthItem : ObservableObject
     [ObservableProperty]
     private string? _successMessage;
 
-    public bool ShowCertificateField => SelectedAuthTypeIndex == 0;
-    public bool ShowSecretField => SelectedAuthTypeIndex == 1;
-    public bool ShowAppFields => SelectedAuthTypeIndex != 2;
+    // ── Computed visibility ──────────────────────────────────────────
+    public bool ShowCloudFields => IsCloud && SelectedAuthType is not null;
+    public bool ShowCertificateField => IsCloud && SelectedAuthType == AuthType.Certificate;
+    public bool ShowSecretField => IsCloud && SelectedAuthType == AuthType.ClientSecret;
+    public bool ShowOnPremServiceAccountFields =>
+        IsOnPrem && SelectedAuthType == AuthType.ServiceAccount;
+    public bool ShowOnPremIntegratedHint =>
+        IsOnPrem && SelectedAuthType == AuthType.WindowsIntegrated;
 
     public string StatusText => IsConfigured ? "Configured" : "Not configured";
-    public string StatusLabel => IsConfigured ? "Active" : "Pending";
+    public string StatusBadge => IsConfigured ? "✓ Active" : "Pending";
+
+    public AuthType? SelectedAuthType => SelectedAuthTypeOption?.Value;
 
     public void NotifyStatusChanged()
     {
         OnPropertyChanged(nameof(StatusText));
-        OnPropertyChanged(nameof(StatusLabel));
+        OnPropertyChanged(nameof(StatusBadge));
     }
 
-    partial void OnSelectedAuthTypeIndexChanged(int value)
+    partial void OnSelectedAuthTypeOptionChanged(AuthTypeOption? value)
     {
+        OnPropertyChanged(nameof(SelectedAuthType));
+        OnPropertyChanged(nameof(ShowCloudFields));
         OnPropertyChanged(nameof(ShowCertificateField));
         OnPropertyChanged(nameof(ShowSecretField));
-        OnPropertyChanged(nameof(ShowAppFields));
+        OnPropertyChanged(nameof(ShowOnPremServiceAccountFields));
+        OnPropertyChanged(nameof(ShowOnPremIntegratedHint));
     }
 
     public WorkloadAuthItem(WorkloadArea workloadArea, Func<WorkloadAuthItem, Task> onSave)
     {
         WorkloadArea = workloadArea;
+        IsCloud = AuthTypeHelper.IsCloudWorkload(workloadArea);
+        IsOnPrem = AuthTypeHelper.IsOnPremWorkload(workloadArea);
         _onSave = onSave;
+
+        var validTypes = AuthTypeHelper.GetValidAuthTypes(workloadArea);
+        AvailableAuthTypes = new ObservableCollection<AuthTypeOption>(
+            validTypes.Select(t => new AuthTypeOption(t)));
+        SelectedAuthTypeOption = AvailableAuthTypes.FirstOrDefault();
     }
 
     [RelayCommand]
     public async Task Save() => await _onSave(this);
-
-    public AuthType SelectedAuthType => SelectedAuthTypeIndex switch
-    {
-        0 => AuthType.Certificate,
-        1 => AuthType.ClientSecret,
-        2 => AuthType.WindowsIntegrated,
-        _ => AuthType.Certificate
-    };
 }
 
 public sealed partial class AuthConfigViewModel : ObservableObject
@@ -146,13 +188,12 @@ public sealed partial class AuthConfigViewModel : ObservableObject
 
             if (existing is not null)
             {
-                item.SelectedAuthTypeIndex = existing.AuthType switch
-                {
-                    AuthType.Certificate => 0,
-                    AuthType.ClientSecret => 1,
-                    AuthType.WindowsIntegrated => 2,
-                    _ => 0
-                };
+                // Restore the saved auth type — only if it's valid for this workload
+                var matchingOption = item.AvailableAuthTypes
+                    .FirstOrDefault(o => o.Value == existing.AuthType);
+                if (matchingOption is not null)
+                    item.SelectedAuthTypeOption = matchingOption;
+
                 item.ClientId = existing.ClientId ?? string.Empty;
                 item.TenantId = existing.TenantId ?? string.Empty;
                 item.CertificateThumbprint = existing.CertificateThumbprint ?? string.Empty;
@@ -167,6 +208,8 @@ public sealed partial class AuthConfigViewModel : ObservableObject
 
     private async Task OnSaveWorkload(WorkloadAuthItem item)
     {
+        if (item.SelectedAuthType is null) return;
+
         item.IsSaving = true;
         item.ErrorMessage = null;
         item.SuccessMessage = null;
@@ -176,7 +219,7 @@ public sealed partial class AuthConfigViewModel : ObservableObject
             await _mediator.Send(new SetAuthConfigurationCommand(
                 _environmentId,
                 item.WorkloadArea,
-                item.SelectedAuthType,
+                item.SelectedAuthType.Value,
                 string.IsNullOrWhiteSpace(item.ClientId) ? null : item.ClientId.Trim(),
                 string.IsNullOrWhiteSpace(item.TenantId) ? null : item.TenantId.Trim(),
                 string.IsNullOrWhiteSpace(item.CertificateThumbprint) ? null : item.CertificateThumbprint.Trim(),
