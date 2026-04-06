@@ -12,101 +12,170 @@
   <Grid RowDefinitions="Auto,Auto,Auto,*">
     <TextBlock Grid.Row="0" Text="Prerequisites" Classes="PageTitle" Margin="0,0,0,4"/>
     <TextBlock Grid.Row="1"
-                Text="Verify the following prerequisites are in place. Required items must be completed; optional items enhance collection capabilities."
-                Classes="PageSubtitle" Margin="0,0,0,16" TextWrapping="Wrap"/>
+               Text="Verify that the following prerequisites are in place. Required items must be completed before proceeding. Optional items improve collection capabilities."
+               Classes="PageSubtitle" Margin="0,0,0,16" TextWrapping="Wrap"
+               MaxWidth="660"/>
 
-    <!-- Action bar -->
-    <Grid Grid.Row="2" ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,12">
+    <!-- Status bar -->
+    <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="0,0,0,12">
       <TextBlock Text="{Binding StatusMessage}"
                  VerticalAlignment="Center" TextWrapping="Wrap"
                  Foreground="{DynamicResource SukiMediumColor}" FontSize="12"/>
       <Button Grid.Column="1"
-              Classes="SecondaryButton"
-              Content="⟳ Refresh"
+              Classes="Flat"
+              Content="⟳ Re-check"
               Command="{Binding RefreshCommand}"
               IsEnabled="{Binding !IsChecking}"
-              Margin="0,0,8,0"/>
-      <Button Grid.Column="2"
-              Classes="PrimaryButton"
-              Content="Install missing modules"
-              Command="{Binding InstallMissingModulesCommand}"
-              IsEnabled="{Binding CanInstallMissingModules}"/>
+              Padding="12,4"/>
     </Grid>
 
-    <!-- Grouped prerequisites -->
+    <!-- Scrollable content: Graph permissions read-only + grouped prerequisites -->
     <ScrollViewer Grid.Row="3">
-      <ItemsControl ItemsSource="{Binding Groups}">
-        <ItemsControl.ItemTemplate>
-          <DataTemplate x:DataType="vm:PrerequisiteGroupVm">
-            <suki:GroupBox Margin="0,0,0,12">
-              <suki:GroupBox.Header>
-                <Grid ColumnDefinitions="Auto,*,Auto,Auto">
-                  <TextBlock Grid.Column="0" Text="{Binding GroupIcon}" FontSize="16"
-                             VerticalAlignment="Center" Margin="0,0,8,0"/>
-                  <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                      <TextBlock Text="{Binding GroupName}" FontWeight="SemiBold"/>
-                      <Border IsVisible="{Binding IsOptionalGroup}"
-                              Background="{DynamicResource SukiLowColor}"
-                              CornerRadius="4" Padding="6,2" VerticalAlignment="Center">
-                        <TextBlock Text="Optional" FontSize="10" FontWeight="Medium"/>
-                      </Border>
-                    </StackPanel>
-                    <TextBlock Text="{Binding WorkloadHints}" FontSize="11"
-                               Foreground="{DynamicResource SukiMediumColor}"
-                               IsVisible="{Binding WorkloadHints, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
-                  </StackPanel>
-                  <TextBlock Grid.Column="2" Text="{Binding CountText}" FontSize="12" FontWeight="Medium"
-                             VerticalAlignment="Center" Margin="8,0,0,0"
-                             Foreground="{DynamicResource SukiMediumColor}"/>
-                </Grid>
-              </suki:GroupBox.Header>
+      <StackPanel Spacing="12">
 
-              <StackPanel Spacing="4" Margin="4,8">
-                <TextBlock Text="{Binding GroupDescription}" FontSize="12"
-                           Foreground="{DynamicResource SukiMediumColor}" TextWrapping="Wrap" Margin="0,0,0,8"/>
-
-                <ItemsControl ItemsSource="{Binding Items}">
-                  <ItemsControl.ItemTemplate>
-                    <DataTemplate x:DataType="vm:PrerequisiteItemVm">
-                      <Border Background="{DynamicResource ClaritySubtleBackground}"
-                              BorderBrush="{DynamicResource SukiLowColor}"
-                              BorderThickness="1" CornerRadius="6"
-                              Padding="12,8" Margin="0,0,0,4">
-                        <Grid ColumnDefinitions="Auto,*,Auto">
-                          <CheckBox Grid.Column="0"
-                                    IsChecked="{Binding IsCompleted}"
-                                    VerticalAlignment="Top"
-                                    Margin="0,0,10,0"/>
-                          <StackPanel Grid.Column="1" Spacing="2">
-                            <TextBlock Text="{Binding Label}" FontWeight="Medium" FontSize="13" TextWrapping="Wrap"/>
-                            <TextBlock Text="{Binding Description}" FontSize="11"
-                                       Foreground="{DynamicResource SukiMediumColor}" TextWrapping="Wrap"/>
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                              <TextBlock Text="{Binding StatusText}" FontSize="11"
-                                         FontStyle="Italic" Foreground="{DynamicResource SukiMediumColor}"/>
-                              <TextBlock Text="{Binding InstallScope}" FontSize="11"
-                                         Foreground="{DynamicResource SukiMediumColor}"
-                                         IsVisible="{Binding InstallScope, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
-                            </StackPanel>
-                          </StackPanel>
-                          <Border Grid.Column="2"
-                                  IsVisible="{Binding IsOptional}"
-                                  Background="{DynamicResource SukiLowColor}"
-                                  CornerRadius="4" Padding="6,2"
-                                  VerticalAlignment="Top" Margin="8,0,0,0">
-                            <TextBlock Text="Optional" FontSize="10"/>
-                          </Border>
-                        </Grid>
-                      </Border>
-                    </DataTemplate>
-                  </ItemsControl.ItemTemplate>
-                </ItemsControl>
+        <!-- ═══ GRAPH API PERMISSIONS (read-only display) ═══ -->
+        <Expander IsVisible="{Binding HasGraphPermissions}"
+                  IsExpanded="{Binding GraphPermissionsExpanded}"
+                  Padding="0">
+          <Expander.Header>
+            <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,4">
+              <TextBlock Grid.Column="0" Text="🔑" FontSize="16"
+                         VerticalAlignment="Center" Margin="0,0,8,0"/>
+              <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="1">
+                <TextBlock Text="Graph API Permissions" FontWeight="SemiBold" FontSize="14"/>
+                <TextBlock Text="These permissions will be included in the setup script on the next step."
+                           FontSize="11" Foreground="{DynamicResource SukiMediumColor}" TextWrapping="Wrap"/>
               </StackPanel>
-            </suki:GroupBox>
-          </DataTemplate>
-        </ItemsControl.ItemTemplate>
-      </ItemsControl>
+              <TextBlock Grid.Column="2" Text="{Binding GraphPermissionSummary}"
+                         FontSize="11" Foreground="{DynamicResource SukiMediumColor}"
+                         VerticalAlignment="Center" Margin="8,0,0,0"/>
+            </Grid>
+          </Expander.Header>
+
+          <ItemsControl ItemsSource="{Binding GraphPermissions}" Margin="8,4,8,8">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:GraphPermissionDisplayVm">
+                <Border Background="{DynamicResource ClaritySubtleBackground}"
+                        CornerRadius="4" Padding="10,6" Margin="0,0,0,3">
+                  <Grid ColumnDefinitions="*,Auto,Auto">
+                    <StackPanel Grid.Column="0" Spacing="1">
+                      <TextBlock Text="{Binding PermissionName}" FontWeight="Medium" FontSize="12"/>
+                      <TextBlock Text="{Binding Description}" FontSize="10.5"
+                                 Foreground="{DynamicResource SukiMediumColor}" TextWrapping="Wrap"/>
+                    </StackPanel>
+                    <Border Grid.Column="1"
+                            IsVisible="{Binding WorkloadHint, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                            Background="{DynamicResource SukiLowColor}"
+                            CornerRadius="3" Padding="5,2" VerticalAlignment="Center" Margin="6,0">
+                      <TextBlock Text="{Binding WorkloadHint}" FontSize="9.5"
+                                 Foreground="{DynamicResource SukiMediumColor}"/>
+                    </Border>
+                    <Border Grid.Column="2"
+                            IsVisible="{Binding IsOptional}"
+                            Background="{DynamicResource SukiLowColor}"
+                            CornerRadius="3" Padding="5,2" VerticalAlignment="Center">
+                      <TextBlock Text="Optional" FontSize="9.5"
+                                 Foreground="{DynamicResource SukiMediumColor}"/>
+                    </Border>
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </Expander>
+
+        <!-- ═══ PREREQUISITE GROUPS (actionable items in Expanders) ═══ -->
+        <ItemsControl ItemsSource="{Binding Groups}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:PrerequisiteGroupVm">
+              <Expander IsExpanded="{Binding IsExpanded}" Margin="0,0,0,0" Padding="0">
+                <Expander.Header>
+                  <Grid ColumnDefinitions="Auto,*,Auto,Auto" Margin="0,4">
+                    <TextBlock Grid.Column="0" Text="{Binding GroupIcon}" FontSize="16"
+                               VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
+                      <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="{Binding GroupName}" FontWeight="SemiBold" FontSize="14"/>
+                        <Border IsVisible="{Binding IsOptionalGroup}"
+                                Background="{DynamicResource SukiLowColor}"
+                                CornerRadius="3" Padding="5,2" VerticalAlignment="Center">
+                          <TextBlock Text="Optional" FontSize="9.5" FontWeight="Medium"
+                                     Foreground="{DynamicResource SukiMediumColor}"/>
+                        </Border>
+                      </StackPanel>
+                      <TextBlock Text="{Binding WorkloadHints}" FontSize="10.5"
+                                 Foreground="{DynamicResource SukiMediumColor}"
+                                 IsVisible="{Binding WorkloadHints, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                 TextWrapping="Wrap"/>
+                    </StackPanel>
+                    <TextBlock Grid.Column="2" Text="{Binding CountText}" FontSize="11" FontWeight="Medium"
+                               VerticalAlignment="Center" Margin="8,0,0,0"
+                               Foreground="{DynamicResource SukiMediumColor}"/>
+                  </Grid>
+                </Expander.Header>
+
+                <StackPanel Spacing="3" Margin="8,4,8,8">
+                  <TextBlock Text="{Binding GroupDescription}" FontSize="11"
+                             Foreground="{DynamicResource SukiMediumColor}" TextWrapping="Wrap" Margin="0,0,0,6"/>
+
+                  <ItemsControl ItemsSource="{Binding Items}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate x:DataType="vm:PrerequisiteItemVm">
+                        <Border Background="{DynamicResource ClaritySubtleBackground}"
+                                BorderBrush="{DynamicResource SukiLowColor}"
+                                BorderThickness="1" CornerRadius="5"
+                                Padding="10,7" Margin="0,0,0,3">
+                          <Grid ColumnDefinitions="Auto,*,Auto">
+                            <CheckBox Grid.Column="0"
+                                      IsChecked="{Binding IsCompleted}"
+                                      VerticalAlignment="Top"
+                                      Margin="0,0,8,0"/>
+                            <StackPanel Grid.Column="1" Spacing="2">
+                              <StackPanel Orientation="Horizontal" Spacing="6">
+                                <TextBlock Text="{Binding Label}" FontWeight="Medium" FontSize="12.5"
+                                           TextWrapping="Wrap" VerticalAlignment="Center"/>
+                                <!-- Workload hint tag -->
+                                <Border IsVisible="{Binding WorkloadHint, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                        Background="{DynamicResource SukiLowColor}"
+                                        CornerRadius="3" Padding="5,1" VerticalAlignment="Center">
+                                  <TextBlock Text="{Binding WorkloadHint}" FontSize="9"
+                                             Foreground="{DynamicResource SukiMediumColor}"/>
+                                </Border>
+                              </StackPanel>
+                              <TextBlock Text="{Binding Description}" FontSize="10.5"
+                                         Foreground="{DynamicResource SukiMediumColor}" TextWrapping="Wrap"/>
+                              <TextBlock Text="{Binding StatusText}" FontSize="10.5"
+                                         FontStyle="Italic" Foreground="{DynamicResource SukiMediumColor}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2" VerticalAlignment="Top" Spacing="4" Margin="8,0,0,0">
+                              <!-- Per-item Install button for PS modules -->
+                              <Button IsVisible="{Binding ShowInstallButton}"
+                                      Command="{Binding ((vm:PrerequisitesStepViewModel)DataContext).InstallModuleCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                      CommandParameter="{Binding}"
+                                      Content="Install"
+                                      Classes="Flat"
+                                      Padding="10,3"
+                                      FontSize="11"/>
+                              <!-- Optional badge -->
+                              <Border IsVisible="{Binding IsOptional}"
+                                      Background="{DynamicResource SukiLowColor}"
+                                      CornerRadius="3" Padding="5,2" HorizontalAlignment="Right">
+                                <TextBlock Text="Optional" FontSize="9.5"
+                                           Foreground="{DynamicResource SukiMediumColor}"/>
+                              </Border>
+                            </StackPanel>
+                          </Grid>
+                        </Border>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </StackPanel>
+              </Expander>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+      </StackPanel>
     </ScrollViewer>
   </Grid>
 </UserControl>
