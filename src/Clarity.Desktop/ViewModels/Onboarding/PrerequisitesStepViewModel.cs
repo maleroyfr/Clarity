@@ -14,6 +14,7 @@ public sealed partial class PrerequisiteItemVm : ObservableObject
     public string Category { get; init; } = default!;
     public string Label { get; init; } = default!;
     public string Description { get; init; } = default!;
+    public string WorkloadHint { get; init; } = string.Empty;
     public bool IsOptional { get; init; }
     public bool IsAutoDetectable { get; init; }
     public bool IsAutoFixSupported { get; init; }
@@ -26,6 +27,16 @@ public sealed partial class PrerequisiteItemVm : ObservableObject
 
     [ObservableProperty]
     private string? _installScope;
+
+    [ObservableProperty]
+    private bool _isInstalling;
+
+    public bool ShowInstallButton => IsAutoFixSupported && !IsCompleted && !IsInstalling;
+
+    public void NotifyInstallButton()
+    {
+        OnPropertyChanged(nameof(ShowInstallButton));
+    }
 }
 
 /// <summary>Groups related prerequisite items under a logical heading.</summary>
@@ -35,8 +46,6 @@ public sealed partial class PrerequisiteGroupVm : ObservableObject
     public string GroupDescription { get; init; } = default!;
     public string GroupIcon { get; init; } = default!;
     public bool IsOptionalGroup { get; init; }
-
-    /// <summary>Workload names that require this group (displayed as hint chips).</summary>
     public string WorkloadHints { get; init; } = string.Empty;
 
     public ObservableCollection<PrerequisiteItemVm> Items { get; init; } = [];
@@ -56,6 +65,15 @@ public sealed partial class PrerequisiteGroupVm : ObservableObject
     }
 }
 
+/// <summary>Read-only display of required Graph API permissions (not checkboxes).</summary>
+public sealed class GraphPermissionDisplayVm
+{
+    public string PermissionName { get; init; } = default!;
+    public string Description { get; init; } = default!;
+    public string WorkloadHint { get; init; } = default!;
+    public bool IsOptional { get; init; }
+}
+
 public sealed partial class PrerequisitesStepViewModel : ObservableObject
 {
     private readonly IPowerShellPrerequisiteService _powerShellPrerequisiteService;
@@ -63,19 +81,21 @@ public sealed partial class PrerequisitesStepViewModel : ObservableObject
 
     public ObservableCollection<PrerequisiteGroupVm> Groups { get; } = [];
     public ObservableCollection<PrerequisiteItemVm> Prerequisites { get; } = [];
+    public ObservableCollection<GraphPermissionDisplayVm> GraphPermissions { get; } = [];
+
+    public bool HasGraphPermissions => GraphPermissions.Count > 0;
+    public int GraphPermissionCount => GraphPermissions.Count;
+    public string GraphPermissionSummary => $"{GraphPermissions.Count(p => !p.IsOptional)} required, {GraphPermissions.Count(p => p.IsOptional)} optional";
+
+    [ObservableProperty]
+    private bool _graphPermissionsExpanded;
 
     public int TotalCount => Prerequisites.Count;
     public int RequiredCount => Prerequisites.Count(p => !p.IsOptional);
     public int CompletedCount => Prerequisites.Count(p => p.IsCompleted);
-    public bool CanInstallMissingModules =>
-        !IsChecking &&
-        Prerequisites.Any(item =>
-            item.CategoryKind == PrerequisiteCategory.PowerShellModule &&
-            item.IsAutoFixSupported &&
-            !item.IsCompleted);
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CanInstallMissingModules))]
+    [NotifyPropertyChangedFor(nameof(HasGraphPermissions))]
     private bool _isChecking;
 
     [ObservableProperty]
@@ -92,9 +112,14 @@ public sealed partial class PrerequisitesStepViewModel : ObservableObject
 
         Prerequisites.Clear();
         Groups.Clear();
+        GraphPermissions.Clear();
+
+        // Build Graph permission display (read-only, no checkboxes)
+        BuildGraphPermissionDisplay();
 
         var mergedItems = _selectedAreas
             .SelectMany(WorkloadCapabilityCatalog.BuildChecklistItems)
+            .Where(i => i.Category != PrerequisiteCategory.GraphPermission) // excluded from checklist
             .GroupBy(item => item.Key, StringComparer.OrdinalIgnoreCase)
             .Select(group =>
             {
@@ -113,38 +138,38 @@ public sealed partial class PrerequisitesStepViewModel : ObservableObject
         var cloudWorkloads = _selectedAreas.Where(AuthTypeHelper.IsCloudWorkload).ToList();
         var onPremWorkloads = _selectedAreas.Where(AuthTypeHelper.IsOnPremWorkload).ToList();
 
-        // Group by area: Microsoft 365 Cloud prerequisites
+        // Cloud setup prerequisites (app reg, admin consent, certificate — not individual Graph perms)
         if (cloudWorkloads.Count > 0)
         {
-            var cloudGraphItems = mergedItems
-                .Where(i => i.Category == PrerequisiteCategory.GraphPermission)
-                .OrderBy(i => !i.IsRequired).ThenBy(i => i.Label, StringComparer.OrdinalIgnoreCase)
-                .ToList();
-
             var cloudAuthItems = mergedItems
                 .Where(i => i.Category is PrerequisiteCategory.Certificate or PrerequisiteCategory.AdminConsent
                          || i.Key.StartsWith("cloud:", StringComparison.OrdinalIgnoreCase)
                          || i.Key.StartsWith("auth:exchange", StringComparison.OrdinalIgnoreCase)
                          || i.Key.StartsWith("role:", StringComparison.OrdinalIgnoreCase))
-                .Where(i => i.Category != PrerequisiteCategory.GraphPermission)
                 .OrderBy(i => !i.IsRequired).ThenBy(i => i.Label, StringComparer.OrdinalIgnoreCase)
                 .ToList();
 
-            var cloudPsItems = mergedItems
-                .Where(i => i.Category == PrerequisiteCategory.PowerShellModule
-                    && !i.Key.StartsWith("auth:ad", StringComparison.OrdinalIgnoreCase))
-                .OrderBy(i => !i.IsRequired).ThenBy(i => i.Label, StringComparer.OrdinalIgnoreCase)
+            if (cloudAuthItems.Count > 0)
+                AddGroup("App Registration & Consent",
+                    "Create an app registration in the customer tenant, grant admin consent, and configure authentication.",
+                    "🔐", false, FormatWorkloadHints(cloudWorkloads), cloudAuthItems);
+        }
+
+        // PowerShell modules
+        var psItems = mergedItems
+            .Where(i => i.Category == PrerequisiteCategory.PowerShellModule)
+            .OrderBy(i => !i.IsRequired).ThenBy(i => i.Label, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        if (psItems.Count > 0)
+        {
+            var psWorkloads = _selectedAreas
+                .Where(a => WorkloadCapabilityCatalog.GetDefinition(a).RequiredPowerShellModules.Count > 0
+                         || mergedItems.Any(i => i.Key == "tool:pwsh"))
                 .ToList();
-
-            var allCloudItems = new List<WorkloadChecklistItemDefinition>();
-            allCloudItems.AddRange(cloudAuthItems);
-            allCloudItems.AddRange(cloudGraphItems);
-            allCloudItems.AddRange(cloudPsItems);
-
-            if (allCloudItems.Count > 0)
-                AddGroup("Microsoft 365 Cloud",
-                    "App registration, Graph API permissions, and PowerShell modules for cloud workloads.",
-                    "☁️", false, FormatWorkloadHints(cloudWorkloads), allCloudItems);
+            AddGroup("PowerShell Modules",
+                "Auto-detected modules. Install missing ones directly or use the buttons below.",
+                "⚡", true, FormatWorkloadHints(psWorkloads), psItems);
         }
 
         // On-Premises prerequisites
@@ -153,27 +178,21 @@ public sealed partial class PrerequisitesStepViewModel : ObservableObject
             var networkItems = mergedItems
                 .Where(i => i.Category == PrerequisiteCategory.NetworkAccess)
                 .ToList();
-
             var onPremAuthItems = mergedItems
                 .Where(i => i.Key.StartsWith("auth:ad", StringComparison.OrdinalIgnoreCase))
                 .ToList();
 
-            var onPremPsRuntime = mergedItems
-                .Where(i => i.Key.Equals("tool:pwsh", StringComparison.OrdinalIgnoreCase))
-                .ToList();
-
             var allOnPremItems = new List<WorkloadChecklistItemDefinition>();
-            allOnPremItems.AddRange(onPremPsRuntime);
             allOnPremItems.AddRange(networkItems);
             allOnPremItems.AddRange(onPremAuthItems);
 
             if (allOnPremItems.Count > 0)
-                AddGroup("On-Premises Infrastructure",
-                    "Network connectivity, LDAP access, and authentication for on-premises workloads.",
+                AddGroup("On-Premises Access",
+                    "Network connectivity and authentication for on-premises workloads.",
                     "🏢", false, FormatWorkloadHints(onPremWorkloads), allOnPremItems);
         }
 
-        // Remaining items not covered
+        // Remaining
         var categorizedKeys = new HashSet<string>(
             Groups.SelectMany(g => g.Items).Select(i => i.Key), StringComparer.OrdinalIgnoreCase);
         var remainingItems = mergedItems.Where(i => !categorizedKeys.Contains(i.Key)).ToList();
@@ -184,9 +203,53 @@ public sealed partial class PrerequisitesStepViewModel : ObservableObject
         OnPropertyChanged(nameof(TotalCount));
         OnPropertyChanged(nameof(RequiredCount));
         OnPropertyChanged(nameof(CompletedCount));
-        OnPropertyChanged(nameof(CanInstallMissingModules));
+        OnPropertyChanged(nameof(HasGraphPermissions));
+        OnPropertyChanged(nameof(GraphPermissionCount));
+        OnPropertyChanged(nameof(GraphPermissionSummary));
 
         await RefreshAsync();
+    }
+
+    private void BuildGraphPermissionDisplay()
+    {
+        // Build a map of permission -> workloads that need it
+        var permWorkloads = new Dictionary<string, List<WorkloadArea>>(StringComparer.Ordinal);
+        var permDetails = new Dictionary<string, (string Description, bool IsOptional)>(StringComparer.Ordinal);
+
+        foreach (var area in _selectedAreas.Where(AuthTypeHelper.IsCloudWorkload))
+        {
+            var def = WorkloadCapabilityCatalog.GetDefinition(area);
+            foreach (var p in def.RequiredPermissions)
+            {
+                if (!permWorkloads.ContainsKey(p.Name))
+                {
+                    permWorkloads[p.Name] = [];
+                    permDetails[p.Name] = (p.Description, false);
+                }
+                permWorkloads[p.Name].Add(area);
+            }
+            foreach (var p in def.OptionalPermissions)
+            {
+                if (!permWorkloads.ContainsKey(p.Name))
+                {
+                    permWorkloads[p.Name] = [];
+                    permDetails[p.Name] = (p.Description, true);
+                }
+                permWorkloads[p.Name].Add(area);
+            }
+        }
+
+        foreach (var kvp in permWorkloads.OrderBy(k => permDetails[k.Key].IsOptional).ThenBy(k => k.Key))
+        {
+            var (desc, isOpt) = permDetails[kvp.Key];
+            GraphPermissions.Add(new GraphPermissionDisplayVm
+            {
+                PermissionName = kvp.Key,
+                Description = desc,
+                WorkloadHint = string.Join(", ", kvp.Value.Select(GetWorkloadShortName).Distinct()),
+                IsOptional = isOpt
+            });
+        }
     }
 
     private static string FormatWorkloadHints(IEnumerable<WorkloadArea> areas) =>
@@ -195,6 +258,9 @@ public sealed partial class PrerequisitesStepViewModel : ObservableObject
     private void AddGroup(string name, string description, string icon, bool isOptional,
         string workloadHints, IReadOnlyList<WorkloadChecklistItemDefinition> items)
     {
+        // Compute workload hints per item
+        var itemWorkloadMap = BuildItemWorkloadMap();
+
         var group = new PrerequisiteGroupVm
         {
             GroupName = name,
@@ -206,6 +272,10 @@ public sealed partial class PrerequisitesStepViewModel : ObservableObject
 
         foreach (var item in items)
         {
+            var hint = itemWorkloadMap.TryGetValue(item.Key, out var workloads)
+                ? string.Join(", ", workloads.Select(GetWorkloadShortName).Distinct())
+                : string.Empty;
+
             var vm = new PrerequisiteItemVm
             {
                 Key = item.Key,
@@ -213,10 +283,11 @@ public sealed partial class PrerequisitesStepViewModel : ObservableObject
                 Category = GetCategoryLabel(item.Category),
                 Label = item.Label,
                 Description = item.Description,
+                WorkloadHint = hint,
                 IsOptional = !item.IsRequired,
                 IsAutoDetectable = item.IsAutoDetectable,
                 IsAutoFixSupported = item.IsAutoFixSupported,
-                StatusText = item.IsAutoDetectable ? "Waiting for verification" : "Manual verification required"
+                StatusText = item.IsAutoDetectable ? "Checking…" : "Manual verification required"
             };
 
             group.Items.Add(vm);
@@ -226,13 +297,28 @@ public sealed partial class PrerequisitesStepViewModel : ObservableObject
         Groups.Add(group);
     }
 
+    private Dictionary<string, List<WorkloadArea>> BuildItemWorkloadMap()
+    {
+        var map = new Dictionary<string, List<WorkloadArea>>(StringComparer.OrdinalIgnoreCase);
+        foreach (var area in _selectedAreas)
+        {
+            foreach (var item in WorkloadCapabilityCatalog.BuildChecklistItems(area))
+            {
+                if (!map.ContainsKey(item.Key))
+                    map[item.Key] = [];
+                map[item.Key].Add(area);
+            }
+        }
+        return map;
+    }
+
     [RelayCommand]
     public async Task RefreshAsync()
     {
         if (_selectedAreas.Count == 0) return;
 
         IsChecking = true;
-        StatusMessage = "Checking local prerequisite readiness...";
+        StatusMessage = "Checking local prerequisites…";
 
         try
         {
@@ -255,50 +341,66 @@ public sealed partial class PrerequisitesStepViewModel : ObservableObject
                 ApplyModuleStatuses(modules);
             }
 
-            StatusMessage = "Prerequisite verification complete. Manual items still require consultant confirmation.";
+            StatusMessage = "Verification complete. Check items above and confirm manually where needed.";
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Prerequisite verification failed: {ex.Message}";
+            StatusMessage = $"Verification failed: {ex.Message}";
         }
         finally
         {
             IsChecking = false;
             RefreshAllGroupCounts();
             OnPropertyChanged(nameof(CompletedCount));
-            OnPropertyChanged(nameof(CanInstallMissingModules));
         }
     }
 
     [RelayCommand]
-    public async Task InstallMissingModulesAsync()
+    public async Task InstallModuleAsync(PrerequisiteItemVm item)
     {
-        if (!CanInstallMissingModules) return;
+        if (item is not { IsAutoFixSupported: true, IsCompleted: false }) return;
 
-        IsChecking = true;
-        StatusMessage = "Installing missing PowerShell modules...";
+        item.IsInstalling = true;
+        item.NotifyInstallButton();
+        item.StatusText = "Installing…";
 
         try
         {
-            var results = await _powerShellPrerequisiteService.InstallAllMissingAsync(_selectedAreas);
-            var failures = results.Count(result => !result.Success);
+            // Extract module name from key "module:ModuleName"
+            var moduleName = item.Key.StartsWith("module:", StringComparison.OrdinalIgnoreCase)
+                ? item.Key[7..] : item.Key;
+            var requirement = WorkloadCapabilityCatalog.GetRequiredModules(_selectedAreas)
+                .FirstOrDefault(m => m.ModuleName.Equals(moduleName, StringComparison.OrdinalIgnoreCase));
 
-            StatusMessage = failures == 0
-                ? "PowerShell module installation completed successfully."
-                : $"{failures} module installation step(s) failed. Review the checklist status.";
+            if (requirement is null)
+            {
+                item.StatusText = "Unknown module";
+                return;
+            }
 
-            await RefreshAsync();
+            var result = await _powerShellPrerequisiteService.InstallModuleAsync(
+                requirement.ModuleName, requirement.MinimumVersion);
+
+            if (result.Success)
+            {
+                item.IsCompleted = true;
+                item.StatusText = $"Installed ({result.InstalledVersion})";
+            }
+            else
+            {
+                item.StatusText = $"Install failed: {result.Error}";
+            }
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Module installation failed: {ex.Message}";
+            item.StatusText = $"Install failed: {ex.Message}";
         }
         finally
         {
-            IsChecking = false;
+            item.IsInstalling = false;
+            item.NotifyInstallButton();
             RefreshAllGroupCounts();
             OnPropertyChanged(nameof(CompletedCount));
-            OnPropertyChanged(nameof(CanInstallMissingModules));
         }
     }
 
@@ -307,8 +409,9 @@ public sealed partial class PrerequisitesStepViewModel : ObservableObject
         foreach (var item in Prerequisites.Where(item => item.IsAutoDetectable))
         {
             item.IsCompleted = false;
-            item.StatusText = "Waiting for verification";
+            item.StatusText = "Checking…";
             item.InstallScope = null;
+            item.NotifyInstallButton();
         }
     }
 
@@ -321,8 +424,9 @@ public sealed partial class PrerequisitesStepViewModel : ObservableObject
 
         pwshItem.IsCompleted = status.Available;
         pwshItem.StatusText = status.Available
-            ? $"Detected PowerShell {status.Version}"
-            : "PowerShell 7 was not detected on PATH";
+            ? $"✓ PowerShell {status.Version} detected"
+            : "✗ PowerShell 7 not found on PATH";
+        pwshItem.NotifyInstallButton();
     }
 
     private void ApplyModuleStatuses(IReadOnlyList<ModuleStatus> modules)
@@ -338,12 +442,13 @@ public sealed partial class PrerequisitesStepViewModel : ObservableObject
             item.InstallScope = module.Scope;
             item.StatusText = module switch
             {
-                { Installed: true, Scope: not null } => $"Installed ({module.InstalledVersion}) — {module.Scope} scope",
-                { Installed: true } => $"Installed ({module.InstalledVersion})",
-                { NeedsUpgrade: true } => $"Installed version {module.InstalledVersion} is below {module.MinimumVersion}",
-                { Error: not null } => module.Error,
-                _ => "Module not installed"
+                { Installed: true, Scope: not null } => $"✓ {module.InstalledVersion} — {module.Scope} scope",
+                { Installed: true } => $"✓ {module.InstalledVersion}",
+                { NeedsUpgrade: true } => $"⚠ Version {module.InstalledVersion} < {module.MinimumVersion}",
+                { Error: not null } => $"✗ {module.Error}",
+                _ => "✗ Not installed"
             };
+            item.NotifyInstallButton();
         }
     }
 
@@ -355,11 +460,11 @@ public sealed partial class PrerequisitesStepViewModel : ObservableObject
 
     private static string GetWorkloadShortName(WorkloadArea area) => area switch
     {
-        WorkloadArea.EntraId => "Microsoft Entra ID",
-        WorkloadArea.Intune => "Microsoft Intune",
+        WorkloadArea.EntraId => "Entra ID",
+        WorkloadArea.Intune => "Intune",
         WorkloadArea.ExchangeOnline => "Exchange Online",
         WorkloadArea.SharePointOnline => "SharePoint Online",
-        WorkloadArea.Teams => "Microsoft Teams",
+        WorkloadArea.Teams => "Teams",
         WorkloadArea.OnPremAD => "Active Directory",
         WorkloadArea.OnPremExchange => "Exchange Server",
         _ => area.ToString()
