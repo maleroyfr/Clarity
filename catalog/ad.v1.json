@@ -1,0 +1,78 @@
+{
+  "schemaVersion": "1.0", "id": "ad", "version": "1.0.0", "environmentKind": "AdForest",
+  "producers": [{
+    "id": "clarity.ad", "channel": "PowerShell", "version": "1.0.0", "apiVersion": "ActiveDirectory",
+    "preview": false, "readiness": "Planned", "testedVersions": [],
+    "prerequisites": ["Windows with RSAT ActiveDirectory module and domain connectivity", "Locally authenticated read session; no credentials in request parameters"],
+    "limits": ["Not yet implemented; no live AD version certified", "Forest/domain discovery does not imply read access to every object", "No passwords, recovery keys, message or file contents"]
+  }],
+  "sections": [
+    {
+      "id": "ad.users", "producerIds": ["clarity.ad"], "supportedScopes": ["domain", "ou"],
+      "attributes": {
+        "displayName": { "type": "string", "referenceProducer": "clarity.ad" },
+        "distinguishedName": { "type": "string", "referenceProducer": "clarity.ad" },
+        "sAMAccountName": { "type": "string", "referenceProducer": "clarity.ad" },
+        "userPrincipalName": { "type": "string", "referenceProducer": "clarity.ad" },
+        "mail": { "type": "string", "referenceProducer": "clarity.ad" },
+        "proxyAddresses": { "type": "strings", "referenceProducer": "clarity.ad" },
+        "objectSid": { "type": "string", "referenceProducer": "clarity.ad" },
+        "msDSConsistencyGuid": { "type": "string", "referenceProducer": "clarity.ad" },
+        "primaryGroupId": { "type": "string", "referenceProducer": "clarity.ad" },
+        "enabled": { "type": "boolean", "referenceProducer": "clarity.ad" },
+        "whenChanged": { "type": "utc", "referenceProducer": "clarity.ad" }
+      },
+      "relations": ["primaryMemberOf"], "permissions": ["Read selected user attributes in the requested domain/OU"],
+      "endpoints": ["Get-ADForest", "Get-ADDomain", "Get-ADUser -Filter * -SearchBase"],
+      "refreshStrategy": "Full comparable domain/OU snapshot; do not infer deletion from partial reads",
+      "limits": ["Attribute ACLs can restrict fields independently", "No sourceAnchor assumption: preserve objectGUID and mS-DS-ConsistencyGuid separately"]
+    },
+    {
+      "id": "ad.computers", "producerIds": ["clarity.ad"], "supportedScopes": ["domain", "ou"],
+      "attributes": {
+        "displayName": { "type": "string", "referenceProducer": "clarity.ad" },
+        "distinguishedName": { "type": "string", "referenceProducer": "clarity.ad" },
+        "sAMAccountName": { "type": "string", "referenceProducer": "clarity.ad" },
+        "dnsHostName": { "type": "string", "referenceProducer": "clarity.ad" },
+        "objectSid": { "type": "string", "referenceProducer": "clarity.ad" },
+        "msDSConsistencyGuid": { "type": "string", "referenceProducer": "clarity.ad" },
+        "primaryGroupId": { "type": "string", "referenceProducer": "clarity.ad" },
+        "enabled": { "type": "boolean", "referenceProducer": "clarity.ad" },
+        "operatingSystem": { "type": "string", "referenceProducer": "clarity.ad" },
+        "whenChanged": { "type": "utc", "referenceProducer": "clarity.ad" }
+      },
+      "relations": ["primaryMemberOf"], "permissions": ["Read selected computer attributes in the requested domain/OU"],
+      "endpoints": ["Get-ADComputer -Filter * -SearchBase"], "refreshStrategy": "Full comparable domain/OU snapshot",
+      "limits": ["No authoritative primary user association"]
+    },
+    {
+      "id": "ad.groups", "producerIds": ["clarity.ad"], "supportedScopes": ["domain", "ou"],
+      "attributes": {
+        "displayName": { "type": "string", "referenceProducer": "clarity.ad" },
+        "distinguishedName": { "type": "string", "referenceProducer": "clarity.ad" },
+        "sAMAccountName": { "type": "string", "referenceProducer": "clarity.ad" },
+        "mail": { "type": "string", "referenceProducer": "clarity.ad" },
+        "proxyAddresses": { "type": "strings", "referenceProducer": "clarity.ad" },
+        "objectSid": { "type": "string", "referenceProducer": "clarity.ad" },
+        "groupScope": { "type": "string", "referenceProducer": "clarity.ad" },
+        "groupCategory": { "type": "string", "referenceProducer": "clarity.ad" },
+        "whenChanged": { "type": "utc", "referenceProducer": "clarity.ad" }
+      },
+      "relations": ["memberOf"], "permissions": ["Read groups, member ranges and referenced object identifiers"],
+      "endpoints": ["Get-ADGroup -Filter * -SearchBase", "Get-ADObject -Properties member;range=<start>-<end>", "Get-ADObject -Identity"],
+      "refreshStrategy": "Full direct membership snapshot with ranged retrieval",
+      "limits": ["No inferred transitive/effective access", "Foreign security principals and unreadable/out-of-scope members remain references"]
+    },
+    {
+      "id": "ad.ous", "producerIds": ["clarity.ad"], "supportedScopes": ["domain", "ou"],
+      "attributes": {
+        "displayName": { "type": "string", "referenceProducer": "clarity.ad" },
+        "distinguishedName": { "type": "string", "referenceProducer": "clarity.ad" },
+        "whenChanged": { "type": "utc", "referenceProducer": "clarity.ad" }
+      },
+      "relations": [], "permissions": ["Read organizational units in the requested search base"],
+      "endpoints": ["Get-ADOrganizationalUnit -Filter * -SearchBase"], "refreshStrategy": "Full comparable domain/OU snapshot",
+      "limits": ["GPO settings and effective policy are not collected in Lot 2"]
+    }
+  ]
+}

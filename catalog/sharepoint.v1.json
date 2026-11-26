@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "1.0", "id": "sharepoint", "version": "1.0.0", "environmentKind": "M365Tenant",
+  "producers": [{
+    "id": "clarity.pnp", "channel": "PowerShell", "version": "planned", "apiVersion": "PnP.PowerShell",
+    "preview": false, "readiness": "Planned", "testedVersions": [],
+    "prerequisites": ["Future Lot 4 implementation; authorized Entra app for local PnP authentication"],
+    "limits": ["No executable producer or certified module/OS version yet; Graph consent is unrelated"]
+  }],
+  "sections": [{
+    "id": "sharepoint.sitePermissions", "producerIds": ["clarity.pnp"], "supportedScopes": ["resource"],
+    "attributes": { "url": { "type": "string", "referenceProducer": "clarity.pnp" } },
+    "relations": ["sitePermission"], "permissions": ["Future targeted site permission/RBAC validation required"],
+    "endpoints": ["Planned: Get-PnPWeb; role assignments require separate verification"],
+    "refreshStrategy": "Planned targeted site snapshot",
+    "limits": ["Not available; sharing/effective access must not be inferred from this catalog declaration"]
+  }]
+}

@@ -1,0 +1,16 @@
+{
+  "schemaVersion": "1.0", "id": "exchange", "version": "1.0.0", "environmentKind": "M365Tenant",
+  "producers": [{
+    "id": "clarity.exchange", "channel": "PowerShell", "version": "planned", "apiVersion": "ExchangeOnlineManagement",
+    "preview": false, "readiness": "Planned", "testedVersions": [],
+    "prerequisites": ["Future Lot 4 implementation and separately authorized Exchange session"],
+    "limits": ["No executable producer or certified module/OS version yet"]
+  }],
+  "sections": [{
+    "id": "exchange.mailboxStatistics", "producerIds": ["clarity.exchange"], "supportedScopes": ["tenant", "resource"],
+    "attributes": { "sizeBytes": { "type": "bytes", "referenceProducer": "clarity.exchange" } },
+    "relations": [], "permissions": ["Future Exchange read-only RBAC validation required"],
+    "endpoints": ["Planned: Get-EXOMailboxStatistics"], "refreshStrategy": "Planned full or targeted mailbox statistics",
+    "limits": ["Not available; actual fields, archive handling and cmdlet versions require Lot 4 verification"]
+  }]
+}

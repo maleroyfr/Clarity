@@ -1,0 +1,97 @@
+{
+  "schemaVersion": "1.0", "id": "entra", "version": "1.0.0", "environmentKind": "M365Tenant",
+  "producers": [{
+    "id": "clarity.graph.entra", "channel": "Graph", "version": "1.0.0", "apiVersion": "v1.0",
+    "preview": false, "readiness": "Planned", "testedVersions": [],
+    "prerequisites": ["Multi-tenant collector app with per-customer admin consent", "Server certificate in Key Vault accessible by managed identity"],
+    "limits": ["Not yet implemented; synthetic HTTP tests do not certify a live tenant", "Graph consent does not authorize local PowerShell modules", "Directory metadata only; no secrets or content"]
+  }],
+  "sections": [
+    {
+      "id": "entra.users", "producerIds": ["clarity.graph.entra"], "supportedScopes": ["tenant"],
+      "attributes": {
+        "displayName": { "type": "string", "referenceProducer": "clarity.graph.entra" },
+        "userPrincipalName": { "type": "string", "referenceProducer": "clarity.graph.entra" },
+        "mail": { "type": "string", "referenceProducer": "clarity.graph.entra" },
+        "proxyAddresses": { "type": "strings", "referenceProducer": "clarity.graph.entra" },
+        "userType": { "type": "string", "referenceProducer": "clarity.graph.entra" },
+        "accountEnabled": { "type": "boolean", "referenceProducer": "clarity.graph.entra" },
+        "onPremisesImmutableId": { "type": "string", "referenceProducer": "clarity.graph.entra" },
+        "onPremisesSyncEnabled": { "type": "boolean", "referenceProducer": "clarity.graph.entra" },
+        "onPremisesSecurityIdentifier": { "type": "string", "referenceProducer": "clarity.graph.entra" },
+        "deleted": { "type": "boolean", "referenceProducer": "clarity.graph.entra" }
+      },
+      "relations": [], "permissions": ["User.Read.All"], "endpoints": ["GET /v1.0/users/delta"],
+      "refreshStrategy": "Persist users delta only after publication; full read when scope/select changes or cursor expires",
+      "limits": ["Guests are users with userType Guest", "Delta is not an exhaustive snapshot; only explicit removed signals imply deletion"]
+    },
+    {
+      "id": "entra.groups", "producerIds": ["clarity.graph.entra"], "supportedScopes": ["tenant"],
+      "attributes": {
+        "displayName": { "type": "string", "referenceProducer": "clarity.graph.entra" },
+        "mail": { "type": "string", "referenceProducer": "clarity.graph.entra" },
+        "proxyAddresses": { "type": "strings", "referenceProducer": "clarity.graph.entra" },
+        "groupTypes": { "type": "strings", "referenceProducer": "clarity.graph.entra" },
+        "securityEnabled": { "type": "boolean", "referenceProducer": "clarity.graph.entra" },
+        "mailEnabled": { "type": "boolean", "referenceProducer": "clarity.graph.entra" }
+      },
+      "relations": ["memberOf", "ownerOf"],
+      "permissions": ["Group.Read.All", "Member.Read.Hidden (only when hidden memberships are required)", "Directory.Read.All (to resolve all returned member/owner types)"],
+      "endpoints": ["GET /v1.0/groups", "GET /v1.0/groups/{id}/members", "GET /v1.0/groups/{id}/owners"],
+      "refreshStrategy": "Full paged direct memberships and owners; no delta cursor for nested endpoint reads",
+      "limits": ["Limited-information references are not full objects", "Hidden/unreadable members reduce coverage", "v1.0 members can omit service principals; not a complete application-membership inventory"]
+    },
+    {
+      "id": "entra.devices", "producerIds": ["clarity.graph.entra"], "supportedScopes": ["tenant"],
+      "attributes": {
+        "displayName": { "type": "string", "referenceProducer": "clarity.graph.entra" },
+        "deviceId": { "type": "string", "referenceProducer": "clarity.graph.entra" },
+        "accountEnabled": { "type": "boolean", "referenceProducer": "clarity.graph.entra" },
+        "operatingSystem": { "type": "string", "referenceProducer": "clarity.graph.entra" },
+        "operatingSystemVersion": { "type": "string", "referenceProducer": "clarity.graph.entra" },
+        "trustType": { "type": "string", "referenceProducer": "clarity.graph.entra" }
+      },
+      "relations": [], "permissions": ["Device.Read.All"], "endpoints": ["GET /v1.0/devices"],
+      "refreshStrategy": "Full tenant snapshot",
+      "limits": ["Not Intune managed devices or Autopilot; no primary-user claim"]
+    },
+    {
+      "id": "entra.domains", "producerIds": ["clarity.graph.entra"], "supportedScopes": ["tenant"],
+      "attributes": {
+        "isDefault": { "type": "boolean", "referenceProducer": "clarity.graph.entra" },
+        "isInitial": { "type": "boolean", "referenceProducer": "clarity.graph.entra" },
+        "isVerified": { "type": "boolean", "referenceProducer": "clarity.graph.entra" },
+        "authenticationType": { "type": "string", "referenceProducer": "clarity.graph.entra" }
+      },
+      "relations": [], "permissions": ["Domain.Read.All"], "endpoints": ["GET /v1.0/domains"],
+      "refreshStrategy": "Full tenant snapshot", "limits": ["Not Exchange accepted-domain configuration"]
+    },
+    {
+      "id": "entra.licenses", "producerIds": ["clarity.graph.entra"], "supportedScopes": ["tenant"],
+      "attributes": {
+        "skuId": { "type": "string", "referenceProducer": "clarity.graph.entra" },
+        "skuPartNumber": { "type": "string", "referenceProducer": "clarity.graph.entra" },
+        "capabilityStatus": { "type": "string", "referenceProducer": "clarity.graph.entra" },
+        "consumedUnits": { "type": "integer", "referenceProducer": "clarity.graph.entra" },
+        "enabledUnits": { "type": "integer", "referenceProducer": "clarity.graph.entra" },
+        "assignedSkuIds": { "type": "strings", "referenceProducer": "clarity.graph.entra" }
+      },
+      "relations": ["assignedLicense"], "permissions": ["LicenseAssignment.Read.All", "User.Read.All"],
+      "endpoints": ["GET /v1.0/subscribedSkus", "GET /v1.0/users?$select=id,assignedLicenses"],
+      "refreshStrategy": "Full tenant snapshot", "limits": ["License assignment metadata, not billing or effective service usage"]
+    },
+    {
+      "id": "entra.applications", "producerIds": ["clarity.graph.entra"], "supportedScopes": ["tenant"],
+      "attributes": {
+        "displayName": { "type": "string", "referenceProducer": "clarity.graph.entra" },
+        "appId": { "type": "string", "referenceProducer": "clarity.graph.entra" },
+        "signInAudience": { "type": "string", "referenceProducer": "clarity.graph.entra" },
+        "servicePrincipalType": { "type": "string", "referenceProducer": "clarity.graph.entra" },
+        "accountEnabled": { "type": "boolean", "referenceProducer": "clarity.graph.entra" }
+      },
+      "relations": [], "permissions": ["Application.Read.All"],
+      "endpoints": ["GET /v1.0/applications", "GET /v1.0/servicePrincipals"],
+      "refreshStrategy": "Full tenant snapshot", "limits": ["Basic metadata only; no credential properties, SSO dependency or consent analysis"]
+    }
+  ]
+}
