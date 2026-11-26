@@ -44,6 +44,14 @@ public sealed class ResourceScriptTests
         {
             Relationships = [edge with { To = edge.To with { ExternalId = package.Manifest.Scope.Value + "-other/child" } }]
         }).ShouldBeFalse();
+        ResourceScriptScope.MatchesEvidence(kind, package with
+        {
+            Relationships = [edge with { Properties = new Dictionary<string, JsonElement> { ["note"] = JsonSerializer.SerializeToElement("unexpected") } }]
+        }).ShouldBeFalse();
+        ResourceScriptScope.MatchesEvidence(kind, package with
+        {
+            Results = package.Results.Select(s => s with { Warnings = [] }).ToArray()
+        }).ShouldBeFalse();
     }
 
     [SqlFact]

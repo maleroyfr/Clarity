@@ -38,12 +38,20 @@ public static partial class ResourceScriptScope
         var prefix = root + "/";
         var subscription = azure ? manifest.EnvironmentExternalId[manifest.EnvironmentExternalId.IndexOf('/')..].ToLowerInvariant() : "";
         bool Inside(string keyNamespace, string id) => keyNamespace == ns && (id == root || id.StartsWith(prefix, StringComparison.Ordinal));
+        var visibility = azure ? "AzureVisibility" : "InfrastructureVisibility";
         // A group points to its actual subscription, but cannot publish the parent as an in-scope object.
-        return package.Objects.All(o => Inside(o.Namespace, o.ExternalId) && o.AlternativeKeys is null or { Count: 0 })
-            && package.Relationships.All(r => Inside(r.From.Namespace, r.From.ExternalId) && (Inside(r.To.Namespace, r.To.ExternalId)
+        return package.Results.All(s => s.Status != CoverageStatus.Complete || s.Warnings.Any(w => w.Code == visibility))
+            && package.Objects.All(o => Inside(o.Namespace, o.ExternalId) && o.AlternativeKeys is null or { Count: 0 })
+            && package.Relationships.All(r => ExpectedProperties(r) && Inside(r.From.Namespace, r.From.ExternalId) && (Inside(r.To.Namespace, r.To.ExternalId)
                 || azure && r.RelationType == "resourceGroupInSubscription" && r.From.Type == "azureResourceGroup"
                 && r.To.Type == "azureSubscription" && r.To.Namespace == ns && r.To.ExternalId == subscription));
     }
+
+    // These bundles never report deletion, fallback endpoint references, or free-form relationship metadata.
+    private static bool ExpectedProperties(RelationshipRecord edge) => edge.RelationType == "serviceDependsOnService"
+        ? edge.Properties is { Count: 1 } && edge.Properties.TryGetValue("dependencyType", out var value)
+            && value.ValueKind == System.Text.Json.JsonValueKind.Number && value.TryGetUInt16(out _)
+        : edge.Properties is null or { Count: 0 };
 
     private static bool NonEmptyGuid(string value) => value.Length == 36 && Guid.TryParseExact(value, "D", out var id) && id != Guid.Empty;
 
