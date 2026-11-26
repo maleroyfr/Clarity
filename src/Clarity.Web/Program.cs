@@ -1,6 +1,7 @@
 using Clarity.Core;
 using Clarity.Infrastructure;
 using Clarity.Web.Components;
+using Clarity.Web.Operations;
 using Clarity.Web.Security;
 using Clarity.Web.Services;
 using Microsoft.AspNetCore.Authentication;
@@ -11,6 +12,8 @@ using Microsoft.Identity.Web;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.AddClarityTelemetry();
+builder.Services.AddClarityReadiness(builder.Configuration);
 builder.Services.AddFluentUIComponents();
 builder.Services.AddLocalization();
 builder.Services.Configure<RequestLocalizationOptions>(options =>
@@ -49,6 +52,7 @@ builder.Services.AddRazorComponents()
 
 var app = builder.Build();
 
+app.Use(Telemetry.ObserveRequestAsync);
 app.UseExceptionHandler();
 app.UseRequestLocalization();
 if (!app.Environment.IsDevelopment())
@@ -62,6 +66,7 @@ app.UseAuthorization();
 app.UseAntiforgery();
 
 app.MapStaticAssets();
+app.MapClarityHealth();
 app.MapFoundationEndpoints();
 app.MapGet("/authentication/login", () => Results.Challenge(new AuthenticationProperties { RedirectUri = "/" }));
 if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"))

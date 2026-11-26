@@ -50,3 +50,25 @@ variable, SQL tests report a clear skip. Unit tests need no SQL service.
 Use environment variables or .NET user-secrets for private configuration; never
 commit connection strings with credentials, real tenant identifiers or customer
 data. Production uses Entra authentication and managed identities.
+
+## Health and telemetry
+
+`/health/live` checks the running host without dependencies. `/health/ready` returns
+503 until SQL and all three private Blob containers are reachable. Configure
+`Storage__BlobServiceUri` with the HTTPS service endpoint. Blob authentication uses
+`DefaultAzureCredential`; `AZURE_CLIENT_ID` selects the user-assigned identity in
+Azure. Local Blob checks require an already authenticated developer credential.
+Neither endpoint returns configuration, exception text or inventory.
+
+Logs are JSON with a generated W3C trace/correlation ID returned in
+`X-Correlation-ID`. Only Clarity-owned, sanitized log messages are enabled.
+OpenTelemetry records HTTP status/duration and UI operation spans; it intentionally
+does not auto-instrument SQL, outbound HTTP, authentication or framework logs that
+could include query strings, exception contents or customer data. New telemetry
+must follow this allowlist approach, not export then redact. No request body,
+header, path, query, principal or exception message is captured.
+
+Set `APPLICATIONINSIGHTS_CONNECTION_STRING` to enable the Azure Monitor trace,
+metric and log exporters. Without it, telemetry remains local and makes no Azure
+Monitor connections. App Service auto-instrumentation must remain disabled to
+avoid a second, unredacted instrumentation pipeline.

@@ -1,5 +1,6 @@
 using System.Data.Common;
 using Clarity.Core;
+using Clarity.Web.Operations;
 using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Localization;
@@ -18,6 +19,11 @@ public abstract class FoundationPage : ComponentBase
         if (Busy) { return; }
         Busy = true;
         Error = null;
+        using var activity = Telemetry.Activities.StartActivity("UI operation");
+        using var scope = Logger.BeginScope(new Dictionary<string, object>
+        {
+            ["CorrelationId"] = System.Diagnostics.Activity.Current?.TraceId.ToString() ?? Guid.NewGuid().ToString("N")
+        });
         try
         {
             await action();
