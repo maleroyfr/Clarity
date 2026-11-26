@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Clarity.Infrastructure;
 
-public sealed class ClarityDbContext(DbContextOptions<ClarityDbContext> options, IWorkspaceContext scope)
+public sealed partial class ClarityDbContext(DbContextOptions<ClarityDbContext> options, IWorkspaceContext scope)
     : DbContext(options)
 {
     public DbSet<ClientWorkspace> Workspaces => Set<ClientWorkspace>();
@@ -57,6 +57,7 @@ public sealed class ClarityDbContext(DbContextOptions<ClarityDbContext> options,
         audit.Property(x => x.CorrelationId).HasMaxLength(100);
         audit.HasIndex(x => new { x.WorkspaceId, x.OccurredAtUtc });
         audit.HasQueryFilter(x => scope.WorkspaceIds.Contains(x.WorkspaceId));
+        ConfigureDiscovery(modelBuilder);
     }
 
     private static void Owned<TEntity>(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<TEntity> entity)

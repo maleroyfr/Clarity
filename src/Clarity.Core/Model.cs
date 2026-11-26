@@ -91,6 +91,34 @@ public static class ModelRules
 
         switch (entity)
         {
+            case Connection connection:
+                Name(connection.Name);
+                if (connection.TenantId == Guid.Empty || string.IsNullOrWhiteSpace(connection.ConfigurationReference))
+                {
+                    throw new ArgumentException("A tenant and server configuration reference are required.");
+                }
+                break;
+            case CollectionRequest request:
+                DiscoveryScope.Validate(request.ScopeJson, request.ScopeHash);
+                break;
+            case CollectionRun run:
+                DiscoveryScope.Validate(run.ScopeJson, run.ScopeHash);
+                if (run.ExternalRunId == Guid.Empty || run.CompletedAtUtc < run.StartedAtUtc)
+                {
+                    throw new ArgumentException("Invalid run identity or dates.");
+                }
+                break;
+            case SectionRun section:
+                DiscoveryScope.Validate(section.ScopeJson, section.ScopeHash);
+                break;
+            case RawArtifact artifact:
+                if (artifact.CompressedBytes < 0 || artifact.UncompressedBytes < 0
+                    || artifact.ContentHash.Length != 64 || !artifact.ContentHash.All(Uri.IsHexDigit)
+                    || !artifact.BlobName.StartsWith(artifact.WorkspaceId.ToString("N") + "/", StringComparison.Ordinal))
+                {
+                    throw new ArgumentException("Invalid private artifact metadata.");
+                }
+                break;
             case ClientWorkspace workspace:
                 Name(workspace.Name);
                 break;
