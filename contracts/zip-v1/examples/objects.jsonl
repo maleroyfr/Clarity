@@ -1,0 +1,1 @@
+{"sectionId":"ad.users:example.test","type":"user","namespace":"ad.objectGUID","externalId":"11111111-0000-0000-0000-000000000003","observedAtUtc":"2026-01-01T10:00:30Z","attributes":{"displayName":"Synthetic User","mail":null,"proxyAddresses":[]},"alternativeKeys":[{"type":"user","namespace":"ad.objectSid","externalId":"S-1-5-21-100-200-300-1001"}]}

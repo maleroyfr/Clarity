@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://clarity.example/contracts/zip-v1/manifest.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "runId", "producerId", "producerVersion", "environmentKind", "environmentExternalId", "scope", "startedAtUtc", "completedAtUtc", "moduleVersions", "sourceId"],
+  "properties": {
+    "schemaVersion": { "type": "string", "pattern": "^1\\.[0-9]+$" },
+    "runId": { "type": "string", "format": "uuid" },
+    "requestId": { "type": "string", "format": "uuid" },
+    "producerId": { "type": "string", "minLength": 1, "maxLength": 100 },
+    "producerVersion": { "type": "string", "minLength": 1, "maxLength": 100 },
+    "environmentKind": { "enum": ["M365Tenant", "AdForest", "AzureScope", "Other"] },
+    "environmentExternalId": { "type": "string", "minLength": 1, "maxLength": 500 },
+    "scope": { "$ref": "#/$defs/scope" },
+    "startedAtUtc": { "$ref": "#/$defs/utc" },
+    "completedAtUtc": { "$ref": "#/$defs/utc" },
+    "moduleVersions": { "type": "object", "maxProperties": 50, "additionalProperties": { "type": "string", "minLength": 1, "maxLength": 100 } },
+    "sourceId": { "type": "string", "minLength": 1, "maxLength": 200 }
+  },
+  "$defs": {
+    "utc": { "type": "string", "format": "date-time", "pattern": "(Z|\\+00:00)$" },
+    "scope": {
+      "type": "object", "additionalProperties": false, "required": ["kind", "value"],
+      "properties": {
+        "kind": { "enum": ["tenant", "forest", "domain", "ou", "resource"] },
+        "value": { "type": "string", "minLength": 1, "maxLength": 2000 }
+      }
+    }
+  }
+}

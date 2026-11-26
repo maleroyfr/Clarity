@@ -1,10 +1,12 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/Clarity.Contracts/Clarity.Contracts.csproj" />
     <Project Path="src/Clarity.Core/Clarity.Core.csproj" />
     <Project Path="src/Clarity.Infrastructure/Clarity.Infrastructure.csproj" />
     <Project Path="src/Clarity.Web/Clarity.Web.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/Clarity.Contracts.Tests/Clarity.Contracts.Tests.csproj" />
     <Project Path="tests/Clarity.Core.Tests/Clarity.Core.Tests.csproj" />
     <Project Path="tests/Clarity.Infrastructure.Tests/Clarity.Infrastructure.Tests.csproj" />
     <Project Path="tests/Clarity.Web.Tests/Clarity.Web.Tests.csproj" />

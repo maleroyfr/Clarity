@@ -1,0 +1,1 @@
+{"sectionId":"ad.groups:example.test","relationType":"memberOf","from":{"type":"user","namespace":"ad.objectGUID","externalId":"11111111-0000-0000-0000-000000000003"},"to":{"type":"group","namespace":"ad.objectGUID","externalId":"11111111-0000-0000-0000-000000000004"},"observedAtUtc":"2026-01-01T10:00:40Z","properties":{"outOfScope":true}}

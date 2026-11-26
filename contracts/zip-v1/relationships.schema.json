@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://clarity.example/contracts/zip-v1/relationships.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["sectionId", "relationType", "from", "to", "observedAtUtc"],
+  "properties": {
+    "sectionId": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "relationType": { "type": "string", "minLength": 1, "maxLength": 100 },
+    "from": { "$ref": "#/$defs/reference" },
+    "to": { "$ref": "#/$defs/reference" },
+    "observedAtUtc": { "type": "string", "format": "date-time", "pattern": "(Z|\\+00:00)$" },
+    "properties": { "type": "object", "maxProperties": 100 }
+  },
+  "$defs": {
+    "reference": {
+      "type": "object", "additionalProperties": false, "required": ["type", "namespace", "externalId"],
+      "properties": {
+        "type": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "namespace": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "externalId": { "type": "string", "minLength": 1, "maxLength": 500 }
+      }
+    }
+  }
+}

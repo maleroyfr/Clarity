@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="../../src/Clarity.Contracts/Clarity.Contracts.csproj" />
+    <None Include="../../contracts/zip-v1/examples/*" Link="Examples/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

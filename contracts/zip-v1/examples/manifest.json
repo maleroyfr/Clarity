@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "1.0",
+  "runId": "11111111-0000-0000-0000-000000000001",
+  "requestId": "11111111-0000-0000-0000-000000000002",
+  "producerId": "clarity.ad",
+  "producerVersion": "1.0.0",
+  "environmentKind": "AdForest",
+  "environmentExternalId": "forest.example.test",
+  "scope": { "kind": "domain", "value": "example.test" },
+  "startedAtUtc": "2026-01-01T10:00:00Z",
+  "completedAtUtc": "2026-01-01T10:01:00Z",
+  "moduleVersions": { "ActiveDirectory": "1.0.1.0" },
+  "sourceId": "Synthetic AD fixture"
+}

@@ -1,0 +1,26 @@
+[
+  {
+    "sectionId": "ad.users:example.test",
+    "capabilityId": "ad.users",
+    "status": "Complete",
+    "scope": { "kind": "domain", "value": "example.test" },
+    "coveredFields": ["displayName", "mail", "proxyAddresses"],
+    "coveredRelations": [],
+    "objectCount": 1,
+    "relationshipCount": 0,
+    "warnings": [],
+    "errors": []
+  },
+  {
+    "sectionId": "ad.groups:example.test",
+    "capabilityId": "ad.groups",
+    "status": "Partial",
+    "scope": { "kind": "domain", "value": "example.test" },
+    "coveredFields": [],
+    "coveredRelations": ["memberOf"],
+    "objectCount": 0,
+    "relationshipCount": 1,
+    "warnings": [{"code":"OutOfScope","message":"Some referenced groups are outside the requested scope."}],
+    "errors": []
+  }
+]
