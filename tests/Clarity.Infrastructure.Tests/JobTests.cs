@@ -159,7 +159,7 @@ public sealed class JobTests
         public CollectionJobKind Kind => CollectionJobKind.Import;
         public async Task ExecuteAsync(JobExecution execution, CancellationToken cancellationToken)
         {
-            await new PublicationService(execution.Factory, execution.Access, new PackageValidator())
+            await new PublicationService(execution.Factory, execution.Access, new PackageValidator(), DiscoveryCatalog.Load())
                 .PublishSectionAsync(execution.Job.ProjectId, runId, package, package.Results[0].SectionId, cancellationToken);
             if (cancel)
             {
@@ -193,7 +193,7 @@ public sealed class JobTests
         public async Task ExecuteAsync(JobExecution execution, CancellationToken cancellationToken)
         {
             await execution.ReportProgressAsync(0, cancellationToken);
-            var publisher = new PublicationService(execution.Factory, execution.Access, new PackageValidator());
+            var publisher = new PublicationService(execution.Factory, execution.Access, new PackageValidator(), DiscoveryCatalog.Load());
             await publisher.PublishSectionAsync(execution.Job.ProjectId, runId, package, package.Results[0].SectionId, cancellationToken);
             Published.TrySetResult();
             if (Interlocked.Increment(ref attempts) == 1)

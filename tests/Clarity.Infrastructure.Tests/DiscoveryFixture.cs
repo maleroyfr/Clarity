@@ -17,7 +17,7 @@ internal sealed class DiscoveryFixture(TestDatabase database) : IAsyncDisposable
     public UserIdentity Identity { get; } = new(Guid.NewGuid(), Guid.NewGuid());
     public IDbContextFactory<ClarityDbContext> Factory { get; private set; } = null!;
     public StoredProjectAccess Access { get; private set; } = null!;
-    public PublicationService Publisher => new(Factory, Access, new PackageValidator());
+    public PublicationService Publisher => new(Factory, Access, new PackageValidator(), DiscoveryCatalog.Load());
 
     public static async Task<DiscoveryFixture> CreateAsync()
     {

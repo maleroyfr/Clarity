@@ -26,3 +26,29 @@ do not attribute a legacy alias to a fabricated observation.
 Run `dotnet test --project tests/Clarity.Infrastructure.Tests --filter FullyQualifiedName~PublicationTests` with
 `CLARITY_TEST_SQL` pointing to a disposable SQL instance. These SQL cases skip
 without it. All observations are synthetic.
+
+## Current state
+
+Section publication commits observations, the section marker and its projections
+together under the environment lock. Re-delivery is a no-op. To reconstruct an
+existing environment, `PublicationService.RebuildEnvironmentAsync` reauthorizes
+collection access and rebuilds from published evidence, not staging data.
+
+For each explicitly reported field, sort by catalog reference producer, verified
+server connection for that producer, complete coverage, observation time, then
+stable run/section identifiers. JSON `null`, `[]` and `""` are values; no row
+means not observed. Comparable streams that disagree retain both observations
+and flag the current field. The winning observation carries the freshness date.
+
+Presence is separate from values. A reference-producer deletion signal is dated
+evidence. Inferring absence instead requires non-overlapping, complete snapshots
+from the same producer/version, connection, capability and exact scope with the
+entire catalog field/relation set and no warnings. Every independently observed
+stream must support absence. Such objects are *absent from scope*, not known
+deleted. Graph user delta never supplies negative evidence by omission, even on
+cursor restart. Historical fields and proof survive either kind of removal.
+
+| Journey | Executable acceptance |
+| --- | --- |
+| Graph delta, interrupted publication, complementary confirmed ZIP, field precedence/conflict, explicit empty vs absent and rebuild | `GraphTests.GraphUsesCommonIngestionSurvivesRestartAndPersistsCursorOnlyAfterPublication` |
+| Partial, field-limited and differently scoped zero versus comparable exhaustive zero | `PublicationTests.AbsenceRequiresAnExhaustiveComparableSnapshot` |

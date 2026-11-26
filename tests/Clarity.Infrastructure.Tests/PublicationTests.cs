@@ -145,6 +145,42 @@ public sealed class PublicationTests
     }
 
     [SqlFact]
+    public async Task AbsenceRequiresAnExhaustiveComparableSnapshot()
+    {
+        await using var fixture = await DiscoveryFixture.CreateAsync();
+        var template = DiscoveryFixture.Package();
+        var capability = DiscoveryCatalog.Load().Sections["ad.users"];
+        var first = template.Results[0] with { CoveredFields = capability.Attributes.Keys.ToArray(), CoveredRelations = capability.Relations };
+        var original = template with { Results = [first] };
+        var originalRun = await fixture.StageAsync(original);
+        await fixture.Publisher.PublishSectionAsync(fixture.Project.Id, originalRun.Id, original, first.SectionId);
+        var day = 0;
+        async Task<InventoryPresence> Empty(SectionResult result)
+        {
+            var date = template.Manifest.StartedAtUtc.AddDays(++day);
+            var package = template with
+            {
+                Manifest = template.Manifest with { RunId = Guid.NewGuid(), Scope = result.Scope, StartedAtUtc = date, CompletedAtUtc = date },
+                Objects = [],
+                Results = [result with { ObjectCount = 0 }]
+            };
+            var run = await fixture.StageAsync(package);
+            await fixture.Publisher.PublishSectionAsync(fixture.Project.Id, run.Id, package, first.SectionId);
+            await using var db = await fixture.Factory.CreateDbContextAsync();
+            return (await db.InventoryObjects.SingleAsync()).Presence;
+        }
+        (await Empty(first with { Status = CoverageStatus.Partial, Warnings = [new SectionIssue("Limited", "Incomplete")] }))
+            .ShouldBe(InventoryPresence.Observed);
+        (await Empty(first with { CoveredFields = ["displayName"] })).ShouldBe(InventoryPresence.Observed);
+        (await Empty(first with { Scope = new CollectionScope("ou", "OU=Other,DC=example,DC=test") })).ShouldBe(InventoryPresence.Observed);
+        (await Empty(first)).ShouldBe(InventoryPresence.AbsentFromScope);
+        await fixture.Publisher.RebuildEnvironmentAsync(fixture.Project.Id, fixture.Environment.Id);
+        await using var check = await fixture.Factory.CreateDbContextAsync();
+        (await check.InventoryObjects.SingleAsync()).Presence.ShouldBe(InventoryPresence.AbsentFromScope);
+        (await check.CurrentValues.SingleAsync()).ValueJson.ShouldBe("\"Synthetic User\"");
+    }
+
+    [SqlFact]
     public async Task ProcessingRechecksMembershipInsteadOfTrustingStagedWorkspace()
     {
         await using var fixture = await DiscoveryFixture.CreateAsync();

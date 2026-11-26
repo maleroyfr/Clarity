@@ -10,6 +10,23 @@ public sealed class InventoryObject : WorkspaceEntity
     public Guid EnvironmentId { get; init; }
     public required string Type { get; init; }
     public DateTimeOffset CreatedAtUtc { get; init; } = DateTimeOffset.UtcNow;
+    public string? DisplayName { get; set; }
+    public string? UserPrincipalName { get; set; }
+    public string? Smtp { get; set; }
+    public DateTimeOffset? LastObservedAtUtc { get; set; }
+    public InventoryPresence Presence { get; set; }
+    public Guid? PresenceSectionId { get; set; }
+}
+
+public enum InventoryPresence { Unknown, Observed, AbsentFromScope, Deleted }
+
+public sealed class CurrentValue : WorkspaceEntity
+{
+    public Guid ObjectId { get; init; }
+    public Guid ObservationId { get; init; }
+    public required string Field { get; init; }
+    public required string ValueJson { get; init; }
+    public bool Conflicting { get; init; }
 }
 
 public sealed class ExternalKey : WorkspaceEntity

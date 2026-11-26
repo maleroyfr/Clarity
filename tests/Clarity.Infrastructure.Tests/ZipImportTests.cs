@@ -187,7 +187,7 @@ public sealed class ZipImportTests
         fixture.Factory, fixture.Access, fixture.Scope, store, new ZipPackageReader(new PackageValidator(), new PackageLimits()),
         new PackageLimits(), TestCatalog());
 
-    private static CollectionJobProcessor Processor(DiscoveryFixture fixture, IArtifactStore store) => new(
+    internal static CollectionJobProcessor Processor(DiscoveryFixture fixture, IArtifactStore store) => new(
         new SqlJobQueue(fixture.ConnectionString, TimeProvider.System),
         [new ImportJobHandler(store, new ZipPackageReader(new PackageValidator(), new PackageLimits()), new PackageLimits(), TestCatalog(), new PackageValidator())],
         NullLogger<CollectionJobProcessor>.Instance);

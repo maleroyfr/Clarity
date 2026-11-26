@@ -6,6 +6,7 @@ namespace Clarity.Infrastructure;
 public sealed partial class ClarityDbContext
 {
     public DbSet<InventoryObject> InventoryObjects => Set<InventoryObject>();
+    public DbSet<CurrentValue> CurrentValues => Set<CurrentValue>();
     public DbSet<ExternalKey> ExternalKeys => Set<ExternalKey>();
     public DbSet<AlternateKeyPeriod> AlternateKeyPeriods => Set<AlternateKeyPeriod>();
     public DbSet<ObjectObservation> ObjectObservations => Set<ObjectObservation>();
@@ -18,6 +19,18 @@ public sealed partial class ClarityDbContext
             .OnDelete(DeleteBehavior.NoAction);
         item.HasAlternateKey(x => new { x.WorkspaceId, x.EnvironmentId, x.Id });
         item.Property(x => x.Type).HasMaxLength(100);
+        item.Property(x => x.DisplayName).HasMaxLength(500);
+        item.Property(x => x.UserPrincipalName).HasMaxLength(500);
+        item.Property(x => x.Smtp).HasMaxLength(500);
+        item.HasIndex(x => new { x.WorkspaceId, x.EnvironmentId, x.Presence, x.Type, x.DisplayName });
+        item.HasOne<SectionRun>().WithMany().HasForeignKey(x => new { x.WorkspaceId, x.PresenceSectionId })
+            .OnDelete(DeleteBehavior.NoAction);
+
+        var current = DiscoveryOwned<CurrentValue>(model);
+        current.Property(x => x.Field).HasMaxLength(100).UseCollation("Latin1_General_100_BIN2");
+        current.HasIndex(x => new { x.WorkspaceId, x.ObjectId, x.Field }).IsUnique();
+        current.HasOne<ObjectObservation>().WithMany().HasForeignKey(x => new { x.WorkspaceId, x.ObjectId, x.ObservationId })
+            .HasPrincipalKey(x => new { x.WorkspaceId, x.ObjectId, x.Id }).OnDelete(DeleteBehavior.NoAction);
 
         var key = DiscoveryOwned<ExternalKey>(model);
         key.HasOne<InventoryObject>().WithMany().HasForeignKey(x => new { x.WorkspaceId, x.EnvironmentId, x.ObjectId })

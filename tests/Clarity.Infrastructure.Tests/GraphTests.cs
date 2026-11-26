@@ -233,8 +233,34 @@ public sealed class GraphTests
         await new CollectionJobProcessor(queue, [Handler(new SyntheticSessions(full.Transport), store)], NullLogger<CollectionJobProcessor>.Instance).ProcessOneAsync(default);
         await using var check = await fixture.Factory.CreateDbContextAsync();
         (await check.GraphCursors.SingleAsync()).DeltaLink.ShouldEndWith("=full");
+        var item = await check.InventoryObjects.AsNoTracking().SingleAsync();
+        item.Presence.ShouldBe(InventoryPresence.Observed);
+        item.DisplayName.ShouldBe("Synthetic");
+        item.Smtp.ShouldBe("updated@example.test");
+
+        var date = DateTimeOffset.UtcNow;
+        var supplement = new DiscoveryPackage(new PackageManifest("1.0", Guid.NewGuid(), "clarity.graph.entra", "1.0.0", "M365Tenant",
+            Tenant.ToString(), Scope, date, date, new Dictionary<string, string>(), "Offline synthetic report"),
+            [new ObjectRecord("entra.users", "user", "microsoft.graph", "user-a", date, new Dictionary<string, JsonElement>
+            {
+                ["displayName"] = JsonSerializer.SerializeToElement("Report name"),
+                ["proxyAddresses"] = JsonSerializer.SerializeToElement(Array.Empty<string>())
+            })], [], [new SectionResult("entra.users", "entra.users", CoverageStatus.Complete, Scope, ["displayName", "proxyAddresses"], [], 1, 0, [], [])]);
+        var imports = ZipImportTests.Service(fixture, store);
+        var uploaded = await imports.UploadAsync(fixture.Project.Id, environment.Id, new MemoryStream(await ZipImportTests.BytesAsync(supplement)), "offline.zip");
+        await imports.ConfirmAsync(fixture.Project.Id, uploaded);
+        await ZipImportTests.Processor(fixture, store).ProcessOneAsync(default);
+        await fixture.Publisher.RebuildEnvironmentAsync(fixture.Project.Id, environment.Id);
+        (await check.InventoryObjects.AsNoTracking().SingleAsync()).Id.ShouldBe(item.Id);
+        var current = await check.CurrentValues.AsNoTracking().ToDictionaryAsync(x => x.Field);
+        current["displayName"].ValueJson.ShouldBe("\"Synthetic\"");
+        current["displayName"].Conflicting.ShouldBeTrue();
+        current["proxyAddresses"].ValueJson.ShouldBe("[]");
+        current.ContainsKey("userType").ShouldBeFalse();
+        (await check.ObjectObservations.Select(x => x.SectionRunId).Distinct().CountAsync()).ShouldBe(3);
         await using var isolated = PersistenceTests.Create(fixture.ConnectionString, []);
         (await isolated.GraphCursors.IgnoreQueryFilters().CountAsync()).ShouldBe(0);
+        (await isolated.CurrentValues.IgnoreQueryFilters().CountAsync()).ShouldBe(0);
     }
 
     [SqlFact]

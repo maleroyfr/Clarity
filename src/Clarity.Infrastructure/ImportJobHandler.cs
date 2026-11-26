@@ -37,7 +37,7 @@ public sealed class ImportJobHandler(IArtifactStore store, ZipPackageReader read
             run.State = CollectionRunState.Running;
             await db.SaveChangesAsync(cancellationToken);
         }
-        var publisher = new PublicationService(execution.Factory, execution.Access, validator);
+        var publisher = new PublicationService(execution.Factory, execution.Access, validator, catalog);
         var progress = 0;
         foreach (var section in package.Results)
         {

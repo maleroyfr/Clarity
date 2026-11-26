@@ -8,8 +8,23 @@ using Microsoft.EntityFrameworkCore;
 namespace Clarity.Infrastructure;
 
 public sealed class PublicationService(
-    IDbContextFactory<ClarityDbContext> factory, IProjectAccess access, PackageValidator validator)
+    IDbContextFactory<ClarityDbContext> factory, IProjectAccess access, PackageValidator validator, DiscoveryCatalog catalog)
 {
+    public async Task RebuildEnvironmentAsync(Guid projectId, Guid environmentId, CancellationToken token = default)
+    {
+        var project = await access.RequireAsync(projectId, WorkspaceOperation.Collect, token);
+        await using var db = await factory.CreateDbContextAsync(token);
+        await ImportService.EnvironmentAsync(db, project, environmentId, token);
+        await using var transaction = await db.Database.BeginTransactionAsync(token);
+        await LockEnvironmentAsync(db, project.WorkspaceId, environmentId, token);
+        var ids = await db.InventoryObjects.Where(x => x.WorkspaceId == project.WorkspaceId && x.EnvironmentId == environmentId)
+            .Select(x => x.Id).ToListAsync(token);
+        await AlternateKeyProjection.RebuildAsync(db, project.WorkspaceId, environmentId, ids, token);
+        await CurrentProjection.RefreshAsync(db, catalog, project.WorkspaceId, environmentId, null, ids, token);
+        await db.SaveChangesAsync(token);
+        await transaction.CommitAsync(token);
+    }
+
     public async Task PublishSectionAsync(Guid projectId, Guid runId, DiscoveryPackage package, string sectionId,
         CancellationToken cancellationToken = default)
     {
@@ -100,6 +115,7 @@ public sealed class PublicationService(
         section.PublishedAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync(cancellationToken);
         await AlternateKeyProjection.RebuildAsync(db, project.WorkspaceId, run.EnvironmentId, changedObjects, cancellationToken);
+        await CurrentProjection.RefreshAsync(db, catalog, run.WorkspaceId, run.EnvironmentId, section, changedObjects, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return;
