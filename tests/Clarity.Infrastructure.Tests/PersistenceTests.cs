@@ -46,9 +46,12 @@ public class PersistenceTests
         await Should.ThrowAsync<DbUpdateException>(() => scoped.SaveChangesAsync());
     }
 
-    internal static ClarityDbContext Create(string connection, IReadOnlyList<Guid> workspaces) =>
-        new(new DbContextOptionsBuilder<ClarityDbContext>().UseSqlServer(connection).Options,
-            new WorkspaceScope(default, workspaces));
+    internal static ClarityDbContext Create(string connection, IReadOnlyList<Guid> workspaces)
+    {
+        var scope = new WorkspaceScope(default, workspaces);
+        return new(new DbContextOptionsBuilder<ClarityDbContext>().UseSqlServer(connection)
+            .AddInterceptors(new WorkspaceConnectionInterceptor(scope)).Options, scope);
+    }
 }
 
 internal sealed class TestDatabase(string connectionString) : IAsyncDisposable

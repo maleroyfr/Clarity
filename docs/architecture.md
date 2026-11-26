@@ -32,3 +32,20 @@ All HTTP mutations require antiforgery validation in addition to authentication.
 HTTP errors return only status and correlation ID; no exception body or payload.
 Development/Testing authentication is never registered in other environments.
 In-memory EF is used only by HTTP authorization tests, not by the application.
+
+## SQL defense in depth
+
+`WorkspaceConnectionInterceptor` overwrites every Clarity `SESSION_CONTEXT` key on
+each synchronous or asynchronous connection open; pooling never inherits a prior
+caller's identity, admin flag or workspace list. An empty scope sees no inventory.
+SQL filter and block predicates protect reads, inserts and updates independently
+of EF, including `IgnoreQueryFilters`. The application identity must not have
+permission to alter security policies, schemas, or its own database roles.
+
+Member self-lookup is allowed only for the authenticated tenant/object pair so
+the authorization service can establish its initial workspace list. Platform
+administrators can manage workspace/member metadata and append audit events, but
+their flag does not bypass inventory predicates. The list is a delimited ASCII
+set in SQL's 8 KB session value; scopes exceeding that capacity fail explicitly
+rather than truncating access. Revisit the representation before more than 216
+simultaneous workspace memberships per user are required.
