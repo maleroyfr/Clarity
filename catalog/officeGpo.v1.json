@@ -1,0 +1,78 @@
+{
+  "schemaVersion": "1.0", "id": "officeGpo", "version": "1.0.0", "environmentKind": "AdForest",
+  "producers": [{
+    "id": "clarity.officegpo", "channel": "PowerShell", "version": "1.0.0", "apiVersion": "GroupPolicy",
+    "preview": false, "readiness": "SyntheticValidated",
+    "testedVersions": ["Windows PowerShell 5.1.26100.10068 and PowerShell 7.6.10 Windows, Pester 5.7.1; mocked GroupPolicy 1.0.0.0 and ActiveDirectory 1.0.1.0 shapes", "Linux CI synthetic tests only; not a supported live execution OS"],
+    "prerequisites": ["Windows with RSAT Group Policy Management and AD DS tools, domain/DC and SYSVOL connectivity",
+      "Native Windows PowerShell 5.1; GroupPolicy 1.0.0.0 and ActiveDirectory 1.0.1.0. PowerShell 7 compatibility proxies are not supported for live collection.",
+      "An already authorized local Windows identity; no automatic installation, login, credentials or execution-policy changes"],
+    "limits": ["Synthetic validation only; real RSAT/domain connectivity, ACLs and Office ADMX versions require an operator pilot",
+      "No AD user/computer/group inventory, effective policy, RSoP, contents, credentials, raw reports or full security descriptors",
+      "Visibility warnings prevent absence inference from ACL-filtered listings; each section preserves the exact requested scope"]
+  }],
+  "sections": [
+    {
+      "id": "officeGpo.policies", "producerIds": ["clarity.officegpo"], "supportedScopes": ["domain", "ou"],
+      "attributes": {
+        "displayName": { "type": "string", "referenceProducer": "clarity.officegpo" },
+        "domainName": { "type": "string", "referenceProducer": "clarity.officegpo" },
+        "gpoStatus": { "type": "string", "referenceProducer": "clarity.officegpo" },
+        "creationTime": { "type": "utc", "referenceProducer": "clarity.officegpo" },
+        "modificationTime": { "type": "utc", "referenceProducer": "clarity.officegpo" },
+        "hasWmiFilter": { "type": "boolean", "referenceProducer": "clarity.officegpo" }
+      },
+      "relations": [],
+      "permissions": ["Read domain/forest metadata; List Contents and Read Property on the requested OU subtree and GPO containers; GPO Read including SYSVOL policy files. Domain Admin is not required."],
+      "endpoints": ["Get-ADDomain -Server", "Get-ADForest -Server", "Get-ADOrganizationalUnit -Identity / -Filter * -SearchBase -SearchScope Subtree",
+        "Get-GPInheritance -Target -Domain -Server (OU selection)", "Get-GPO -All -Domain -Server / -Guid -Domain -Server"],
+      "refreshStrategy": "Full readable domain GPO list, or distinct GPOs directly linked to the requested OU and descendants; never infer forest-wide absence.",
+      "limits": ["Id is the stable ad.gpoId; DisplayName, DomainName, GpoStatus, CreationTime, ModificationTime and WmiFilter presence only",
+        "OU scope excludes inherited, domain/site and out-of-subtree links; WMI filter presence is not its evaluation"]
+    },
+    {
+      "id": "officeGpo.links", "producerIds": ["clarity.officegpo"], "supportedScopes": ["domain", "ou"],
+      "attributes": {}, "relations": ["gpoLinkedToOu"],
+      "permissions": ["Read domain/forest metadata; List Contents and Read Property on the requested OU subtree including objectGUID, distinguishedName, gPLink and gPOptions."],
+      "endpoints": ["Get-ADDomain -Server", "Get-ADForest -Server", "Get-ADOrganizationalUnit -Identity / -Filter * -SearchBase -SearchScope Subtree",
+        "Get-GPInheritance -Target -Domain -Server"],
+      "refreshStrategy": "Read direct links for each readable OU in the exact domain/OU subtree; preserve successful links when another OU fails.",
+      "limits": ["GpoLinks only, never InheritedGpoLinks; GpoId, Target, Enabled, Enforced, Order, Path and GpoInheritanceBlocked are read",
+        "Typed ad.objectGUID OU references remain pending until the separate AD family supplies the object",
+        "No domain/site links, computed application order, computer containment inventory or effective policy"]
+    },
+    {
+      "id": "officeGpo.securityFiltering", "producerIds": ["clarity.officegpo"], "supportedScopes": ["domain", "ou"],
+      "attributes": {}, "relations": ["gpoSecurityFilter", "gpoPermission"],
+      "permissions": ["GPO Read and READ_CONTROL to inspect its permission summaries, plus the policy-selection metadata reads; no Modify Security, Apply Group Policy or administrator membership is required for collection."],
+      "endpoints": ["Get-GPO -All / -Guid -Domain -Server", "Get-GPPermission -Guid -All -DomainName -Server"],
+      "refreshStrategy": "Read each selected GPO's permission summaries; retain distinct apply-filter and other-permission edges by SID.",
+      "limits": ["Reads Trustee.Sid, Trustee.SidType, Permission and Inherited; GpoApply produces gpoSecurityFilter, all other supported summaries gpoPermission",
+        "Custom permissions make coverage partial; deny ACEs, nested groups, WMI, loopback and computer policy application are not evaluated",
+        "Group, user, computer and unknown typed SID references can remain pending; no name-based match or membership enumeration"]
+    },
+    {
+      "id": "officeGpo.officeSettings", "producerIds": ["clarity.officegpo"], "supportedScopes": ["domain", "ou"],
+      "attributes": {
+        "displayName": { "type": "string", "referenceProducer": "clarity.officegpo" },
+        "application": { "type": "string", "referenceProducer": "clarity.officegpo" },
+        "configuration": { "type": "string", "referenceProducer": "clarity.officegpo" },
+        "officeVersion": { "type": "string", "referenceProducer": "clarity.officegpo" },
+        "registryKey": { "type": "string", "referenceProducer": "clarity.officegpo" },
+        "valueName": { "type": "string", "referenceProducer": "clarity.officegpo" },
+        "valueType": { "type": "string", "referenceProducer": "clarity.officegpo" },
+        "policyState": { "type": "string", "referenceProducer": "clarity.officegpo" },
+        "integerValue": { "type": "integer", "referenceProducer": "clarity.officegpo" }
+      },
+      "relations": ["officeSettingInGpo"],
+      "permissions": ["GPO Read in AD and read access to its SYSVOL registry policy files, plus the policy-selection metadata reads."],
+      "endpoints": ["Get-GPO -All / -Guid -Domain -Server",
+        "Get-GPRegistryValue -Guid -Key HKEY_CURRENT_USER\\Software\\Policies\\Microsoft\\office\\16.0\\{word,excel,powerpoint}\\security -Domain -Server"],
+      "refreshStrategy": "Read the three exact user policy keys; publish only DWORD VBAWarnings and blockcontentexecutionfrominternet with Set/Delete state.",
+      "limits": ["Six Office 16.0 ADMX-backed macro policy values only; no arbitrary registry values, template contents or localized ADMX names",
+        "Reads FullKeyPath, ValueName, HasValue, PolicyState, Type and Value; Delete retains null integerValue and is not an inventory deletion",
+        "Any missing-key, access, connectivity or unsupported-shape error reduces coverage; missing-key errors are not silently reclassified as not configured",
+        "Office Cloud Policy, Intune, preferences, machine settings and other Office versions are excluded; registry policy is not effective policy on a computer"]
+    }
+  ]
+}

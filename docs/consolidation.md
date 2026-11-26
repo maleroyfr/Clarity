@@ -170,6 +170,13 @@ address; a weaker key is used only while the stronger one is unobserved and an
 ambiguous match is never guessed. Shared and resource mailboxes never link to a
 user. Graph usage-report mailboxes stay provisional `m365report.upn` objects and
 join Exchange objects only through the reviewable association path above.
+
+The [Office/GPO collector](connectors/office-gpo.md) supplies direct OU links by
+AD objectGUID and filter principals by SID. Their endpoints can resolve when the
+separate AD family publishes evidence; unknown principals remain pending. A
+configured Office setting belongs to a GPO, not directly to a computer. A direct
+link or a `GpoApply` permission is not a membership or effective policy claim.
+
 The cyclic-membership SQL case above opens the pending and resolved sheets,
 follows a reverse link, and verifies both source observations and isolation.
 

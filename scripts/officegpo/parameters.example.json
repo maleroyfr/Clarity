@@ -1,0 +1,10 @@
+{
+  "schemaVersion": "1.0",
+  "requestId": "44444444-0000-0000-0000-000000000001",
+  "environmentKind": "AdForest",
+  "expectedEnvironmentExternalId": "forest.example.test",
+  "scope": { "kind": "domain", "value": "example.test" },
+  "sections": ["officeGpo.policies", "officeGpo.links", "officeGpo.securityFiltering", "officeGpo.officeSettings"],
+  "producerVersion": "1.0.0",
+  "domain": "example.test"
+}

@@ -186,4 +186,9 @@ They reuse the same private Blob retention, preview, explicit confirmation, leas
 job and `PublicationService` path, arrive on channel `ReportImport`, and never count
 as a verified Graph connection. The Exchange Online PowerShell family is documented
 in [Exchange Online](connectors/exchange.md); the other Lot 4 collection families
-(PnP, Teams, GPO, Power BI and Azure) are not implemented.
+(PnP, Teams, Power BI and Azure) are not implemented.
+
+The separate [Office/GPO PowerShell family](connectors/office-gpo.md) records
+direct GPO links, security-filter principals and supported Office 16.0 user
+settings for a verified domain or OU subtree. Its ZIP references existing AD
+identities without enumerating AD users, computers or groups.

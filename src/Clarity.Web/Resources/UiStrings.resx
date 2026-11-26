@@ -203,6 +203,32 @@
   <data name="Section_ad.computers" xml:space="preserve"><value>AD — ordinateurs</value></data>
   <data name="Section_ad.groups" xml:space="preserve"><value>AD — groupes et appartenances</value></data>
   <data name="Section_ad.ous" xml:space="preserve"><value>AD — unités d'organisation</value></data>
+  <data name="Producer_clarity.officegpo" xml:space="preserve"><value>Office et stratégies de groupe (GPO)</value></data>
+  <data name="LocalScriptConnectionHint_clarity.officegpo" xml:space="preserve"><value>Le script Office et GPO utilise votre session Windows autorisée. Les droits de lecture du domaine, des unités d’organisation, des stratégies et de SYSVOL sont indépendants de Microsoft Graph.</value></data>
+  <data name="CreateScriptRequest_clarity.officegpo" xml:space="preserve"><value>Créer une demande de script Office et GPO</value></data>
+  <data name="DownloadScriptBundle_clarity.officegpo" xml:space="preserve"><value>Télécharger le script Office et GPO (ZIP)</value></data>
+  <data name="ScriptCommandHint_clarity.officegpo" xml:space="preserve"><value>Décompressez le ZIP et placez parameters.json à sa racine. Dans Windows PowerShell 5.1 (powershell.exe), avec les modules RSAT GroupPolicy 1.0.0.0 et ActiveDirectory 1.0.1.0, exécutez :</value></data>
+  <data name="Section_officeGpo.policies" xml:space="preserve"><value>GPO — stratégies du périmètre</value></data>
+  <data name="Section_officeGpo.links" xml:space="preserve"><value>GPO — liens directs aux unités d’organisation</value></data>
+  <data name="Section_officeGpo.securityFiltering" xml:space="preserve"><value>GPO — filtrage de sécurité et autorisations observées</value></data>
+  <data name="Section_officeGpo.officeSettings" xml:space="preserve"><value>Office — paramètres de macros déclarés par les GPO</value></data>
+  <data name="ObjectType_groupPolicyObject" xml:space="preserve"><value>Objet de stratégie de groupe (GPO)</value></data>
+  <data name="ObjectType_officePolicySetting" xml:space="preserve"><value>Paramètre de stratégie Office</value></data>
+  <data name="Relation_gpoLinkedToOu" xml:space="preserve"><value>GPO directement liée à l’unité d’organisation</value></data>
+  <data name="Relation_gpoSecurityFilter" xml:space="preserve"><value>Principal désigné par le filtrage de sécurité GPO</value></data>
+  <data name="Relation_gpoPermission" xml:space="preserve"><value>Principal disposant d’une autorisation GPO observée</value></data>
+  <data name="Relation_officeSettingInGpo" xml:space="preserve"><value>Paramètre Office déclaré dans la GPO</value></data>
+  <data name="Issue_VisibilityLimited" xml:space="preserve"><value>Seuls les éléments lisibles et les paramètres déclarés sont couverts. Une omission ne prouve ni une absence ni la stratégie effectivement appliquée à un poste.</value></data>
+  <data name="Issue_OuEnumerationFailed" xml:space="preserve"><value>Certaines unités d’organisation n’ont pas pu être énumérées. Vérifiez le périmètre et les droits de lecture dans le domaine.</value></data>
+  <data name="Issue_OuLinksReadFailed" xml:space="preserve"><value>Impossible de vérifier les liens directs de certaines unités d’organisation. Vérifiez les droits de lecture sur gPLink et gPOptions.</value></data>
+  <data name="Issue_LinkShapeUnsupported" xml:space="preserve"><value>Un lien de stratégie ne fournit pas les propriétés attendues. Vérifiez les versions RSAT et relancez la collecte.</value></data>
+  <data name="Issue_GpoEnumerationFailed" xml:space="preserve"><value>La liste des GPO est incomplète. Vérifiez le domaine, la connectivité et les autorisations de lecture.</value></data>
+  <data name="Issue_LinkedGpoReadFailed" xml:space="preserve"><value>Une GPO liée n’a pas pu être lue dans le domaine. Son lien direct reste conservé si la section des liens a été demandée.</value></data>
+  <data name="Issue_GpoSectionReadFailed" xml:space="preserve"><value>Des métadonnées de GPO sont illisibles. Vérifiez la version de GroupPolicy et vos droits sur les GPO sélectionnées.</value></data>
+  <data name="Issue_PermissionShapeUnsupported" xml:space="preserve"><value>Une autorisation ne fournit pas de principal ou de résumé exploitable. Vérifiez la lecture des autorisations de la GPO.</value></data>
+  <data name="Issue_CustomSecurityDescriptorNotEvaluated" xml:space="preserve"><value>Une autorisation GPO personnalisée a été observée. Son effet sur le filtrage de sécurité n’a pas été évalué.</value></data>
+  <data name="Issue_OfficeRegistryReadFailed" xml:space="preserve"><value>Une clé de stratégie Office est absente ou illisible. Vérifiez les droits sur SYSVOL ; aucune absence de configuration n’en est déduite.</value></data>
+  <data name="Issue_OfficeRegistryShapeUnsupported" xml:space="preserve"><value>Un paramètre Office n’a pas le type ou l’état attendu. Seules les valeurs DWORD prises en charge sont intégrées.</value></data>
   <data name="Section_entra.users" xml:space="preserve"><value>Entra — utilisateurs et invités</value></data>
   <data name="Section_entra.groups" xml:space="preserve"><value>Entra — groupes, membres et propriétaires</value></data>
   <data name="Section_entra.devices" xml:space="preserve"><value>Entra — appareils</value></data>
