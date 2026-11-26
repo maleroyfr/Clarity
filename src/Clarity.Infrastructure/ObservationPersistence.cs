@@ -11,6 +11,8 @@ public sealed partial class ClarityDbContext
     public DbSet<AlternateKeyPeriod> AlternateKeyPeriods => Set<AlternateKeyPeriod>();
     public DbSet<ObjectObservation> ObjectObservations => Set<ObjectObservation>();
     public DbSet<RelationshipObservation> RelationshipObservations => Set<RelationshipObservation>();
+    public DbSet<InventoryRelationship> InventoryRelationships => Set<InventoryRelationship>();
+    public DbSet<RelationshipSupport> RelationshipSupports => Set<RelationshipSupport>();
 
     private void ConfigureObservations(ModelBuilder model)
     {
@@ -73,5 +75,19 @@ public sealed partial class ClarityDbContext
         relation.Property(x => x.RelationType).HasMaxLength(100);
         relation.Property(x => x.IdentityHash).HasMaxLength(64).IsUnicode(false);
         relation.HasIndex(x => new { x.WorkspaceId, x.SectionRunId, x.IdentityHash }).IsUnique();
+
+        var edge = DiscoveryOwned<InventoryRelationship>(model);
+        edge.Property(x => x.RelationType).HasMaxLength(100).UseCollation("Latin1_General_100_BIN2");
+        edge.HasOne<ProjectEnvironment>().WithMany().HasForeignKey(x => new { x.WorkspaceId, x.EnvironmentId }).OnDelete(DeleteBehavior.NoAction);
+        edge.HasOne<InventoryObject>().WithMany().HasForeignKey(x => new { x.WorkspaceId, x.EnvironmentId, x.FromObjectId })
+            .HasPrincipalKey(x => new { x.WorkspaceId, x.EnvironmentId, x.Id }).OnDelete(DeleteBehavior.NoAction);
+        edge.HasOne<InventoryObject>().WithMany().HasForeignKey(x => new { x.WorkspaceId, x.EnvironmentId, x.ToObjectId })
+            .HasPrincipalKey(x => new { x.WorkspaceId, x.EnvironmentId, x.Id }).OnDelete(DeleteBehavior.NoAction);
+        edge.HasIndex(x => new { x.WorkspaceId, x.EnvironmentId, x.FromObjectId, x.Origin, x.IsCurrent });
+        edge.HasIndex(x => new { x.WorkspaceId, x.EnvironmentId, x.ToObjectId, x.Origin, x.IsCurrent });
+        var support = DiscoveryOwned<RelationshipSupport>(model);
+        support.HasOne<InventoryRelationship>().WithMany().HasForeignKey(x => new { x.WorkspaceId, x.RelationshipId }).OnDelete(DeleteBehavior.NoAction);
+        support.HasOne<RelationshipObservation>().WithMany().HasForeignKey(x => new { x.WorkspaceId, x.ObservationId }).OnDelete(DeleteBehavior.NoAction);
+        support.HasIndex(x => new { x.WorkspaceId, x.ObservationId }).IsUnique();
     }
 }

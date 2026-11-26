@@ -181,6 +181,54 @@ public sealed class PublicationTests
     }
 
     [SqlFact]
+    public async Task MembershipPathsResolveLaterArrivalsPreserveProofAndTerminateOnCycles()
+    {
+        await using var fixture = await DiscoveryFixture.CreateAsync();
+        var template = DiscoveryFixture.Package();
+        var store = new MemoryArtifactStore();
+        var service = ZipImportTests.Service(fixture, store);
+        var source = new ExternalReference("user", "ad.objectGUID", "user");
+        var group = new ExternalReference("group", "ad.objectGUID", "group");
+        var parent = group with { ExternalId = "parent" };
+        async Task Publish(int day, ExternalReference[] objects, (ExternalReference From, ExternalReference To)[] links)
+        {
+            var date = template.Manifest.StartedAtUtc.AddDays(day);
+            const string section = "ad.groups";
+            var package = template with
+            {
+                Manifest = template.Manifest with { RunId = Guid.NewGuid(), StartedAtUtc = date, CompletedAtUtc = date },
+                Objects = objects.Select(r => new ObjectRecord(section, r.Type, r.Namespace, r.ExternalId, date,
+                    new Dictionary<string, JsonElement> { ["displayName"] = JsonSerializer.SerializeToElement(r.ExternalId) })).ToArray(),
+                Relationships = links.Select(r => new RelationshipRecord(section, "memberOf", r.From, r.To, date)).ToArray(),
+                Results = [template.Results[0] with { SectionId = section, CapabilityId = section, CoveredRelations = ["memberOf"],
+                    ObjectCount = objects.Length, RelationshipCount = links.Length }]
+            };
+            var run = await service.UploadAsync(fixture.Project.Id, fixture.Environment.Id, new MemoryStream(await ZipImportTests.BytesAsync(package)), "groups.zip");
+            await service.ConfirmAsync(fixture.Project.Id, run);
+            await ZipImportTests.Processor(fixture, store).ProcessOneAsync(default);
+        }
+        await Publish(0, [source, group], [(source, group), (group, parent)]);
+        await using var db = await fixture.Factory.CreateDbContextAsync();
+        (await db.InventoryRelationships.CountAsync(x => x.ToMethod == EndpointResolution.Pending)).ShouldBe(1);
+        var original = await db.InventoryRelationships.Where(x => x.ToObjectId == null).Select(x => x.Id).SingleAsync();
+        await Publish(1, [parent], [(group, parent), (parent, group)]);
+        (await db.InventoryRelationships.CountAsync()).ShouldBe(3);
+        (await db.InventoryRelationships.CountAsync(x => x.ToMethod == EndpointResolution.Pending)).ShouldBe(0);
+        (await db.RelationshipSupports.CountAsync(x => x.RelationshipId == original)).ShouldBe(2);
+        var ids = await db.ExternalKeys.ToDictionaryAsync(x => x.ExternalId, x => x.ObjectId);
+        var graph = new InventoryGraph(fixture.Factory, fixture.Access);
+        var paths = await graph.MembershipsAsync(fixture.Project.Id, ids["user"], false);
+        paths.Count.ShouldBe(2);
+        paths.Single(p => p.ObjectId == ids["parent"]).RelationshipIds.Count.ShouldBe(2);
+        (await graph.MembershipsAsync(fixture.Project.Id, ids["parent"], true)).Single(p => p.ObjectId == ids["user"])
+            .RelationshipIds.Count.ShouldBe(2);
+        await Should.ThrowAsync<AccessDeniedException>(() => graph.MembershipsAsync(Guid.NewGuid(), ids["parent"], true));
+        await using var outside = PersistenceTests.Create(fixture.ConnectionString, []);
+        (await outside.InventoryRelationships.IgnoreQueryFilters().CountAsync()).ShouldBe(0);
+        (await outside.RelationshipSupports.IgnoreQueryFilters().CountAsync()).ShouldBe(0);
+    }
+
+    [SqlFact]
     public async Task ProcessingRechecksMembershipInsteadOfTrustingStagedWorkspace()
     {
         await using var fixture = await DiscoveryFixture.CreateAsync();

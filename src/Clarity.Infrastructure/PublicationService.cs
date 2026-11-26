@@ -22,6 +22,8 @@ public sealed class PublicationService(
         await AlternateKeyProjection.RebuildAsync(db, project.WorkspaceId, environmentId, ids, token);
         await CurrentProjection.RefreshAsync(db, catalog, project.WorkspaceId, environmentId, null, ids, token);
         await db.SaveChangesAsync(token);
+        await RelationshipProjection.RefreshAsync(db, catalog, project.WorkspaceId, environmentId, token);
+        await db.SaveChangesAsync(token);
         await transaction.CommitAsync(token);
     }
 
@@ -116,6 +118,8 @@ public sealed class PublicationService(
         await db.SaveChangesAsync(cancellationToken);
         await AlternateKeyProjection.RebuildAsync(db, project.WorkspaceId, run.EnvironmentId, changedObjects, cancellationToken);
         await CurrentProjection.RefreshAsync(db, catalog, run.WorkspaceId, run.EnvironmentId, section, changedObjects, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        await RelationshipProjection.RefreshAsync(db, catalog, run.WorkspaceId, run.EnvironmentId, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return;

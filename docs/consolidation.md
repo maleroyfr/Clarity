@@ -52,3 +52,25 @@ cursor restart. Historical fields and proof survive either kind of removal.
 | --- | --- |
 | Graph delta, interrupted publication, complementary confirmed ZIP, field precedence/conflict, explicit empty vs absent and rebuild | `GraphTests.GraphUsesCommonIngestionSurvivesRestartAndPersistsCursorOnlyAfterPublication` |
 | Partial, field-limited and differently scoped zero versus comparable exhaustive zero | `PublicationTests.AbsenceRequiresAnExhaustiveComparableSnapshot` |
+
+## Relationships
+
+The relationship projection keeps each directed type distinct and retains its
+supporting observation IDs. Resolution stays inside one environment: exact primary
+keys first, then unique alternate evidence valid at the observation date. A
+technical SID/SKU/device ID may be resolved when its first observation arrives
+later; a mutable name is not extrapolated backwards. Unknown or ambiguous
+endpoints retain the original typed reference. An explicitly deleted edge or
+comparable exhaustive omission retires that stream's support, not another
+stream's evidence. No single-owner or primary-user constraint is assumed.
+
+`InventoryGraph.MembershipsAsync` follows only current direct membership and
+primary-group edges, in either direction. It returns a shortest evidence path
+of relationship IDs for each reachable object and never returns the start node.
+Delegation, ownership and qualification are not transitive membership or proof
+of effective access. Later workloads can supply other typed edges; this slice
+does not collect them.
+
+| Journey | Executable acceptance |
+| --- | --- |
+| Confirmed ZIP, pending endpoint becoming resolved, deduplicated evidence, cyclic nested groups and reverse navigation | `PublicationTests.MembershipPathsResolveLaterArrivalsPreserveProofAndTerminateOnCycles` |

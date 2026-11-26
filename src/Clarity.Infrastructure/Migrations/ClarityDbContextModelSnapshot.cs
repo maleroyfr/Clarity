@@ -16,7 +16,7 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261126191518_CurrentInventory";
+    public override string LastMigrationId => "20261126192117_EvidencedRelationships";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -602,6 +602,58 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
                 b.ToTable("InventoryObjects");
             });
 
+        modelBuilder.Entity("Clarity.Core.InventoryRelationship", b =>
+            {
+                b.Property<Guid>("WorkspaceId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("Id")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("EnvironmentId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<string>("FromJson")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<int>("FromMethod")
+                    .HasColumnType("int");
+
+                b.Property<Guid?>("FromObjectId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<bool>("IsCurrent")
+                    .HasColumnType("bit");
+
+                b.Property<int>("Origin")
+                    .HasColumnType("int");
+
+                b.Property<string>("RelationType")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("nvarchar(100)")
+                    .UseCollation("Latin1_General_100_BIN2");
+
+                b.Property<string>("ToJson")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<int>("ToMethod")
+                    .HasColumnType("int");
+
+                b.Property<Guid?>("ToObjectId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.HasKey("WorkspaceId", "Id");
+
+                b.HasIndex("WorkspaceId", "EnvironmentId", "FromObjectId", "Origin", "IsCurrent");
+
+                b.HasIndex("WorkspaceId", "EnvironmentId", "ToObjectId", "Origin", "IsCurrent");
+
+                b.ToTable("InventoryRelationships");
+            });
+
         modelBuilder.Entity("Clarity.Core.ObjectObservation", b =>
             {
                 b.Property<Guid>("WorkspaceId")
@@ -836,6 +888,30 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
                     .IsUnique();
 
                 b.ToTable("RelationshipObservations");
+            });
+
+        modelBuilder.Entity("Clarity.Core.RelationshipSupport", b =>
+            {
+                b.Property<Guid>("WorkspaceId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("Id")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("ObservationId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("RelationshipId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.HasKey("WorkspaceId", "Id");
+
+                b.HasIndex("WorkspaceId", "ObservationId")
+                    .IsUnique();
+
+                b.HasIndex("WorkspaceId", "RelationshipId");
+
+                b.ToTable("RelationshipSupports");
             });
 
         modelBuilder.Entity("Clarity.Core.SectionRun", b =>
@@ -1095,6 +1171,33 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
                     .OnDelete(DeleteBehavior.NoAction);
             });
 
+        modelBuilder.Entity("Clarity.Core.InventoryRelationship", b =>
+            {
+                b.HasOne("Clarity.Core.ClientWorkspace", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+
+                b.HasOne("Clarity.Core.ProjectEnvironment", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId", "EnvironmentId")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+
+                b.HasOne("Clarity.Core.InventoryObject", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId", "EnvironmentId", "FromObjectId")
+                    .HasPrincipalKey("WorkspaceId", "EnvironmentId", "Id")
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                b.HasOne("Clarity.Core.InventoryObject", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId", "EnvironmentId", "ToObjectId")
+                    .HasPrincipalKey("WorkspaceId", "EnvironmentId", "Id")
+                    .OnDelete(DeleteBehavior.NoAction);
+            });
+
         modelBuilder.Entity("Clarity.Core.ObjectObservation", b =>
             {
                 b.HasOne("Clarity.Core.ClientWorkspace", null)
@@ -1166,6 +1269,27 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
                 b.HasOne("Clarity.Core.SectionRun", null)
                     .WithMany()
                     .HasForeignKey("WorkspaceId", "SectionRunId")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+            });
+
+        modelBuilder.Entity("Clarity.Core.RelationshipSupport", b =>
+            {
+                b.HasOne("Clarity.Core.ClientWorkspace", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+
+                b.HasOne("Clarity.Core.RelationshipObservation", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId", "ObservationId")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+
+                b.HasOne("Clarity.Core.InventoryRelationship", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId", "RelationshipId")
                     .OnDelete(DeleteBehavior.NoAction)
                     .IsRequired();
             });

@@ -34,6 +34,7 @@ public static class DiscoveryRegistration
         services.AddScoped<DiscoveryQueries>();
         services.AddScoped<ImportService>();
         services.AddScoped<PublicationService>();
+        services.AddScoped<InventoryGraph>();
         services.AddScoped<ScriptRequestService>();
         services.AddScoped<GraphDiscoveryService>();
         services.AddScoped<JobService>();
