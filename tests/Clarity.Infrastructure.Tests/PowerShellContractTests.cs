@@ -22,6 +22,7 @@ public sealed class PowerShellContractTests
             await using var stream = File.OpenRead(file);
             var package = await reader.ReadAsync(stream, cancellationToken: TestContext.Current.CancellationToken);
             package.Package.Results.ShouldNotBeEmpty();
+            DiscoveryCatalog.Load().ValidatePackage(package.Package);
         }
     }
 }

@@ -6,6 +6,10 @@
     <PackageReference Include="Microsoft.Data.SqlClient.Extensions.Azure" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" PrivateAssets="all" />
     <PackageReference Include="Azure.Storage.Blobs" />
+    <EmbeddedResource Include="../../scripts/ad/Collect-AD.ps1" LogicalName="Scripts.ad.Collect-AD.ps1" />
+    <EmbeddedResource Include="../../scripts/ad/Clarity.Discovery.AD.psm1" LogicalName="Scripts.ad.Clarity.Discovery.AD.psm1" />
+    <EmbeddedResource Include="../../scripts/Clarity.Discovery.Common/Clarity.Discovery.Common.psd1" LogicalName="Scripts.common.Clarity.Discovery.Common.psd1" />
+    <EmbeddedResource Include="../../scripts/Clarity.Discovery.Common/Clarity.Discovery.Common.psm1" LogicalName="Scripts.common.Clarity.Discovery.Common.psm1" />
   </ItemGroup>
 
   <PropertyGroup>

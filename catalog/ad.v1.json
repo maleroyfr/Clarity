@@ -2,9 +2,9 @@
   "schemaVersion": "1.0", "id": "ad", "version": "1.0.0", "environmentKind": "AdForest",
   "producers": [{
     "id": "clarity.ad", "channel": "PowerShell", "version": "1.0.0", "apiVersion": "ActiveDirectory",
-    "preview": false, "readiness": "Planned", "testedVersions": [],
+    "preview": false, "readiness": "SyntheticValidated", "testedVersions": ["PowerShell 7.6.10 Windows; Pester 5.7.1; mocked ActiveDirectory 1.0.1.0 shapes", "Linux CI Pester with mocked AD cmdlets; not a supported live AD execution OS"],
     "prerequisites": ["Windows with RSAT ActiveDirectory module and domain connectivity", "Locally authenticated read session; no credentials in request parameters"],
-    "limits": ["Not yet implemented; no live AD version certified", "Forest/domain discovery does not imply read access to every object", "No passwords, recovery keys, message or file contents"]
+    "limits": ["Implemented with synthetic tests only; no live AD or Windows PowerShell 5.1 certification", "Forest/domain discovery does not imply read access to every object", "No passwords, recovery keys, message or file contents"]
   }],
   "sections": [
     {

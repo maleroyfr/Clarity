@@ -1,0 +1,10 @@
+{
+  "schemaVersion": "1.0",
+  "requestId": "11111111-0000-0000-0000-000000000002",
+  "environmentKind": "AdForest",
+  "expectedEnvironmentExternalId": "forest.example.test",
+  "scope": { "kind": "domain", "value": "example.test" },
+  "sections": ["ad.users", "ad.computers", "ad.groups", "ad.ous"],
+  "producerVersion": "1.0.0",
+  "domain": "example.test"
+}

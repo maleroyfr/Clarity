@@ -29,6 +29,7 @@ public sealed class CollectionRequest : WorkspaceEntity
     public required string SectionsJson { get; init; }
     public required string ProducerId { get; init; }
     public required string ScriptVersion { get; init; }
+    public string ParametersJson { get; init; } = "{}";
     public CollectionRequestState State { get; set; }
     public DateTimeOffset CreatedAtUtc { get; init; } = DateTimeOffset.UtcNow;
     public Guid ActorTenantId { get; init; }
