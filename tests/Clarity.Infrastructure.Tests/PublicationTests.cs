@@ -225,6 +225,10 @@ public sealed class PublicationTests
         await using var db = await fixture.Factory.CreateDbContextAsync();
         (await db.InventoryRelationships.CountAsync(x => x.ToMethod == EndpointResolution.Pending)).ShouldBe(1);
         var original = await db.InventoryRelationships.Where(x => x.ToObjectId == null).Select(x => x.Id).SingleAsync();
+        var sheets = new InventorySheet(fixture.Factory, fixture.Access);
+        var groupId = await db.ExternalKeys.Where(k => k.ExternalId == "group").Select(k => k.ObjectId).SingleAsync();
+        var pending = (await sheets.EdgesAsync(fixture.Project.Id, groupId, new())).Items.Single(e => e.OtherId == null);
+        pending.OtherLabel.ShouldBe("parent");
         await Publish(1, [parent], [(group, parent), (parent, group)]);
         (await db.InventoryRelationships.CountAsync()).ShouldBe(3);
         (await db.InventoryRelationships.CountAsync(x => x.ToMethod == EndpointResolution.Pending)).ShouldBe(0);
@@ -234,6 +238,15 @@ public sealed class PublicationTests
         var paths = await graph.MembershipsAsync(fixture.Project.Id, ids["user"], false);
         paths.Count.ShouldBe(2);
         paths.Single(p => p.ObjectId == ids["parent"]).RelationshipIds.Count.ShouldBe(2);
+        var sheet = await sheets.ReadAsync(fixture.Project.Id, groupId);
+        sheet.Fields.Single(f => f.Name == "displayName").Json.ShouldBe("\"group\"");
+        var observations = await sheets.HistoryAsync(fixture.Project.Id, groupId, new());
+        observations.Items.Single().Attributes["displayName"].GetString().ShouldBe("group");
+        var support = await new InventoryProof(fixture.Factory, fixture.Access).ReadAsync(fixture.Project.Id, new(ProofKind.Relationship, original));
+        support.Sources.Count.ShouldBe(2);
+        (await sheets.EdgesAsync(fixture.Project.Id, groupId, new())).Items.Where(e => e.Outgoing).Single().OtherId.ShouldBe(ids["parent"]);
+        var other = await fixture.OtherWorkspaceAsync();
+        await Should.ThrowAsync<AccessDeniedException>(() => new InventorySheet(other.Factory, other.Access).ReadAsync(other.Project.Id, groupId));
         (await graph.MembershipsAsync(fixture.Project.Id, ids["parent"], true)).Single(p => p.ObjectId == ids["user"])
             .RelationshipIds.Count.ShouldBe(2);
         await Should.ThrowAsync<AccessDeniedException>(() => graph.MembershipsAsync(Guid.NewGuid(), ids["parent"], true));

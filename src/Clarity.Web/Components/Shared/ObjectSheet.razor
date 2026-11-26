@@ -1,0 +1,97 @@
+@using System.Text.Json
+@using Clarity.Infrastructure
+@inherits FoundationPage
+@inject InventorySheet Sheets
+@inject InventoryGraph Graph
+@inject NavigationManager Navigation
+
+@if (_proof is not null)
+{
+    <ProvenancePanel @key="(ProjectId, _proof)" ProjectId="ProjectId" Target="_proof" Close="@(() => _proof = null)" />
+}
+else
+{
+    <DetailPanel Title="@(_sheet?.Name ?? Text["ObjectSheet"])" Close="Close" Error="@Error">
+        @if (_sheet is { } sheet)
+        {
+            <p>@Text[sheet.Side.ToString()] · @sheet.Environment · @sheet.Type · @Text[sheet.Presence.ToString()]</p>
+            @foreach (var k in sheet.Keys) { <p>@k.Namespace : <code>@k.ExternalId</code></p> }
+            @if (sheet.PresenceSection.HasValue) { <FluentButton OnClick="@(() => Show(ProofKind.Section, sheet.PresenceSection.Value))">@Text["PresenceProof"]</FluentButton> }
+            <h3>@Text["CurrentProperties"]</h3>
+            <dl>@foreach (var f in sheet.Fields)
+                {
+                    <dt>@f.Name</dt><dd>@Value(f.Json)
+                        @if (f.Conflicting) { <strong>@Text["ConflictingValues"]</strong> }
+                        <FluentButton OnClick="@(() => Show(ProofKind.Observation, f.ObservationId))">@Text["Provenance"]</FluentButton>
+                    </dd>
+                }</dl>
+            @if (sheet.Associations.Count > 0)
+            {
+                <h3>@Text["DirectoryAssociations"]</h3>
+                @foreach (var a in sheet.Associations)
+                {
+                    <p><a href="@Link(a.OtherId)">@(a.OtherName ?? a.OtherId.ToString())</a> · @Text[a.State.ToString()] · @Text[a.Rule.ToString()]
+                        <FluentButton OnClick="@(() => Show(ProofKind.Mapping, a.DecisionId))">@Text["Provenance"]</FluentButton></p>
+                }
+            }
+            <h3>@Text["DirectRelationships"]</h3>
+            <ClarityGrid TGridItem="SheetEdge" Load="@((p, ct) => Sheets.EdgesAsync(ProjectId, ObjectId, p, ct))">
+                <Columns><TemplateColumn Title="@Text["Relation"]" Context="e">@(e.Outgoing ? "→" : "←") @e.Type · @Text[e.Origin.ToString()]</TemplateColumn>
+                    <TemplateColumn Title="@Text["RelatedObject"]" Context="e">
+                        @if (e.OtherId.HasValue) { <a href="@Link(e.OtherId.Value)">@e.OtherLabel</a> } else { @e.OtherLabel }
+                        <small>@Text[$"Endpoint{e.Resolution}"] · @Text[e.Current ? "Observed" : "Historical"]</small>
+                    </TemplateColumn>
+                    <TemplateColumn Title="@Text["Actions"]" Context="e"><FluentButton OnClick="@(() => Show(ProofKind.Relationship, e.Id))">@Text["Provenance"]</FluentButton></TemplateColumn>
+                </Columns><EmptyContent><p>@Text["NoObservedLinks"]</p></EmptyContent>
+            </ClarityGrid>
+            <FluentButton OnClick="@(() => PathsAsync(false))">@Text["ShowMemberships"]</FluentButton>
+            @if (sheet.Type == "group") { <FluentButton OnClick="@(() => PathsAsync(true))">@Text["ShowMembers"]</FluentButton> }
+            @if (_paths is not null)
+            {
+                <p>@Text["MembershipPathHint"]</p>
+                @if (_paths.Count == 0) { <p>@Text["NoObservedLinks"]</p> }
+                @foreach (var p in _paths)
+                {
+                    <p><a href="@Link(p.ObjectId)">@(p.Name ?? p.ObjectId.ToString())</a> :
+                        @for (int index = 0; index < p.RelationshipIds.Count; index++)
+                        {
+                            var edge = p.RelationshipIds[index];
+                            <FluentButton OnClick="@(() => Show(ProofKind.Relationship, edge))">@Text["EvidenceStep"] @(index + 1)</FluentButton>
+                        }</p>
+                }
+            }
+            <h3>@Text["ObservationHistory"]</h3>
+            <ClarityGrid TGridItem="SheetObservation" Load="@((p, ct) => Sheets.HistoryAsync(ProjectId, ObjectId, p, ct))">
+                <Columns><PropertyColumn Property="@(o => o.ObservedAtUtc)" Title="@Text["Date"]" Sortable="true" />
+                    <TemplateColumn Title="@Text["Section"]" Context="o">@o.Capability · @Text[o.Coverage.ToString()]</TemplateColumn>
+                    <TemplateColumn Title="@Text["CurrentProperties"]" Context="o">
+                        <details><summary>@o.Producer</summary>@foreach (var f in o.Attributes) { <p>@f.Key : @Value(f.Value.GetRawText())</p> }</details>
+                    </TemplateColumn>
+                    <TemplateColumn Title="@Text["Actions"]" Context="o"><FluentButton OnClick="@(() => Show(ProofKind.Observation, o.Id))">@Text["Provenance"]</FluentButton></TemplateColumn>
+                </Columns><EmptyContent><p>@Text["NoInventory"]</p></EmptyContent>
+            </ClarityGrid>
+            <h3>@Text["AlternateKeys"]</h3>
+            <ClarityGrid TGridItem="SheetAlias" Load="@((p, ct) => Sheets.AliasesAsync(ProjectId, ObjectId, p, ct))">
+                <Columns><PropertyColumn Property="@(a => a.Namespace)" Title="@Text["ObjectType"]" />
+                    <PropertyColumn Property="@(a => a.Value)" Title="@Text["TechnicalId"]" />
+                    <TemplateColumn Title="@Text["Validity"]" Context="a">@a.From.ToString("u") — @(a.Until?.ToString("u") ?? Text["OpenPeriod"])</TemplateColumn>
+                    <TemplateColumn Title="@Text["Actions"]" Context="a"><FluentButton OnClick="@(() => Show(ProofKind.Observation, a.ObservationId))">@Text["Provenance"]</FluentButton></TemplateColumn>
+                </Columns><EmptyContent><p>@Text["NoResults"]</p></EmptyContent>
+            </ClarityGrid>
+        }
+    </DetailPanel>
+}
+
+@code {
+    [Parameter] public Guid ProjectId { get; set; }
+    [Parameter] public Guid ObjectId { get; set; }
+    [Parameter] public EventCallback Close { get; set; }
+    private ObjectSheetData? _sheet;
+    private ProofRef? _proof;
+    private IReadOnlyList<MembershipPath>? _paths;
+    protected override Task OnParametersSetAsync() => RunAsync(async () => { _sheet = null; _paths = null; _proof = null; _sheet = await Sheets.ReadAsync(ProjectId, ObjectId); });
+    private void Show(ProofKind kind, Guid id) => _proof = new(kind, id);
+    private string Link(Guid id) => Navigation.GetUriWithQueryParameter("object", id);
+    private Task PathsAsync(bool reverse) => RunAsync(async () => _paths = await Graph.MembershipsAsync(ProjectId, ObjectId, reverse));
+    private string Value(string json) => json is "null" or "\"\"" or "[]" ? Text["ExplicitEmpty"] : JsonSerializer.Deserialize<JsonElement>(json).ToString();
+}

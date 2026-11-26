@@ -254,4 +254,25 @@
   <data name="ObjectType_application" xml:space="preserve"><value>Application</value></data>
   <data name="ObjectType_servicePrincipal" xml:space="preserve"><value>Principal de service</value></data>
   <data name="ObjectType_organizationalUnit" xml:space="preserve"><value>Unité d’organisation</value></data>
+  <data name="ObjectSheet" xml:space="preserve"><value>Fiche d’objet</value></data>
+  <data name="PresenceProof" xml:space="preserve"><value>Preuve du statut</value></data>
+  <data name="CurrentProperties" xml:space="preserve"><value>Propriétés</value></data>
+  <data name="ConflictingValues" xml:space="preserve"><value>Sources en désaccord · voir l’historique</value></data>
+  <data name="DirectoryAssociations" xml:space="preserve"><value>Rapprochements AD et Entra</value></data>
+  <data name="DirectRelationships" xml:space="preserve"><value>Relations directes</value></data>
+  <data name="Relation" xml:space="preserve"><value>Relation</value></data>
+  <data name="RelatedObject" xml:space="preserve"><value>Objet lié</value></data>
+  <data name="Historical" xml:space="preserve"><value>Historique</value></data>
+  <data name="Membership" xml:space="preserve"><value>Appartenance</value></data>
+  <data name="ObservedDelegation" xml:space="preserve"><value>Délégation observée</value></data>
+  <data name="ConsultantQualification" xml:space="preserve"><value>Qualification du consultant</value></data>
+  <data name="NoObservedLinks" xml:space="preserve"><value>Aucune relation observée dans la couverture disponible.</value></data>
+  <data name="ShowMemberships" xml:space="preserve"><value>Voir les groupes directs et imbriqués</value></data>
+  <data name="ShowMembers" xml:space="preserve"><value>Voir les membres directs et imbriqués</value></data>
+  <data name="MembershipPathHint" xml:space="preserve"><value>Un chemin d’appartenance explique le lien ; il ne prouve pas un accès effectif.</value></data>
+  <data name="EvidenceStep" xml:space="preserve"><value>Preuve du lien</value></data>
+  <data name="ObservationHistory" xml:space="preserve"><value>Historique des observations</value></data>
+  <data name="AlternateKeys" xml:space="preserve"><value>Historique des identifiants secondaires</value></data>
+  <data name="Validity" xml:space="preserve"><value>Période observée</value></data>
+  <data name="OpenPeriod" xml:space="preserve"><value>dernière valeur connue</value></data>
 </root>

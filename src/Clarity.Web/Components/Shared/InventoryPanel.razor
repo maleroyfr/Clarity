@@ -58,6 +58,7 @@
                 }
                 <PropertyColumn Property="@(r => r.LastObservedAtUtc)" Title="@Text["LastValidObservation"]" Sortable="true" />
                 <TemplateColumn Title="@Text["Actions"]" Context="r">
+                    <a href="@Navigation.GetUriWithQueryParameter("object", r.Id)">@Text["ObjectSheet"]</a>
                     @if (r.PresenceSectionId.HasValue) { <FluentButton OnClick="@(() => _proof = new(ProofKind.Section, r.PresenceSectionId.Value))">@Text["Provenance"]</FluentButton> }
                 </TemplateColumn>
             </Columns>
@@ -69,6 +70,10 @@
         }
     }
 </section>
+@if (SelectedObject is { } selected)
+{
+    <ObjectSheet @key="(ProjectId, selected)" ProjectId="ProjectId" ObjectId="selected" Close="@(() => Navigation.NavigateTo(Navigation.GetUriWithQueryParameter("object", (Guid?)null)))" />
+}
 @if (_proof is not null)
 {
     <ProvenancePanel @key="(ProjectId, _proof)" ProjectId="ProjectId" Target="_proof" Close="@(() => _proof = null)" />
@@ -85,6 +90,7 @@
     [SupplyParameterFromQuery(Name = "status")] public string? StatusQuery { get; set; }
     [SupplyParameterFromQuery(Name = "run")] public string? RunQuery { get; set; }
     [SupplyParameterFromQuery(Name = "conflicts")] public bool? Conflicts { get; set; }
+    [SupplyParameterFromQuery(Name = "object")] public Guid? SelectedObject { get; set; }
     private static readonly string[] Statuses = ["Observed", "AbsentFromScope", "Deleted", "Unknown", "Enabled", "Disabled"];
     private string _search = "", _environment = "", _domain = "", _site = "", _type = "", _status = "", _run = "", _appliedSearch = "";
     private IReadOnlyList<ProjectEnvironment> _environments = [];

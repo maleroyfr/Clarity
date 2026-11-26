@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Clarity.Infrastructure;
 
-public sealed record MembershipPath(Guid ObjectId, IReadOnlyList<Guid> RelationshipIds);
+public sealed record MembershipPath(Guid ObjectId, IReadOnlyList<Guid> RelationshipIds, string? Name);
 
 public sealed class InventoryGraph(IDbContextFactory<ClarityDbContext> factory, IProjectAccess access)
 {
@@ -34,12 +34,15 @@ public sealed class InventoryGraph(IDbContextFactory<ClarityDbContext> factory, 
             }
             frontier = next;
         }
+        var objectIds = parents.Keys.ToArray();
+        var names = await db.InventoryObjects.Where(i => i.WorkspaceId == project.WorkspaceId && i.EnvironmentId == environment && objectIds.Contains(i.Id))
+            .ToDictionaryAsync(i => i.Id, i => i.DisplayName ?? i.UserPrincipalName, token);
         return parents.Keys.Select(node =>
         {
             var path = new List<Guid>();
             for (var step = node; step != objectId; step = parents[step].Node) { path.Add(parents[step].Edge); }
             path.Reverse();
-            return new MembershipPath(node, path);
+            return new MembershipPath(node, path, names.GetValueOrDefault(node));
         }).ToList();
     }
 }

@@ -130,3 +130,18 @@ Select an environment to rebuild its projections from the published history.
 queries a former UPN, combines filters and checks a descending second page and
 cross-workspace isolation. `ComponentTests.Grid_forwards_paging_and_sorting_to_the_server_provider`
 exercises the actual grid sort property and direction.
+
+## Object sheets
+
+Open a sheet from an inventory row; its URL retains the selected object and grid
+filters. The shared panel shows source identity and environment, projected fields
+and their evidence, conflicting sources, historical observations and alternate
+identifier periods. Direct edges support both directions, including unresolved
+references. Nested membership is expanded on demand with proof for each hop.
+Reviewed associations navigate to the independent AD or Entra sheet without
+merging the two source objects. Links to devices, subscriptions, applications or
+later resource types appear only when evidence exists: a device has no implied
+primary user and basic application metadata does not establish user access.
+
+The cyclic-membership SQL case above opens the pending and resolved sheets,
+follows a reverse link, and verifies both source observations and isolation.
