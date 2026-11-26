@@ -28,7 +28,6 @@ jobs:
       actions: read
       id-token: write
     env:
-      AZURE_CONFIG_DIR: ${{ runner.temp }}/clarity-azure-${{ github.run_id }}
       AZURE_TOKEN_CREDENTIALS: AzureCliCredential
       SQL_HOST: ${{ vars.SQL_HOST }}
       SQL_DATABASE: ${{ vars.SQL_DATABASE }}
@@ -43,6 +42,7 @@ jobs:
           TENANT: ${{ vars.AZURE_TENANT_ID }}
           SUBSCRIPTION: ${{ vars.AZURE_SUBSCRIPTION_ID }}
         run: |
+          echo "AZURE_CONFIG_DIR=${RUNNER_TEMP}/clarity-azure-${GITHUB_RUN_ID}" >> "$GITHUB_ENV"
           for variable in SQL_HOST SQL_DATABASE AZURE_RESOURCE_GROUP AZURE_WEBAPP_NAME DEPLOY_CLIENT MIGRATION_CLIENT TENANT SUBSCRIPTION; do
             test -n "${!variable}" || { echo "::error::Missing environment variable $variable"; exit 1; }
           done
