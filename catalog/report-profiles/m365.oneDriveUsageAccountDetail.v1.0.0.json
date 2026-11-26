@@ -47,7 +47,7 @@
       { "code": "NotTenantExhaustive", "description": "Missing rows never prove that a OneDrive was deleted or never existed." },
       { "code": "ConcealedNames", "description": "When report concealment is enabled, owner names and URLs are replaced by hashes; such rows or fields are counted and not converted." },
       { "code": "DataLatency", "description": "Microsoft usage reports typically lag 24 to 48 hours; the observation date is the report refresh date, not the upload date." },
-      { "code": "ProvisionalSiteKey", "description": "Without a Site Id column, OneDrive objects are keyed by the normalized report URL in namespace m365report.siteUrl and are not merged with Site Id keyed objects." },
+      { "code": "ProvisionalSiteKey", "description": "When a row has no Site Id value (absent column or blank cell), its OneDrive object is keyed by the normalized report URL in namespace m365report.siteUrl and is not merged with Site Id keyed objects." },
       { "code": "OwnerLinkTiming", "description": "Owner links resolve only through an Entra user UPN valid at the report refresh date; otherwise they stay pending." },
       { "code": "SingleGeography", "description": "Files whose rows span more than one SharePoint root host (multi-geo) are rejected." },
       { "code": "NoEndpointFields", "description": "The report carries no sharing, permission or file-level details." }

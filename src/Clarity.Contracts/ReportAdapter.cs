@@ -22,7 +22,7 @@ public sealed record ReportDiagnostics(
     int DataRows, int UsableRows, int RejectedRows, int ConcealedRows, int PartiallyConcealedRows,
     IReadOnlyList<ReportRowIssue> Issues, bool IssuesTruncated,
     DateOnly RefreshDate, int? PeriodDays, IReadOnlyList<string> UpnDomains, IReadOnlyList<string> SiteRoots,
-    string IdentityColumn, string IdentityNamespace, IReadOnlyList<string> CoverageLimits);
+    IReadOnlyList<ReportIdentity> Identities, IReadOnlyList<string> CoverageLimits);
 
 public sealed record ReportConversion(DiscoveryPackage Package, ReportDiagnostics Diagnostics);
 
@@ -57,7 +57,7 @@ public static class ReportAdapter
         if (table.Rows.Count == 0) { throw new ContractException("ReportHasNoRows", file, 1); }
 
         var columns = profile.Columns.Where(c => index.ContainsKey(c.Header)).ToArray();
-        var identity = profile.Object.Identities.First(i => index.ContainsKey(i.Column));
+        var identities = profile.Object.Identities.Where(i => index.ContainsKey(i.Column)).ToArray();
         var refresh = profile.Column(profile.RefreshDateColumn);
         var issues = new List<ReportRowIssue>();
         var rejected = new HashSet<int>();
@@ -75,25 +75,30 @@ public static class ReportAdapter
             if (refreshCell.Length == 0) { Reject(row.Line, refresh.Header, "MissingValue"); continue; }
             if (!TryDate(refreshCell)) { Reject(row.Line, refresh.Header, "InvalidDate"); continue; }
             refreshDates.Add(DateOnly.ParseExact(refreshCell, "yyyy-MM-dd", CultureInfo.InvariantCulture));
-            var current = new Row(row.Line);
+            var values = new Dictionary<string, (object? Value, string? Normalized)>(StringComparer.OrdinalIgnoreCase);
+            var concealed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             string? failure = null;
             ReportColumn? failed = null;
             foreach (var column in columns)
             {
                 var raw = row.Fields[index[column.Header]];
                 var cell = raw.Trim();
-                if (column.Concealable && IsConcealed(cell)) { current.Concealed.Add(column.Header); continue; }
+                if (column.Concealable && IsConcealed(cell)) { concealed.Add(column.Header); continue; }
                 var code = Parse(column, raw, cell, out var value, out var normalized);
                 if (code is not null) { failure = code; failed = column; break; }
-                current.Values[column.Header] = (value, normalized);
+                values[column.Header] = (value, normalized);
             }
             if (failure is not null) { Reject(row.Line, failed!.Header, failure); continue; }
-            if (current.Concealed.Contains(identity.Column)) { concealedRows++; continue; }
-            var (_, key) = current.Values[identity.Column];
-            if (key is null) { Reject(row.Line, identity.Column, "MissingIdentifier"); continue; }
+            var identity = identities.FirstOrDefault(i => values.TryGetValue(i.Column, out var value) && value.Normalized is not null);
+            if (identity is null)
+            {
+                if (identities.Any(i => concealed.Contains(i.Column))) { concealedRows++; continue; }
+                Reject(row.Line, identities[0].Column, "MissingIdentifier");
+                continue;
+            }
+            var key = values[identity.Column].Normalized!;
             if (key.Length > 500) { Reject(row.Line, identity.Column, "InvalidIdentifier"); continue; }
-            current.ExternalId = key;
-            parsed.Add(current);
+            parsed.Add(new Row(row.Line, identity, key, values, concealed));
         }
 
         if (refreshDates.Count == 0)
@@ -108,13 +113,13 @@ public static class ReportAdapter
         }
         if (roots.Count > 1) { throw new ContractException("ReportEnvironmentConflict", file, null, roots.Take(10).ToArray()); }
 
-        var duplicates = parsed.GroupBy(x => x.ExternalId!, StringComparer.Ordinal).Where(g => g.Count() > 1)
-            .Select(g => g.Key).ToHashSet(StringComparer.Ordinal);
-        foreach (var row in parsed.Where(x => duplicates.Contains(x.ExternalId!)))
+        var duplicates = parsed.GroupBy(x => (x.Identity.Namespace, x.ExternalId)).Where(g => g.Count() > 1)
+            .Select(g => g.Key).ToHashSet();
+        foreach (var row in parsed.Where(x => duplicates.Contains((x.Identity.Namespace, x.ExternalId))))
         {
-            Reject(row.Line, identity.Column, "DuplicateIdentifier");
+            Reject(row.Line, row.Identity.Column, "DuplicateIdentifier");
         }
-        parsed.RemoveAll(x => duplicates.Contains(x.ExternalId!));
+        parsed.RemoveAll(x => duplicates.Contains((x.Identity.Namespace, x.ExternalId)));
 
         var periodColumn = profile.Column(profile.PeriodColumn);
         var periods = parsed.Select(x => x.Values[periodColumn.Header].Value).Where(x => x is not null)
@@ -143,8 +148,8 @@ public static class ReportAdapter
                 .Where(k => row.Values.TryGetValue(k.Column, out var v) && v.Normalized is not null)
                 .Select(k => new ExternalReference(profile.Object.Type, k.Namespace, row.Values[k.Column].Normalized!))
                 .Distinct().ToArray();
-            var self = new ExternalReference(profile.Object.Type, identity.Namespace, row.ExternalId!);
-            objects.Add(new ObjectRecord(sectionId, profile.Object.Type, identity.Namespace, row.ExternalId!, observedAt, attributes,
+            var self = new ExternalReference(profile.Object.Type, row.Identity.Namespace, row.ExternalId);
+            objects.Add(new ObjectRecord(sectionId, profile.Object.Type, row.Identity.Namespace, row.ExternalId, observedAt, attributes,
                 alternatives.Length == 0 ? null : alternatives));
             foreach (var relation in profile.Relations)
             {
@@ -217,12 +222,14 @@ public static class ReportAdapter
         new PackageValidator().Validate(package);
 
         var ordered = issues.OrderBy(x => x.Line).ThenBy(x => x.Column, StringComparer.Ordinal).ToArray();
+        var usedIdentities = parsed.Select(x => x.Identity).ToHashSet();
         var diagnostics = new ReportDiagnostics(profile.Id, profile.Version,
             columns.Select(c => c.Header).ToArray(), unrecognized.Take(50).Select(CsvReportReader.Truncate).ToArray(), missingOptional,
             table.Rows.Count, objects.Count, rejected.Count, concealedRows, partial,
             ordered.Take(MaxIssues).ToArray(), ordered.Length > MaxIssues,
             refreshDate, periods.Length == 1 ? periods[0] : null, domains.ToArray(), roots.ToArray(),
-            identity.Column, identity.Namespace, profile.Coverage.Limits.Select(x => x.Code).ToArray());
+            usedIdentities.Count == 0 ? identities : identities.Where(usedIdentities.Contains).ToArray(),
+            profile.Coverage.Limits.Select(x => x.Code).ToArray());
         return new ReportConversion(package, diagnostics);
 
         void Reject(int line, string? column, string code)
@@ -340,11 +347,6 @@ public static class ReportAdapter
         return new Guid(SHA256.HashData(Encoding.UTF8.GetBytes(seed)).AsSpan(0, 16), bigEndian: true);
     }
 
-    private sealed class Row(int line)
-    {
-        public int Line { get; } = line;
-        public Dictionary<string, (object? Value, string? Normalized)> Values { get; } = new(StringComparer.OrdinalIgnoreCase);
-        public HashSet<string> Concealed { get; } = new(StringComparer.OrdinalIgnoreCase);
-        public string? ExternalId { get; set; }
-    }
+    private sealed record Row(int Line, ReportIdentity Identity, string ExternalId,
+        IReadOnlyDictionary<string, (object? Value, string? Normalized)> Values, IReadOnlySet<string> Concealed);
 }

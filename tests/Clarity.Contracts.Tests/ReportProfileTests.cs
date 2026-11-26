@@ -70,7 +70,7 @@ public sealed class ReportProfileTests
         report.RefreshDate.ShouldBe(new DateOnly(2026, 5, 31));
         report.PeriodDays.ShouldBe(7);
         report.UpnDomains.ShouldBe(["contoso.example"]);
-        report.IdentityNamespace.ShouldBe("m365report.upn");
+        report.Identities.Select(x => x.Namespace).ShouldBe(["m365report.upn"]);
         report.UnrecognizedColumns.ShouldBeEmpty();
         report.MissingOptionalColumns.ShouldBeEmpty();
         report.CoverageLimits.ShouldContain("NotTenantExhaustive");
@@ -124,7 +124,7 @@ public sealed class ReportProfileTests
         var conversion = Convert(Example(OneDrive), OneDrive);
         conversion.Package.Results.Single().Status.ShouldBe(CoverageStatus.Complete);
         conversion.Diagnostics.SiteRoots.ShouldBe(["contoso.sharepoint.com"]);
-        conversion.Diagnostics.IdentityNamespace.ShouldBe("sharepoint.siteId");
+        conversion.Diagnostics.Identities.Select(x => x.Namespace).ShouldBe(["sharepoint.siteId"]);
         var drive = conversion.Package.Objects[0];
         (drive.Type, drive.Namespace, drive.ExternalId).ShouldBe(("oneDrive", "sharepoint.siteId", "6f1c2a10-1111-4a8b-9c11-000000000001"));
         drive.AlternativeKeys!.Single().ShouldBe(new ExternalReference("oneDrive", "url",
@@ -139,9 +139,70 @@ public sealed class ReportProfileTests
 
         var withoutSiteId = Csv(Text(OneDrive), drop: "Site Id");
         var provisional = Convert(withoutSiteId, OneDrive);
-        provisional.Diagnostics.IdentityNamespace.ShouldBe("m365report.siteUrl");
+        provisional.Diagnostics.Identities.Select(x => x.Namespace).ShouldBe(["m365report.siteUrl"]);
         provisional.Package.Objects[0].ExternalId.ShouldBe("https://contoso-my.sharepoint.com/personal/adele_vance_contoso_example");
         provisional.Package.Objects[0].AlternativeKeys!.Single().Namespace.ShouldBe("url");
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData(" \t ")]
+    public void OneDriveRowsChooseTheirOwnIdentityWhenSiteIdIsBlank(string siteId)
+    {
+        var bytes = Encoding.UTF8.GetBytes(Text(OneDrive).Replace(
+            "6f1c2a10-1111-4a8b-9c11-000000000002", siteId, StringComparison.Ordinal));
+        var conversion = Convert(bytes, OneDrive);
+
+        conversion.Package.Results.Single().Status.ShouldBe(CoverageStatus.Complete);
+        (conversion.Diagnostics.UsableRows, conversion.Diagnostics.RejectedRows).ShouldBe((2, 0));
+        conversion.Diagnostics.Issues.ShouldBeEmpty();
+        conversion.Diagnostics.Identities.ShouldBe(Profile(OneDrive).Object.Identities);
+        conversion.Package.Objects.Select(x => (x.Namespace, x.ExternalId)).ShouldBe([
+            ("sharepoint.siteId", "6f1c2a10-1111-4a8b-9c11-000000000001"),
+            ("m365report.siteUrl", "https://contoso-my.sharepoint.com/personal/alex_wilber_contoso_example")]);
+        conversion.Package.Objects[1].AlternativeKeys!.Single().ShouldBe(new ExternalReference("oneDrive", "url",
+            "https://contoso-my.sharepoint.com/personal/alex_wilber_contoso_example"));
+        conversion.Package.Relationships.Select(x => x.To).ShouldBe(
+            conversion.Package.Objects.Select(x => new ExternalReference(x.Type, x.Namespace, x.ExternalId)));
+    }
+
+    [Theory]
+    [InlineData("invalid-id", "https://contoso-my.sharepoint.com/personal/alex_wilber_contoso_example", "InvalidIdentifier", 0)]
+    [InlineData("", "", "MissingIdentifier", 0)]
+    [InlineData("", "0123456789abcdef0123456789abcdef", null, 1)]
+    public void OneDriveFallbackDoesNotHideInvalidMissingOrConcealedIdentities(string siteId, string siteUrl, string? error, int concealed)
+    {
+        var bytes = Encoding.UTF8.GetBytes(Text(OneDrive)
+            .Replace("6f1c2a10-1111-4a8b-9c11-000000000002", siteId, StringComparison.Ordinal)
+            .Replace("https://contoso-my.sharepoint.com/personal/alex_wilber_contoso_example", siteUrl, StringComparison.Ordinal));
+        var conversion = Convert(bytes, OneDrive);
+
+        conversion.Package.Results.Single().Status.ShouldBe(CoverageStatus.Partial);
+        conversion.Package.Objects.Single().Namespace.ShouldBe("sharepoint.siteId");
+        conversion.Package.Relationships.Single().To.ExternalId.ShouldBe(conversion.Package.Objects.Single().ExternalId);
+        conversion.Diagnostics.ConcealedRows.ShouldBe(concealed);
+        conversion.Diagnostics.RejectedRows.ShouldBe(error is null ? 0 : 1);
+        conversion.Diagnostics.Issues.ShouldBe(error is null ? [] : [new ReportRowIssue(3, "Site Id", error)]);
+    }
+
+    [Fact]
+    public void OneDriveDuplicateRowsReportTheSelectedIdentityColumn()
+    {
+        var rows = Text(OneDrive).TrimEnd('\n').Split('\n');
+        var provisional = rows[2].Replace("6f1c2a10-1111-4a8b-9c11-000000000002", "", StringComparison.Ordinal);
+        var normalizedDuplicate = provisional.Replace("contoso-my.sharepoint.com", "CONTOSO-MY.SHAREPOINT.COM", StringComparison.Ordinal)
+            .Replace("alex_wilber_contoso_example,", "alex_wilber_contoso_example/,", StringComparison.Ordinal);
+        var conversion = Convert(Encoding.UTF8.GetBytes(string.Join('\n', rows[0], rows[1], rows[1], provisional, normalizedDuplicate)), OneDrive);
+
+        conversion.Package.Results.Single().Status.ShouldBe(CoverageStatus.Failed);
+        conversion.Package.Objects.ShouldBeEmpty();
+        conversion.Package.Relationships.ShouldBeEmpty();
+        conversion.Diagnostics.RejectedRows.ShouldBe(4);
+        conversion.Diagnostics.Issues.ShouldBe([
+            new ReportRowIssue(2, "Site Id", "DuplicateIdentifier"),
+            new ReportRowIssue(3, "Site Id", "DuplicateIdentifier"),
+            new ReportRowIssue(4, "Site URL", "DuplicateIdentifier"),
+            new ReportRowIssue(5, "Site URL", "DuplicateIdentifier")]);
     }
 
     [Fact]

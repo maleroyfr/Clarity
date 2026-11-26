@@ -11,7 +11,7 @@ Graph. Framework behavior, reuse and acceptance tests are in
 | Profile | Object / key | Section | Relation |
 | --- | --- | --- | --- |
 | `m365.mailboxUsageDetail` 1.0.0 | `mailbox` in `m365report.upn` (lower-case UPN, provisional) | `exchange.mailboxUsage` | `mailboxOf` mailbox → `user`/`upn` |
-| `m365.oneDriveUsageAccountDetail` 1.0.0 | `oneDrive` in `sharepoint.siteId` when the optional `Site Id` column exists, otherwise `m365report.siteUrl` (normalized URL, provisional); alternate `url` | `onedrive.accountUsage` | `ownerOf` `user`/`upn` → OneDrive |
+| `m365.oneDriveUsageAccountDetail` 1.0.0 | `oneDrive` in `sharepoint.siteId` when the row supplies a valid `Site Id`, otherwise `m365report.siteUrl` (normalized URL, provisional) when the column or cell is empty; alternate `url` | `onedrive.accountUsage` | `ownerOf` `user`/`upn` → OneDrive |
 | `m365.sharePointSiteUsageDetail` 1.0.0 | `site` in `sharepoint.siteId` (required `Site Id`); alternate `url` | `sharepoint.siteUsage` | `ownerOf` `user`/`upn` → site |
 
 ## Acquiring the reports
@@ -61,6 +61,12 @@ OneDrive required columns: `Report Refresh Date`, `Site URL`, `Owner Display Nam
 `Is Deleted`, `Last Activity Date`, `File Count`, `Active File Count`,
 `Storage Used (Byte)`, `Storage Allocated (Byte)`, `Owner Principal Name`,
 `Report Period`; optional `Site Id`.
+
+OneDrive identity selection is per row: populated and blank `Site Id` cells may
+coexist. A blank or whitespace-only cell uses that row's usable `Site URL`; an
+invalid nonblank ID rejects the row rather than silently falling back. A concealed
+URL cannot provide a provisional identity. The preview lists every identity
+column/namespace used, and owner relationships keep the selected row's namespace.
 
 SharePoint required columns: `Report Refresh Date`, `Site Id`, `Site URL`,
 `Owner Display Name`, `Is Deleted`, `Last Activity Date`, `File Count`,
@@ -115,6 +121,6 @@ members.
 
 Profiles 1.0.0 with adapter 1.0.0, against the Graph v1.0 column lists published on
 Microsoft Learn and checked when this slice was written. Synthetic tests cover each schema, BOM
-and quoted fields, reordered headers, blank versus zero versus invalid values,
+and quoted fields, reordered headers, mixed populated/blank OneDrive IDs, blank versus zero versus invalid values,
 concealed rows, missing columns and the megabyte variant. A pilot must download real
 reports for each period and confirm their headers before claiming live readiness.

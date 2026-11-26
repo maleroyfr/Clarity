@@ -110,6 +110,71 @@ public sealed class ReportImportTests
     }
 
     [SqlFact]
+    public async Task MixedOneDriveIdentitiesPublishThroughTheCommonJobPathWithoutDuplicates()
+    {
+        await using var fixture = await DiscoveryFixture.CreateAsync();
+        var environment = await AddTenantAsync(fixture);
+        var store = new MemoryArtifactStore();
+        var imports = ZipImportTests.Service(fixture, store);
+        var bytes = Encoding.UTF8.GetBytes(Text(OneDrive).Replace(
+            "6f1c2a10-1111-4a8b-9c11-000000000002", "", StringComparison.Ordinal));
+        var ids = await Task.WhenAll(Enumerable.Range(0, 2).Select(_ => UploadAsync(imports, fixture, environment, OneDrive, bytes)));
+        ids.Distinct().ShouldHaveSingleItem();
+        var id = ids[0];
+        var preview = await imports.PreviewAsync(fixture.Project.Id, id);
+        preview.Sections.Single().Status.ShouldBe(CoverageStatus.Complete);
+        (preview.Report!.UsableRows, preview.Report.RejectedRows).ShouldBe((2, 0));
+        preview.Report.Identities.Select(x => x.Namespace).ShouldBe(["sharepoint.siteId", "m365report.siteUrl"]);
+        preview.NewObjects.ShouldBe(2);
+        await using var check = await fixture.Factory.CreateDbContextAsync();
+        (await check.InventoryObjects.CountAsync()).ShouldBe(0);
+        (await check.ObjectObservations.CountAsync()).ShouldBe(0);
+        (await check.CollectionJobs.CountAsync()).ShouldBe(0);
+
+        await Task.WhenAll(imports.ConfirmAsync(fixture.Project.Id, id), imports.ConfirmAsync(fixture.Project.Id, id));
+        await IntegrateAsync(fixture, store, imports, id);
+        var keys = await check.ExternalKeys.AsNoTracking().Where(x => x.IsPrimary && x.Type == "oneDrive")
+            .ToDictionaryAsync(x => x.Namespace + "|" + x.ExternalId, x => x.ObjectId);
+        keys.Keys.ShouldBe([
+            "sharepoint.siteId|6f1c2a10-1111-4a8b-9c11-000000000001",
+            "m365report.siteUrl|https://contoso-my.sharepoint.com/personal/alex_wilber_contoso_example"], ignoreOrder: true);
+        (await check.InventoryObjects.AsNoTracking().ToListAsync()).ShouldAllBe(x =>
+            x.Type == "oneDrive" && x.LastObservedAtUtc == Refresh && x.Presence == InventoryPresence.Observed);
+        var owners = await check.InventoryRelationships.AsNoTracking().ToListAsync();
+        owners.ShouldAllBe(x => x.RelationType == "ownerOf" && x.FromMethod == EndpointResolution.Pending
+            && x.ToMethod == EndpointResolution.Primary);
+        owners.Select(x => x.ToObjectId!.Value).ShouldBe(keys.Values, ignoreOrder: true);
+        var provisionalId = keys["m365report.siteUrl|https://contoso-my.sharepoint.com/personal/alex_wilber_contoso_example"];
+        var storage = await check.CurrentValues.AsNoTracking().SingleAsync(x => x.ObjectId == provisionalId && x.Field == "storageUsedBytes");
+        storage.ValueJson.ShouldBe("0");
+        var proof = (await new InventoryProof(fixture.Factory, fixture.Access)
+            .ReadAsync(fixture.Project.Id, new(ProofKind.Observation, storage.ObservationId))).Sources.Single();
+        proof.Channel.ShouldBe("ReportImport");
+        proof.Modules["reportProfile"].ShouldBe($"{OneDrive}@{Version}");
+        proof.Modules["reportAdapter"].ShouldBe(ReportAdapter.Version);
+        proof.Modules["scopeSource"].ShouldBe("consultantSupplied");
+        proof.Observed.ShouldBe(Refresh);
+        proof.Uploader.ShouldBe(fixture.Identity);
+        proof.Result.ShouldBe(CoverageStatus.Complete);
+
+        var raw = await imports.DownloadRawAsync(fixture.Project.Id, id);
+        await using (var content = raw.Content)
+        {
+            using var copy = new MemoryStream();
+            await content.CopyToAsync(copy);
+            copy.ToArray().ShouldBe(bytes);
+        }
+        (await UploadAsync(imports, fixture, environment, OneDrive, bytes)).ShouldBe(id);
+        await imports.ConfirmAsync(fixture.Project.Id, id);
+        (await ZipImportTests.Processor(fixture, store).ProcessOneAsync(default)).ShouldBeFalse();
+        (await check.InventoryObjects.CountAsync()).ShouldBe(2);
+        (await check.ObjectObservations.CountAsync()).ShouldBe(2);
+        (await check.CollectionJobs.CountAsync()).ShouldBe(1);
+        (await check.SectionRuns.CountAsync(x => x.PublishedAtUtc != null)).ShouldBe(1);
+        store.Count.ShouldBe(1);
+    }
+
+    [SqlFact]
     public async Task SiteReportsResolveOwnersThroughObservedUpnsAndContradictoryTenantEvidenceBlocksPublication()
     {
         await using var fixture = await DiscoveryFixture.CreateAsync();

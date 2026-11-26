@@ -7,7 +7,7 @@
     <p>@Text["ReportSource"] : @Text["ReportSourceUpload"]</p>
     <p>@Text["ReportRefreshDate"] : @Report.RefreshDate.ToString("dd/MM/yyyy", System.Globalization.CultureInfo.GetCultureInfo("fr-FR"))
         · @Text["ReportPeriod"] : @(Report.PeriodDays is { } days ? $"{days} {Text["Days"]}" : Text["Unknown"].Value)</p>
-    <p>@Text["ReportIdentity"] : <code>@Report.IdentityColumn → @Report.IdentityNamespace</code></p>
+    <p>@Text["ReportIdentity"] : @foreach (var identity in Report.Identities) { <code>@identity.Column → @identity.Namespace</code> @(" ") }</p>
     <p>@Text["ReportRows"] : @Report.DataRows · @Text["ReportUsableRows"] : @Report.UsableRows · @Text["ReportRejectedRows"] : @Report.RejectedRows
         · @Text["ReportConcealedRows"] : @Report.ConcealedRows · @Text["ReportPartiallyConcealedRows"] : @Report.PartiallyConcealedRows</p>
     <p>@Text["RecognizedColumns"] : @foreach (var column in Report.RecognizedColumns) { <code>@column</code> @(" ") }</p>

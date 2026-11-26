@@ -106,6 +106,26 @@ public class ComponentTests : BunitContext
     }
 
     [Fact]
+    public void Report_preview_shows_both_identity_namespaces_for_mixed_onedrive_rows()
+    {
+        var tenant = Guid.NewGuid().ToString();
+        var csv = string.Join('\n',
+            "Report Refresh Date,Site Id,Site URL,Owner Display Name,Is Deleted,Last Activity Date,File Count,Active File Count,Storage Used (Byte),Storage Allocated (Byte),Owner Principal Name,Report Period",
+            "2026-05-31,6f1c2a10-1111-4a8b-9c11-000000000001,https://contoso-my.sharepoint.com/personal/adele_vance_contoso_example,Adele Vance,False,2026-05-30,1200,35,5368709120,1099511627776,adele.vance@contoso.example,7",
+            "2026-05-31,,https://contoso-my.sharepoint.com/personal/alex_wilber_contoso_example,Alex Wilber,False,,0,0,0,1099511627776,alex.wilber@contoso.example,7");
+        var profile = ReportProfiles.Default.Require("m365.oneDriveUsageAccountDetail", "1.0.0");
+        var report = ReportAdapter.Convert(System.Text.Encoding.UTF8.GetBytes(csv), profile,
+            new ReportContext(tenant, new("tenant", tenant), new string('a', 64)), ReportLimits.Default).Diagnostics;
+
+        var text = System.Net.WebUtility.HtmlDecode(Render<ReportPreview>(parameters => parameters.Add(x => x.Report, report)).Markup);
+
+        text.ShouldContain("<code>Site Id → sharepoint.siteId</code>");
+        text.ShouldContain("<code>Site URL → m365report.siteUrl</code>");
+        text.ShouldContain("Lignes exploitables : 2");
+        text.ShouldContain("Lignes rejetées : 0");
+    }
+
+    [Fact]
     public void Every_supported_report_profile_and_declared_limit_has_a_french_label()
     {
         var text = Services.GetRequiredService<Microsoft.Extensions.Localization.IStringLocalizer<UiStrings>>();
