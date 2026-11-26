@@ -12,7 +12,7 @@ public sealed record RequestView(Guid Id, string ScopeJson, string ScriptVersion
 public sealed record JobView(Guid Id, CollectionJobKind Kind, CollectionRunState State, int Attempt, int Progress,
     bool CancellationRequested, string? ErrorCode, string CorrelationId, DateTimeOffset CreatedAtUtc);
 public sealed record CoverageView(Guid RunId, string CapabilityId, string ScopeJson, CoverageStatus? Coverage,
-    long? ObjectCount, long? RelationshipCount, DateTimeOffset? LastValidAtUtc, Guid? LastValidRunId);
+    long? ObjectCount, long? RelationshipCount, DateTimeOffset? LastValidAtUtc, Guid? LastValidRunId, Guid SectionRunId);
 public sealed record ConnectionView(Guid Id, string Name, Guid TenantId, DateTimeOffset? TestedAtUtc, IReadOnlyList<SectionAccess> Checks);
 public sealed record PreviewView(RunView Run, IReadOnlyList<SectionResult> Sections, IReadOnlyList<ObjectRecord> Objects,
     IReadOnlyList<RelationshipRecord> Relationships, int NewObjects, int ExistingObjects);
@@ -86,7 +86,7 @@ public sealed class DiscoveryQueries(IDbContextFactory<ClarityDbContext> factory
                 .OrderByDescending(x => x.Run.CompletedAtUtc).Select(x => new { x.Run.CompletedAtUtc, x.Run.Id }).FirstOrDefaultAsync(ct);
             var published = latest.Section.PublishedAtUtc is not null;
             rows.Add(new(latest.Run.Id, key.CapabilityId, latest.Section.ScopeJson, published ? latest.Section.Coverage : null,
-                published ? latest.Section.ObjectCount : null, published ? latest.Section.RelationshipCount : null, valid?.CompletedAtUtc, valid?.Id));
+                published ? latest.Section.ObjectCount : null, published ? latest.Section.RelationshipCount : null, valid?.CompletedAtUtc, valid?.Id, latest.Section.Id));
         }
         return new(rows, count);
     }

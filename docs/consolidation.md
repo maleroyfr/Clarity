@@ -99,3 +99,17 @@ reviews and competing validated associations.
 | Journey | Executable acceptance |
 | --- | --- |
 | Configured byte anchor through Graph, reviewed UPN preserved on identical evidence, affected decisions reopened on ambiguity/config change | `GraphTests.VerifiedConsistencyAnchorAndReviewedUpnSurviveUnrelatedRefreshButNotANewCandidate` |
+
+## Provenance
+
+The proof panel reauthorizes the dossier on each read. It shows the actual
+arrival channel (server Graph connection or ZIP), declared source and producer
+version, modules, observed environment/date, verified scope, fields, relations
+and section outcome. A ZIP additionally identifies the original filename,
+uploader's stable identity and upload time. It does not fetch raw files or
+return Blob names, tokens, continuation JSON or credential configuration.
+Relationships show endpoint resolution and all supporting source sections;
+mapping histories distinguish dated human justifications from rule revisions.
+
+The Graph/ZIP and configured-anchor SQL acceptance cases above exercise proof
+lookups, both channels, human history and guessed IDs from another workspace.

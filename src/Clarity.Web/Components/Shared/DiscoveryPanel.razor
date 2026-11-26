@@ -165,7 +165,10 @@
                         @if (row.LastValidRunId is { } validId) { <FluentButton OnClick="@(() => PreviewAsync(validId))">@Date(row.LastValidAtUtc)</FluentButton> }
                         else { @Text["Unknown"] }
                     </TemplateColumn>
-                    <TemplateColumn Title="@Text["Actions"]" Context="row"><FluentButton OnClick="@(() => PreviewAsync(row.RunId))">@Text["SectionResults"]</FluentButton></TemplateColumn>
+                    <TemplateColumn Title="@Text["Actions"]" Context="row">
+                        <FluentButton OnClick="@(() => PreviewAsync(row.RunId))">@Text["SectionResults"]</FluentButton>
+                        @if (row.Coverage.HasValue) { <FluentButton OnClick="@(() => _proof = new(ProofKind.Section, row.SectionRunId))">@Text["Provenance"]</FluentButton> }
+                    </TemplateColumn>
                 </Columns>
                 <EmptyContent><p>@Text["NoInventory"]</p></EmptyContent>
             </ClarityGrid>
@@ -173,6 +176,10 @@
         </section>
     }
 </section>
+@if (_proof is not null)
+{
+    <ProvenancePanel @key="(ProjectId, _proof)" ProjectId="ProjectId" Target="_proof" Close="@(() => _proof = null)" />
+}
 @if (_request is not null)
 {
     <DetailPanel Title="@Text["ScriptDownloads"]" Close="@(() => _request = null)">
@@ -232,6 +239,7 @@
     private IReadOnlyList<string> _uncollected = [];
     private ConnectionView? _connection;
     private RequestView? _request;
+    private ProofRef? _proof;
     private PreviewView? _preview;
 
     protected override Task OnParametersSetAsync() => RunAsync(async () =>
@@ -250,7 +258,7 @@
     }
     private async Task LoadSelectedAsync()
     {
-        _connection = null; _preview = null; _request = null; _uncollected = [];
+        _connection = null; _preview = null; _request = null; _proof = null; _uncollected = [];
         _availableSections = SelectedEnvironment is null ? [] : Catalog.Families.Where(x => x.EnvironmentKind == SelectedEnvironment.Kind.ToString())
             .SelectMany(x => x.Sections).Where(x => x.ProducerIds.Any(id => Catalog.Producers[id].Readiness == "SyntheticValidated")).Select(x => x.Id).ToArray();
         _sections = _availableSections;

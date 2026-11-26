@@ -103,6 +103,25 @@ internal sealed class DiscoveryFixture(TestDatabase database) : IAsyncDisposable
     }
 
     public ValueTask DisposeAsync() => Database.DisposeAsync();
+
+    internal async Task<(Project Project, TestContextFactory Factory, StoredProjectAccess Access, WorkspaceScope Scope)> OtherWorkspaceAsync()
+    {
+        var workspace = new ClientWorkspace { Name = "Other synthetic workspace" };
+        var identity = new UserIdentity(Guid.NewGuid(), Guid.NewGuid());
+        var scope = new WorkspaceScope(identity, [workspace.Id]);
+        var factory = new TestContextFactory(ConnectionString, scope);
+        await using var db = await factory.CreateDbContextAsync();
+        var project = new Project { WorkspaceId = workspace.Id, Name = "Other synthetic dossier" };
+        db.AddRange(workspace, project, new WorkspaceMember
+        {
+            WorkspaceId = workspace.Id,
+            TenantId = identity.TenantId,
+            ObjectId = identity.ObjectId,
+            Role = WorkspaceRole.Consultant
+        });
+        await db.SaveChangesAsync();
+        return (project, factory, new StoredProjectAccess(factory, scope), scope);
+    }
 }
 
 internal sealed class TestContextFactory(string connection, IWorkspaceContext scope) : IDbContextFactory<ClarityDbContext>

@@ -1,0 +1,41 @@
+@using Clarity.Infrastructure
+@inherits FoundationPage
+@inject InventoryProof Proof
+
+<DetailPanel Title="@Text["Provenance"]" Error="@Error" Close="Close">
+    @if (_detail?.Relation is { } relation)
+    {
+        <p>@Text["ResolutionRule"] : @relation · @Text[$"Endpoint{_detail.From}"] → @Text[$"Endpoint{_detail.To}"]</p>
+    }
+    @foreach (var decision in _detail?.Decisions ?? [])
+    {
+        <article><h3>@Text[decision.State.ToString()] · @Text[decision.Rule.ToString()]</h3>
+            <p>@decision.Date.ToString("g") · @(decision.Author?.ObjectId.ToString() ?? Text["Automatic"].Value)</p>
+            <p>@(decision.Author.HasValue ? decision.Reason : Text[decision.Reason].Value)</p>
+        </article>
+    }
+    @foreach (var source in _detail?.Sources ?? [])
+    {
+        <article class="environment-card">
+            <h3>@source.Source · @Text[source.Result.ToString()]</h3>
+            <p>@Text["CollectionChannel"] : @Text[source.Channel] · @source.Producer @source.Version</p>
+            <p>@Text[source.Side.ToString()] : @source.Environment · @source.Observed.ToString("u")</p>
+            <p>@Text["Section"] : @source.Capability · @Text["Scope"] : @source.Scope.Kind · @source.Scope.Value</p>
+            <p>@Text["CoveredFields"] : @string.Join(", ", source.Fields)</p>
+            <p>@Text["CoveredRelations"] : @string.Join(", ", source.Relations)</p>
+            @foreach (var module in source.Modules) { <p>@module.Key @module.Value</p> }
+            @if (source.FileName is not null)
+            {
+                <p>@Text["ResultFile"] : @source.FileName · @source.Uploaded?.ToString("u") · @Text["Uploader"] : @source.Uploader?.ObjectId</p>
+            }
+        </article>
+    }
+</DetailPanel>
+
+@code {
+    [Parameter] public Guid ProjectId { get; set; }
+    [Parameter, EditorRequired] public ProofRef Target { get; set; } = default!;
+    [Parameter] public EventCallback Close { get; set; }
+    private ProofDetail? _detail;
+    protected override Task OnParametersSetAsync() => RunAsync(async () => { _detail = null; _detail = await Proof.ReadAsync(ProjectId, Target); });
+}
