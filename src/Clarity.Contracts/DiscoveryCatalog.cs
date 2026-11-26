@@ -8,7 +8,7 @@ public sealed record CatalogField(string Type, string ReferenceProducer);
 public sealed record CatalogProducer(
     string Id, string Channel, string Version, string ApiVersion, bool Preview,
     string Readiness, IReadOnlyList<string> TestedVersions,
-    IReadOnlyList<string> Prerequisites, IReadOnlyList<string> Limits);
+    IReadOnlyList<string> Prerequisites, IReadOnlyList<string> Limits, bool VisibilityLimited = false);
 public sealed record CatalogSection(
     string Id, IReadOnlyList<string> ProducerIds, IReadOnlyList<string> SupportedScopes,
     IReadOnlyDictionary<string, CatalogField> Attributes, IReadOnlyList<string> Relations,
@@ -83,7 +83,8 @@ public sealed class DiscoveryCatalog
         }
         foreach (var result in package.Results)
         {
-            if (!Sections.TryGetValue(result.CapabilityId, out var section)
+            if (producer.VisibilityLimited && result.Status == CoverageStatus.Complete
+                || !Sections.TryGetValue(result.CapabilityId, out var section)
                 || !section.ProducerIds.Contains(producer.Id, StringComparer.Ordinal)
                 || !section.SupportedScopes.Contains(result.Scope.Kind, StringComparer.Ordinal)
                 || result.CoveredFields.Except(section.Attributes.Keys, StringComparer.Ordinal).Any()

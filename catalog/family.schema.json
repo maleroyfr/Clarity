@@ -18,6 +18,7 @@
           "version": { "$ref": "#/$defs/text" },
           "apiVersion": { "$ref": "#/$defs/text" },
           "preview": { "type": "boolean" },
+          "visibilityLimited": { "type": "boolean" },
           "readiness": { "enum": ["Planned", "SyntheticValidated"] },
           "testedVersions": { "$ref": "#/$defs/list" },
           "prerequisites": { "$ref": "#/$defs/nonemptyList" },

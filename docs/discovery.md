@@ -185,8 +185,10 @@ mailboxes, OneDrive accounts and SharePoint sites in an M365 tenant environment.
 They reuse the same private Blob retention, preview, explicit confirmation, leased
 job and `PublicationService` path, arrive on channel `ReportImport`, and never count
 as a verified Graph connection. The Exchange Online PowerShell family is documented
-in [Exchange Online](connectors/exchange.md); the other Lot 4 collection families
-(PnP, Teams, Power BI and Azure) are not implemented.
+in [Exchange Online](connectors/exchange.md). The [Power BI script](connectors/powerbi.md)
+uses the same request and import path for visible workspaces, reports, semantic
+models, their owners and dependencies, and administrable gateways. Its results
+never establish tenant-wide coverage or effective access.
 
 The separate [Office/GPO PowerShell family](connectors/office-gpo.md) records
 direct GPO links, security-filter principals and supported Office 16.0 user

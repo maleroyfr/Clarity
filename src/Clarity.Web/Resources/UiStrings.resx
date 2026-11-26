@@ -521,4 +521,31 @@
   <data name="Issue_UnresolvedMembers" xml:space="preserve"><value>Des membres de groupe sans identifiant Exchange lisible ont été omis ; l'appartenance est partielle.</value></data>
   <data name="Issue_UnresolvedTrustees" xml:space="preserve"><value>Des bénéficiaires de délégation n'ont pas pu être rapprochés d'un destinataire observé unique et ont été omis ; la couverture des délégations est partielle.</value></data>
   <data name="Issue_UnlinkedMailbox" xml:space="preserve"><value>Des boîtes utilisateur n'ont aucun identifiant exploitable pour les rattacher à un utilisateur : le lien reste en attente.</value></data>
+  <data name="Producer_clarity.powerbi" xml:space="preserve"><value>Power BI — script PowerShell</value></data>
+  <data name="CreateScriptRequest_clarity.powerbi" xml:space="preserve"><value>Créer une demande de collecte Power BI</value></data>
+  <data name="DownloadScriptBundle_clarity.powerbi" xml:space="preserve"><value>Télécharger le script Power BI 1.0.0 (ZIP)</value></data>
+  <data name="ScriptCommandHint_clarity.powerbi" xml:space="preserve"><value>Décompressez le script, placez parameters.json à la racine et lancez la commande dans une nouvelle fenêtre PowerShell. À la connexion Microsoft, choisissez le compte autorisé du tenant demandé.</value></data>
+  <data name="LocalScriptConnectionHint_clarity.powerbi" xml:space="preserve"><value>PowerShell 7.2 ou plus et MicrosoftPowerBIMgmt.Profile 1.3.84 requis. Le script vérifie le tenant avant la première lecture. Seuls les éléments visibles par ce compte sont observés ; un élément absent du résultat n’est pas considéré comme supprimé.</value></data>
+  <data name="Section_powerbi.workspaces" xml:space="preserve"><value>Power BI — espaces de travail visibles</value></data>
+  <data name="Section_powerbi.reports" xml:space="preserve"><value>Power BI — rapports et modèles associés</value></data>
+  <data name="Section_powerbi.semanticModels" xml:space="preserve"><value>Power BI — modèles sémantiques</value></data>
+  <data name="Section_powerbi.owners" xml:space="preserve"><value>Power BI — propriétaires des modèles sémantiques</value></data>
+  <data name="Section_powerbi.workspaceRoles" xml:space="preserve"><value>Power BI — rôles directs des utilisateurs et groupes</value></data>
+  <data name="Section_powerbi.gateways" xml:space="preserve"><value>Power BI — passerelles administrées par le compte</value></data>
+  <data name="Section_powerbi.dataSources" xml:space="preserve"><value>Power BI — sources de données des passerelles</value></data>
+  <data name="Section_powerbi.modelSources" xml:space="preserve"><value>Power BI — sources de données utilisées par les modèles</value></data>
+  <data name="ObjectType_powerBIWorkspace" xml:space="preserve"><value>Espace de travail Power BI</value></data>
+  <data name="ObjectType_powerBIReport" xml:space="preserve"><value>Rapport Power BI</value></data>
+  <data name="ObjectType_powerBISemanticModel" xml:space="preserve"><value>Modèle sémantique Power BI</value></data>
+  <data name="ObjectType_powerBIGateway" xml:space="preserve"><value>Passerelle Power BI</value></data>
+  <data name="ObjectType_powerBIDataSource" xml:space="preserve"><value>Source de données Power BI</value></data>
+  <data name="Relation_inPowerBIWorkspace" xml:space="preserve"><value>Appartient à l’espace de travail Power BI</value></data>
+  <data name="Relation_usesSemanticModel" xml:space="preserve"><value>Utilise le modèle sémantique</value></data>
+  <data name="Relation_modelOwnedBy" xml:space="preserve"><value>Propriétaire déclaré du modèle</value></data>
+  <data name="Relation_workspaceRoleAssignedTo" xml:space="preserve"><value>Rôle attribué directement dans l’espace de travail</value></data>
+  <data name="Relation_onPowerBIGateway" xml:space="preserve"><value>Source rattachée à la passerelle Power BI</value></data>
+  <data name="Relation_usesPowerBIDataSource" xml:space="preserve"><value>Utilise la source de données Power BI</value></data>
+  <data name="Issue_PowerBIVisibility" xml:space="preserve"><value>La visibilité dépend du compte. Une omission ne prouve ni une suppression ni les droits effectifs.</value></data>
+  <data name="Issue_PowerBIReadFailed" xml:space="preserve"><value>Lecture Power BI incomplète. Vérifiez les droits, les limites du service et la session avant de relancer la demande.</value></data>
+  <data name="Issue_PowerBIUnlinked" xml:space="preserve"><value>Une valeur ou une identité est absente ou non prise en charge. Aucun lien n’a été déduit.</value></data>
 </root>

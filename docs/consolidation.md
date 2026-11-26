@@ -53,6 +53,11 @@ stream must support absence. Such objects are *absent from scope*, not known
 deleted. Graph user delta never supplies negative evidence by omission, even on
 cursor restart. Historical fields and proof survive either kind of removal.
 
+[Power BI](connectors/powerbi.md) publishes operator-visible evidence only:
+an empty workspace or gateway list cannot withdraw a previously observed object
+or link. Owners and workspace role holders point to typed identity references in
+the same environment; access rights are not derived from those links.
+
 | Journey | Executable acceptance |
 | --- | --- |
 | Graph delta, interrupted publication, complementary confirmed ZIP, field precedence/conflict, explicit empty vs absent and rebuild | `GraphTests.GraphUsesCommonIngestionSurvivesRestartAndPersistsCursorOnlyAfterPublication` |

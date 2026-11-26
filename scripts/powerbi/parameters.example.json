@@ -1,0 +1,9 @@
+{
+  "schemaVersion": "1.0",
+  "requestId": "00000000-0000-0000-0000-0000000000b1",
+  "environmentKind": "M365Tenant",
+  "expectedEnvironmentExternalId": "00000000-0000-0000-0000-000000000001",
+  "scope": { "kind": "tenant", "value": "00000000-0000-0000-0000-000000000001" },
+  "sections": ["powerbi.workspaces", "powerbi.reports", "powerbi.semanticModels", "powerbi.owners", "powerbi.workspaceRoles", "powerbi.gateways", "powerbi.dataSources", "powerbi.modelSources"],
+  "producerVersion": "1.0.0"
+}

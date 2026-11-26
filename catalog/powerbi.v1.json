@@ -1,0 +1,67 @@
+{
+  "schemaVersion": "1.0", "id": "powerbi", "version": "1.0.0", "environmentKind": "M365Tenant",
+  "producers": [{
+    "id": "clarity.powerbi", "channel": "PowerShell", "version": "1.0.0", "apiVersion": "Power BI REST v1.0",
+    "preview": false, "readiness": "SyntheticValidated", "visibilityLimited": true,
+    "testedVersions": ["PowerShell 7.6.10, Pester 5.7.1, synthetic MicrosoftPowerBIMgmt.Profile 1.3.84 profile and documented REST v1.0 response shapes; no live execution"],
+    "prerequisites": ["PowerShell 7.2+ in a dedicated process with MicrosoftPowerBIMgmt.Profile 1.3.84 installed separately", "Interactive authorized user in the public cloud: Connect-PowerBIServiceAccount -Environment Public; authenticated TenantId must match before any reads", "Invoke-PowerBIRestMethod -Method Get; Disconnect-PowerBIServiceAccount after collection"],
+    "limits": ["Never tenant-exhaustive: all successful sections are Partial, including empty lists. No negative evidence or effective access.", "No admin APIs, app-only sessions, My workspace, sovereign clouds or VNet gateway coverage. Live module, rights and scale validation remain pilot work."]
+  }],
+  "sections": [{
+    "id": "powerbi.workspaces", "producerIds": ["clarity.powerbi"], "supportedScopes": ["tenant"],
+    "attributes": { "displayName": { "type": "string", "referenceProducer": "clarity.powerbi" } }, "relations": [],
+    "permissions": ["Workspace.Read.All and access to the workspace"],
+    "endpoints": ["GET groups?$top=100&$skip={offset}"],
+    "refreshStrategy": "Positive observations from a paged list of accessible workspaces.",
+    "limits": ["No personal workspace, tenant scan or membership expansion."]
+  }, {
+    "id": "powerbi.reports", "producerIds": ["clarity.powerbi"], "supportedScopes": ["tenant"],
+    "attributes": { "displayName": { "type": "string", "referenceProducer": "clarity.powerbi" } }, "relations": ["inPowerBIWorkspace", "usesSemanticModel"],
+    "permissions": ["Workspace.Read.All, Report.Read.All and workspace/report visibility"],
+    "endpoints": ["GET groups?$top=100&$skip={offset}", "GET groups/{groupId}/reports"],
+    "refreshStrategy": "List for each visible workspace; preserve readable workspaces on individual failures.",
+    "limits": ["No report contents or embed URLs. Paginated reports have no datasetId; external models need not be observable."]
+  }, {
+    "id": "powerbi.semanticModels", "producerIds": ["clarity.powerbi"], "supportedScopes": ["tenant"],
+    "attributes": { "displayName": { "type": "string", "referenceProducer": "clarity.powerbi" } }, "relations": ["inPowerBIWorkspace"],
+    "permissions": ["Workspace.Read.All, Dataset.Read.All and access to the dataset"],
+    "endpoints": ["GET groups?$top=100&$skip={offset}", "GET groups/{groupId}/datasets"],
+    "refreshStrategy": "List models in each visible workspace.",
+    "limits": ["No model schema, DAX, rows or content. Read-only access can return only id and name."]
+  }, {
+    "id": "powerbi.owners", "producerIds": ["clarity.powerbi"], "supportedScopes": ["tenant"],
+    "attributes": {}, "relations": ["modelOwnedBy"],
+    "permissions": ["Workspace.Read.All, Dataset.Read.All; write permission on the dataset for full properties"],
+    "endpoints": ["GET groups?$top=100&$skip={offset}", "GET groups/{groupId}/datasets (configuredBy)"],
+    "refreshStrategy": "Record an exact owner reference only when returned.",
+    "limits": ["Semantic-model ownership only; workspace administrators are not owners. A missing or unusable configuredBy never creates an identity."]
+  }, {
+    "id": "powerbi.workspaceRoles", "producerIds": ["clarity.powerbi"], "supportedScopes": ["tenant"],
+    "attributes": {}, "relations": ["workspaceRoleAssignedTo"],
+    "permissions": ["Workspace.Read.All and access to enumerate the workspace's role entries"],
+    "endpoints": ["GET groups?$top=100&$skip={offset}", "GET groups/{groupId}/users?$top=100&$skip={offset}"],
+    "refreshStrategy": "Record directly returned workspace roles for linkable users and groups.",
+    "limits": ["Only typed user address/group GUID references; no apps, nested members, effective access or ownership inferred from roles."]
+  }, {
+    "id": "powerbi.gateways", "producerIds": ["clarity.powerbi"], "supportedScopes": ["tenant"],
+    "attributes": { "displayName": { "type": "string", "referenceProducer": "clarity.powerbi" } }, "relations": [],
+    "permissions": ["Dataset.Read.All and gateway admin permission"],
+    "endpoints": ["GET gateways"],
+    "refreshStrategy": "Enumerate gateway IDs visible to this gateway administrator.",
+    "limits": ["A gateway cluster is represented by its primary gateway ID, not all nodes. VNet gateways unsupported."]
+  }, {
+    "id": "powerbi.dataSources", "producerIds": ["clarity.powerbi"], "supportedScopes": ["tenant"],
+    "attributes": { "dataSourceType": { "type": "string", "referenceProducer": "clarity.powerbi" } }, "relations": ["onPowerBIGateway"],
+    "permissions": ["Dataset.Read.All and gateway admin permission"],
+    "endpoints": ["GET gateways", "GET gateways/{gatewayId}/datasources"],
+    "refreshStrategy": "Read configured sources per visible gateway.",
+    "limits": ["Only IDs and allowlisted source types. No source names, credential fields or connection details."]
+  }, {
+    "id": "powerbi.modelSources", "producerIds": ["clarity.powerbi"], "supportedScopes": ["tenant"],
+    "attributes": { "dataSourceType": { "type": "string", "referenceProducer": "clarity.powerbi" } }, "relations": ["usesPowerBIDataSource", "onPowerBIGateway"],
+    "permissions": ["Workspace.Read.All, Dataset.Read.All and write permission on the dataset"],
+    "endpoints": ["GET groups?$top=100&$skip={offset}", "GET groups/{groupId}/datasets", "GET groups/{groupId}/datasets/{datasetId}/datasources"],
+    "refreshStrategy": "Record positive bindings for individually readable datasets.",
+    "limits": ["A source without a stable datasourceId is omitted, not identified by its connection. No queries or credentials."]
+  }]
+}

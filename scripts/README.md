@@ -52,3 +52,7 @@ only while the catalog version equals the version recorded in the request.
 ExchangeOnlineManagement 3.x cmdlets; it never connects, and requires one
 operator-opened session for the requested tenant. See
 [Exchange Online](../docs/connectors/exchange.md).
+
+[Power BI](../docs/connectors/powerbi.md) uses an interactive local
+MicrosoftPowerBIMgmt.Profile sign-in in a dedicated process; no credentials are
+put in the parameters. Its operator-limited sections cannot claim Complete coverage.
