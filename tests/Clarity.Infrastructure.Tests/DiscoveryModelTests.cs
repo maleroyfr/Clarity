@@ -4,6 +4,7 @@ using Shouldly;
 
 namespace Clarity.Infrastructure.Tests;
 
+[Collection("SQL lifecycle")]
 public sealed class DiscoveryModelTests
 {
     [Fact]

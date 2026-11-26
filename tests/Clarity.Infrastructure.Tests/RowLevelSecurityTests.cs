@@ -5,6 +5,7 @@ using Shouldly;
 
 namespace Clarity.Infrastructure.Tests;
 
+[Collection("SQL lifecycle")]
 public class RowLevelSecurityTests
 {
     [SqlFact]
