@@ -311,4 +311,105 @@
   <data name="ClearFilters" xml:space="preserve"><value>Effacer les filtres</value></data>
   <data name="PendingLinks" xml:space="preserve"><value>Relations en attente de résolution</value></data>
   <data name="Endpoints" xml:space="preserve"><value>Extrémités de la relation</value></data>
+  <data name="ErrorDetails" xml:space="preserve"><value>Détails de l'erreur</value></data>
+  <data name="Section_exchange.mailboxUsage" xml:space="preserve"><value>Exchange — utilisation des boîtes aux lettres (rapport)</value></data>
+  <data name="Section_onedrive.accountUsage" xml:space="preserve"><value>OneDrive — utilisation des comptes (rapport)</value></data>
+  <data name="Section_sharepoint.siteUsage" xml:space="preserve"><value>SharePoint — utilisation des sites (rapport)</value></data>
+  <data name="ObjectType_mailbox" xml:space="preserve"><value>Boîte aux lettres</value></data>
+  <data name="ObjectType_oneDrive" xml:space="preserve"><value>Espace OneDrive</value></data>
+  <data name="ObjectType_site" xml:space="preserve"><value>Site SharePoint</value></data>
+  <data name="ReportImport" xml:space="preserve"><value>Import de rapport administratif</value></data>
+  <data name="ImportReportTitle" xml:space="preserve"><value>Importer un rapport administratif</value></data>
+  <data name="ImportReportHint" xml:space="preserve"><value>Choisissez un profil d'import pris en charge, confirmez le tenant du rapport puis déposez le fichier CSV. Rien n'est intégré avant votre confirmation de l'aperçu.</value></data>
+  <data name="ReportProfile" xml:space="preserve"><value>Profil d'import</value></data>
+  <data name="ReportProfile_m365.mailboxUsageDetail" xml:space="preserve"><value>Microsoft 365 — détail d'utilisation des boîtes aux lettres</value></data>
+  <data name="ReportProfile_m365.oneDriveUsageAccountDetail" xml:space="preserve"><value>Microsoft 365 — détail d'utilisation des comptes OneDrive</value></data>
+  <data name="ReportProfile_m365.sharePointSiteUsageDetail" xml:space="preserve"><value>Microsoft 365 — détail d'utilisation des sites SharePoint</value></data>
+  <data name="ReportProfileHint_m365.mailboxUsageDetail" xml:space="preserve"><value>CSV Microsoft Graph getMailboxUsageDetail ou Get-MgReportMailboxUsageDetail, tailles en octets. La boîte est rattachée provisoirement par son UPN : aucun identifiant Exchange n'est fourni par le rapport.</value></data>
+  <data name="ReportProfileHint_m365.oneDriveUsageAccountDetail" xml:space="preserve"><value>CSV Microsoft Graph getOneDriveUsageAccountDetail ou Get-MgReportOneDriveUsageAccountDetail, tailles en octets. L'identifiant de site est utilisé lorsqu'il est présent, sinon l'URL sert de référence provisoire.</value></data>
+  <data name="ReportProfileHint_m365.sharePointSiteUsageDetail" xml:space="preserve"><value>CSV Microsoft Graph getSharePointSiteUsageDetail ou Get-MgReportSharePointSiteUsageDetail, tailles en octets. L'identifiant de site est obligatoire.</value></data>
+  <data name="ReportFormat" xml:space="preserve"><value>Format accepté</value></data>
+  <data name="ReportFormatValue" xml:space="preserve"><value>CSV UTF-8 séparé par des virgules, en-tête anglais Microsoft Graph, dates AAAA-MM-JJ, tailles en octets. Les exports du centre d'administration en Mo et les en-têtes traduits ne sont pas pris en charge.</value></data>
+  <data name="RequiredColumns" xml:space="preserve"><value>Colonnes obligatoires</value></data>
+  <data name="ReportIdentity" xml:space="preserve"><value>Identifiant de rapprochement</value></data>
+  <data name="DeclaredCoverage" xml:space="preserve"><value>Couverture déclarée et limites</value></data>
+  <data name="ReportTenantScope" xml:space="preserve"><value>Tenant couvert par le rapport (identifiant)</value></data>
+  <data name="ReportScopeAttestation" xml:space="preserve"><value>Je confirme que ce rapport provient de ce tenant. Le fichier ne porte pas l'identifiant du tenant : ce périmètre sera enregistré comme renseigné par le consultant, non observé.</value></data>
+  <data name="ReportFile" xml:space="preserve"><value>Rapport CSV</value></data>
+  <data name="ReportDiagnostics" xml:space="preserve"><value>Interprétation du rapport</value></data>
+  <data name="ReportNotGraphEvidence" xml:space="preserve"><value>Fichier déposé par un consultant : il ne constitue pas une preuve de connexion Microsoft Graph et ne prouve pas l'absence des objets non listés.</value></data>
+  <data name="ReportSource" xml:space="preserve"><value>Source d'origine</value></data>
+  <data name="ReportSourceUpload" xml:space="preserve"><value>Rapport d'utilisation Microsoft 365 au format CSV, déposé par un consultant</value></data>
+  <data name="ReportRefreshDate" xml:space="preserve"><value>Date d'actualisation du rapport</value></data>
+  <data name="ReportPeriod" xml:space="preserve"><value>Période</value></data>
+  <data name="Days" xml:space="preserve"><value>jours</value></data>
+  <data name="ReportRows" xml:space="preserve"><value>Lignes de données</value></data>
+  <data name="ReportUsableRows" xml:space="preserve"><value>Lignes exploitables</value></data>
+  <data name="ReportRejectedRows" xml:space="preserve"><value>Lignes rejetées</value></data>
+  <data name="ReportConcealedRows" xml:space="preserve"><value>Lignes à identité masquée</value></data>
+  <data name="ReportPartiallyConcealedRows" xml:space="preserve"><value>Lignes partiellement masquées</value></data>
+  <data name="RecognizedColumns" xml:space="preserve"><value>Colonnes reconnues</value></data>
+  <data name="UnrecognizedColumns" xml:space="preserve"><value>Colonnes non reconnues (ignorées)</value></data>
+  <data name="MissingOptionalColumns" xml:space="preserve"><value>Colonnes facultatives absentes</value></data>
+  <data name="ReportDomains" xml:space="preserve"><value>Domaines UPN présents</value></data>
+  <data name="ReportSiteRoots" xml:space="preserve"><value>Hôtes SharePoint présents</value></data>
+  <data name="RejectedRowDetails" xml:space="preserve"><value>Lignes rejetées ou non converties</value></data>
+  <data name="Line" xml:space="preserve"><value>Ligne</value></data>
+  <data name="IssuesTruncated" xml:space="preserve"><value>D'autres lignes sont concernées : seules les premières sont affichées.</value></data>
+  <data name="ReportPartialHint" xml:space="preserve"><value>Certaines lignes sont rejetées ou masquées : la section sera intégrée comme partielle et les objets non listés ne seront pas considérés comme absents.</value></data>
+  <data name="NothingToPublish" xml:space="preserve"><value>Aucune ligne exploitable : ce rapport ne peut pas être intégré. Corrigez le fichier ou choisissez un autre profil puis déposez-le à nouveau.</value></data>
+  <data name="ReportLimit_NotTenantExhaustive" xml:space="preserve"><value>Le rapport n'est pas un inventaire exhaustif du tenant : une ligne absente ne prouve ni suppression ni inexistence.</value></data>
+  <data name="ReportLimit_ConcealedNames" xml:space="preserve"><value>Lorsque le masquage des rapports est actif, noms, UPN et URL sont remplacés par des empreintes : ces valeurs sont comptées, jamais converties ni devinées.</value></data>
+  <data name="ReportLimit_DataLatency" xml:space="preserve"><value>Les rapports d'utilisation ont généralement 24 à 48 heures de retard : la date d'observation est la date d'actualisation du rapport, pas la date de dépôt.</value></data>
+  <data name="ReportLimit_OwnerLinkTiming" xml:space="preserve"><value>Les liens de propriété ne se résolvent qu'avec un utilisateur Entra dont l'UPN est valide à la date d'actualisation ; sinon ils restent en attente.</value></data>
+  <data name="ReportLimit_NoEndpointFields" xml:space="preserve"><value>Le rapport ne contient ni droits, ni liens de partage, ni appartenances, ni étiquettes de confidentialité.</value></data>
+  <data name="ReportLimit_DeletedRetention" xml:space="preserve"><value>Les boîtes supprimées restent environ 30 jours dans le rapport puis disparaissent, sans preuve de suppression.</value></data>
+  <data name="ReportLimit_ProvisionalMailboxKey" xml:space="preserve"><value>Le rapport ne fournit aucun identifiant Exchange immuable : la boîte est référencée provisoirement par son UPN, à rapprocher.</value></data>
+  <data name="ReportLimit_ProvisionalSiteKey" xml:space="preserve"><value>Sans identifiant de site, l'URL OneDrive sert de référence provisoire ; elle change si l'UPN du propriétaire change.</value></data>
+  <data name="ReportLimit_HiddenUrls" xml:space="preserve"><value>Les URL de site peuvent être vides avec Customer Key ou Customer Lockbox ; elles restent inconnues.</value></data>
+  <data name="ReportLimit_SingleGeography" xml:space="preserve"><value>Un fichier couvrant plusieurs hôtes SharePoint racines (multi-géo) est refusé.</value></data>
+  <data name="ReportRow_FieldCount" xml:space="preserve"><value>nombre de colonnes différent de l'en-tête</value></data>
+  <data name="ReportRow_MissingValue" xml:space="preserve"><value>valeur obligatoire vide</value></data>
+  <data name="ReportRow_InvalidDate" xml:space="preserve"><value>date invalide (format attendu AAAA-MM-JJ)</value></data>
+  <data name="ReportRow_InvalidBoolean" xml:space="preserve"><value>booléen invalide (True ou False attendu)</value></data>
+  <data name="ReportRow_InvalidBytes" xml:space="preserve"><value>taille invalide (nombre entier d'octets attendu)</value></data>
+  <data name="ReportRow_InvalidCount" xml:space="preserve"><value>nombre invalide (entier positif attendu)</value></data>
+  <data name="ReportRow_InvalidPeriod" xml:space="preserve"><value>période invalide (nombre de jours attendu)</value></data>
+  <data name="ReportRow_ValueTooLong" xml:space="preserve"><value>valeur trop longue</value></data>
+  <data name="ReportRow_InvalidUpn" xml:space="preserve"><value>UPN invalide</value></data>
+  <data name="ReportRow_InvalidIdentifier" xml:space="preserve"><value>identifiant invalide</value></data>
+  <data name="ReportRow_InvalidUrl" xml:space="preserve"><value>URL SharePoint invalide (https://*.sharepoint.com attendu)</value></data>
+  <data name="ReportRow_MissingIdentifier" xml:space="preserve"><value>identifiant de rapprochement absent</value></data>
+  <data name="ReportRow_DuplicateIdentifier" xml:space="preserve"><value>identifiant présent sur plusieurs lignes : toutes ces lignes sont rejetées</value></data>
+  <data name="Issue_ScopeSuppliedByConsultant" xml:space="preserve"><value>Le tenant de ce rapport a été renseigné par le consultant ; il n'est pas porté par le fichier.</value></data>
+  <data name="Issue_ReportCoverageLimited" xml:space="preserve"><value>Rapport administratif : couverture limitée aux lignes fournies ; aucune absence n'est déduite.</value></data>
+  <data name="Issue_ConcealedIdentifiers" xml:space="preserve"><value>Des lignes ont une identité masquée : elles sont comptées mais non converties.</value></data>
+  <data name="Issue_ConcealedFields" xml:space="preserve"><value>Des valeurs masquées n'ont pas été converties ; les valeurs précédentes sont conservées.</value></data>
+  <data name="Issue_OptionalColumnsMissing" xml:space="preserve"><value>Des colonnes facultatives sont absentes : les champs correspondants ne sont pas mis à jour.</value></data>
+  <data name="Issue_UnrecognizedColumns" xml:space="preserve"><value>Des colonnes non reconnues ont été ignorées.</value></data>
+  <data name="Issue_RejectedRows" xml:space="preserve"><value>Des lignes ont été rejetées : la section est partielle.</value></data>
+  <data name="Issue_AllIdentifiersConcealed" xml:space="preserve"><value>Toutes les identités sont masquées : rien ne peut être intégré. Désactivez le masquage des rapports puis exportez à nouveau.</value></data>
+  <data name="Issue_NoUsableRows" xml:space="preserve"><value>Aucune ligne exploitable dans ce rapport.</value></data>
+  <data name="ImportError_ReportFileTooLarge" xml:space="preserve"><value>Le rapport dépasse la taille maximale acceptée (16 Mio).</value></data>
+  <data name="ImportError_ReportInvalidEncoding" xml:space="preserve"><value>Le rapport n'est pas un texte UTF-8 valide.</value></data>
+  <data name="ImportError_ReportMalformedCsv" xml:space="preserve"><value>Le fichier n'est pas un CSV valide (guillemets mal fermés ou inattendus).</value></data>
+  <data name="ImportError_ReportFieldTooLong" xml:space="preserve"><value>Une valeur du rapport dépasse la longueur maximale acceptée.</value></data>
+  <data name="ImportError_ReportTooManyFields" xml:space="preserve"><value>Une ligne du rapport contient trop de colonnes.</value></data>
+  <data name="ImportError_ReportRowLimit" xml:space="preserve"><value>Le rapport dépasse le nombre maximal de lignes accepté (150 000).</value></data>
+  <data name="ImportError_ReportInvalidHeader" xml:space="preserve"><value>L'en-tête du rapport est absent ou invalide.</value></data>
+  <data name="ImportError_ReportDuplicateColumns" xml:space="preserve"><value>L'en-tête du rapport contient des colonnes en double.</value></data>
+  <data name="ImportError_ReportUnsupportedVariant" xml:space="preserve"><value>Cette variante d'export n'est pas prise en charge (par exemple tailles en Mo du centre d'administration). Téléchargez le CSV Microsoft Graph en octets.</value></data>
+  <data name="ImportError_ReportMissingColumns" xml:space="preserve"><value>Des colonnes obligatoires du profil sont absentes. Vérifiez le profil choisi et l'export.</value></data>
+  <data name="ImportError_ReportHasNoRows" xml:space="preserve"><value>Le rapport ne contient que l'en-tête : aucune ligne à interpréter.</value></data>
+  <data name="ImportError_ReportNoUsableRows" xml:space="preserve"><value>Aucune ligne n'a de date d'actualisation exploitable : rien ne peut être intégré.</value></data>
+  <data name="ImportError_ReportMixedRefreshDates" xml:space="preserve"><value>Le rapport mélange plusieurs dates d'actualisation : déposez un seul instantané.</value></data>
+  <data name="ImportError_ReportMixedPeriods" xml:space="preserve"><value>Le rapport mélange plusieurs périodes : déposez un seul export.</value></data>
+  <data name="ImportError_ReportEnvironmentConflict" xml:space="preserve"><value>Le contenu du rapport contredit l'environnement choisi (domaines ou hôtes SharePoint) : intégration bloquée.</value></data>
+  <data name="ImportError_ReportScopeMismatch" xml:space="preserve"><value>Le tenant renseigné ne correspond pas à l'environnement choisi.</value></data>
+  <data name="ImportError_ReportScopeNotAttested" xml:space="preserve"><value>Confirmez que le rapport provient de ce tenant avant de le déposer.</value></data>
+  <data name="ImportError_ReportEnvironmentUnsupported" xml:space="preserve"><value>Ce profil ne s'applique pas au type ou à l'identifiant de cet environnement.</value></data>
+  <data name="ImportError_ReportProfileUnavailable" xml:space="preserve"><value>Ce profil ou cette version n'est pas pris en charge.</value></data>
+  <data name="ImportError_ReportRequiresProfileUpload" xml:space="preserve"><value>Les rapports administratifs se déposent via un profil d'import, pas dans une archive de résultat.</value></data>
+  <data name="ImportError_ContentHashMismatch" xml:space="preserve"><value>Le fichier stocké ne correspond plus à l'empreinte enregistrée : déposez-le à nouveau.</value></data>
+  <data name="ImportError_ReportProfileMismatch" xml:space="preserve"><value>Ce fichier correspond à un autre profil d'import plus précis : choisissez le profil indiqué ci-dessous.</value></data>
 </root>

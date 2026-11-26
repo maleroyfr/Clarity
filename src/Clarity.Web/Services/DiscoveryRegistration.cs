@@ -21,6 +21,7 @@ public static class DiscoveryRegistration
             && !string.IsNullOrWhiteSpace(options.CertificateName)));
         services.AddSingleton(options);
         services.AddSingleton(DiscoveryCatalog.Load());
+        services.AddSingleton(provider => ReportProfiles.Load(provider.GetRequiredService<DiscoveryCatalog>()));
         services.AddSingleton<PackageValidator>();
         services.AddSingleton(new PackageLimits());
         services.AddSingleton<ZipPackageReader>();

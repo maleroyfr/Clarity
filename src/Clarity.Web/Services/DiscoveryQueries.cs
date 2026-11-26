@@ -15,7 +15,7 @@ public sealed record CoverageView(Guid RunId, string CapabilityId, string ScopeJ
     long? ObjectCount, long? RelationshipCount, DateTimeOffset? LastValidAtUtc, Guid? LastValidRunId, Guid SectionRunId);
 public sealed record ConnectionView(Guid Id, string Name, Guid TenantId, DateTimeOffset? TestedAtUtc, IReadOnlyList<SectionAccess> Checks);
 public sealed record PreviewView(RunView Run, IReadOnlyList<SectionResult> Sections, IReadOnlyList<ObjectRecord> Objects,
-    IReadOnlyList<RelationshipRecord> Relationships, int NewObjects, int ExistingObjects);
+    IReadOnlyList<RelationshipRecord> Relationships, int NewObjects, int ExistingObjects, ReportDiagnostics? Report = null);
 
 public sealed class DiscoveryQueries(IDbContextFactory<ClarityDbContext> factory, IProjectAccess access, DiscoveryCatalog catalog)
 {
@@ -121,5 +121,6 @@ public sealed class DiscoveryQueries(IDbContextFactory<ClarityDbContext> factory
 
     public static PreviewView Present(ImportPreview preview) => new(new(preview.Run.Id, preview.Run.ProducerId, preview.Run.ProducerVersion,
         preview.Run.ScopeJson, preview.Run.StartedAtUtc, preview.Run.CompletedAtUtc, preview.Run.State, preview.Run.ConfirmedAtUtc,
-        preview.Run.ContentHash, preview.Run.ExternalRunId), preview.Sections, preview.Objects, preview.Relationships, preview.NewObjects, preview.ExistingObjects);
+        preview.Run.ContentHash, preview.Run.ExternalRunId), preview.Sections, preview.Objects, preview.Relationships, preview.NewObjects, preview.ExistingObjects,
+        preview.Report);
 }

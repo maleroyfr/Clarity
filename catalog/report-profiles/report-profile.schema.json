@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object", "additionalProperties": false,
+  "required": ["schemaVersion", "id", "version", "name", "readiness", "producerId", "capabilityId", "environmentKind", "scopeKind",
+    "refreshDateColumn", "periodColumn", "format", "object", "columns", "relations", "unsupportedVariants", "coverage", "source"],
+  "properties": {
+    "schemaVersion": { "const": "1.0" },
+    "id": { "type": "string", "pattern": "^[a-z][a-zA-Z0-9]*\\.[a-zA-Z][a-zA-Z0-9]*$", "maxLength": 100 },
+    "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "name": { "$ref": "#/$defs/text" },
+    "readiness": { "enum": ["Planned", "SyntheticValidated"] },
+    "producerId": { "$ref": "#/$defs/text" },
+    "capabilityId": { "type": "string", "pattern": "^[a-z][a-zA-Z0-9]*\\.[a-zA-Z][a-zA-Z0-9]*$" },
+    "environmentKind": { "enum": ["M365Tenant"] },
+    "scopeKind": { "enum": ["tenant"] },
+    "refreshDateColumn": { "$ref": "#/$defs/header" },
+    "periodColumn": { "$ref": "#/$defs/header" },
+    "format": {
+      "type": "object", "additionalProperties": false, "required": ["kind", "encoding", "delimiter", "extension", "dateFormat"],
+      "properties": {
+        "kind": { "const": "csv" },
+        "encoding": { "const": "utf-8" },
+        "delimiter": { "const": "," },
+        "extension": { "const": ".csv" },
+        "dateFormat": { "const": "yyyy-MM-dd" }
+      }
+    },
+    "object": {
+      "type": "object", "additionalProperties": false, "required": ["type", "identities", "alternativeKeys"],
+      "properties": {
+        "type": { "type": "string", "pattern": "^[a-z][a-zA-Z0-9]*$", "maxLength": 100 },
+        "identities": {
+          "type": "array", "minItems": 1, "maxItems": 5,
+          "items": {
+            "type": "object", "additionalProperties": false, "required": ["column", "namespace", "format"],
+            "properties": {
+              "column": { "$ref": "#/$defs/header" },
+              "namespace": { "type": "string", "minLength": 1, "maxLength": 100 },
+              "format": { "enum": ["guid", "upn", "url"] }
+            }
+          }
+        },
+        "alternativeKeys": {
+          "type": "array", "maxItems": 5,
+          "items": {
+            "type": "object", "additionalProperties": false, "required": ["column", "namespace"],
+            "properties": { "column": { "$ref": "#/$defs/header" }, "namespace": { "enum": ["url"] } }
+          }
+        }
+      }
+    },
+    "columns": {
+      "type": "array", "minItems": 1, "maxItems": 100,
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["header", "type", "required"],
+        "properties": {
+          "header": { "$ref": "#/$defs/header" },
+          "field": { "type": "string", "pattern": "^[a-z][a-zA-Z0-9]*$", "maxLength": 100 },
+          "type": { "enum": ["date", "boolean", "bytes", "count", "days", "string", "upn", "guid", "url"] },
+          "unit": { "enum": ["bytes", "items", "files", "pages", "views", "days"] },
+          "required": { "type": "boolean" },
+          "concealable": { "type": "boolean" }
+        }
+      }
+    },
+    "relations": {
+      "type": "array", "maxItems": 10,
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["type", "column", "direction", "endpoint"],
+        "properties": {
+          "type": { "type": "string", "pattern": "^[a-z][a-zA-Z0-9]*$", "maxLength": 100 },
+          "column": { "$ref": "#/$defs/header" },
+          "direction": { "enum": ["objectToEndpoint", "endpointToObject"] },
+          "endpoint": {
+            "type": "object", "additionalProperties": false, "required": ["type", "namespace"],
+            "properties": { "type": { "const": "user" }, "namespace": { "const": "upn" } }
+          }
+        }
+      }
+    },
+    "unsupportedVariants": {
+      "type": "array", "maxItems": 20,
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["code", "headers", "description"],
+        "properties": {
+          "code": { "type": "string", "pattern": "^[A-Z][A-Za-z0-9]*$", "maxLength": 100 },
+          "headers": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/header" } },
+          "description": { "$ref": "#/$defs/text" }
+        }
+      }
+    },
+    "coverage": {
+      "type": "object", "additionalProperties": false, "required": ["tenantExhaustive", "statement", "limits"],
+      "properties": {
+        "tenantExhaustive": { "const": false },
+        "statement": { "$ref": "#/$defs/text" },
+        "limits": {
+          "type": "array", "minItems": 1, "maxItems": 20,
+          "items": {
+            "type": "object", "additionalProperties": false, "required": ["code", "description"],
+            "properties": {
+              "code": { "type": "string", "pattern": "^[A-Z][A-Za-z0-9]*$", "maxLength": 100 },
+              "description": { "$ref": "#/$defs/text" }
+            }
+          }
+        }
+      }
+    },
+    "source": {
+      "type": "object", "additionalProperties": false, "required": ["name", "endpoints", "cmdlets", "permissions", "roles", "documentation"],
+      "properties": {
+        "name": { "$ref": "#/$defs/text" },
+        "endpoints": { "$ref": "#/$defs/list" },
+        "cmdlets": { "$ref": "#/$defs/list" },
+        "permissions": { "$ref": "#/$defs/list" },
+        "roles": { "$ref": "#/$defs/list" },
+        "documentation": { "$ref": "#/$defs/list" }
+      }
+    }
+  },
+  "$defs": {
+    "text": { "type": "string", "minLength": 1, "maxLength": 1000 },
+    "header": { "type": "string", "minLength": 1, "maxLength": 100 },
+    "list": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/text" } }
+  }
+}

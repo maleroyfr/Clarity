@@ -1,0 +1,68 @@
+{
+  "schemaVersion": "1.0",
+  "id": "m365.oneDriveUsageAccountDetail",
+  "version": "1.0.0",
+  "name": "Microsoft 365 OneDrive usage account detail report",
+  "readiness": "SyntheticValidated",
+  "producerId": "report.m365.oneDriveUsageAccountDetail",
+  "capabilityId": "onedrive.accountUsage",
+  "environmentKind": "M365Tenant",
+  "scopeKind": "tenant",
+  "refreshDateColumn": "Report Refresh Date",
+  "periodColumn": "Report Period",
+  "format": { "kind": "csv", "encoding": "utf-8", "delimiter": ",", "extension": ".csv", "dateFormat": "yyyy-MM-dd" },
+  "object": {
+    "type": "oneDrive",
+    "identities": [
+      { "column": "Site Id", "namespace": "sharepoint.siteId", "format": "guid" },
+      { "column": "Site URL", "namespace": "m365report.siteUrl", "format": "url" }
+    ],
+    "alternativeKeys": [{ "column": "Site URL", "namespace": "url" }]
+  },
+  "columns": [
+    { "header": "Report Refresh Date", "field": "reportRefreshDate", "type": "date", "required": true },
+    { "header": "Site Id", "type": "guid", "required": false },
+    { "header": "Site URL", "field": "siteUrl", "type": "url", "required": true, "concealable": true },
+    { "header": "Owner Display Name", "field": "ownerDisplayName", "type": "string", "required": true, "concealable": true },
+    { "header": "Is Deleted", "field": "isDeleted", "type": "boolean", "required": true },
+    { "header": "Last Activity Date", "field": "lastActivityDate", "type": "date", "required": true },
+    { "header": "File Count", "field": "fileCount", "type": "count", "unit": "files", "required": true },
+    { "header": "Active File Count", "field": "activeFileCount", "type": "count", "unit": "files", "required": true },
+    { "header": "Storage Used (Byte)", "field": "storageUsedBytes", "type": "bytes", "unit": "bytes", "required": true },
+    { "header": "Storage Allocated (Byte)", "field": "storageAllocatedBytes", "type": "bytes", "unit": "bytes", "required": true },
+    { "header": "Owner Principal Name", "field": "ownerPrincipalName", "type": "upn", "required": true, "concealable": true },
+    { "header": "Report Period", "field": "reportPeriodDays", "type": "days", "unit": "days", "required": true }
+  ],
+  "relations": [
+    { "type": "ownerOf", "column": "Owner Principal Name", "direction": "endpointToObject", "endpoint": { "type": "user", "namespace": "upn" } }
+  ],
+  "unsupportedVariants": [
+    { "code": "MegabyteUnits", "headers": ["Storage Used (MB)", "Storage Allocated (MB)"],
+      "description": "Microsoft 365 admin center exports in MB are rounded and not byte-faithful; download the Graph CSV in bytes instead." }
+  ],
+  "coverage": {
+    "tenantExhaustive": false,
+    "statement": "Rows are the OneDrive accounts Microsoft included in this report snapshot; the file is not a tenant-wide exhaustive OneDrive inventory.",
+    "limits": [
+      { "code": "NotTenantExhaustive", "description": "Missing rows never prove that a OneDrive was deleted or never existed." },
+      { "code": "ConcealedNames", "description": "When report concealment is enabled, owner names and URLs are replaced by hashes; such rows or fields are counted and not converted." },
+      { "code": "DataLatency", "description": "Microsoft usage reports typically lag 24 to 48 hours; the observation date is the report refresh date, not the upload date." },
+      { "code": "ProvisionalSiteKey", "description": "Without a Site Id column, OneDrive objects are keyed by the normalized report URL in namespace m365report.siteUrl and are not merged with Site Id keyed objects." },
+      { "code": "OwnerLinkTiming", "description": "Owner links resolve only through an Entra user UPN valid at the report refresh date; otherwise they stay pending." },
+      { "code": "SingleGeography", "description": "Files whose rows span more than one SharePoint root host (multi-geo) are rejected." },
+      { "code": "NoEndpointFields", "description": "The report carries no sharing, permission or file-level details." }
+    ]
+  },
+  "source": {
+    "name": "Microsoft Graph usage report getOneDriveUsageAccountDetail (CSV)",
+    "endpoints": ["GET https://graph.microsoft.com/v1.0/reports/getOneDriveUsageAccountDetail(period='D7') (D7, D30, D90 or D180) or (date=YYYY-MM-DD); 302 redirect to a short-lived CSV download URL"],
+    "cmdlets": ["Get-MgReportOneDriveUsageAccountDetail -Period D7 -OutFile onedrive-usage.csv (Microsoft.Graph.Reports)"],
+    "permissions": ["Reports.Read.All (Microsoft Graph, delegated or application)"],
+    "roles": ["Delegated access: Global Administrator, Exchange Administrator, SharePoint Administrator, Skype for Business (Lync) Administrator, Teams Service Administrator, Teams Communications Administrator or Reports Reader", "Global Reader and Usage Summary Reports Reader see tenant-level summaries only and cannot download user-level detail"],
+    "documentation": [
+      "https://learn.microsoft.com/graph/api/reportroot-getonedriveusageaccountdetail?view=graph-rest-1.0",
+      "https://learn.microsoft.com/microsoft-365/admin/activity-reports/onedrive-for-business-usage-ww",
+      "https://learn.microsoft.com/microsoft-365/troubleshoot/miscellaneous/reports-show-anonymous-user-name"
+    ]
+  }
+}

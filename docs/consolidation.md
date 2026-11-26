@@ -38,7 +38,10 @@ For each explicitly reported field, sort by catalog reference producer, verified
 server connection for that producer, complete coverage, observation time, then
 stable run/section identifiers. JSON `null`, `[]` and `""` are values; no row
 means not observed. A successful Graph user delta is comparable for its
-explicitly reported fields, never for omitted objects or fields.
+explicitly reported fields, never for omitted objects or fields. A `Partial`
+[report import](import-profiles.md) section whose only errors are rejected rows is
+comparable for the rows it converted, because each row is all-or-nothing; it never
+supports absence because report sections always carry a coverage warning.
 Comparable streams that disagree retain both observations
 and flag the current field. The winning observation carries the freshness date.
 
@@ -54,6 +57,7 @@ cursor restart. Historical fields and proof survive either kind of removal.
 | --- | --- |
 | Graph delta, interrupted publication, complementary confirmed ZIP, field precedence/conflict, explicit empty vs absent and rebuild | `GraphTests.GraphUsesCommonIngestionSurvivesRestartAndPersistsCursorOnlyAfterPublication` |
 | Partial, field-limited and differently scoped zero versus comparable exhaustive zero | `PublicationTests.AbsenceRequiresAnExhaustiveComparableSnapshot` |
+| A later partial report updates its rows and keeps prior values, presence and a validated decision | `ReportImportTests.PartialReportKeepsPriorValuesPresenceAndValidatedHumanDecisions` |
 
 ## Relationships
 
@@ -105,10 +109,12 @@ reviews and competing validated associations.
 ## Provenance
 
 The proof panel reauthorizes the dossier on each read. It shows the actual
-arrival channel (server Graph connection or ZIP), declared source and producer
-version, modules, observed environment/date, verified scope, fields, relations
-and section outcome. A ZIP additionally identifies the original filename,
-uploader's stable identity and upload time. It does not fetch raw files or
+arrival channel (server Graph connection, ZIP or administrative report import),
+declared source and producer version, modules, observed environment/date, verified
+scope, fields, relations and section outcome. A ZIP or report additionally
+identifies the original filename, uploader's stable identity and upload time; a
+report also shows its profile/adapter versions and whether scope was supplied by
+the consultant. It does not fetch raw files or
 return Blob names, tokens, continuation JSON or credential configuration.
 Relationships show endpoint resolution and all supporting source sections;
 mapping histories distinguish dated human justifications from rule revisions.

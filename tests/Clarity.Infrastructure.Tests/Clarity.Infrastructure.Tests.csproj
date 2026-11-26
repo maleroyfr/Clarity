@@ -1,5 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
     <ProjectReference Include="../../src/Clarity.Infrastructure/Clarity.Infrastructure.csproj" />
+    <None Include="../../catalog/report-profiles/examples/*.csv" Link="ReportExamples/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

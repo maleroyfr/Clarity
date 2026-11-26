@@ -1,0 +1,3 @@
+Report Refresh Date,Site Id,Site URL,Owner Display Name,Is Deleted,Last Activity Date,File Count,Active File Count,Storage Used (Byte),Storage Allocated (Byte),Owner Principal Name,Report Period
+2026-05-31,6f1c2a10-1111-4a8b-9c11-000000000001,https://contoso-my.sharepoint.com/personal/adele_vance_contoso_example,Adele Vance,False,2026-05-30,1200,35,5368709120,1099511627776,adele.vance@contoso.example,7
+2026-05-31,6f1c2a10-1111-4a8b-9c11-000000000002,https://contoso-my.sharepoint.com/personal/alex_wilber_contoso_example,"Wilber, Alex",False,,0,0,0,1099511627776,alex.wilber@contoso.example,7

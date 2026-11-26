@@ -37,12 +37,19 @@ public static class DiscoveryEndpoints
             service.CreateAsync(projectId, environmentId, input.OperationId, input.Scope, input.Sections, input.Domain, ct));
         api.MapPost("/{environmentId:guid}/upload", (Guid projectId, Guid environmentId, HttpContext context, ImportService service, CancellationToken ct) =>
             service.UploadAsync(projectId, environmentId, context.Request.Body, "uploaded-result.zip", ct));
+        api.MapPost("/{environmentId:guid}/reports/{profileId}/{version}", (Guid projectId, Guid environmentId, string profileId, string version,
+            string scopeKind, string scopeValue, bool attested, HttpContext context, ImportService service, CancellationToken ct) =>
+            service.UploadReportAsync(projectId, environmentId, profileId, version, new(scopeKind, scopeValue), attested,
+                context.Request.Body, "uploaded-report.csv", ct));
         api.MapGet("/runs/{runId:guid}/preview", async (Guid projectId, Guid runId, ImportService service, CancellationToken ct) =>
             DiscoveryQueries.Present(await service.PreviewAsync(projectId, runId, ct)));
         api.MapPost("/runs/{runId:guid}/confirm", (Guid projectId, Guid runId, ImportService service, CancellationToken ct) =>
             service.ConfirmAsync(projectId, runId, ct));
         api.MapGet("/runs/{runId:guid}/download", async (Guid projectId, Guid runId, ImportService service, CancellationToken ct) =>
-            Results.Stream(await service.DownloadAsync(projectId, runId, ct), "application/zip", "result.zip"));
+        {
+            var raw = await service.DownloadRawAsync(projectId, runId, ct);
+            return Results.Stream(raw.Content, raw.ContentType, raw.FileName);
+        });
         api.MapGet("/requests/{requestId:guid}/parameters", async (Guid projectId, Guid requestId, ScriptRequestService service, CancellationToken ct) =>
             Results.File(await service.DownloadParametersAsync(projectId, requestId, ct), "application/json", "parameters.json"));
         api.MapGet("/requests/{requestId:guid}/bundle", async (Guid projectId, Guid requestId, ScriptRequestService service, CancellationToken ct) =>

@@ -2,5 +2,6 @@
   <ItemGroup>
     <ProjectReference Include="../../src/Clarity.Contracts/Clarity.Contracts.csproj" />
     <None Include="../../contracts/zip-v1/examples/*" Link="Examples/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../catalog/report-profiles/examples/*.csv" Link="ReportExamples/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

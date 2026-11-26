@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Clarity.Infrastructure;
 
 public sealed class ImportJobHandler(IArtifactStore store, ZipPackageReader reader, PackageLimits limits,
-    DiscoveryCatalog catalog, PackageValidator validator) : ICollectionJobHandler
+    DiscoveryCatalog catalog, PackageValidator validator, ReportProfiles? profiles = null) : ICollectionJobHandler
 {
     public CollectionJobKind Kind => CollectionJobKind.Import;
 
@@ -24,16 +24,14 @@ public sealed class ImportJobHandler(IArtifactStore store, ZipPackageReader read
         var operation = job.Kind == CollectionJobKind.Import ? WorkspaceOperation.Import : WorkspaceOperation.Collect;
         var project = await execution.Access.RequireAsync(job.ProjectId, operation, cancellationToken);
         var scope = new WorkspaceScope(new UserIdentity(job.ActorTenantId, job.ActorObjectId), [project.WorkspaceId]);
-        var imports = new ImportService(execution.Factory, execution.Access, scope, store, reader, limits, catalog);
+        var imports = new ImportService(execution.Factory, execution.Access, scope, store, reader, limits, catalog, profiles);
         DiscoveryPackage package;
         await using (var db = await execution.Factory.CreateDbContextAsync(cancellationToken))
         {
             var run = await ImportService.RunAsync(db, project, runId, cancellationToken);
             if (run.ConfirmedAtUtc is null) { throw new ConflictException(); }
             var environment = await ImportService.EnvironmentAsync(db, project, run.EnvironmentId, cancellationToken);
-            package = await imports.ReadAsync(db, run, cancellationToken);
-            catalog.ValidatePackage(package);
-            await ImportService.ValidateContextAsync(db, project, environment, package, cancellationToken);
+            package = await imports.ReadForPublicationAsync(db, project, environment, run, cancellationToken);
             run.State = CollectionRunState.Running;
             await db.SaveChangesAsync(cancellationToken);
         }

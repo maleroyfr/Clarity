@@ -1,0 +1,68 @@
+{
+  "schemaVersion": "1.0",
+  "id": "m365.sharePointSiteUsageDetail",
+  "version": "1.0.0",
+  "name": "Microsoft 365 SharePoint site usage detail report",
+  "readiness": "SyntheticValidated",
+  "producerId": "report.m365.sharePointSiteUsageDetail",
+  "capabilityId": "sharepoint.siteUsage",
+  "environmentKind": "M365Tenant",
+  "scopeKind": "tenant",
+  "refreshDateColumn": "Report Refresh Date",
+  "periodColumn": "Report Period",
+  "format": { "kind": "csv", "encoding": "utf-8", "delimiter": ",", "extension": ".csv", "dateFormat": "yyyy-MM-dd" },
+  "object": {
+    "type": "site",
+    "identities": [{ "column": "Site Id", "namespace": "sharepoint.siteId", "format": "guid" }],
+    "alternativeKeys": [{ "column": "Site URL", "namespace": "url" }]
+  },
+  "columns": [
+    { "header": "Report Refresh Date", "field": "reportRefreshDate", "type": "date", "required": true },
+    { "header": "Site Id", "type": "guid", "required": true },
+    { "header": "Site URL", "field": "siteUrl", "type": "url", "required": true, "concealable": true },
+    { "header": "Owner Display Name", "field": "ownerDisplayName", "type": "string", "required": true, "concealable": true },
+    { "header": "Is Deleted", "field": "isDeleted", "type": "boolean", "required": true },
+    { "header": "Last Activity Date", "field": "lastActivityDate", "type": "date", "required": true },
+    { "header": "File Count", "field": "fileCount", "type": "count", "unit": "files", "required": true },
+    { "header": "Active File Count", "field": "activeFileCount", "type": "count", "unit": "files", "required": true },
+    { "header": "Page View Count", "field": "pageViewCount", "type": "count", "unit": "views", "required": true },
+    { "header": "Visited Page Count", "field": "visitedPageCount", "type": "count", "unit": "pages", "required": true },
+    { "header": "Storage Used (Byte)", "field": "storageUsedBytes", "type": "bytes", "unit": "bytes", "required": true },
+    { "header": "Storage Allocated (Byte)", "field": "storageAllocatedBytes", "type": "bytes", "unit": "bytes", "required": true },
+    { "header": "Root Web Template", "field": "rootWebTemplate", "type": "string", "required": true },
+    { "header": "Owner Principal Name", "field": "ownerPrincipalName", "type": "upn", "required": true, "concealable": true },
+    { "header": "Report Period", "field": "reportPeriodDays", "type": "days", "unit": "days", "required": true }
+  ],
+  "relations": [
+    { "type": "ownerOf", "column": "Owner Principal Name", "direction": "endpointToObject", "endpoint": { "type": "user", "namespace": "upn" } }
+  ],
+  "unsupportedVariants": [
+    { "code": "MegabyteUnits", "headers": ["Storage Used (MB)", "Storage Allocated (MB)"],
+      "description": "Microsoft 365 admin center exports in MB are rounded and not byte-faithful; download the Graph CSV in bytes instead." }
+  ],
+  "coverage": {
+    "tenantExhaustive": false,
+    "statement": "Rows are the sites Microsoft included in this report snapshot; the file is not a tenant-wide exhaustive site inventory.",
+    "limits": [
+      { "code": "NotTenantExhaustive", "description": "Missing rows never prove that a site was deleted or never existed; the list can differ from the admin center Active sites list." },
+      { "code": "ConcealedNames", "description": "When report concealment is enabled, owner names and URLs are replaced by hashes; such fields are counted and not converted." },
+      { "code": "HiddenUrls", "description": "Site URLs can be blank under Customer Key (BYOK) or Customer Lockbox; blank URLs stay unknown." },
+      { "code": "DataLatency", "description": "Microsoft usage reports typically lag 24 to 48 hours; the observation date is the report refresh date, not the upload date." },
+      { "code": "OwnerLinkTiming", "description": "Owner links resolve only through an Entra user UPN valid at the report refresh date; group-owned sites stay pending." },
+      { "code": "SingleGeography", "description": "Files whose rows span more than one SharePoint root host (multi-geo) are rejected." },
+      { "code": "NoEndpointFields", "description": "The report carries no permissions, sharing links, group membership or sensitivity labels." }
+    ]
+  },
+  "source": {
+    "name": "Microsoft Graph usage report getSharePointSiteUsageDetail (CSV)",
+    "endpoints": ["GET https://graph.microsoft.com/v1.0/reports/getSharePointSiteUsageDetail(period='D7') (D7, D30, D90 or D180) or (date=YYYY-MM-DD); 302 redirect to a short-lived CSV download URL"],
+    "cmdlets": ["Get-MgReportSharePointSiteUsageDetail -Period D7 -OutFile sharepoint-site-usage.csv (Microsoft.Graph.Reports)"],
+    "permissions": ["Reports.Read.All (Microsoft Graph, delegated or application)"],
+    "roles": ["Delegated access: Global Administrator, Exchange Administrator, SharePoint Administrator, Skype for Business (Lync) Administrator, Teams Service Administrator, Teams Communications Administrator or Reports Reader", "Global Reader and Usage Summary Reports Reader see tenant-level summaries only and cannot download user-level detail"],
+    "documentation": [
+      "https://learn.microsoft.com/graph/api/reportroot-getsharepointsiteusagedetail?view=graph-rest-1.0",
+      "https://learn.microsoft.com/microsoft-365/admin/activity-reports/sharepoint-site-usage-ww",
+      "https://learn.microsoft.com/microsoft-365/troubleshoot/miscellaneous/reports-show-anonymous-user-name"
+    ]
+  }
+}

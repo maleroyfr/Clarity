@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 using Json.Schema;
 
@@ -127,6 +128,8 @@ public sealed class DiscoveryCatalog
             "bytes" => value.ValueKind == JsonValueKind.Number && value.TryGetInt64(out var bytes) && bytes >= 0,
             "strings" => value.ValueKind == JsonValueKind.Array && value.EnumerateArray().All(x => x.ValueKind == JsonValueKind.String),
             "utc" => value.ValueKind == JsonValueKind.String && value.TryGetDateTimeOffset(out var date) && date.Offset == TimeSpan.Zero,
+            "date" => value.ValueKind == JsonValueKind.String && DateOnly.TryParseExact(value.GetString(), "yyyy-MM-dd",
+                CultureInfo.InvariantCulture, DateTimeStyles.None, out _),
             _ => false
         };
 

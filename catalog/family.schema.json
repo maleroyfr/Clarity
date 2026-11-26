@@ -39,7 +39,7 @@
             "additionalProperties": {
               "type": "object", "additionalProperties": false, "required": ["type", "referenceProducer"],
               "properties": {
-                "type": { "enum": ["string", "strings", "boolean", "integer", "bytes", "utc"] },
+                "type": { "enum": ["string", "strings", "boolean", "integer", "bytes", "utc", "date"] },
                 "referenceProducer": { "$ref": "#/$defs/text" }
               }
             }

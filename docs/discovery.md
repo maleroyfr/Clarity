@@ -150,4 +150,15 @@ through a former member's scope. Existing observations remain untouched.
 CI executes the SQL cases on disposable SQL Server and runs Pester before validating
 its generated packages. Local SQL skips are intentional when `CLARITY_TEST_SQL`
 is absent. Live AD/Graph/Key Vault validation is an operator pilot, not a claim made
-by synthetic acceptance. Lot 4 collection families are not implemented by this delivery.
+by synthetic acceptance.
+
+## Administrative report imports
+
+Administrative exports use versioned [import profiles](import-profiles.md), not the
+ZIP v1 upload. The first profiles interpret the
+[Microsoft 365 usage reports](connectors/microsoft-365-usage-reports.md) for
+mailboxes, OneDrive accounts and SharePoint sites in an M365 tenant environment.
+They reuse the same private Blob retention, preview, explicit confirmation, leased
+job and `PublicationService` path, arrive on channel `ReportImport`, and never count
+as a verified Graph connection. The other Lot 4 collection families (Exchange
+Online PowerShell, PnP, Teams, Intune, GPO, Power BI and Azure) are not implemented.

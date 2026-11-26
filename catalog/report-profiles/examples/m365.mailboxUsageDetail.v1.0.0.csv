@@ -1,0 +1,7 @@
+﻿Report Refresh Date,User Principal Name,Display Name,Is Deleted,Deleted Date,Created Date,Last Activity Date,Item Count,Storage Used (Byte),Issue Warning Quota (Byte),Prohibit Send Quota (Byte),Prohibit Send/Receive Quota (Byte),Deleted Item Count,Deleted Item Size (Byte),Deleted Item Quota (Byte),Has Archive,Report Period
+2026-05-31,adele.vance@contoso.example,Adele Vance,False,,2021-03-04,2026-05-30,1520,2147483648,105226698752,106300440576,107374182400,42,10485760,32212254720,True,7
+2026-05-31,alex.wilber@contoso.example,"Wilber, Alex",False,,2022-01-10,,0,0,105226698752,106300440576,107374182400,0,0,32212254720,False,7
+2026-05-31,megan.bowen@contoso.example,"Megan ""MB"" Bowen",False,,2023-06-01,2026-05-29,880,,105226698752,106300440576,107374182400,,,,,7
+2026-05-31,lee.gu@contoso.example,Lee Gu,False,,2020-02-02,2026-05-28,10,12 MB,105226698752,106300440576,107374182400,1,1024,32212254720,False,7
+2026-05-31,0123456789ABCDEF0123456789ABCDEF,FEDCBA9876543210FEDCBA9876543210,False,,2020-05-05,2026-05-27,5,1024,105226698752,106300440576,107374182400,0,0,32212254720,False,7
+2026-05-31,former.employee@contoso.example,Former Employee,True,2026-05-20,2019-01-01,2026-04-01,3,4096,105226698752,106300440576,107374182400,0,0,32212254720,False,7

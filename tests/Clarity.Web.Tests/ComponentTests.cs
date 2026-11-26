@@ -1,4 +1,5 @@
 using Bunit;
+using Clarity.Contracts;
 using Clarity.Core;
 using Clarity.Web.Components.Shared;
 using Microsoft.AspNetCore.Components;
@@ -71,5 +72,51 @@ public class ComponentTests : BunitContext
             .SortByColumnAsync("Nom", DataGridSortDirection.Descending));
         component.WaitForAssertion(() => requests[^1].Descending.ShouldBeTrue());
         requests[^1].Sort.ShouldBe("Name");
+    }
+
+    [Fact]
+    public void Report_preview_shows_recognized_columns_rejected_rows_origin_and_declared_limits_in_french()
+    {
+        var tenant = Guid.NewGuid().ToString();
+        var csv = string.Join('\n',
+            DiscoveryEndpointTests.MailboxHeader + ",Extra Column",
+            "2026-05-31,adele.vance@contoso.example,Adele Vance,False,,2021-03-04,2026-05-30,1520,2147483648,105226698752,106300440576,107374182400,42,10485760,32212254720,True,7,x",
+            "2026-05-31,lee.gu@contoso.example,Lee Gu,False,,2020-02-02,2026-05-28,10,12 MB,105226698752,106300440576,107374182400,1,1024,32212254720,False,7,x",
+            "2026-05-31,0123456789ABCDEF0123456789ABCDEF,FEDCBA9876543210FEDCBA9876543210,False,,2020-05-05,2026-05-27,5,1024,105226698752,106300440576,107374182400,0,0,32212254720,False,7,x");
+        var profile = ReportProfiles.Default.Require("m365.mailboxUsageDetail", "1.0.0");
+        var report = ReportAdapter.Convert(System.Text.Encoding.UTF8.GetBytes(csv), profile,
+            new ReportContext(tenant, new("tenant", tenant), new string('a', 64)), ReportLimits.Default).Diagnostics;
+
+        var text = System.Net.WebUtility.HtmlDecode(Render<ReportPreview>(parameters => parameters.Add(x => x.Report, report)).Markup);
+
+        text.ShouldContain("Interprétation du rapport");
+        text.ShouldContain("ne constitue pas une preuve de connexion Microsoft Graph");
+        text.ShouldContain("Microsoft 365 — détail d'utilisation des boîtes aux lettres");
+        text.ShouldContain("Rapport d'utilisation Microsoft 365 au format CSV, déposé par un consultant");
+        text.ShouldContain("31/05/2026");
+        text.ShouldContain("Lignes exploitables : 1");
+        text.ShouldContain("Lignes rejetées : 1");
+        text.ShouldContain("Lignes à identité masquée : 1");
+        text.ShouldContain("<code>Storage Used (Byte)</code>");
+        text.ShouldContain("Colonnes non reconnues (ignorées)");
+        text.ShouldContain("Extra Column");
+        text.ShouldContain("Ligne 3 · Storage Used (Byte) : taille invalide (nombre entier d'octets attendu)");
+        text.ShouldContain("le masquage des rapports est actif");
+        text.ShouldNotContain("0123456789ABCDEF0123456789ABCDEF");
+    }
+
+    [Fact]
+    public void Every_supported_report_profile_and_declared_limit_has_a_french_label()
+    {
+        var text = Services.GetRequiredService<Microsoft.Extensions.Localization.IStringLocalizer<UiStrings>>();
+        foreach (var profile in ReportProfiles.Default.Supported)
+        {
+            text[$"ReportProfile_{profile.Id}"].ResourceNotFound.ShouldBeFalse(profile.Id);
+            text[$"ReportProfileHint_{profile.Id}"].ResourceNotFound.ShouldBeFalse(profile.Id);
+            foreach (var limit in profile.Coverage.Limits)
+            {
+                text[$"ReportLimit_{limit.Code}"].ResourceNotFound.ShouldBeFalse(limit.Code);
+            }
+        }
     }
 }

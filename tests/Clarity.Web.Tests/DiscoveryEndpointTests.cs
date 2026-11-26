@@ -34,6 +34,8 @@ public sealed class DiscoveryEndpointTests
             (await client.PostAsJsonAsync($"{root}/{environment}/graph", new GraphInput(Guid.NewGuid(), Guid.NewGuid(), new("tenant", "synthetic"), ["entra.users"]),
                 TestContext.Current.CancellationToken)).StatusCode.ShouldBe(HttpStatusCode.Forbidden);
             (await client.PostAsync($"{root}/{environment}/upload", new ByteArrayContent([1, 2]), TestContext.Current.CancellationToken)).StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+            (await client.PostAsync($"{root}/{environment}/reports/m365.mailboxUsageDetail/1.0.0?scopeKind=tenant&scopeValue=x&attested=true",
+                new ByteArrayContent([1, 2]), TestContext.Current.CancellationToken)).StatusCode.ShouldBe(HttpStatusCode.Forbidden);
             (await client.PostAsync($"{root}/runs/{Guid.NewGuid()}/confirm", null, TestContext.Current.CancellationToken)).StatusCode.ShouldBe(HttpStatusCode.Forbidden);
             foreach (var action in new[] { "cancel", "retry" })
             {
@@ -67,6 +69,7 @@ public sealed class DiscoveryEndpointTests
         collections.ShouldContain("Historique des résultats");
         collections.ShouldContain("Aucun stockage local de remplacement");
         collections.ShouldNotContain("Aucune collecte ni import n'est encore lancé");
+        collections.ShouldNotContain("Importer un rapport administratif");
         var coverage = WebUtility.HtmlDecode(await client.GetStringAsync($"/projects/{alpha}/discovery?view=Coverage", TestContext.Current.CancellationToken));
         coverage.ShouldContain("AD — unités d'organisation");
         coverage.ShouldContain("Inconnu — à collecter");
@@ -185,6 +188,107 @@ public sealed class DiscoveryEndpointTests
         var json = await reader.GetStringAsync($"/api/projects/{alpha}/discovery/{id}/runs", TestContext.Current.CancellationToken);
         json.ShouldNotContain("private-delta-marker");
         json.ShouldNotContain("continuationJson");
+    }
+
+    [Fact]
+    public async Task FrenchReportCardOffersOnlySupportedTenantProfilesWithTheirColumnsAndDeclaredLimits()
+    {
+        await using var app = new FoundationApplication();
+        var (alpha, _) = await app.SeedAsync();
+        await SeedTenantAsync(app, alpha, Guid.NewGuid().ToString());
+        using var client = await app.CreatePersonaClientAsync("manager");
+        var page = WebUtility.HtmlDecode(await client.GetStringAsync($"/projects/{alpha}/discovery?view=Collections", TestContext.Current.CancellationToken));
+        page.ShouldContain("Importer un rapport administratif");
+        page.ShouldContain("Profil d'import");
+        page.ShouldContain("Microsoft 365 — détail d'utilisation des boîtes aux lettres · v1.0.0");
+        page.ShouldContain("Microsoft 365 — détail d'utilisation des comptes OneDrive · v1.0.0");
+        page.ShouldContain("Microsoft 365 — détail d'utilisation des sites SharePoint · v1.0.0");
+        page.ShouldContain("Colonnes obligatoires");
+        page.ShouldContain("Report Refresh Date");
+        page.ShouldContain("User Principal Name → m365report.upn");
+        page.ShouldContain("Couverture déclarée et limites");
+        page.ShouldContain("une ligne absente ne prouve ni suppression ni inexistence");
+        page.ShouldContain("Aucun stockage local de remplacement");
+        page.ShouldNotContain("Je confirme que ce rapport provient de ce tenant");
+    }
+
+    [Fact]
+    public async Task SqlReportJourneyStreamsPreviewsConfirmsAndPublishesAPartialReportThroughTheHttpBoundary()
+    {
+        if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("CLARITY_TEST_SQL")))
+        {
+            Assert.Skip("SQL integration test skipped: set CLARITY_TEST_SQL to a disposable SQL Server (provided by CI).");
+        }
+        await using var app = new FoundationApplication(sql: true, discoveryStorage: true);
+        var (alpha, _) = await app.SeedAsync();
+        var tenant = Guid.NewGuid().ToString();
+        var environment = await SeedTenantAsync(app, alpha, tenant);
+        using var consultant = await app.CreatePersonaClientAsync("consultant");
+        var page = WebUtility.HtmlDecode(await consultant.GetStringAsync($"/projects/{alpha}/discovery?view=Collections", TestContext.Current.CancellationToken));
+        page.ShouldContain("Je confirme que ce rapport provient de ce tenant");
+        var root = $"/api/projects/{alpha}/discovery";
+        var report = $"{root}/{environment}/reports/m365.mailboxUsageDetail/1.0.0?scopeKind=tenant&scopeValue={tenant}";
+        var csv = System.Text.Encoding.UTF8.GetBytes(string.Join("\r\n", MailboxHeader,
+            "2026-05-31,adele.vance@contoso.example,Adele Vance,False,,2021-03-04,2026-05-30,1520,2147483648,105226698752,106300440576,107374182400,42,10485760,32212254720,True,7",
+            "2026-05-31,lee.gu@contoso.example,Lee Gu,False,,2020-02-02,2026-05-28,10,12 MB,105226698752,106300440576,107374182400,1,1024,32212254720,False,7", ""));
+
+        var refused = await consultant.PostAsync($"{report}&attested=false", new ByteArrayContent(csv), TestContext.Current.CancellationToken);
+        refused.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        var problem = await refused.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        problem.ShouldNotContain(DevelopmentAuthenticationHandler.AlphaWorkspace.ToString("N"));
+        problem.ShouldNotContain("adele.vance", Case.Insensitive);
+
+        var upload = await consultant.PostAsync($"{report}&attested=true", new ByteArrayContent(csv), TestContext.Current.CancellationToken);
+        upload.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var runId = await upload.Content.ReadFromJsonAsync<Guid>(TestContext.Current.CancellationToken);
+        var preview = await consultant.GetFromJsonAsync<PreviewView>($"{root}/runs/{runId}/preview", TestContext.Current.CancellationToken);
+        preview!.Run.ProducerId.ShouldBe("report.m365.mailboxUsageDetail");
+        preview.Report!.ProfileVersion.ShouldBe("1.0.0");
+        preview.Report.UsableRows.ShouldBe(1);
+        preview.Report.RejectedRows.ShouldBe(1);
+        preview.Report.Issues.ShouldHaveSingleItem().ShouldBe(new ReportRowIssue(3, "Storage Used (Byte)", "InvalidBytes"));
+        preview.Sections.ShouldHaveSingleItem().Status.ShouldBe(CoverageStatus.Partial);
+        preview.Objects.ShouldHaveSingleItem().ExternalId.ShouldBe("adele.vance@contoso.example");
+        await using (var db = app.CreateUnscopedContext()) { (await db.ObjectObservations.CountAsync(TestContext.Current.CancellationToken)).ShouldBe(0); }
+
+        (await consultant.PostAsync($"{root}/runs/{runId}/confirm", null, TestContext.Current.CancellationToken)).StatusCode.ShouldBe(HttpStatusCode.OK);
+        string connection;
+        await using (var db = app.CreateUnscopedContext()) { connection = db.Database.GetConnectionString()!; }
+        var store = app.Services.GetRequiredService<IArtifactStore>();
+        var processor = new CollectionJobProcessor(new SqlJobQueue(connection, TimeProvider.System),
+            [new ImportJobHandler(store, new(new(), new()), new(), DiscoveryCatalog.Load(), new())], NullLogger<CollectionJobProcessor>.Instance);
+        (await processor.ProcessOneAsync(TestContext.Current.CancellationToken)).ShouldBeTrue();
+        var coverage = await consultant.GetFromJsonAsync<PageResult<CoverageView>>($"{root}/{environment}/coverage", TestContext.Current.CancellationToken);
+        var section = coverage!.Items.ShouldHaveSingleItem();
+        section.CapabilityId.ShouldBe("exchange.mailboxUsage");
+        section.Coverage.ShouldBe(CoverageStatus.Partial);
+        section.ObjectCount.ShouldBe(1);
+        (await consultant.GetByteArrayAsync($"{root}/runs/{runId}/download", TestContext.Current.CancellationToken)).ShouldBe(csv);
+        await using var check = app.CreateUnscopedContext();
+        var mailbox = await check.InventoryObjects.SingleAsync(TestContext.Current.CancellationToken);
+        mailbox.LastObservedAtUtc.ShouldBe(new DateTimeOffset(2026, 5, 31, 0, 0, 0, TimeSpan.Zero));
+        var sheet = WebUtility.HtmlDecode(await consultant.GetStringAsync($"/projects/{alpha}/inventory?object={mailbox.Id}", TestContext.Current.CancellationToken));
+        sheet.ShouldContain("adele.vance@contoso.example");
+        sheet.ShouldContain("Historique des observations");
+    }
+
+    internal const string MailboxHeader = "Report Refresh Date,User Principal Name,Display Name,Is Deleted,Deleted Date,Created Date,Last Activity Date,"
+        + "Item Count,Storage Used (Byte),Issue Warning Quota (Byte),Prohibit Send Quota (Byte),Prohibit Send/Receive Quota (Byte),"
+        + "Deleted Item Count,Deleted Item Size (Byte),Deleted Item Quota (Byte),Has Archive,Report Period";
+
+    private static async Task<Guid> SeedTenantAsync(FoundationApplication app, Guid project, string tenant)
+    {
+        await using var db = app.CreateUnscopedContext();
+        var environment = new ProjectEnvironment
+        {
+            WorkspaceId = DevelopmentAuthenticationHandler.AlphaWorkspace,
+            ProjectId = project,
+            Kind = EnvironmentKind.M365Tenant,
+            ExternalId = tenant
+        };
+        db.Environments.Add(environment);
+        await db.SaveChangesAsync();
+        return environment.Id;
     }
 
     private static async Task<Guid> SeedEnvironmentAsync(FoundationApplication app, Guid project)

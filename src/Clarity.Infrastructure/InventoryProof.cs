@@ -33,6 +33,7 @@ public sealed class InventoryProof(IDbContextFactory<ClarityDbContext> factory, 
                            r.EnvironmentId,
                            r.ManifestJson,
                            r.ConnectionId,
+                           r.Channel,
                            r.UploadedAtUtc,
                            r.ActorObjectId,
                            r.ActorTenantId,
@@ -100,7 +101,9 @@ public sealed class InventoryProof(IDbContextFactory<ClarityDbContext> factory, 
             var manifest = JsonSerializer.Deserialize<PackageManifest>(s.ManifestJson, ContractJson.Options)!;
             var result = JsonSerializer.Deserialize<SectionResult>(s.ResultJson, ContractJson.Options)!;
             var import = s.ConnectionId is null;
-            return new SourceProof(s.Id, result.CapabilityId, import ? "ZipImport" : "Microsoft Graph", manifest.ProducerId, manifest.ProducerVersion,
+            // A profiled report upload is labelled as such and is never presented as Microsoft Graph connection evidence.
+            var channel = !import ? "Microsoft Graph" : s.Channel == CollectionChannel.Report ? "ReportImport" : "ZipImport";
+            return new SourceProof(s.Id, result.CapabilityId, channel, manifest.ProducerId, manifest.ProducerVersion,
                 manifest.SourceId, manifest.ModuleVersions, manifest.EnvironmentExternalId, data.Role, d.Date, result.Scope, result.Status,
                 result.CoveredFields, result.CoveredRelations, import ? data.File : null, import ? s.UploadedAtUtc : null,
                 import ? new UserIdentity(s.ActorTenantId, s.ActorObjectId) : null);

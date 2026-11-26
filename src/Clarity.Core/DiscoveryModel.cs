@@ -7,7 +7,7 @@ namespace Clarity.Core;
 
 public enum CollectionRequestState { AwaitingFile, FileToConfirm, Integrated }
 public enum CollectionRunState { Pending, Running, Completed, Failed, Cancelled }
-public enum CollectionChannel { Graph, PowerShell }
+public enum CollectionChannel { Graph, PowerShell, Report }
 
 public sealed class Connection : WorkspaceEntity
 {

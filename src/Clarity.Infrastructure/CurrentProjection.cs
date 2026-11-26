@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Clarity.Infrastructure;
 
 internal sealed record ProjectedSection(SectionRun Section, Guid ExternalRunId, string Producer, string Version,
-    DateTimeOffset Started, DateTimeOffset Completed, Guid? Connection)
+    DateTimeOffset Started, DateTimeOffset Completed, Guid? Connection, CollectionChannel Channel)
 {
     public (string, string, string, string, Guid?) Stream =>
         (Producer, Version, Section.CapabilityId, Section.ScopeHash, Connection);
@@ -25,7 +25,7 @@ internal sealed record ProjectedSection(SectionRun Section, Guid ExternalRunId, 
         (from s in db.SectionRuns.AsNoTracking()
          join r in db.CollectionRuns on new { s.WorkspaceId, Id = s.RunId } equals new { r.WorkspaceId, r.Id }
          where s.WorkspaceId == workspace && r.EnvironmentId == environment && s.PublishedAtUtc != null
-         select new ProjectedSection(s, r.ExternalRunId, r.ProducerId, r.ProducerVersion, r.StartedAtUtc, r.CompletedAtUtc, r.ConnectionId))
+         select new ProjectedSection(s, r.ExternalRunId, r.ProducerId, r.ProducerVersion, r.StartedAtUtc, r.CompletedAtUtc, r.ConnectionId, r.Channel))
         .ToListAsync(token);
 }
 
@@ -41,8 +41,15 @@ internal static class CurrentProjection
         var comparableFields = sections.Values.Where(s =>
         {
             if (s.Section.Coverage == CoverageStatus.Complete) { return true; }
-            if (s.Section.Coverage != CoverageStatus.Partial || s.Connection == null || s.Section.CapabilityId != "entra.users") { return false; }
+            if (s.Section.Coverage != CoverageStatus.Partial) { return false; }
             var result = JsonSerializer.Deserialize<SectionResult>(s.Section.ResultJson, ContractJson.Options)!;
+            // A profiled report converts each row whole or rejects it whole: values of converted rows stay comparable even when
+            // other rows were rejected or concealed. Such sections still never prove absence.
+            if (s.Channel == CollectionChannel.Report)
+            {
+                return result.Errors.All(x => x.Code == "RejectedRows");
+            }
+            if (s.Connection == null || s.Section.CapabilityId != "entra.users") { return false; }
             return result.Errors.Count == 0 && result.Warnings.Count == 1 && result.Warnings[0].Code == "IncrementalChanges";
         }).Select(s => s.Section.Id).ToHashSet();
         var exhaustive = sections.Values.Where(x => x.IsExhaustive(catalog)).ToLookup(x => x.Stream);

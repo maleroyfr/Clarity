@@ -13,13 +13,18 @@ Field types define explicit empty values (`null`, empty string or empty array);
 unknown fields are rejected at the catalog boundary. Metadata outside this
 allowlist (including credentials and file/message contents) is not accepted.
 
-Lot 2 enables only AD and Graph Entra as their implementations land.
-Exchange and SharePoint entries illustrate future Lot 4 extensions, explicitly
-unavailable and untested. The remaining planned families below are not selectable:
+Lot 2 enables only AD and Graph Entra as their implementations land. Lot 4 adds
+`SyntheticValidated` report-import producers (channel `Import`) for Exchange
+mailbox usage, the new OneDrive family and SharePoint site usage. They are
+selectable only through the matching profile in `report-profiles/`, whose loader
+also checks that every profile field and relation exists in its family; see
+[import profiles](../docs/import-profiles.md). The Exchange Online PowerShell and
+PnP producers remain `planned`, unavailable and untested. The remaining planned
+families below are not selectable:
 
 | Family | Intended producer / data | Required future verification |
 | --- | --- | --- |
-| OneDrive | Graph plus SharePoint/PnP or administrative report | Personal-site provisioning, byte volumes, masked IDs, separate local permissions |
+| OneDrive (beyond usage reports) | Graph plus SharePoint/PnP | Personal-site provisioning, separate local permissions, sharing |
 | Teams | Graph teams, channels and associated sites | Endpoint permissions and hidden/shared channel scope |
 | Intune / Autopilot | Graph management metadata | v1.0 versus opt-in preview by section; licensing and application rights |
 | Microsoft 365 Apps / GPO | Local Office / GroupPolicy scripts | Windows and module versions, OU/computer scope and read rights |

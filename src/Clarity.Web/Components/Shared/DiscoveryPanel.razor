@@ -9,11 +9,18 @@
 @inject ImportService Imports
 @inject JobService Jobs
 @inject DiscoveryCatalog Catalog
+@inject ReportProfiles Reports
 @inject DiscoveryAvailability Availability
 @inject WorkspaceAuthorization Authorization
 
 <section aria-label="@Text["Discovery"]">
     @if (Error is not null) { <p class="error" role="alert">@Error</p> }
+    @if (Error is not null && ErrorDetails.Count > 0)
+    {
+        <ul class="error-details" aria-label="@Text["ErrorDetails"]">
+            @foreach (var detail in ErrorDetails) { <li>@Detail(detail)</li> }
+        </ul>
+    }
     @if (_message is not null) { <p class="notice" role="status">@_message</p> }
     <div class="toolbar discovery-toolbar">
         <FluentSelect TOption="ProjectEnvironment" TValue="Guid" Items="_environments"
@@ -108,6 +115,40 @@
                 else if (!Availability.Storage) { <p class="notice">@Text["StorageRequired"]</p> }
                 else { <p>@Text["ReadOnlyDiscovery"]</p> }
             </article>
+            @if (_profiles.Count > 0)
+            {
+                <article class="environment-card report-import">
+                    <h3>@Text["ImportReportTitle"]</h3>
+                    <p>@Text["ImportReportHint"]</p>
+                    <FluentSelect TOption="ReportProfile" TValue="string" Items="_profiles" OptionText="ProfileLabel" OptionValue="ProfileKey"
+                        @bind-Value="_profileKey" Label="@Text["ReportProfile"]" Disabled="@(!_canCollect || Busy)" />
+                    @if (SelectedProfile is { } profile)
+                    {
+                        <p>@Text[$"ReportProfileHint_{profile.Id}"]</p>
+                        <p>@Text["ReportFormat"] : @Text["ReportFormatValue"]</p>
+                        <p>@Text["RequiredColumns"] :
+                            @foreach (var column in profile.Columns.Where(x => x.Required)) { <code>@column.Header</code> @(" ") }</p>
+                        <p>@Text["ReportIdentity"] :
+                            @foreach (var identity in profile.Object.Identities) { <code>@identity.Column → @identity.Namespace</code> @(" ") }</p>
+                        <details>
+                            <summary>@Text["DeclaredCoverage"]</summary>
+                            <ul>@foreach (var limit in profile.Coverage.Limits) { <li>@Text[$"ReportLimit_{limit.Code}"]</li> }</ul>
+                        </details>
+                    }
+                    @if (Availability.Storage && _canCollect)
+                    {
+                        <FluentTextInput Label="@Text["ReportTenantScope"]" @bind-Value="_reportScope" Disabled="Busy" />
+                        <p>
+                            <input type="checkbox" id="report-scope-attested" @bind="_reportAttested" disabled="@Busy" />
+                            <label for="report-scope-attested">@Text["ReportScopeAttestation"]</label>
+                        </p>
+                        <label for="discovery-report">@Text["ReportFile"]</label>
+                        <InputFile id="discovery-report" OnChange="UploadReportAsync" accept=".csv" disabled="@(Busy || !_reportAttested || SelectedProfile is null)" />
+                    }
+                    else if (!Availability.Storage) { <p class="notice">@Text["StorageRequired"]</p> }
+                    else { <p>@Text["ReadOnlyDiscovery"]</p> }
+                </article>
+            }
             <h3>@Text["RequestHistory"]</h3>
             <ClarityGrid TGridItem="RequestView" Load="LoadRequestsAsync">
                 <Columns>
@@ -201,6 +242,7 @@
         <p>@Text["RunIdentifier"] : @_preview.Run.ExternalRunId</p>
         <p>SHA-256 : <code>@_preview.Run.ContentHash</code></p>
         <p>@Text["NewObjects"] : @_preview.NewObjects · @Text["ExistingObjects"] : @_preview.ExistingObjects</p>
+        @if (_preview.Report is { } report) { <ReportPreview Report="report" /> }
         @foreach (var result in _preview.Sections)
         {
             <article class="environment-card">
@@ -217,8 +259,17 @@
         <p><a href="@($"/api/projects/{ProjectId}/discovery/runs/{_preview.Run.Id}/download")" download>@Text["DownloadRawResult"]</a></p>
         @if (_preview.Run.ConfirmedAtUtc is null)
         {
-            <p class="notice">@Text["ConfirmationHint"]</p>
-            <FluentButton Appearance="ButtonAppearance.Primary" OnClick="ConfirmAsync" Disabled="@(!_canCollect || Busy)">@Text["ConfirmPublication"]</FluentButton>
+            @if (_preview.Report is { } diagnostics && (diagnostics.UsableRows == 0 || _preview.Sections.Any(x => x.Status == CoverageStatus.Failed)))
+            {
+                <p class="notice" role="status">@Text["NothingToPublish"]</p>
+            }
+            else
+            {
+                <p class="notice">@Text["ConfirmationHint"]</p>
+                @if (_preview.Report is not null && _preview.Sections.Any(x => x.Status == CoverageStatus.Partial))
+                { <p class="notice">@Text["ReportPartialHint"]</p> }
+                <FluentButton Appearance="ButtonAppearance.Primary" OnClick="ConfirmAsync" Disabled="@(!_canCollect || Busy)">@Text["ConfirmPublication"]</FluentButton>
+            }
         }
     </DetailPanel>
 }
@@ -237,6 +288,10 @@
     private string[] _availableSections = [];
     private IEnumerable<string> _sections = [];
     private IReadOnlyList<string> _uncollected = [];
+    private IReadOnlyList<ReportProfile> _profiles = [];
+    private string _profileKey = "", _reportScope = "";
+    private bool _reportAttested;
+    private ReportProfile? SelectedProfile => _profiles.FirstOrDefault(x => ProfileKey(x) == _profileKey);
     private ConnectionView? _connection;
     private RequestView? _request;
     private ProofRef? _proof;
@@ -260,8 +315,13 @@
     {
         _connection = null; _preview = null; _request = null; _proof = null; _uncollected = [];
         _availableSections = SelectedEnvironment is null ? [] : Catalog.Families.Where(x => x.EnvironmentKind == SelectedEnvironment.Kind.ToString())
-            .SelectMany(x => x.Sections).Where(x => x.ProducerIds.Any(id => Catalog.Producers[id].Readiness == "SyntheticValidated")).Select(x => x.Id).ToArray();
+            .SelectMany(x => x.Sections).Where(x => x.ProducerIds.Any(id => Catalog.Producers[id].Readiness == "SyntheticValidated"
+                && Catalog.Producers[id].Channel != "Import")).Select(x => x.Id).ToArray();
         _sections = _availableSections;
+        _profiles = SelectedEnvironment is null ? [] : Reports.Supported.Where(x => x.EnvironmentKind == SelectedEnvironment.Kind.ToString()).ToArray();
+        if (SelectedProfile is null) { _profileKey = _profiles.Count > 0 ? ProfileKey(_profiles[0]) : ""; }
+        _reportScope = SelectedEnvironment?.ExternalId ?? "";
+        _reportAttested = false;
         if (SelectedEnvironment is not null)
         {
             _connection = await Queries.ConnectionAsync(ProjectId, _environmentId);
@@ -296,6 +356,17 @@
         _preview = DiscoveryQueries.Present(await Imports.PreviewAsync(ProjectId, id)); _revision++;
     });
     private Task PreviewAsync(Guid id) => RunAsync(async () => _preview = DiscoveryQueries.Present(await Imports.PreviewAsync(ProjectId, id)));
+    private Task UploadReportAsync(InputFileChangeEventArgs args) => RunAsync(async () =>
+    {
+        var profile = SelectedProfile ?? throw new ContractException("ReportProfileUnavailable", "profile");
+        var limit = new PackageLimits().CompressedBytes;
+        if (args.File.Size > limit) { throw new ContractException("ReportFileTooLarge", CsvReportReader.FileName); }
+        await using var stream = args.File.OpenReadStream(limit);
+        var id = await Imports.UploadReportAsync(ProjectId, _environmentId, profile.Id, profile.Version,
+            new(profile.ScopeKind, _reportScope), _reportAttested, stream, args.File.Name);
+        _reportAttested = false;
+        _preview = DiscoveryQueries.Present(await Imports.PreviewAsync(ProjectId, id)); _revision++;
+    });
     private Task ConfirmAsync() => RunAsync(async () =>
     {
         await Imports.ConfirmAsync(ProjectId, _preview!.Run.Id);
@@ -310,6 +381,11 @@
     private string RequestUrl(Guid id, string kind) => $"/api/projects/{ProjectId}/discovery/requests/{id}/{kind}";
     private string SectionName(string id) => Text[$"Section_{id}"];
     private string Issue(string code) => Text[$"Issue_{code}"].ResourceNotFound ? Text["CollectionRemediation"] : Text[$"Issue_{code}"];
+    private static string ProfileKey(ReportProfile profile) => $"{profile.Id}@{profile.Version}";
+    private string ProfileLabel(ReportProfile profile) => $"{ReportPreview.ProfileName(Text, profile.Id)} · v{profile.Version}";
+    private string Detail(string detail) => detail.Split('|') is [var line, var column, var code] && int.TryParse(line, out var number)
+        ? ReportPreview.RowIssue(Text, number, column, code)
+        : Text[$"ReportProfile_{detail}"] is { ResourceNotFound: false } profile ? profile.Value : detail;
     private string Date(DateTimeOffset? date) => date is null ? Text["Unknown"]
         : date.Value.UtcDateTime.ToString("g", System.Globalization.CultureInfo.GetCultureInfo("fr-FR")) + " UTC";
     private string Count(long? value, CoverageStatus? status) => status == CoverageStatus.NotApplicable ? Text["NotApplicable"]

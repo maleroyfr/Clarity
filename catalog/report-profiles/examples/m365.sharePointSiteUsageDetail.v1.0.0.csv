@@ -1,0 +1,3 @@
+Report Refresh Date,Site Id,Site URL,Owner Display Name,Is Deleted,Last Activity Date,File Count,Active File Count,Page View Count,Visited Page Count,Storage Used (Byte),Storage Allocated (Byte),Root Web Template,Owner Principal Name,Report Period
+2026-05-31,7a2d3b20-2222-4b9c-8d22-000000000001,https://contoso.sharepoint.com/sites/Finance,Finance Owners,False,2026-05-30,340,12,1500,25,1073741824,27487790694400,Group,megan.bowen@contoso.example,7
+2026-05-31,7a2d3b20-2222-4b9c-8d22-000000000002,https://contoso.sharepoint.com/sites/Archive,,False,,0,0,0,0,0,27487790694400,Team Site,,7

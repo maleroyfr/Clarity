@@ -5,6 +5,12 @@
     "preview": false, "readiness": "Planned", "testedVersions": [],
     "prerequisites": ["Future Lot 4 implementation; authorized Entra app for local PnP authentication"],
     "limits": ["No executable producer or certified module/OS version yet; Graph consent is unrelated"]
+  }, {
+    "id": "report.m365.sharePointSiteUsageDetail", "channel": "Import", "version": "1.0.0", "apiVersion": "Microsoft Graph v1.0 usage report CSV",
+    "preview": false, "readiness": "SyntheticValidated",
+    "testedVersions": ["Synthetic CSV fixtures of the documented Graph v1.0 getSharePointSiteUsageDetail column set (byte units)"],
+    "prerequisites": ["Consultant upload of a report downloaded with Reports.Read.All and a Microsoft 365 reports role; tenant attested by the consultant"],
+    "limits": ["File import through report profile m365.sharePointSiteUsageDetail 1.0.0; not verified Graph connection evidence", "Admin center MB exports, localized headers and multi-geo files are rejected"]
   }],
   "sections": [{
     "id": "sharepoint.sitePermissions", "producerIds": ["clarity.pnp"], "supportedScopes": ["resource"],
@@ -13,5 +19,28 @@
     "endpoints": ["Planned: Get-PnPWeb; role assignments require separate verification"],
     "refreshStrategy": "Planned targeted site snapshot",
     "limits": ["Not available; sharing/effective access must not be inferred from this catalog declaration"]
+  }, {
+    "id": "sharepoint.siteUsage", "producerIds": ["report.m365.sharePointSiteUsageDetail"], "supportedScopes": ["tenant"],
+    "attributes": {
+      "reportRefreshDate": { "type": "date", "referenceProducer": "report.m365.sharePointSiteUsageDetail" },
+      "siteUrl": { "type": "string", "referenceProducer": "report.m365.sharePointSiteUsageDetail" },
+      "ownerDisplayName": { "type": "string", "referenceProducer": "report.m365.sharePointSiteUsageDetail" },
+      "isDeleted": { "type": "boolean", "referenceProducer": "report.m365.sharePointSiteUsageDetail" },
+      "lastActivityDate": { "type": "date", "referenceProducer": "report.m365.sharePointSiteUsageDetail" },
+      "fileCount": { "type": "integer", "referenceProducer": "report.m365.sharePointSiteUsageDetail" },
+      "activeFileCount": { "type": "integer", "referenceProducer": "report.m365.sharePointSiteUsageDetail" },
+      "pageViewCount": { "type": "integer", "referenceProducer": "report.m365.sharePointSiteUsageDetail" },
+      "visitedPageCount": { "type": "integer", "referenceProducer": "report.m365.sharePointSiteUsageDetail" },
+      "storageUsedBytes": { "type": "bytes", "referenceProducer": "report.m365.sharePointSiteUsageDetail" },
+      "storageAllocatedBytes": { "type": "bytes", "referenceProducer": "report.m365.sharePointSiteUsageDetail" },
+      "rootWebTemplate": { "type": "string", "referenceProducer": "report.m365.sharePointSiteUsageDetail" },
+      "ownerPrincipalName": { "type": "string", "referenceProducer": "report.m365.sharePointSiteUsageDetail" },
+      "reportPeriodDays": { "type": "integer", "referenceProducer": "report.m365.sharePointSiteUsageDetail" }
+    },
+    "relations": ["ownerOf"],
+    "permissions": ["Reports.Read.All (delegated or application) to download the report; delegated users also need a Microsoft 365 reports role"],
+    "endpoints": ["Consultant upload of GET /v1.0/reports/getSharePointSiteUsageDetail(period='D7|D30|D90|D180') or (date=YYYY-MM-DD) CSV"],
+    "refreshStrategy": "Consultant-uploaded report snapshot observed at the report refresh date",
+    "limits": ["Not a tenant-wide exhaustive site inventory; absence from a report never proves deletion", "Concealed names and URLs are not converted or guessed", "Site list can differ from the SharePoint admin center Active sites list"]
   }]
 }

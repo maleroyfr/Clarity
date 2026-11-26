@@ -78,10 +78,12 @@ public static class ContractJson
     }
 }
 
-public sealed class ContractException(string code, string file, int? line = null)
+public sealed class ContractException(string code, string file, int? line = null, IReadOnlyList<string>? details = null)
     : Exception($"Invalid Discovery package: {code} ({file}{(line is null ? "" : $":{line}")}).")
 {
     public string Code { get; } = code;
     public string File { get; } = file;
     public int? Line { get; } = line;
+    /// <summary>Safe, consultant-facing hints such as profile column names; never cell values or storage paths.</summary>
+    public IReadOnlyList<string> Details { get; } = details ?? [];
 }

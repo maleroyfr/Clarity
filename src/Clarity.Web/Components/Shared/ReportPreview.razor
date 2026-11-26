@@ -1,0 +1,41 @@
+@using Clarity.Contracts
+
+<article class="environment-card report-diagnostics">
+    <h3>@Text["ReportDiagnostics"]</h3>
+    <p class="notice">@Text["ReportNotGraphEvidence"]</p>
+    <p>@Text["ReportProfile"] : @ProfileName(Text, Report.ProfileId) <code>@Report.ProfileId @Report.ProfileVersion</code></p>
+    <p>@Text["ReportSource"] : @Text["ReportSourceUpload"]</p>
+    <p>@Text["ReportRefreshDate"] : @Report.RefreshDate.ToString("dd/MM/yyyy", System.Globalization.CultureInfo.GetCultureInfo("fr-FR"))
+        · @Text["ReportPeriod"] : @(Report.PeriodDays is { } days ? $"{days} {Text["Days"]}" : Text["Unknown"].Value)</p>
+    <p>@Text["ReportIdentity"] : <code>@Report.IdentityColumn → @Report.IdentityNamespace</code></p>
+    <p>@Text["ReportRows"] : @Report.DataRows · @Text["ReportUsableRows"] : @Report.UsableRows · @Text["ReportRejectedRows"] : @Report.RejectedRows
+        · @Text["ReportConcealedRows"] : @Report.ConcealedRows · @Text["ReportPartiallyConcealedRows"] : @Report.PartiallyConcealedRows</p>
+    <p>@Text["RecognizedColumns"] : @foreach (var column in Report.RecognizedColumns) { <code>@column</code> @(" ") }</p>
+    @if (Report.UnrecognizedColumns.Count > 0)
+    { <p>@Text["UnrecognizedColumns"] : @foreach (var column in Report.UnrecognizedColumns) { <code>@column</code> @(" ") }</p> }
+    @if (Report.MissingOptionalColumns.Count > 0)
+    { <p>@Text["MissingOptionalColumns"] : @foreach (var column in Report.MissingOptionalColumns) { <code>@column</code> @(" ") }</p> }
+    @if (Report.UpnDomains.Count > 0) { <p>@Text["ReportDomains"] : @string.Join(", ", Report.UpnDomains)</p> }
+    @if (Report.SiteRoots.Count > 0) { <p>@Text["ReportSiteRoots"] : @string.Join(", ", Report.SiteRoots)</p> }
+    @if (Report.Issues.Count > 0)
+    {
+        <h4>@Text["RejectedRowDetails"]</h4>
+        <ul>@foreach (var issue in Report.Issues) { <li>@RowIssue(Text, issue.Line, issue.Column, issue.Code)</li> }</ul>
+        @if (Report.IssuesTruncated) { <p>@Text["IssuesTruncated"]</p> }
+    }
+    <details>
+        <summary>@Text["DeclaredCoverage"]</summary>
+        <ul>@foreach (var limit in Report.CoverageLimits) { <li>@Text[$"ReportLimit_{limit}"]</li> }</ul>
+    </details>
+</article>
+
+@code {
+    [Parameter, EditorRequired] public ReportDiagnostics Report { get; set; } = default!;
+
+    public static string ProfileName(IStringLocalizer text, string id) =>
+        text[$"ReportProfile_{id}"] is { ResourceNotFound: false } name ? name.Value : id;
+
+    public static string RowIssue(IStringLocalizer text, int line, string? column, string code) =>
+        $"{text["Line"]} {line}{(string.IsNullOrEmpty(column) ? "" : $" · {column}")} : "
+        + (text[$"ReportRow_{code}"] is { ResourceNotFound: false } label ? label.Value : code);
+}

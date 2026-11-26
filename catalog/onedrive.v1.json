@@ -1,0 +1,31 @@
+{
+  "schemaVersion": "1.0", "id": "onedrive", "version": "1.0.0", "environmentKind": "M365Tenant",
+  "producers": [{
+    "id": "report.m365.oneDriveUsageAccountDetail", "channel": "Import", "version": "1.0.0", "apiVersion": "Microsoft Graph v1.0 usage report CSV",
+    "preview": false, "readiness": "SyntheticValidated",
+    "testedVersions": ["Synthetic CSV fixtures of the documented Graph v1.0 getOneDriveUsageAccountDetail column set (byte units), with and without Site Id"],
+    "prerequisites": ["Consultant upload of a report downloaded with Reports.Read.All and a Microsoft 365 reports role; tenant attested by the consultant"],
+    "limits": ["File import through report profile m365.oneDriveUsageAccountDetail 1.0.0; not verified Graph connection evidence", "Admin center MB exports, localized headers and multi-geo files are rejected"]
+  }],
+  "sections": [{
+    "id": "onedrive.accountUsage", "producerIds": ["report.m365.oneDriveUsageAccountDetail"], "supportedScopes": ["tenant"],
+    "attributes": {
+      "reportRefreshDate": { "type": "date", "referenceProducer": "report.m365.oneDriveUsageAccountDetail" },
+      "siteUrl": { "type": "string", "referenceProducer": "report.m365.oneDriveUsageAccountDetail" },
+      "ownerDisplayName": { "type": "string", "referenceProducer": "report.m365.oneDriveUsageAccountDetail" },
+      "isDeleted": { "type": "boolean", "referenceProducer": "report.m365.oneDriveUsageAccountDetail" },
+      "lastActivityDate": { "type": "date", "referenceProducer": "report.m365.oneDriveUsageAccountDetail" },
+      "fileCount": { "type": "integer", "referenceProducer": "report.m365.oneDriveUsageAccountDetail" },
+      "activeFileCount": { "type": "integer", "referenceProducer": "report.m365.oneDriveUsageAccountDetail" },
+      "storageUsedBytes": { "type": "bytes", "referenceProducer": "report.m365.oneDriveUsageAccountDetail" },
+      "storageAllocatedBytes": { "type": "bytes", "referenceProducer": "report.m365.oneDriveUsageAccountDetail" },
+      "ownerPrincipalName": { "type": "string", "referenceProducer": "report.m365.oneDriveUsageAccountDetail" },
+      "reportPeriodDays": { "type": "integer", "referenceProducer": "report.m365.oneDriveUsageAccountDetail" }
+    },
+    "relations": ["ownerOf"],
+    "permissions": ["Reports.Read.All (delegated or application) to download the report; delegated users also need a Microsoft 365 reports role"],
+    "endpoints": ["Consultant upload of GET /v1.0/reports/getOneDriveUsageAccountDetail(period='D7|D30|D90|D180') or (date=YYYY-MM-DD) CSV"],
+    "refreshStrategy": "Consultant-uploaded report snapshot observed at the report refresh date",
+    "limits": ["Not a tenant-wide exhaustive OneDrive inventory; absence from a report never proves deletion", "Concealed names and URLs are not converted or guessed", "Without a Site Id column, OneDrive keys are provisional report URL references"]
+  }]
+}

@@ -14,6 +14,8 @@ public abstract class FoundationPage : ComponentBase
     [Inject] protected ILogger<FoundationPage> Logger { get; set; } = default!;
     [Inject] protected IStringLocalizer<UiStrings> Messages { get; set; } = default!;
     protected string? Error { get; private set; }
+    /// <summary>Safe hints attached to a contract error (profile column names, line/column/code triples, conflicting hosts).</summary>
+    protected IReadOnlyList<string> ErrorDetails { get; private set; } = [];
     protected bool Busy { get; private set; }
 
     protected async Task RunAsync(Func<Task> action)
@@ -21,6 +23,7 @@ public abstract class FoundationPage : ComponentBase
         if (Busy) { return; }
         Busy = true;
         Error = null;
+        ErrorDetails = [];
         using var activity = Telemetry.Activities.StartActivity("UI operation");
         using var scope = Logger.BeginScope(new Dictionary<string, object>
         {
@@ -35,6 +38,13 @@ public abstract class FoundationPage : ComponentBase
             or Azure.Identity.AuthenticationFailedException or IOException or HttpRequestException or OperationCanceledException)
         {
             Logger.LogWarning("UI operation failed with {ErrorType}", exception.GetType().Name);
+            if (exception is ContractException { Code: var code } contractError
+                && Messages[$"ImportError_{code}"] is { ResourceNotFound: false } specific)
+            {
+                Error = specific.Value;
+                ErrorDetails = contractError.Details;
+                return;
+            }
             Error = Messages[exception switch
             {
                 AccessDeniedException => "Denied",

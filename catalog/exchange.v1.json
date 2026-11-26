@@ -5,6 +5,12 @@
     "preview": false, "readiness": "Planned", "testedVersions": [],
     "prerequisites": ["Future Lot 4 implementation and separately authorized Exchange session"],
     "limits": ["No executable producer or certified module/OS version yet"]
+  }, {
+    "id": "report.m365.mailboxUsageDetail", "channel": "Import", "version": "1.0.0", "apiVersion": "Microsoft Graph v1.0 usage report CSV",
+    "preview": false, "readiness": "SyntheticValidated",
+    "testedVersions": ["Synthetic CSV fixtures of the documented Graph v1.0 getMailboxUsageDetail column set (byte units)"],
+    "prerequisites": ["Consultant upload of a report downloaded with Reports.Read.All and a Microsoft 365 reports role; tenant attested by the consultant"],
+    "limits": ["File import through report profile m365.mailboxUsageDetail 1.0.0; not verified Graph connection evidence", "Admin center MB exports and localized headers are rejected"]
   }],
   "sections": [{
     "id": "exchange.mailboxStatistics", "producerIds": ["clarity.exchange"], "supportedScopes": ["tenant", "resource"],
@@ -12,5 +18,31 @@
     "relations": [], "permissions": ["Future Exchange read-only RBAC validation required"],
     "endpoints": ["Planned: Get-EXOMailboxStatistics"], "refreshStrategy": "Planned full or targeted mailbox statistics",
     "limits": ["Not available; actual fields, archive handling and cmdlet versions require Lot 4 verification"]
+  }, {
+    "id": "exchange.mailboxUsage", "producerIds": ["report.m365.mailboxUsageDetail"], "supportedScopes": ["tenant"],
+    "attributes": {
+      "reportRefreshDate": { "type": "date", "referenceProducer": "report.m365.mailboxUsageDetail" },
+      "userPrincipalName": { "type": "string", "referenceProducer": "report.m365.mailboxUsageDetail" },
+      "displayName": { "type": "string", "referenceProducer": "report.m365.mailboxUsageDetail" },
+      "isDeleted": { "type": "boolean", "referenceProducer": "report.m365.mailboxUsageDetail" },
+      "deletedDate": { "type": "date", "referenceProducer": "report.m365.mailboxUsageDetail" },
+      "createdDate": { "type": "date", "referenceProducer": "report.m365.mailboxUsageDetail" },
+      "lastActivityDate": { "type": "date", "referenceProducer": "report.m365.mailboxUsageDetail" },
+      "itemCount": { "type": "integer", "referenceProducer": "report.m365.mailboxUsageDetail" },
+      "storageUsedBytes": { "type": "bytes", "referenceProducer": "report.m365.mailboxUsageDetail" },
+      "issueWarningQuotaBytes": { "type": "bytes", "referenceProducer": "report.m365.mailboxUsageDetail" },
+      "prohibitSendQuotaBytes": { "type": "bytes", "referenceProducer": "report.m365.mailboxUsageDetail" },
+      "prohibitSendReceiveQuotaBytes": { "type": "bytes", "referenceProducer": "report.m365.mailboxUsageDetail" },
+      "deletedItemCount": { "type": "integer", "referenceProducer": "report.m365.mailboxUsageDetail" },
+      "deletedItemSizeBytes": { "type": "bytes", "referenceProducer": "report.m365.mailboxUsageDetail" },
+      "deletedItemQuotaBytes": { "type": "bytes", "referenceProducer": "report.m365.mailboxUsageDetail" },
+      "hasArchive": { "type": "boolean", "referenceProducer": "report.m365.mailboxUsageDetail" },
+      "reportPeriodDays": { "type": "integer", "referenceProducer": "report.m365.mailboxUsageDetail" }
+    },
+    "relations": ["mailboxOf"],
+    "permissions": ["Reports.Read.All (delegated or application) to download the report; delegated users also need a Microsoft 365 reports role"],
+    "endpoints": ["Consultant upload of GET /v1.0/reports/getMailboxUsageDetail(period='D7|D30|D90|D180') CSV"],
+    "refreshStrategy": "Consultant-uploaded report snapshot observed at the report refresh date",
+    "limits": ["Not a tenant-wide exhaustive inventory; absence from a report never proves deletion", "Concealed user names are not converted or guessed", "Mailbox keys are provisional report UPN references, not Exchange GUIDs"]
   }]
 }
