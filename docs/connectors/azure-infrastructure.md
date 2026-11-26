@@ -81,7 +81,10 @@ or cross-environment dependency is inferred.
 
 Import requires the request, version, section set, observed environment and exact
 scope to match. Object and relationship identities must stay in the requested
-resource boundary (a group may reference its parent subscription). These checks
+resource boundary (a group may reference its parent subscription). Complete
+sections must retain the producer's visibility warning. Relationship metadata
+is limited to the documented numeric service dependency type; these producers
+do not report fallback identities or deletion signals. These checks
 validate consistency, not the signature or truthfulness of a user-uploaded file.
 The usual private upload, preview, confirmation, worker reauthorization,
 idempotent section publication and dated proof apply.
