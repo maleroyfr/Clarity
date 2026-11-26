@@ -9,6 +9,7 @@
     <PackageVersion Include="bunit" Version="2.15.2" />
     <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="11.0.0" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="11.0.0" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="11.0.0" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="11.0.0" />
     <PackageVersion Include="Microsoft.FluentUI.AspNetCore.Components" Version="5.1.0" />
     <PackageVersion Include="Microsoft.Identity.Web" Version="4.18.0" />

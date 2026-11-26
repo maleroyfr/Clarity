@@ -26,7 +26,7 @@ public sealed class ClarityDbContext(DbContextOptions<ClarityDbContext> options,
         Owned(member);
         member.HasIndex(x => new { x.WorkspaceId, x.TenantId, x.ObjectId }).IsUnique();
         member.HasIndex(x => new { x.TenantId, x.ObjectId });
-        member.HasQueryFilter(x => scope.WorkspaceIds.Contains(x.WorkspaceId)
+        member.HasQueryFilter(x => scope.IsPlatformAdmin || scope.WorkspaceIds.Contains(x.WorkspaceId)
             || (x.TenantId == scope.Identity.TenantId && x.ObjectId == scope.Identity.ObjectId));
 
         var admin = modelBuilder.Entity<PlatformAdmin>();
