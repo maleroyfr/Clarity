@@ -36,8 +36,13 @@ else
                 }
             }
             <h3>@Text["DirectRelationships"]</h3>
+            @if (sheet.Type is "application" or "servicePrincipal" && sheet.Keys.Any(k => k.Namespace == "microsoft.graph"))
+            {
+                <SsoQualificationPanel @key="(ProjectId, ObjectId)" ProjectId="ProjectId" ObjectId="ObjectId" Fields="sheet.Fields"
+                                       ShowEvidence="@(id => Show(ProofKind.Observation, id))" />
+            }
             <ClarityGrid TGridItem="SheetEdge" Load="@((p, ct) => Sheets.EdgesAsync(ProjectId, ObjectId, p, ct))">
-                <Columns><TemplateColumn Title="@Text["Relation"]" Context="e">@(e.Outgoing ? "→" : "←") @e.Type · @Text[e.Origin.ToString()]</TemplateColumn>
+                <Columns><TemplateColumn Title="@Text["Relation"]" Context="e">@(e.Outgoing ? "→" : "←") @(Text[$"Relation_{e.Type}"].ResourceNotFound ? e.Type : Text[$"Relation_{e.Type}"].Value) · @Text[e.Origin.ToString()]</TemplateColumn>
                     <TemplateColumn Title="@Text["RelatedObject"]" Context="e">
                         @if (e.OtherId.HasValue) { <a href="@Link(e.OtherId.Value)">@e.OtherLabel</a> } else { @e.OtherLabel }
                         <small>@Text[$"Endpoint{e.Resolution}"] · @Text[e.Current ? "Observed" : "Historical"]</small>

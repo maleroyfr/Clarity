@@ -117,6 +117,11 @@ v1.0 Graph producer and per-family connection for the same verified tenant. Its
 access tests and section selections are independent of Entra. It uses full
 paged reads with explicit visibility limits rather than directory delta cursors.
 
+[Applications and SSO](connectors/applications-sso.md) have their own v1.0 Graph
+producer and access checks, retaining application/service-principal identities
+and typed app-role assignments. Consultant qualifications live in independent,
+authored assessment history on the object sheet, never Graph-observed access.
+
 ## Authorized Discovery screens
 
 The Fluent UI v5 Discovery panel exposes French Connexions, Collectes and Couverture

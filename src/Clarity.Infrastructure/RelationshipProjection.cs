@@ -83,7 +83,7 @@ internal static class RelationshipProjection
             var candidates = history.Where(x => x.ValidFromUtc <= at && (x.ValidUntilUtc == null || at < x.ValidUntilUtc))
                 .Select(x => x.ObjectId).Distinct().ToArray();
             // A stable technical alternate may arrive after the edge. Mutable names cannot be extrapolated backwards.
-            if (candidates.Length == 0 && reference.Namespace is "ad.objectSid" or "microsoft.graph.skuId" or "deviceId")
+            if (candidates.Length == 0 && reference.Namespace is "ad.objectSid" or "microsoft.graph.skuId" or "deviceId" or "appId")
             {
                 candidates = history.Select(x => x.ObjectId).Distinct().ToArray();
             }

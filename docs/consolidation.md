@@ -151,6 +151,13 @@ merging the two source objects. Links to devices, subscriptions, applications or
 later resource types appear only when evidence exists: a device has no implied
 primary user and basic application metadata does not establish user access.
 
+The [applications / SSO family](connectors/applications-sso.md) links distinct
+service principals and applications by typed appId evidence, including later
+arrivals. Explicit role assignments are separate nodes so multiple roles between
+the same endpoints remain distinguishable. Its authored SSO assessments use the
+existing project lock and revision conventions, stay separate from observations,
+and flag changed critical metadata for human review without rewriting history.
+
 The [Intune / Autopilot connector](connectors/intune-autopilot.md) preserves
 managed and directory devices independently, linking by an exposed managed ID
 or Entra `deviceId`. Intune primary users and Entra registered owners remain

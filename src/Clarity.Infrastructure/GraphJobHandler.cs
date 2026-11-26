@@ -44,6 +44,7 @@ public sealed class GraphJobHandler(IGraphSessionFactory sessions, EntraCollecto
             var results = new List<SectionResult>();
             var continuations = new List<GraphContinuation>();
             var intune = new IntuneCollector(catalog);
+            var applicationsSso = new ApplicationsSsoCollector(catalog);
             foreach (var capability in payload.Sections)
             {
                 await execution.ReportProgressAsync(0, cancellationToken);
@@ -59,9 +60,12 @@ public sealed class GraphJobHandler(IGraphSessionFactory sessions, EntraCollecto
                         && x.ConnectionId == connection.Id && x.CapabilityId == capability && x.ScopeHash == hash && x.PublishedAtUtc > oldest)
                         .Select(x => x.DeltaLink).SingleOrDefaultAsync(cancellationToken);
                 }
-                var section = connection.ProducerId == IntuneCollector.ProducerId
-                    ? await intune.CollectAsync(session.Transport, capability, payload.Scope, cancellationToken)
-                    : await collector.CollectAsync(session.Transport, capability, payload.Scope, delta, cancellationToken);
+                var section = connection.ProducerId switch
+                {
+                    IntuneCollector.ProducerId => await intune.CollectAsync(session.Transport, capability, payload.Scope, cancellationToken),
+                    ApplicationsSsoCollector.ProducerId => await applicationsSso.CollectAsync(session.Transport, capability, payload.Scope, cancellationToken),
+                    _ => await collector.CollectAsync(session.Transport, capability, payload.Scope, delta, cancellationToken)
+                };
                 objects.AddRange(section.Objects);
                 relationships.AddRange(section.Relationships);
                 results.Add(section.Result);

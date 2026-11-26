@@ -42,6 +42,7 @@ public static class DiscoveryRegistration
         services.AddScoped<InventoryQueries>();
         services.AddScoped<InventorySheet>();
         services.AddScoped<MappingReview>();
+        services.AddScoped<SsoQualificationService>();
         services.AddScoped<InventoryOverview>();
         services.AddScoped<ScriptRequestService>();
         services.AddScoped<GraphDiscoveryService>();

@@ -29,7 +29,7 @@
         <FluentButton OnClick="ReloadAsync" Disabled="Busy">@Text["Reload"]</FluentButton>
         @if (SelectedEnvironment?.Kind == EnvironmentKind.M365Tenant)
         {
-            <FluentSelect TOption="string" TValue="string" Items="@(new[] { GraphDiscoveryService.EntraProducerId, IntuneCollector.ProducerId })"
+            <FluentSelect TOption="string" TValue="string" Items="@(new[] { GraphDiscoveryService.EntraProducerId, IntuneCollector.ProducerId, ApplicationsSsoCollector.ProducerId })"
                           OptionText="@(id => Text[$"Producer_{id}"])" Value="_graphProducer" ValueChanged="SelectProducerAsync"
                           Label="@Text["Producer"]" Disabled="Busy" />
         }
@@ -77,7 +77,7 @@
                     }
                 }
                 @if (!Availability.Graph) { <p class="notice">@Text["GraphConfigurationRequired"]</p> }
-                <p>@Text[_graphProducer == IntuneCollector.ProducerId ? "IntunePrerequisiteHint" : "GraphAlternativeHint"]</p>
+                <p>@Text[_graphProducer switch { IntuneCollector.ProducerId => "IntunePrerequisiteHint", ApplicationsSsoCollector.ProducerId => "SsoPrerequisiteHint", _ => "GraphAlternativeHint" }]</p>
             }
             else
             {

@@ -428,4 +428,40 @@
   <data name="ImportError_ReportRequiresProfileUpload" xml:space="preserve"><value>Les rapports administratifs se déposent via un profil d'import, pas dans une archive de résultat.</value></data>
   <data name="ImportError_ContentHashMismatch" xml:space="preserve"><value>Le fichier stocké ne correspond plus à l'empreinte enregistrée : déposez-le à nouveau.</value></data>
   <data name="ImportError_ReportProfileMismatch" xml:space="preserve"><value>Ce fichier correspond à un autre profil d'import plus précis : choisissez le profil indiqué ci-dessous.</value></data>
+  <data name="Producer_clarity.graph.applicationsSso" xml:space="preserve"><value>Microsoft Graph — applications et SSO (v1.0)</value></data>
+  <data name="Section_applicationsSso.applications" xml:space="preserve"><value>Applications — inscriptions</value></data>
+  <data name="Section_applicationsSso.servicePrincipals" xml:space="preserve"><value>Applications — principaux de service et mode SSO</value></data>
+  <data name="Section_applicationsSso.appRoleAssignments" xml:space="preserve"><value>Applications — attributions explicites de rôles</value></data>
+  <data name="SsoPrerequisiteHint" xml:space="preserve"><value>Consentement d’application Application.Read.All et Organization.Read.All requis. Les métadonnées SSO et les attributions explicites ne prouvent pas un accès effectif. La qualification du consultant est disponible dans la fiche de l’application.</value></data>
+  <data name="Issue_SsoMetadataOnly" xml:space="preserve"><value>Métadonnées visibles et attributions explicites uniquement : ni accès effectif ni absence déduite d’une omission.</value></data>
+  <data name="Issue_SsoAssignmentsNotTested" xml:space="preserve"><value>Aucun principal de service dans la page échantillonnée : l’accès aux attributions n’a pas été testé.</value></data>
+  <data name="Issue_SsoPrincipalTypeUnknown" xml:space="preserve"><value>Type de principal non fourni ou inconnu : référence conservée, couverture partielle.</value></data>
+  <data name="Issue_SsoResourceMismatch" xml:space="preserve"><value>Une attribution ne correspond pas au principal de service interrogé. Relancez la section.</value></data>
+  <data name="SsoQualification" xml:space="preserve"><value>Qualification des dépendances SSO</value></data>
+  <data name="SsoManualOnly" xml:space="preserve"><value>Constat du consultant pour cet objet et cet environnement, distinct des observations Microsoft Graph. Il ne prouve ni un SSO opérationnel ni un accès effectif. Décrivez les systèmes, populations et dépendances à conserver ou à adapter, sans secret.</value></data>
+  <data name="SsoMetadataChanged" xml:space="preserve"><value>Les métadonnées SSO ont changé depuis cette qualification. Réexaminez le constat ; son historique reste conservé.</value></data>
+  <data name="SsoNotQualified" xml:space="preserve"><value>Aucune qualification SSO enregistrée.</value></data>
+  <data name="SsoDependencyValue" xml:space="preserve"><value>Dépendance SSO selon le consultant</value></data>
+  <data name="SsoDependency_Unknown" xml:space="preserve"><value>À qualifier</value></data>
+  <data name="SsoDependency_Required" xml:space="preserve"><value>Dépendance à conserver ou à adapter</value></data>
+  <data name="SsoDependency_NotRequired" xml:space="preserve"><value>Pas de dépendance retenue par le consultant</value></data>
+  <data name="SsoProtocolValue" xml:space="preserve"><value>Mode qualifié par le consultant</value></data>
+  <data name="SsoProtocol_Unknown" xml:space="preserve"><value>Non déterminé</value></data>
+  <data name="SsoProtocol_Saml" xml:space="preserve"><value>SAML</value></data>
+  <data name="SsoProtocol_OpenIdConnect" xml:space="preserve"><value>OpenID Connect</value></data>
+  <data name="SsoProtocol_Password" xml:space="preserve"><value>SSO par mot de passe (aucun secret à saisir)</value></data>
+  <data name="SsoProtocol_Other" xml:space="preserve"><value>Autre — préciser dans la justification</value></data>
+  <data name="SsoAuthor" xml:space="preserve"><value>Auteur (tenant et identifiant Entra)</value></data>
+  <data name="SsoReason" xml:space="preserve"><value>Dépendances et justification (1 à 1 000 caractères)</value></data>
+  <data name="SsoEvidenceReference" xml:space="preserve"><value>Référence de preuve disponible : ticket ou compte rendu (facultatif, sans secret)</value></data>
+  <data name="SsoObservationEvidence" xml:space="preserve"><value>Observation publiée à joindre au constat (facultatif)</value></data>
+  <data name="SsoNoObservation" xml:space="preserve"><value>Aucune observation jointe</value></data>
+  <data name="SsoNoExternalEvidence" xml:space="preserve"><value>Aucune référence de preuve externe fournie</value></data>
+  <data name="SsoHistory" xml:space="preserve"><value>Historique des qualifications du consultant</value></data>
+  <data name="SsoRevision" xml:space="preserve"><value>Révision</value></data>
+  <data name="SsoReload" xml:space="preserve"><value>Recharger la qualification</value></data>
+  <data name="SsoPriorEvidence" xml:space="preserve"><value>Observation historique jointe au constat précédent</value></data>
+  <data name="Relation_servicePrincipalForApplication" xml:space="preserve"><value>Principal de service de l’application</value></data>
+  <data name="Relation_appRoleAssignmentPrincipal" xml:space="preserve"><value>Principal explicitement attribué au rôle</value></data>
+  <data name="Relation_appRoleAssignmentResource" xml:space="preserve"><value>Ressource de l’attribution du rôle</value></data>
 </root>

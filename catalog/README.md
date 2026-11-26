@@ -35,3 +35,8 @@ families below are not selectable:
 No future family is presented as tested or ready. New supported families require
 their own versioned file, exact endpoint/cmdlet and permissions documentation,
 tested-version evidence, limits, reference fields, and canonical-package tests.
+
+The [applications / SSO family](../docs/connectors/applications-sso.md) adds a
+separate v1.0 Graph producer for registrations, service principals and explicit
+role assignments. Manual SSO assessments are not catalog producers or Graph
+observations; they retain independent author/date/environment/proof history.

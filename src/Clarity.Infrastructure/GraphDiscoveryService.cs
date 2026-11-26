@@ -15,7 +15,7 @@ public sealed class GraphDiscoveryService(IDbContextFactory<ClarityDbContext> fa
         string producerId = EntraProducerId)
     {
         var project = await access.RequireAsync(projectId, WorkspaceOperation.ManageConnections, cancellationToken);
-        if (producerId is not (EntraProducerId or IntuneCollector.ProducerId)) { throw new ContractException("ProducerUnavailable", "catalog"); }
+        if (producerId is not (EntraProducerId or IntuneCollector.ProducerId or ApplicationsSsoCollector.ProducerId)) { throw new ContractException("ProducerUnavailable", "catalog"); }
         catalog.RequireProducer(producerId);
         await using var db = await factory.CreateDbContextAsync(cancellationToken);
         var environment = await ImportService.EnvironmentAsync(db, project, environmentId, cancellationToken);
@@ -80,6 +80,15 @@ public sealed class GraphDiscoveryService(IDbContextFactory<ClarityDbContext> fa
         var checks = new List<SectionAccess>();
         foreach (var section in catalog.Sections.Values.Where(x => x.ProducerIds.Contains(connection.ProducerId)))
         {
+            if (connection.ProducerId == ApplicationsSsoCollector.ProducerId)
+            {
+                try { checks.Add(await ApplicationsSsoCollector.ProbeAsync(session.Transport, section, cancellationToken)); }
+                catch (Exception error) when (error is GraphReadException or HttpRequestException or JsonException or InvalidOperationException or ContractException)
+                {
+                    checks.Add(new(section.Id, false, error is GraphReadException read ? read.Code : "GraphDataUnavailable", section.Permissions));
+                }
+                continue;
+            }
             if (connection.ProducerId == IntuneCollector.ProducerId)
             {
                 try { checks.Add(await IntuneCollector.ProbeAsync(session.Transport, section, cancellationToken)); }
@@ -138,7 +147,7 @@ public sealed class GraphDiscoveryService(IDbContextFactory<ClarityDbContext> fa
         var connection = await db.Connections.SingleOrDefaultAsync(x => x.WorkspaceId == project.WorkspaceId && x.Id == connectionId,
             cancellationToken) ?? throw new AccessDeniedException();
         if (environment.Kind != EnvironmentKind.M365Tenant || !Guid.TryParse(environment.ExternalId, out var tenant)
-            || connection.TenantId != tenant || connection.ProducerId is not (EntraProducerId or IntuneCollector.ProducerId))
+            || connection.TenantId != tenant || connection.ProducerId is not (EntraProducerId or IntuneCollector.ProducerId or ApplicationsSsoCollector.ProducerId))
         {
             throw new ContractException("EnvironmentMismatch", "Graph");
         }

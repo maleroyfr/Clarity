@@ -47,6 +47,7 @@ Never use a production database for tests.
 - [Versioned report import profiles](docs/import-profiles.md) and
   [Microsoft 365 usage reports](docs/connectors/microsoft-365-usage-reports.md)
 - [Consolidation rules, acceptance matrix and pilot limits](docs/consolidation.md)
+- [Applications, SSO metadata and consultant qualification](docs/connectors/applications-sso.md)
 - [Azure provisioning, deployment and rollback](docs/deployment.md)
 - [Contributor conventions](.github/copilot-instructions.md)
 

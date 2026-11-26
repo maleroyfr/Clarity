@@ -1,0 +1,103 @@
+@using Clarity.Infrastructure
+@inherits FoundationPage
+@inject SsoQualificationService Qualifications
+@inject FoundationService Foundation
+@inject WorkspaceAuthorization Authorization
+
+<section aria-label="@Text["SsoQualification"]">
+    <h3>@Text["SsoQualification"]</h3>
+    <p>@Text["SsoManualOnly"]</p>
+    @if (Error is not null) { <p class="error" role="alert">@Error</p> }
+    @if (_saved) { <p role="status">@Text["ChangesSaved"]</p> }
+    @if (_state is { } state)
+    {
+        @if (state.NeedsReview) { <p role="alert">@Text["SsoMetadataChanged"]</p> }
+        @if (state.Current is { } current)
+        {
+            <p>@Text[$"SsoDependency_{current.Value}"] · @Text[$"SsoProtocol_{current.Protocol}"] · @current.RecordedAtUtc.ToString("u")</p>
+            <p>@Text["SsoAuthor"] : @current.AuthorTenantId / @current.AuthorObjectId</p>
+            <p>@current.Reason</p>
+        }
+        else { <p>@Text["SsoNotQualified"]</p> }
+        @if (_canQualify)
+        {
+            <label>@Text["SsoDependencyValue"] <select @bind="_value">
+                @foreach (var value in Enum.GetValues<SsoDependencyValue>()) { <option value="@value">@Text[$"SsoDependency_{value}"]</option> }
+            </select></label>
+            <label>@Text["SsoProtocolValue"] <select @bind="_protocol">
+                @foreach (var protocol in Enum.GetValues<SsoProtocol>()) { <option value="@protocol">@Text[$"SsoProtocol_{protocol}"]</option> }
+            </select></label>
+            <FluentTextInput Label="@Text["SsoReason"]" @bind-Value="_reason" />
+            <FluentTextInput Label="@Text["SsoEvidenceReference"]" @bind-Value="_reference" />
+            <label>@Text["SsoObservationEvidence"] <select @bind="_observation">
+                <option value="">@Text["SsoNoObservation"]</option>
+                @if (state.Current?.EvidenceObservationId is { } prior && !Fields.Any(x => x.ObservationId == prior))
+                {
+                    <option value="@prior">@Text["SsoPriorEvidence"]</option>
+                }
+                @foreach (var evidence in Fields.GroupBy(x => x.ObservationId))
+                {
+                    <option value="@evidence.Key">@string.Join(", ", evidence.Select(x => x.Name))</option>
+                }
+            </select></label>
+            <FluentButton OnClick="SaveAsync" Disabled="@(Busy || string.IsNullOrWhiteSpace(_reason))">@Text["Save"]</FluentButton>
+            <FluentButton OnClick="ReloadAsync" Disabled="@Busy">@Text["SsoReload"]</FluentButton>
+        }
+        <h4>@Text["SsoHistory"]</h4>
+        <ClarityGrid @key="(ProjectId, ObjectId, _generation)" TGridItem="Assessment" Load="@((p, ct) => Qualifications.HistoryAsync(ProjectId, ObjectId, p, ct))">
+            <Columns>
+                <PropertyColumn Property="@(a => a.Revision)" Title="@Text["SsoRevision"]" />
+                <TemplateColumn Title="@Text["Date"]" Context="a">@a.RecordedAtUtc.ToString("u")</TemplateColumn>
+                <TemplateColumn Title="@Text["SsoAuthor"]" Context="a">@a.AuthorTenantId / @a.AuthorObjectId</TemplateColumn>
+                <TemplateColumn Title="@Text["SsoQualification"]" Context="a">@Text[$"SsoDependency_{a.Value}"] · @Text[$"SsoProtocol_{a.Protocol}"]<p>@a.Reason</p></TemplateColumn>
+                <TemplateColumn Title="@Text["Provenance"]" Context="a">
+                    <p>@(a.EvidenceReference.Length == 0 ? Text["SsoNoExternalEvidence"].Value : a.EvidenceReference)</p>
+                    @if (a.EvidenceObservationId is { } evidence)
+                    {
+                        <FluentButton OnClick="@(() => ShowEvidence.InvokeAsync(evidence))">@Text["Provenance"]</FluentButton>
+                    }
+                </TemplateColumn>
+            </Columns><EmptyContent><p>@Text["SsoNotQualified"]</p></EmptyContent>
+        </ClarityGrid>
+    }
+</section>
+
+@code {
+    [Parameter] public Guid ProjectId { get; set; }
+    [Parameter] public Guid ObjectId { get; set; }
+    [Parameter] public IReadOnlyList<SheetField> Fields { get; set; } = [];
+    [Parameter] public EventCallback<Guid> ShowEvidence { get; set; }
+    private SsoQualificationState? _state;
+    private SsoDependencyValue _value;
+    private SsoProtocol _protocol;
+    private string _reason = "", _reference = "", _observation = "";
+    private Guid _operation = Guid.NewGuid();
+    private bool _canQualify, _saved;
+    private int _generation;
+
+    protected override Task OnParametersSetAsync() => ReloadAsync();
+    private Task ReloadAsync() => RunAsync(async () =>
+    {
+        _state = null; _saved = false;
+        var project = await Foundation.GetProjectAsync(ProjectId);
+        _canQualify = project.Status == ProjectStatus.Active && Authorization.Allows(project.WorkspaceId, WorkspaceOperation.Qualify);
+        await LoadAsync();
+    });
+    private async Task LoadAsync()
+    {
+        _state = await Qualifications.ReadAsync(ProjectId, ObjectId);
+        _value = _state.Current?.Value ?? SsoDependencyValue.Unknown;
+        _protocol = _state.Current?.Protocol ?? SsoProtocol.Unknown;
+        _reason = _state.Current?.Reason ?? "";
+        _reference = _state.Current?.EvidenceReference ?? "";
+        _observation = _state.Current?.EvidenceObservationId?.ToString() ?? "";
+        _operation = Guid.NewGuid(); _generation++;
+    }
+    private Task SaveAsync() => RunAsync(async () =>
+    {
+        var state = _state!;
+        await Qualifications.RecordAsync(ProjectId, ObjectId, new(_operation, state.Current?.Revision ?? 0, state.MetadataFingerprint,
+            _value, _protocol, _reason, _reference, _observation.Length == 0 ? null : Guid.Parse(_observation)));
+        await LoadAsync(); _saved = true;
+    });
+}

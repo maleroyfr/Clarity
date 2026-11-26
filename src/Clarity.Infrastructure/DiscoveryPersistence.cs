@@ -65,6 +65,7 @@ public sealed partial class ClarityDbContext
         artifact.HasIndex(x => new { x.WorkspaceId, x.RunId }).IsUnique();
         ConfigureObservations(model);
         ConfigureMatching(model);
+        ConfigureAssessments(model);
         ConfigureJobs(model);
         var cursor = DiscoveryOwned<GraphCursor>(model);
         cursor.HasOne<ProjectEnvironment>().WithMany().HasForeignKey(x => new { x.WorkspaceId, x.EnvironmentId }).OnDelete(DeleteBehavior.NoAction);

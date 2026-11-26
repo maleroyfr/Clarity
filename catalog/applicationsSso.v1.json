@@ -1,0 +1,53 @@
+{
+  "schemaVersion": "1.0", "id": "applicationsSso", "version": "1.0.0", "environmentKind": "M365Tenant",
+  "producers": [{
+    "id": "clarity.graph.applicationsSso", "channel": "Graph", "version": "1.0.0", "apiVersion": "v1.0",
+    "preview": false, "readiness": "SyntheticValidated",
+    "testedVersions": [".NET 11; Microsoft Graph REST v1.0 synthetic HTTP fixtures only"],
+    "prerequisites": ["Collector certificate in Key Vault", "Application.Read.All application consent in the declared tenant", "Organization.Read.All application consent for tenant verification"],
+    "limits": ["Public Graph cloud only; no live tenant validation", "Metadata and explicit app-role assignments only, never effective SSO or access", "No credentials, tokens, key material, contents or delegated OAuth grants"]
+  }],
+  "sections": [
+    {
+      "id": "applicationsSso.applications", "producerIds": ["clarity.graph.applicationsSso"], "supportedScopes": ["tenant"],
+      "attributes": {
+        "displayName": { "type": "string", "referenceProducer": "clarity.graph.applicationsSso" },
+        "appId": { "type": "string", "referenceProducer": "clarity.graph.applicationsSso" },
+        "signInAudience": { "type": "string", "referenceProducer": "clarity.graph.applicationsSso" }
+      },
+      "relations": [], "permissions": ["Application.Read.All"],
+      "endpoints": ["GET /v1.0/applications"],
+      "refreshStrategy": "Full paged read of visible application registrations",
+      "limits": ["Application object ID is not its client appId or a service-principal object ID", "No app registration credentials, requested permissions or sign-in activity"]
+    },
+    {
+      "id": "applicationsSso.servicePrincipals", "producerIds": ["clarity.graph.applicationsSso"], "supportedScopes": ["tenant"],
+      "attributes": {
+        "displayName": { "type": "string", "referenceProducer": "clarity.graph.applicationsSso" },
+        "appId": { "type": "string", "referenceProducer": "clarity.graph.applicationsSso" },
+        "servicePrincipalType": { "type": "string", "referenceProducer": "clarity.graph.applicationsSso" },
+        "accountEnabled": { "type": "boolean", "referenceProducer": "clarity.graph.applicationsSso" },
+        "appRoleAssignmentRequired": { "type": "boolean", "referenceProducer": "clarity.graph.applicationsSso" },
+        "preferredSingleSignOnMode": { "type": "string", "referenceProducer": "clarity.graph.applicationsSso" }
+      },
+      "relations": ["servicePrincipalForApplication"], "permissions": ["Application.Read.All"],
+      "endpoints": ["GET /v1.0/servicePrincipals"],
+      "refreshStrategy": "Full paged read of visible service principals",
+      "limits": ["Null or missing preferredSingleSignOnMode does not prove no SSO; older SAML and OIDC apps may report null", "Application references by appId stay unresolved when the application is outside this environment", "No credential, certificate, SAML payload or policy collection"]
+    },
+    {
+      "id": "applicationsSso.appRoleAssignments", "producerIds": ["clarity.graph.applicationsSso"], "supportedScopes": ["tenant"],
+      "attributes": {
+        "appRoleId": { "type": "string", "referenceProducer": "clarity.graph.applicationsSso" },
+        "principalId": { "type": "string", "referenceProducer": "clarity.graph.applicationsSso" },
+        "principalType": { "type": "string", "referenceProducer": "clarity.graph.applicationsSso" },
+        "resourceId": { "type": "string", "referenceProducer": "clarity.graph.applicationsSso" },
+        "createdDateTime": { "type": "utc", "referenceProducer": "clarity.graph.applicationsSso" }
+      },
+      "relations": ["appRoleAssignmentPrincipal", "appRoleAssignmentResource"], "permissions": ["Application.Read.All"],
+      "endpoints": ["GET /v1.0/servicePrincipals", "GET /v1.0/servicePrincipals/{id}/appRoleAssignedTo"],
+      "refreshStrategy": "Page assignments for each visible resource service principal; preserve successful parents when another fails",
+      "limits": ["Explicit user, group and client service-principal assignments only; no group expansion or effective access", "Unknown principal types retain a directoryObject reference and partial coverage", "Role GUID only, not role definitions; zero appRoleId is the default assignment, not a missing role", "Replication delay and incomplete visibility preclude negative evidence from omission"]
+    }
+  ]
+}
