@@ -1,0 +1,100 @@
+name: Deploy
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-${{ vars.AZURE_ENVIRONMENT || 'production' }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: >-
+      vars.AZURE_DEPLOY_ENABLED == 'true' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_repository.full_name == github.repository
+    environment: ${{ vars.AZURE_ENVIRONMENT || 'production' }}
+    runs-on: [self-hosted, Linux, X64, clarity-deploy-private]
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+    env:
+      AZURE_CONFIG_DIR: ${{ runner.temp }}/clarity-azure-${{ github.run_id }}
+      AZURE_TOKEN_CREDENTIALS: AzureCliCredential
+      SQL_HOST: ${{ vars.SQL_HOST }}
+      SQL_DATABASE: ${{ vars.SQL_DATABASE }}
+      AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+      AZURE_WEBAPP_NAME: ${{ vars.AZURE_WEBAPP_NAME }}
+      RELEASE_SHA: ${{ github.event.workflow_run.head_sha }}
+    steps:
+      - name: Require private environment configuration
+        env:
+          DEPLOY_CLIENT: ${{ vars.AZURE_DEPLOY_CLIENT_ID }}
+          MIGRATION_CLIENT: ${{ vars.AZURE_MIGRATION_CLIENT_ID }}
+          TENANT: ${{ vars.AZURE_TENANT_ID }}
+          SUBSCRIPTION: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+        run: |
+          for variable in SQL_HOST SQL_DATABASE AZURE_RESOURCE_GROUP AZURE_WEBAPP_NAME DEPLOY_CLIENT MIGRATION_CLIENT TENANT SUBSCRIPTION; do
+            test -n "${!variable}" || { echo "::error::Missing environment variable $variable"; exit 1; }
+          done
+          test "$DEPLOY_CLIENT" != "$MIGRATION_CLIENT" || { echo "::error::Migration and deployment identities must differ"; exit 1; }
+      - uses: actions/download-artifact@v5
+        with:
+          name: clarity-linux-${{ github.event.workflow_run.head_sha }}
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+          path: release
+      - name: Verify release provenance and checksums
+        working-directory: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          test "$(cat commit.txt)" = "$RELEASE_SHA"
+          sha256sum --check SHA256SUMS
+          current_sha=$(gh api "repos/${GITHUB_REPOSITORY}/commits/main" --jq .sha)
+          test "$current_sha" = "$RELEASE_SHA" || { echo "::error::Refusing a superseded main release"; exit 1; }
+          chmod +x efbundle
+      - name: Sign in as migration identity with OIDC
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_MIGRATION_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+          allow-no-subscriptions: true
+      - name: Apply reviewed backward-compatible schema
+        working-directory: release
+        env:
+          CLARITY_MIGRATION_SQL: Server=tcp:${{ vars.SQL_HOST }},1433;Database=${{ vars.SQL_DATABASE }};Authentication=Active Directory Default;Encrypt=True;TrustServerCertificate=False;
+        run: ./efbundle
+      - name: Clear migration sign-in
+        if: always()
+        run: az logout
+      - name: Sign in as deployment identity with OIDC
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_DEPLOY_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Deploy the CI artifact without rebuilding
+        run: |
+          az webapp deploy --resource-group "$AZURE_RESOURCE_GROUP" --name "$AZURE_WEBAPP_NAME" \
+            --src-path release/web.zip --type zip --clean true --restart true --only-show-errors --output none
+      - name: Verify health
+        run: |
+          for endpoint in live ready; do
+            curl --silent --show-error --fail --retry 20 --retry-delay 5 --retry-all-errors \
+              --max-time 15 "https://${AZURE_WEBAPP_NAME}.azurewebsites.net/health/${endpoint}"
+          done
+      - name: Record deployed artifact
+        run: |
+          echo "Deployed immutable CI artifact \`clarity-linux-${RELEASE_SHA}\`." >> "$GITHUB_STEP_SUMMARY"
+          echo "Keep this run and its upstream CI artifact for rollback (90-day retention)." >> "$GITHUB_STEP_SUMMARY"

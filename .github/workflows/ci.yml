@@ -14,7 +14,7 @@ concurrency:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     services:
       sql:
         image: mcr.microsoft.com/mssql/server:2022-latest
@@ -33,7 +33,9 @@ jobs:
       DOTNET_CLI_TELEMETRY_OPTOUT: true
       CLARITY_TEST_SQL: Server=localhost,1433;Database=master;User Id=sa;Password=Clarity-CI-${{ github.run_id }}-${{ github.run_attempt }}!;Encrypt=True;TrustServerCertificate=True
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
       - uses: actions/setup-dotnet@v5
         with:
           global-json-file: global.json
@@ -57,3 +59,46 @@ jobs:
           for parameter_file in infra/parameters/*.bicepparam; do
             az bicep build-params --file "$parameter_file"
           done
+      - name: Build immutable Linux release and migration bundle
+        run: |
+          dotnet tool restore
+          dotnet publish src/Clarity.Web --configuration Release --runtime linux-x64 --self-contained true -o artifacts/web -warnaserror
+          dotnet ef migrations bundle --project src/Clarity.Infrastructure --configuration Release --runtime linux-x64 --self-contained --output artifacts/efbundle
+          printf '%s\n' "$GITHUB_SHA" > artifacts/commit.txt
+      - name: Verify explicit migration bundle against SQL
+        run: |
+          connection="${CLARITY_TEST_SQL/Database=master/Database=ClarityBundle}"
+          ./artifacts/efbundle --connection "$connection"
+          ./artifacts/efbundle --connection "$connection"
+      - name: Smoke test self-contained empty application
+        env:
+          ASPNETCORE_ENVIRONMENT: Development
+          ASPNETCORE_URLS: http://127.0.0.1:5189
+        run: |
+          cd artifacts/web
+          ./Clarity.Web > ../startup.log 2>&1 &
+          app_pid=$!
+          trap 'kill "$app_pid"; wait "$app_pid" || true' EXIT
+          for attempt in {1..30}; do
+            if curl --silent --fail http://127.0.0.1:5189/health/live > /dev/null; then break; fi
+            sleep 1
+          done
+          curl --silent --fail http://127.0.0.1:5189/health/live
+          test "$(curl --silent -o /dev/null -w '%{http_code}' http://127.0.0.1:5189/health/ready)" = 503
+          curl --silent --fail http://127.0.0.1:5189/ | grep -q 'Aucun espace client'
+      - name: Package verified release
+        run: |
+          (cd artifacts/web && zip -q -r ../web.zip .)
+          cd artifacts
+          sha256sum web.zip efbundle commit.txt > SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        with:
+          name: clarity-linux-${{ github.sha }}
+          path: |
+            artifacts/web.zip
+            artifacts/efbundle
+            artifacts/commit.txt
+            artifacts/SHA256SUMS
+          retention-days: 90
+          if-no-files-found: error
