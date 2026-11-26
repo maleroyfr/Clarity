@@ -77,7 +77,14 @@
                     }
                 }
                 @if (!Availability.Graph) { <p class="notice">@Text["GraphConfigurationRequired"]</p> }
-                <p>@Text[_producer switch { IntuneCollector.ProducerId => "IntunePrerequisiteHint", ApplicationsSsoCollector.ProducerId => "SsoPrerequisiteHint", _ => "GraphAlternativeHint" }]</p>
+                <p>@Text[_producer switch
+                {
+                    IntuneCollector.ProducerId => "IntunePrerequisiteHint",
+                    ApplicationsSsoCollector.ProducerId => "SsoPrerequisiteHint",
+                    SharePointCollector.ProducerId => "SharePointPrerequisiteHint",
+                    OneDriveCollector.ProducerId => "OneDrivePrerequisiteHint",
+                    _ => "GraphAlternativeHint"
+                }]</p>
             }
             else
             {
@@ -109,7 +116,7 @@
                         {
                             <FluentSelect TOption="string" TValue="string" Items="ScopeKinds"
                                 @bind-Value="_scopeKind" OptionText="@(kind => Text[$"ScopeKind_{kind}"])" Label="@Text["ScopeKind"]" Disabled="@(!_canCollect || Busy)" />
-                            <FluentTextInput Label="@Text["ScopeValue"]" @bind-Value="_scopeValue" Disabled="@(!_canCollect || Busy)" />
+                            <FluentTextInput Label="@ScriptText("ScopeValue", _producer)" @bind-Value="_scopeValue" Disabled="@(!_canCollect || Busy)" />
                             @if (_scopeKind == "ou") { <FluentTextInput Label="@Text["AdDomain"]" @bind-Value="_domain" Disabled="@(!_canCollect || Busy)" /> }
                         }
                         <FluentButton Appearance="ButtonAppearance.Primary" OnClick="RequestAsync" Disabled="@(!_canCollect || Busy)">@ScriptText("CreateScriptRequest", _producer)</FluentButton>
@@ -294,13 +301,13 @@
     private IReadOnlyList<ProjectEnvironment> _environments = [];
     private ProjectEnvironment? SelectedEnvironment => _environments.FirstOrDefault(x => x.Id == _environmentId);
     private Guid _environmentId, _operationId = Guid.NewGuid();
+    private readonly Dictionary<string, Guid> _reportOperations = new(StringComparer.Ordinal);
     private string _view = "Connections", _connectionName = "Microsoft Graph", _scopeKind = "domain", _scopeValue = "", _domain = "";
     private string? _message;
     private bool _canCollect, _canManage;
     private int _revision;
     private string[] _availableSections = [];
     private string _producer = GraphDiscoveryService.EntraProducerId;
-    private static readonly string[] GraphProducers = [GraphDiscoveryService.EntraProducerId, IntuneCollector.ProducerId, ApplicationsSsoCollector.ProducerId];
     private IReadOnlyList<string> _producerChoices = [], _scriptProducers = [];
     private IEnumerable<string> _sections = [];
     private IReadOnlyList<string> _uncollected = [];
@@ -331,12 +338,13 @@
     {
         _connection = null; _preview = null; _request = null; _proof = null; _uncollected = [];
         _scriptProducers = SelectedEnvironment is null ? [] : Scripts.Producers(SelectedEnvironment.Kind).Select(x => x.Id).ToArray();
-        _producerChoices = SelectedEnvironment is null ? [] : (SelectedEnvironment.Kind == EnvironmentKind.M365Tenant ? GraphProducers : []).Concat(_scriptProducers).ToArray();
+        _producerChoices = SelectedEnvironment is null ? [] : (SelectedEnvironment.Kind == EnvironmentKind.M365Tenant ? GraphDiscoveryService.ConnectionProducerIds : []).Concat(_scriptProducers).ToArray();
         if (!_producerChoices.Contains(_producer)) { _producer = _producerChoices.FirstOrDefault() ?? GraphDiscoveryService.EntraProducerId; }
         _availableSections = SelectedEnvironment is null ? [] : Catalog.Families.Where(x => x.EnvironmentKind == SelectedEnvironment.Kind.ToString())
             .SelectMany(x => x.Sections).Where(x => x.ProducerIds.Any(id => Catalog.Producers[id].Readiness == "SyntheticValidated"
                 && !Catalog.Producers[id].Preview && (SelectedEnvironment.Kind == EnvironmentKind.M365Tenant || _scriptProducers.Count > 0
-                    ? id == _producer : Catalog.Producers[id].Channel != "Import"))).Select(x => x.Id).ToArray();
+                    ? id == _producer || id == GraphReportDownloads.ReportProducer(x, _producer)
+                    : Catalog.Producers[id].Channel != "Import"))).Select(x => x.Id).ToArray();
         if (!ScopeKinds.Contains(_scopeKind)) { _scopeKind = ScopeKinds.FirstOrDefault() ?? "domain"; }
         _sections = _availableSections;
         _profiles = SelectedEnvironment is null ? [] : Reports.Supported.Where(x => x.EnvironmentKind == SelectedEnvironment.Kind.ToString()).ToArray();
@@ -350,11 +358,12 @@
         }
         _revision++;
     }
-    private Task SelectAsync(Guid id) => RunAsync(async () => { _environmentId = id; _operationId = Guid.NewGuid(); _message = null; await LoadSelectedAsync(); });
+    private Task SelectAsync(Guid id) => RunAsync(async () => { _environmentId = id; NewOperation(); _message = null; await LoadSelectedAsync(); });
+    private void NewOperation() { _operationId = Guid.NewGuid(); _reportOperations.Clear(); }
     private Task ReloadAsync() => RunAsync(LoadAsync);
     private Task SelectProducerAsync(string id) => RunAsync(async () =>
     {
-        _producer = id; _operationId = Guid.NewGuid(); _message = null; await LoadSelectedAsync();
+        _producer = id; NewOperation(); _message = null; await LoadSelectedAsync();
     });
     private Task ConnectAsync() => RunAsync(async () => { await Graph.ConnectAsync(ProjectId, _environmentId, _connectionName, producerId: _producer); await LoadSelectedAsync(); });
     private Task TestAsync() => RunAsync(async () =>
@@ -364,9 +373,21 @@
     });
     private Task LaunchAsync() => RunAsync(async () =>
     {
-        await Graph.LaunchAsync(ProjectId, _environmentId, _connection!.Id, _operationId,
-            new("tenant", Guid.Parse(SelectedEnvironment!.ExternalId).ToString()), _sections.ToArray());
-        _operationId = Guid.NewGuid(); _message = Text["CollectionQueued"]; _revision++;
+        CollectionScope scope = new("tenant", Guid.Parse(SelectedEnvironment!.ExternalId).ToString());
+        var selected = _sections.ToArray();
+        // Each downloadable report is its own Import producer and runs as a single-section job with a stable operation ID.
+        var reports = selected.Where(x => Catalog.Sections[x].ProducerIds.Any(id => Catalog.Producers[id].Channel == "Import")).ToArray();
+        var collections = selected.Except(reports, StringComparer.Ordinal).ToArray();
+        if (collections.Length > 0 || reports.Length == 0)
+        {
+            await Graph.LaunchAsync(ProjectId, _environmentId, _connection!.Id, _operationId, scope, collections);
+        }
+        foreach (var report in reports)
+        {
+            if (!_reportOperations.TryGetValue(report, out var operation)) { _reportOperations[report] = operation = Guid.NewGuid(); }
+            await Graph.LaunchAsync(ProjectId, _environmentId, _connection!.Id, operation, scope, [report]);
+        }
+        NewOperation(); _message = Text["CollectionQueued"]; _revision++;
     });
     private Task RequestAsync() => RunAsync(async () =>
     {
@@ -375,7 +396,7 @@
         var id = await Scripts.CreateAsync(ProjectId, _environmentId, _operationId, scope, _sections.ToArray(), bound ? null : _domain);
         _request = new RequestView(id, DiscoveryScope.Serialize(scope), Catalog.Producers[_producer].Version, CollectionRequestState.AwaitingFile,
             DateTimeOffset.UtcNow, _producer);
-        _operationId = Guid.NewGuid(); _revision++;
+        NewOperation(); _revision++;
     });
     private Task UploadAsync(InputFileChangeEventArgs args) => RunAsync(async () =>
     {

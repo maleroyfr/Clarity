@@ -190,6 +190,15 @@ uses the same request and import path for visible workspaces, reports, semantic
 models, their owners and dependencies, and administrable gateways. Its results
 never establish tenant-wide coverage or effective access.
 
+The SharePoint and OneDrive family
+(Graph sites, group-connected sites, OneDrive accounts and server report
+downloads, a PnP.PowerShell script for one targeted site and a SharePoint Online
+Management Shell script for personal sites) is documented in
+[SharePoint and OneDrive](connectors/sharepoint-onedrive.md). A report downloaded
+by the server through that family's Graph connection uses the same profile and
+publication path, records the connection's observed tenant and is confirmed by
+the explicit launch.
+
 The separate [Office/GPO PowerShell family](connectors/office-gpo.md) records
 direct GPO links, security-filter principals and supported Office 16.0 user
 settings for a verified domain or OU subtree. Its ZIP references existing AD

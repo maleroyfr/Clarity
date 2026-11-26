@@ -1,13 +1,56 @@
 {
   "schemaVersion": "1.0", "id": "onedrive", "version": "1.0.0", "environmentKind": "M365Tenant",
   "producers": [{
+    "id": "clarity.graph.onedrive", "channel": "Graph", "version": "1.0.0", "apiVersion": "v1.0",
+    "preview": false, "readiness": "SyntheticValidated", "testedVersions": [".NET 11; Microsoft Graph REST v1.0 synthetic HTTP fixtures only"],
+    "prerequisites": ["A Clarity Graph connection for this producer on the tenant (multi-tenant collector app with per-customer admin consent)", "Admin consent for the section application permissions listed below", "Organization.Read.All to verify the observed tenant before collecting any section"],
+    "limits": ["Synthetic HTTP tests do not certify a live tenant or Key Vault access", "Graph consent does not authorize SharePoint Online Management Shell or PnP.PowerShell", "Drive metadata only; no file contents, permissions or sharing", "Public Graph cloud only; tenant-wide scope; bounded ZIP v1 package sizes"]
+  }, {
+    "id": "clarity.onedrive", "channel": "PowerShell", "version": "1.0.0", "apiVersion": "Microsoft.Online.SharePoint.PowerShell",
+    "preview": false, "readiness": "SyntheticValidated",
+    "testedVersions": ["Pester 5.7.1 with mocked Microsoft.Online.SharePoint.PowerShell cmdlets; no live module version is certified"],
+    "prerequisites": ["Windows PowerShell 5.1 on an authorized Windows workstation", "Microsoft.Online.SharePoint.PowerShell installed separately by an administrator", "SharePoint administrator account signing in interactively to the tenant admin URL typed at launch"],
+    "limits": ["Tenant binding is checked through the public OpenID configuration of the admin URL's onmicrosoft.com name", "Personal sites are keyed by provisional normalized URL, never equated to Graph site IDs automatically", "Storage values are the module's megabyte integers, not bytes"]
+  }, {
     "id": "report.m365.oneDriveUsageAccountDetail", "channel": "Import", "version": "1.0.0", "apiVersion": "Microsoft Graph v1.0 usage report CSV",
     "preview": false, "readiness": "SyntheticValidated",
     "testedVersions": ["Synthetic CSV fixtures of the documented Graph v1.0 getOneDriveUsageAccountDetail column set (byte units), with and without Site Id"],
-    "prerequisites": ["Consultant upload of a report downloaded with Reports.Read.All and a Microsoft 365 reports role; tenant attested by the consultant"],
-    "limits": ["File import through report profile m365.oneDriveUsageAccountDetail 1.0.0; not verified Graph connection evidence", "Admin center MB exports, localized headers and multi-geo files are rejected"]
+    "prerequisites": ["Consultant upload of a report downloaded with Reports.Read.All and a Microsoft 365 reports role; tenant attested by the consultant", "Or a server download through the tenant's clarity.graph.onedrive connection with Reports.Read.All (application); tenant observed"],
+    "limits": ["Interpreted only through report profile m365.oneDriveUsageAccountDetail 1.0.0, whether uploaded or downloaded", "Admin center MB exports, localized headers and multi-geo files are rejected"]
   }],
   "sections": [{
+    "id": "onedrive.accounts", "producerIds": ["clarity.graph.onedrive"], "supportedScopes": ["tenant"],
+    "attributes": {
+      "driveId": { "type": "string", "referenceProducer": "clarity.graph.onedrive" },
+      "siteUrl": { "type": "string", "referenceProducer": "clarity.graph.onedrive" },
+      "driveType": { "type": "string", "referenceProducer": "clarity.graph.onedrive" },
+      "createdDateTime": { "type": "utc", "referenceProducer": "clarity.graph.onedrive" },
+      "lastModifiedDateTime": { "type": "utc", "referenceProducer": "clarity.graph.onedrive" },
+      "quotaUsedBytes": { "type": "bytes", "referenceProducer": "clarity.graph.onedrive" },
+      "quotaTotalBytes": { "type": "bytes", "referenceProducer": "clarity.graph.onedrive" },
+      "quotaState": { "type": "string", "referenceProducer": "clarity.graph.onedrive" }
+    },
+    "relations": ["ownerOf"],
+    "permissions": ["User.Read.All (application)", "Files.Read.All or Sites.Read.All (application); Clarity reads drive metadata only"],
+    "endpoints": ["GET /v1.0/users?$top=999&$select=id,userPrincipalName", "GET /v1.0/users/{id}/drives?$select=id,driveType,webUrl,createdDateTime,lastModifiedDateTime,quota,owner,sharepointIds"],
+    "refreshStrategy": "Full user snapshot per run; one drives read per user",
+    "limits": ["Users without a readable OneDrive are counted as OneDriveNotProvisioned; Graph does not distinguish never-provisioned from inaccessible", "Drives without sharepointIds.siteId are counted as SiteIdUnavailable and not converted", "At most 20,000 users per run; larger tenants are Partial"]
+  }, {
+    "id": "onedrive.personalSites", "producerIds": ["clarity.onedrive"], "supportedScopes": ["tenant"],
+    "attributes": {
+      "url": { "type": "string", "referenceProducer": "clarity.onedrive" },
+      "ownerPrincipalName": { "type": "string", "referenceProducer": "clarity.onedrive" },
+      "storageUsedMegabytes": { "type": "integer", "referenceProducer": "clarity.onedrive" },
+      "storageQuotaMegabytes": { "type": "integer", "referenceProducer": "clarity.onedrive" },
+      "lastContentModifiedDate": { "type": "utc", "referenceProducer": "clarity.onedrive" },
+      "lockState": { "type": "string", "referenceProducer": "clarity.onedrive" },
+      "status": { "type": "string", "referenceProducer": "clarity.onedrive" }
+    },
+    "relations": ["ownerOf"], "permissions": ["SharePoint administrator"],
+    "endpoints": ["Connect-SPOService -Url https://<tenant>-admin.sharepoint.com", "Get-SPOSite -IncludePersonalSite $true -Limit All -Filter \"Url -like '-my.sharepoint.com/personal/'\""],
+    "refreshStrategy": "Full personal site snapshot per run",
+    "limits": ["Objects use the provisional namespace sharepoint.siteUrl plus an alternate url key; association with Graph site IDs is a reviewable proposal", "Empty owners are counted as OwnerUnresolved and non-UPN (masked) owners as OwnerMasked; neither is guessed", "Megabyte storage integers are rounded by the module"]
+  }, {
     "id": "onedrive.accountUsage", "producerIds": ["report.m365.oneDriveUsageAccountDetail"], "supportedScopes": ["tenant"],
     "attributes": {
       "reportRefreshDate": { "type": "date", "referenceProducer": "report.m365.oneDriveUsageAccountDetail" },
@@ -24,8 +67,8 @@
     },
     "relations": ["ownerOf"],
     "permissions": ["Reports.Read.All (delegated or application) to download the report; delegated users also need a Microsoft 365 reports role"],
-    "endpoints": ["Consultant upload of GET /v1.0/reports/getOneDriveUsageAccountDetail(period='D7|D30|D90|D180') or (date=YYYY-MM-DD) CSV"],
-    "refreshStrategy": "Consultant-uploaded report snapshot observed at the report refresh date",
+    "endpoints": ["Consultant upload of GET /v1.0/reports/getOneDriveUsageAccountDetail(period='D7|D30|D90|D180') or (date=YYYY-MM-DD) CSV", "Server download of GET /v1.0/reports/getOneDriveUsageAccountDetail(period='D30') through the clarity.graph.onedrive connection (302 to a pre-authenticated CSV URL)"],
+    "refreshStrategy": "Report snapshot observed at the report refresh date",
     "limits": ["Not a tenant-wide exhaustive OneDrive inventory; absence from a report never proves deletion", "Concealed names and URLs are not converted or guessed", "Without a Site Id column, OneDrive keys are provisional report URL references"]
   }]
 }

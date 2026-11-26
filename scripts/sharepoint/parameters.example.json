@@ -1,0 +1,9 @@
+{
+  "schemaVersion": "1.0",
+  "requestId": "11111111-0000-0000-0000-000000000021",
+  "environmentKind": "M365Tenant",
+  "expectedEnvironmentExternalId": "11111111-2222-3333-4444-555555555555",
+  "scope": { "kind": "resource", "value": "https://synthetic.sharepoint.com/sites/Alpha" },
+  "sections": ["sharepoint.siteDetails", "sharepoint.libraries", "sharepoint.sitePermissions", "sharepoint.siteSharing"],
+  "producerVersion": "1.0.0"
+}

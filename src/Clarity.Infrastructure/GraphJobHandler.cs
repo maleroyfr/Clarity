@@ -10,8 +10,10 @@ public sealed record GraphContinuation(string CapabilityId, string ScopeHash, st
 
 public sealed class GraphJobHandler(IGraphSessionFactory sessions, EntraCollector collector,
     IArtifactStore store, ZipPackageReader reader, PackageLimits limits, DiscoveryCatalog catalog,
-    PackageValidator validator) : ICollectionJobHandler
+    PackageValidator validator, ReportProfiles? profiles = null) : ICollectionJobHandler
 {
+    private readonly ReportProfiles reports = profiles ?? ReportProfiles.Default;
+
     public CollectionJobKind Kind => CollectionJobKind.Graph;
 
     public async Task ExecuteAsync(JobExecution execution, CancellationToken cancellationToken)
@@ -21,19 +23,30 @@ public sealed class GraphJobHandler(IGraphSessionFactory sessions, EntraCollecto
             ?? throw new ContractException("JobPayload", "job");
         var project = await execution.Access.RequireAsync(job.ProjectId, WorkspaceOperation.Collect, cancellationToken);
         var scope = new WorkspaceScope(new UserIdentity(job.ActorTenantId, job.ActorObjectId), [project.WorkspaceId]);
-        var imports = new ImportService(execution.Factory, execution.Access, scope, store, reader, limits, catalog);
+        var imports = new ImportService(execution.Factory, execution.Access, scope, store, reader, limits, catalog, reports);
         CollectionRun? prepared;
         Connection connection;
+        string producerId;
         await using (var db = await execution.Factory.CreateDbContextAsync(cancellationToken))
         {
+            // Connection-staged runs take the job ID as run ID; downloaded reports keep their profile's deterministic external run ID.
             prepared = await db.CollectionRuns.AsNoTracking().SingleOrDefaultAsync(x => x.WorkspaceId == project.WorkspaceId
-                && x.ProjectId == project.Id && x.EnvironmentId == payload.EnvironmentId && x.ExternalRunId == job.Id, cancellationToken);
+                && x.ProjectId == project.Id && x.EnvironmentId == payload.EnvironmentId && x.Id == job.Id, cancellationToken);
             var environment = await ImportService.EnvironmentAsync(db, project, payload.EnvironmentId, cancellationToken);
             connection = await GraphDiscoveryService.ConnectionAsync(db, project, environment, payload.ConnectionId, cancellationToken);
-            GraphDiscoveryService.ValidateSelection(catalog, connection, payload.Scope, payload.Sections);
+            producerId = GraphDiscoveryService.ValidateSelection(catalog, connection, payload.Scope, payload.Sections);
         }
-        if (prepared is not null && (prepared.ConnectionId != connection.Id || prepared.ConfirmedAtUtc is null
-            || prepared.ProducerId != connection.ProducerId)) { throw new ConflictException(); }
+        if (prepared is not null) { Check(prepared, connection, producerId); }
+        if (prepared is null && catalog.Producers[producerId].Channel == "Import")
+        {
+            using var session = await sessions.CreateAsync(connection, cancellationToken);
+            await session.Transport.VerifyTenantAsync(connection.TenantId, cancellationToken);
+            var id = await DownloadReportAsync(execution, imports, session.Transport, payload, producerId, connection, project.Id,
+                cancellationToken);
+            await using var preparedDb = await execution.Factory.CreateDbContextAsync(cancellationToken);
+            prepared = await ImportService.RunAsync(preparedDb, project, id, cancellationToken);
+            Check(prepared, connection, producerId);
+        }
         if (prepared is null)
         {
             using var session = await sessions.CreateAsync(connection, cancellationToken);
@@ -45,6 +58,8 @@ public sealed class GraphJobHandler(IGraphSessionFactory sessions, EntraCollecto
             var continuations = new List<GraphContinuation>();
             var intune = new IntuneCollector(catalog);
             var applicationsSso = new ApplicationsSsoCollector(catalog);
+            var sharePoint = new SharePointCollector(catalog);
+            var oneDrive = new OneDriveCollector(catalog);
             foreach (var capability in payload.Sections)
             {
                 await execution.ReportProgressAsync(0, cancellationToken);
@@ -64,6 +79,8 @@ public sealed class GraphJobHandler(IGraphSessionFactory sessions, EntraCollecto
                 {
                     IntuneCollector.ProducerId => await intune.CollectAsync(session.Transport, capability, payload.Scope, cancellationToken),
                     ApplicationsSsoCollector.ProducerId => await applicationsSso.CollectAsync(session.Transport, capability, payload.Scope, cancellationToken),
+                    SharePointCollector.ProducerId => await sharePoint.CollectAsync(session.Transport, capability, payload.Scope, cancellationToken),
+                    OneDriveCollector.ProducerId => await oneDrive.CollectAsync(session.Transport, capability, payload.Scope, cancellationToken),
                     _ => await collector.CollectAsync(session.Transport, capability, payload.Scope, delta, cancellationToken)
                 };
                 objects.AddRange(section.Objects);
@@ -84,7 +101,7 @@ public sealed class GraphJobHandler(IGraphSessionFactory sessions, EntraCollecto
             await using var preparedDb = await execution.Factory.CreateDbContextAsync(cancellationToken);
             prepared = await ImportService.RunAsync(preparedDb, project, id, cancellationToken);
         }
-        var pipeline = new ImportJobHandler(store, reader, limits, catalog, validator);
+        var pipeline = new ImportJobHandler(store, reader, limits, catalog, validator, reports);
         await pipeline.PublishAsync(execution, prepared.Id, cancellationToken);
         await execution.ReportProgressAsync(payload.Sections.Length, cancellationToken);
         await execution.Access.RequireAsync(job.ProjectId, WorkspaceOperation.Collect, cancellationToken);
@@ -124,6 +141,36 @@ public sealed class GraphJobHandler(IGraphSessionFactory sessions, EntraCollecto
         }
         await complete.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
+    }
+
+    private static void Check(CollectionRun run, Connection connection, string producerId)
+    {
+        // A run found for this job, or reused for identical report bytes, must come from this connection and producer.
+        if (run.ConnectionId != connection.Id || run.ConfirmedAtUtc is null || run.ProducerId != producerId) { throw new ConflictException(); }
+    }
+
+    private async Task<Guid> DownloadReportAsync(JobExecution execution, ImportService imports, GraphTransport transport,
+        GraphJobPayload payload, string producerId, Connection connection, Guid projectId, CancellationToken cancellationToken)
+    {
+        var producer = catalog.RequireProducer(producerId);
+        var profile = reports.ForProducer(producer.Id, producer.Version) ?? throw new ContractException("ReportProfileUnavailable", "profile");
+        var path = GraphReportDownloads.PathFor(producer.Id) ?? throw new ContractException("ReportDownloadUnavailable", "profile");
+        await execution.ReportProgressAsync(0, cancellationToken);
+        await execution.Access.RequireAsync(execution.Job.ProjectId, WorkspaceOperation.Collect, cancellationToken);
+        byte[] content;
+        try
+        {
+            content = await transport.DownloadReportAsync(path, limits.CompressedBytes, false, cancellationToken)
+                ?? throw new GraphReadException("ReportDownloadFailed");
+        }
+        catch (GraphReadException error)
+        {
+            // Surface a stable, non-sensitive code on the job; report URLs and bodies are never recorded.
+            throw new ContractException(error.Code, "report");
+        }
+        await execution.ReportProgressAsync(0, cancellationToken);
+        return await imports.StageReportAsync(projectId, payload.EnvironmentId, profile, content, connection.Id, execution.Job.Id,
+            cancellationToken);
     }
 
     public static string CursorScopeHash(CollectionScope scope, DiscoveryCatalog catalog) =>

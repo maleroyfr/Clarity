@@ -51,6 +51,7 @@ Never use a production database for tests.
 - [Exchange Online collection script](docs/connectors/exchange.md)
 - [Power BI collection script and visibility limits](docs/connectors/powerbi.md)
 - [Office settings, GPO links and security filtering](docs/connectors/office-gpo.md)
+- [SharePoint and OneDrive collection](docs/connectors/sharepoint-onedrive.md)
 - [Azure provisioning, deployment and rollback](docs/deployment.md)
 - [Contributor conventions](.github/copilot-instructions.md)
 

@@ -14,6 +14,21 @@ function Assert-DiscoveryPrerequisites {
     }
 }
 
+function ConvertTo-DiscoverySharePointUrl {
+    # Mirrors the server report adapter: https only, SharePoint Online host, lower-case host, no trailing slash.
+    [CmdletBinding()]
+    param([AllowNull()][AllowEmptyString()][string]$Value)
+    if ([string]::IsNullOrEmpty($Value) -or $Value.Length -gt 500 -or $Value -match '\s') { return $null }
+    $uri = $null
+    if (-not [Uri]::TryCreate($Value, [UriKind]::Absolute, [ref]$uri)) { return $null }
+    if ($uri.Scheme -ne 'https' -or -not $uri.IsDefaultPort -or $uri.UserInfo.Length -ne 0 -or $uri.Query.Length -ne 0 -or
+        $uri.Fragment.Length -ne 0 -or -not $uri.Host.EndsWith('.sharepoint.com', [StringComparison]::OrdinalIgnoreCase)) { return $null }
+    $authority = $Value.IndexOf('://', [StringComparison]::Ordinal) + 3
+    $slash = $Value.IndexOf('/', $authority)
+    $path = if ($slash -lt 0) { '' } else { $Value.Substring($slash) }
+    return ('https://' + $uri.Host.ToLowerInvariant() + $path).TrimEnd('/')
+}
+
 function Read-DiscoveryParameters {
     [CmdletBinding()]
     param([Parameter(Mandatory)][string]$Path)

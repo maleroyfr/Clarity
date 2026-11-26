@@ -8,7 +8,7 @@
     FunctionsToExport = @(
         'Assert-DiscoveryPrerequisites', 'Read-DiscoveryParameters', 'New-DiscoveryPackage',
         'Start-DiscoverySection', 'Write-DiscoveryObject', 'Write-DiscoveryRelationship',
-        'Complete-DiscoverySection', 'Complete-DiscoveryPackage'
+        'Complete-DiscoverySection', 'Complete-DiscoveryPackage', 'ConvertTo-DiscoverySharePointUrl'
     )
     CmdletsToExport = @()
     VariablesToExport = @()

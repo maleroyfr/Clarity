@@ -56,3 +56,11 @@ operator-opened session for the requested tenant. See
 [Power BI](../docs/connectors/powerbi.md) uses an interactive local
 MicrosoftPowerBIMgmt.Profile sign-in in a dedicated process; no credentials are
 put in the parameters. Its operator-limited sections cannot claim Complete coverage.
+
+`sharepoint/Collect-SharePoint.ps1` (PowerShell 7.4, PnP.PowerShell) uses the
+`resource` scope: the request carries one normalized site collection URL, and the
+script prompts for the client ID of the customer-authorized Entra app registration
+for interactive sign-in without storing it. `onedrive/Collect-OneDrive.ps1`
+(Windows PowerShell 5.1, Microsoft.Online.SharePoint.PowerShell) is bound to the
+tenant and prompts for the admin URL, whose tenant is checked before sign-in. See
+[SharePoint and OneDrive](../docs/connectors/sharepoint-onedrive.md).
