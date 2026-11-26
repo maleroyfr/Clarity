@@ -50,6 +50,7 @@ Never use a production database for tests.
 - [Applications, SSO metadata and consultant qualification](docs/connectors/applications-sso.md)
 - [Exchange Online collection script](docs/connectors/exchange.md)
 - [Power BI collection script and visibility limits](docs/connectors/powerbi.md)
+- [Azure and local Windows infrastructure collection scripts](docs/connectors/azure-infrastructure.md)
 - [Office settings, GPO links and security filtering](docs/connectors/office-gpo.md)
 - [Azure provisioning, deployment and rollback](docs/deployment.md)
 - [Contributor conventions](.github/copilot-instructions.md)

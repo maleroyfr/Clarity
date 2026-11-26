@@ -56,3 +56,9 @@ operator-opened session for the requested tenant. See
 [Power BI](../docs/connectors/powerbi.md) uses an interactive local
 MicrosoftPowerBIMgmt.Profile sign-in in a dedicated process; no credentials are
 put in the parameters. Its operator-limited sections cannot claim Complete coverage.
+
+`azure/Collect-Azure.ps1` and `infrastructure/Collect-Infrastructure.ps1` use
+the existing `resource` scope for a verified Azure subscription/resource group
+and one verified Windows server respectively. Their independent bundles, rights,
+scope formats and synthetic validation matrix are documented in
+[Azure and local infrastructure](../docs/connectors/azure-infrastructure.md).

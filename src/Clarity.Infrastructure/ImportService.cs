@@ -404,6 +404,8 @@ public sealed class ImportService(
         var manifest = package.Manifest;
         if (manifest.EnvironmentKind != environment.Kind.ToString()
             || !string.Equals(manifest.EnvironmentExternalId, environment.ExternalId, StringComparison.OrdinalIgnoreCase)
+            || ResourceScriptScope.RequiresRequest(manifest.ProducerId) && (manifest.RequestId is null
+                || !ResourceScriptScope.MatchesEvidence(environment.Kind, package))
             || package.Results.Any(x => x.Scope != manifest.Scope))
         {
             throw new ContractException("EnvironmentOrScopeMismatch", "manifest.json");
