@@ -16,7 +16,7 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261126173904_CollectionMetadata";
+    public override string LastMigrationId => "20261126174744_AtomicObservations";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -287,6 +287,125 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
                 b.ToTable("Connections");
             });
 
+        modelBuilder.Entity("Clarity.Core.ExternalKey", b =>
+            {
+                b.Property<Guid>("WorkspaceId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("Id")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("EnvironmentId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<string>("ExternalId")
+                    .IsRequired()
+                    .HasMaxLength(500)
+                    .HasColumnType("nvarchar(500)")
+                    .UseCollation("Latin1_General_100_BIN2");
+
+                b.Property<string>("Namespace")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("nvarchar(100)")
+                    .UseCollation("Latin1_General_100_BIN2");
+
+                b.Property<Guid>("ObjectId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<string>("Type")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("nvarchar(100)")
+                    .UseCollation("Latin1_General_100_BIN2");
+
+                b.HasKey("WorkspaceId", "Id");
+
+                b.HasIndex("WorkspaceId", "EnvironmentId", "ObjectId");
+
+                b.HasIndex("WorkspaceId", "EnvironmentId", "Namespace", "Type", "ExternalId")
+                    .IsUnique();
+
+                b.ToTable("ExternalKeys");
+            });
+
+        modelBuilder.Entity("Clarity.Core.InventoryObject", b =>
+            {
+                b.Property<Guid>("WorkspaceId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("Id")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<DateTimeOffset>("CreatedAtUtc")
+                    .HasColumnType("datetimeoffset");
+
+                b.Property<Guid>("EnvironmentId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<string>("Type")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("nvarchar(100)");
+
+                b.HasKey("WorkspaceId", "Id");
+
+                b.ToTable("InventoryObjects");
+            });
+
+        modelBuilder.Entity("Clarity.Core.ObjectObservation", b =>
+            {
+                b.Property<Guid>("WorkspaceId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("Id")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<string>("AttributesJson")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("DisplayName")
+                    .HasMaxLength(500)
+                    .HasColumnType("nvarchar(500)");
+
+                b.Property<Guid>("ObjectId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<DateTimeOffset>("ObservedAtUtc")
+                    .HasColumnType("datetimeoffset");
+
+                b.Property<Guid>("SectionRunId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<string>("Smtp")
+                    .HasMaxLength(500)
+                    .HasColumnType("nvarchar(500)");
+
+                b.Property<string>("Status")
+                    .HasMaxLength(100)
+                    .HasColumnType("nvarchar(100)");
+
+                b.Property<string>("UserPrincipalName")
+                    .HasMaxLength(500)
+                    .HasColumnType("nvarchar(500)");
+
+                b.HasKey("WorkspaceId", "Id");
+
+                b.HasIndex("WorkspaceId", "Smtp");
+
+                b.HasIndex("WorkspaceId", "UserPrincipalName");
+
+                b.HasIndex("WorkspaceId", "ObjectId", "ObservedAtUtc");
+
+                b.HasIndex("WorkspaceId", "SectionRunId", "ObjectId")
+                    .IsUnique();
+
+                b.HasIndex("WorkspaceId", "Status", "ObservedAtUtc");
+
+                b.ToTable("ObjectObservations");
+            });
+
         modelBuilder.Entity("Clarity.Core.PlatformAdmin", b =>
             {
                 b.Property<Guid>("TenantId")
@@ -420,6 +539,51 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
                     .IsUnique();
 
                 b.ToTable("RawArtifacts");
+            });
+
+        modelBuilder.Entity("Clarity.Core.RelationshipObservation", b =>
+            {
+                b.Property<Guid>("WorkspaceId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("Id")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<string>("FromJson")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("IdentityHash")
+                    .IsRequired()
+                    .HasMaxLength(64)
+                    .IsUnicode(false)
+                    .HasColumnType("varchar(64)");
+
+                b.Property<DateTimeOffset>("ObservedAtUtc")
+                    .HasColumnType("datetimeoffset");
+
+                b.Property<string>("PropertiesJson")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("RelationType")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("nvarchar(100)");
+
+                b.Property<Guid>("SectionRunId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<string>("ToJson")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.HasKey("WorkspaceId", "Id");
+
+                b.HasIndex("WorkspaceId", "SectionRunId", "IdentityHash")
+                    .IsUnique();
+
+                b.ToTable("RelationshipObservations");
             });
 
         modelBuilder.Entity("Clarity.Core.SectionRun", b =>
@@ -568,6 +732,58 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
                     .IsRequired();
             });
 
+        modelBuilder.Entity("Clarity.Core.ExternalKey", b =>
+            {
+                b.HasOne("Clarity.Core.ClientWorkspace", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+
+                b.HasOne("Clarity.Core.InventoryObject", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId", "EnvironmentId", "ObjectId")
+                    .HasPrincipalKey("WorkspaceId", "EnvironmentId", "Id")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+            });
+
+        modelBuilder.Entity("Clarity.Core.InventoryObject", b =>
+            {
+                b.HasOne("Clarity.Core.ClientWorkspace", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+
+                b.HasOne("Clarity.Core.ProjectEnvironment", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId", "EnvironmentId")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+            });
+
+        modelBuilder.Entity("Clarity.Core.ObjectObservation", b =>
+            {
+                b.HasOne("Clarity.Core.ClientWorkspace", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+
+                b.HasOne("Clarity.Core.InventoryObject", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId", "ObjectId")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+
+                b.HasOne("Clarity.Core.SectionRun", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId", "SectionRunId")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+            });
+
         modelBuilder.Entity("Clarity.Core.Project", b =>
             {
                 b.HasOne("Clarity.Core.ClientWorkspace", null)
@@ -603,6 +819,21 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
                 b.HasOne("Clarity.Core.CollectionRun", null)
                     .WithMany()
                     .HasForeignKey("WorkspaceId", "RunId")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+            });
+
+        modelBuilder.Entity("Clarity.Core.RelationshipObservation", b =>
+            {
+                b.HasOne("Clarity.Core.ClientWorkspace", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+
+                b.HasOne("Clarity.Core.SectionRun", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId", "SectionRunId")
                     .OnDelete(DeleteBehavior.NoAction)
                     .IsRequired();
             });

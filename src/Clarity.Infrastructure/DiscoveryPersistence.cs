@@ -63,6 +63,7 @@ public sealed partial class ClarityDbContext
         artifact.Property(x => x.ContentHash).HasMaxLength(64).IsUnicode(false);
         artifact.Property(x => x.FileName).HasMaxLength(200);
         artifact.HasIndex(x => new { x.WorkspaceId, x.RunId }).IsUnique();
+        ConfigureObservations(model);
     }
 
     private EntityTypeBuilder<TEntity> DiscoveryOwned<TEntity>(ModelBuilder model) where TEntity : WorkspaceEntity

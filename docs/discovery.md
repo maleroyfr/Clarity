@@ -29,3 +29,20 @@ byte counts. Neither blob names nor credentials are public download URLs.
 
 Apply migrations explicitly with the operator identity as described in
 `local-development.md`; app startup never migrates production implicitly.
+
+## Atomic section publication
+
+`PublicationService` is the common observation sink. It requires current project
+collection authorization, a confirmed run, matching manifest/section metadata and
+the actual declared environment. A SQL transaction and an environment-scoped
+transactional application lock serialize stable-key creation and section
+publication. The unique section marker makes retries and competing publications
+idempotent. An identity conflict rolls back the entire section.
+
+The store appends object and relationship observations; it never replaces prior
+valid data when staging, failing or publishing partial data. Failed/NotApplicable
+sections publish their coverage only. Stable keys use environment/namespace/type/
+external ID and ordinal SQL collation. Alternate-key conflicts are explicit rather
+than silently merging identities. Relationship endpoints may remain unresolved.
+UPN, SMTP, status and observation dates are indexed alongside original JSON.
+Full current-value projection, matching and object-detail UI remain Lot 3 work.
