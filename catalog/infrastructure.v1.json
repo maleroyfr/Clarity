@@ -1,0 +1,77 @@
+{
+  "schemaVersion":"1.0","id":"infrastructure","version":"1.0.0","environmentKind":"Other",
+  "producers":[{
+    "id":"clarity.infrastructure","channel":"PowerShell","version":"1.0.0","apiVersion":"Local Windows CIM and Certificate provider",
+    "preview":false,"readiness":"SyntheticValidated",
+    "testedVersions":["Synthetic Windows Server 2022 shapes; native Windows PowerShell 5.1 and PowerShell Core 7.6.10 Pester 5.7.1 with mocked providers, not live platform validation."],
+    "prerequisites":["Execute locally on one domain-joined Windows Server 2019 or later with 64-bit Windows PowerShell 5.1, native CimCmdlets, matching primary DNS suffix and domain. Use existing authorized local identity; no remote host parameters."],
+    "limits":["Windows local provider metadata only. Missing optional roles, providers and restricted sections are not inferred absent. Named resources may be recreated; no automatic matching by host name to AD or other environments."]
+  }],
+  "sections":[
+    {
+      "id":"infrastructure.servers","producerIds":["clarity.infrastructure"],"supportedScopes":["resource"],
+      "attributes":{"displayName":{"type":"string","referenceProducer":"clarity.infrastructure"},"operatingSystem":{"type":"string","referenceProducer":"clarity.infrastructure"},"domainName":{"type":"string","referenceProducer":"clarity.infrastructure"}},
+      "relations":[],"permissions":["Read local root/cimv2 computer system and operating system identity (required for every section)."],
+      "endpoints":["Get-CimInstance Win32_ComputerSystem: DNSHostName,Domain,PartOfDomain","Get-CimInstance Win32_OperatingSystem: ProductType,Version,Caption","IPGlobalProperties.GetIPGlobalProperties(): HostName,DomainName"],
+      "refreshStrategy":"Verify local DNS identity, joined domain and Server SKU; observe this one server.",
+      "limits":["No domain enumeration, desktops, workgroups, disjoint namespaces or implied AD object identity."]
+    },
+    {
+      "id":"infrastructure.dnsZones","producerIds":["clarity.infrastructure"],"supportedScopes":["resource"],
+      "attributes":{"displayName":{"type":"string","referenceProducer":"clarity.infrastructure"},"zoneType":{"type":"integer","referenceProducer":"clarity.infrastructure"}},
+      "relations":["dnsZoneOnServer"],"permissions":["Read local root/MicrosoftDNS zone metadata on the named DNS server."],
+      "endpoints":["Get-CimInstance MicrosoftDNS_Zone: Name,ZoneType"],
+      "refreshStrategy":"Local zone headers only.","limits":["No records, lookups, transfers, server lists or zone contents. Provider not installed or unreadable is unknown."]
+    },
+    {
+      "id":"infrastructure.shares","producerIds":["clarity.infrastructure"],"supportedScopes":["resource"],
+      "attributes":{"displayName":{"type":"string","referenceProducer":"clarity.infrastructure"},"shareType":{"type":"integer","referenceProducer":"clarity.infrastructure"}},
+      "relations":["shareOnServer"],"permissions":["Read local Win32_Share metadata; effective visibility depends on the caller."],
+      "endpoints":["Get-CimInstance Win32_Share: Name,Type"],
+      "refreshStrategy":"Observe locally visible share headers.","limits":["No paths, file traversal, share contents, sessions or ACLs."]
+    },
+    {
+      "id":"infrastructure.printers","producerIds":["clarity.infrastructure"],"supportedScopes":["resource"],
+      "attributes":{"displayName":{"type":"string","referenceProducer":"clarity.infrastructure"}},
+      "relations":["printerOnServer"],"permissions":["Read local print queues through root/cimv2 and the spooler."],
+      "endpoints":["Get-CimInstance Win32_Printer: Name; Local = TRUE AND Network = FALSE"],
+      "refreshStrategy":"Enumerate local non-network queues.","limits":["No network printer discovery, ports, drivers, jobs or documents."]
+    },
+    {
+      "id":"infrastructure.services","producerIds":["clarity.infrastructure"],"supportedScopes":["resource"],
+      "attributes":{"displayName":{"type":"string","referenceProducer":"clarity.infrastructure"},"status":{"type":"string","referenceProducer":"clarity.infrastructure"}},
+      "relations":["serviceOnServer"],"permissions":["Read Win32_Service name and state through local root/cimv2."],
+      "endpoints":["Get-CimInstance Win32_Service: Name,State"],
+      "refreshStrategy":"Observe service name and reported state.","limits":["Does not request executable paths, command lines, service identities, process lists or configurations."]
+    },
+    {
+      "id":"infrastructure.certificates","producerIds":["clarity.infrastructure"],"supportedScopes":["resource"],
+      "attributes":{"displayName":{"type":"string","referenceProducer":"clarity.infrastructure"},"notBefore":{"type":"utc","referenceProducer":"clarity.infrastructure"},"notAfter":{"type":"utc","referenceProducer":"clarity.infrastructure"}},
+      "relations":["certificateOnServer"],"permissions":["List public certificate metadata in the local machine Personal store. Private-key access is not required."],
+      "endpoints":["Get-ChildItem -LiteralPath Microsoft.PowerShell.Security\\Certificate::LocalMachine\\My: Thumbprint,NotBefore,NotAfter"],
+      "refreshStrategy":"List only the immediate machine Personal store.","limits":["No private key access, certificate export, raw bytes, subjects, chains or binding guesses."]
+    },
+    {
+      "id":"infrastructure.serviceDependencies","producerIds":["clarity.infrastructure"],"supportedScopes":["resource"],
+      "attributes":{},"relations":["serviceDependsOnService"],"permissions":["Read local Win32_DependentService associations."],
+      "endpoints":["Get-CimInstance Win32_DependentService: Dependent,Antecedent,TypeOfDependency"],
+      "refreshStrategy":"Record the directed provider association and its numeric dependency type.",
+      "limits":["No effective application topology, load-order group expansion or credential access; missing service objects remain unresolved."]
+    },
+    {
+      "id":"infrastructure.applicationPools","producerIds":["clarity.infrastructure"],"supportedScopes":["resource"],
+      "attributes":{"displayName":{"type":"string","referenceProducer":"clarity.infrastructure"}},
+      "relations":["poolOnServer"],"permissions":["IIS Management Scripts and Tools WMI provider; read pool names in local root/WebAdministration."],
+      "endpoints":["Get-CimInstance ApplicationPool: Name"],"refreshStrategy":"Read existing pool identities separately from application configuration.",
+      "limits":["No application pool identity, process model, passwords, worker processes or recycling actions."]
+    },
+    {
+      "id":"infrastructure.applications","producerIds":["clarity.infrastructure"],"supportedScopes":["resource"],
+      "attributes":{"displayName":{"type":"string","referenceProducer":"clarity.infrastructure"},"siteName":{"type":"string","referenceProducer":"clarity.infrastructure"},"virtualPath":{"type":"string","referenceProducer":"clarity.infrastructure"}},
+      "relations":["applicationOnServer","applicationUsesPool"],"permissions":["IIS Management Scripts and Tools WMI provider; read local Application identity and assigned pool."],
+      "endpoints":["Get-CimInstance Application: SiteName,Path,ApplicationPool"],
+      "refreshStrategy":"Record IIS site/virtual-path identity and only the explicitly reported, case-sensitive pool reference.",
+      "limits":["No physical paths, files, connection strings, application settings, traffic analysis or inferred dependencies. Unobserved pools remain typed references."]
+    }
+  ]
+}

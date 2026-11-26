@@ -203,3 +203,9 @@ The separate [Office/GPO PowerShell family](connectors/office-gpo.md) records
 direct GPO links, security-filter principals and supported Office 16.0 user
 settings for a verified domain or OU subtree. Its ZIP references existing AD
 identities without enumerating AD users, computers or groups.
+
+[Azure and local Windows infrastructure](connectors/azure-infrastructure.md)
+use separate verified execution contexts and exact resource scopes. A request
+targets one subscription, one resource group or one domain-joined server.
+Import checks both the declared scope and the boundaries of the identities in
+the generated ZIP before confirmation.

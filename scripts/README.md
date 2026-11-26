@@ -64,3 +64,9 @@ for interactive sign-in without storing it. `onedrive/Collect-OneDrive.ps1`
 (Windows PowerShell 5.1, Microsoft.Online.SharePoint.PowerShell) is bound to the
 tenant and prompts for the admin URL, whose tenant is checked before sign-in. See
 [SharePoint and OneDrive](../docs/connectors/sharepoint-onedrive.md).
+
+`azure/Collect-Azure.ps1` and `infrastructure/Collect-Infrastructure.ps1` use
+the existing `resource` scope for a verified Azure subscription/resource group
+and one verified Windows server respectively. Their independent bundles, rights,
+scope formats and synthetic validation matrix are documented in
+[Azure and local infrastructure](../docs/connectors/azure-infrastructure.md).

@@ -393,7 +393,7 @@
     {
         var bound = BoundToEnvironment;
         CollectionScope scope = bound ? new("tenant", SelectedEnvironment!.ExternalId) : new(_scopeKind, _scopeValue);
-        var id = await Scripts.CreateAsync(ProjectId, _environmentId, _operationId, scope, _sections.ToArray(), bound ? null : _domain);
+        var id = await Scripts.CreateAsync(ProjectId, _environmentId, _operationId, scope, _sections.ToArray(), scope.Kind == "ou" ? _domain : null);
         _request = new RequestView(id, DiscoveryScope.Serialize(scope), Catalog.Producers[_producer].Version, CollectionRequestState.AwaitingFile,
             DateTimeOffset.UtcNow, _producer);
         NewOperation(); _revision++;

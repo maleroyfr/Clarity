@@ -19,7 +19,7 @@ public sealed class ScriptRequestService(IDbContextFactory<ClarityDbContext> fac
         // A tenant collection is always bound to the environment's tenant, never to a client-supplied identifier.
         var boundToTenant = requestedScope.Kind == "tenant" && string.Equals(requestedScope.Value, environment.ExternalId, StringComparison.OrdinalIgnoreCase);
         if (boundToTenant) { requestedScope = new CollectionScope("tenant", environment.ExternalId); }
-        var resource = requestedScope.Kind == "resource" ? ResourceScope(producer.Id, requestedScope.Value) : null;
+        var resource = requestedScope.Kind == "resource" ? BindResourceScope(producer.Id, environment, requestedScope) : null;
         if (resource is not null) { requestedScope = resource; }
         if (operationId == Guid.Empty || sections.Length == 0
             || sections.Distinct(StringComparer.Ordinal).Count() != sections.Length
@@ -86,6 +86,15 @@ public sealed class ScriptRequestService(IDbContextFactory<ClarityDbContext> fac
     /// Normalizes a resource scope for the producers that define one. Only <c>clarity.sharepoint</c> does: one SharePoint Online
     /// site collection URL, normalized like the report adapter, never an admin or personal (OneDrive) host.
     /// </summary>
+    private static CollectionScope? BindResourceScope(string producerId, ProjectEnvironment environment, CollectionScope scope)
+    {
+        if (ResourceScriptScope.RequiresRequest(producerId))
+        {
+            return ResourceScriptScope.Allows(environment.Kind, environment.ExternalId, scope) ? scope : null;
+        }
+        return ResourceScope(producerId, scope.Value);
+    }
+
     public static CollectionScope? ResourceScope(string producerId, string? value) =>
         producerId == SharePointScriptProducerId && GraphValues.SharePointUrl(value?.Trim()) is { } url
             && new Uri(url).Host is var host && !host.EndsWith("-admin.sharepoint.com", StringComparison.Ordinal)

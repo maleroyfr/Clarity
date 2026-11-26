@@ -33,7 +33,6 @@ planned families below are not selectable:
 | --- | --- | --- |
 | Teams | Graph teams, channels and associated sites | Endpoint permissions and hidden/shared channel scope |
 | Power BI | Power BI script or administrative export | API/report schema, tenant admin/scanner rights and resource scope |
-| Azure / infrastructure | Az and targeted local scripts/imports | Subscription RBAC, OS/modules, servers/DNS/shares/services metadata boundaries |
 
 No future family is presented as tested or ready. New supported families require
 their own versioned file, exact endpoint/cmdlet and permissions documentation,
@@ -47,3 +46,7 @@ observations; they retain independent author/date/environment/proof history.
 The [Office/GPO PowerShell producer](../docs/connectors/office-gpo.md) covers
 direct OU links, security-filter principals and six ADMX-backed macro settings
 for the exact requested domain or OU subtree. It does not report effective policy.
+
+The [Azure and local infrastructure producers](../docs/connectors/azure-infrastructure.md)
+are separately requestable for `AzureScope` and `Other`. Both use exact `resource`
+scopes; neither an Azure resource path nor a server FQDN is an AD domain.
