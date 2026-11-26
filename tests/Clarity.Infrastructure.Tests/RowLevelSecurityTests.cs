@@ -23,11 +23,11 @@ public class RowLevelSecurityTests
             await setup.SaveChangesAsync();
         }
 
-        int sessionId;
+        short sessionId;
         await using (var first = PersistenceTests.Create(connection, [alpha.Id]))
         {
             await first.Database.OpenConnectionAsync();
-            sessionId = await first.Database.SqlQueryRaw<int>("SELECT @@SPID AS Value").SingleAsync();
+            sessionId = await first.Database.SqlQueryRaw<short>("SELECT @@SPID AS Value").SingleAsync();
             var visible = await first.Projects.IgnoreQueryFilters().ToListAsync();
             visible.ShouldHaveSingleItem().WorkspaceId.ShouldBe(alpha.Id);
             (await first.Projects.IgnoreQueryFilters().Where(x => x.WorkspaceId == beta.Id)
@@ -39,7 +39,7 @@ public class RowLevelSecurityTests
         await using (var second = PersistenceTests.Create(connection, [beta.Id]))
         {
             await second.Database.OpenConnectionAsync();
-            (await second.Database.SqlQueryRaw<int>("SELECT @@SPID AS Value").SingleAsync()).ShouldBe(sessionId);
+            (await second.Database.SqlQueryRaw<short>("SELECT @@SPID AS Value").SingleAsync()).ShouldBe(sessionId);
             (await second.Projects.IgnoreQueryFilters().ToListAsync()).ShouldHaveSingleItem().WorkspaceId.ShouldBe(beta.Id);
         }
 
