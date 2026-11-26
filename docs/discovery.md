@@ -46,7 +46,9 @@ external ID and ordinal SQL collation. [Consolidation](consolidation.md) retains
 alternate keys independently, including ambiguous values and rename history.
 Relationship endpoints may remain unresolved.
 UPN, SMTP, status and observation dates are indexed alongside original JSON.
-Full current-value projection, matching and object-detail UI remain Lot 3 work.
+The publisher also refreshes the current-value, relationship and association
+projections in the same transaction; the [consolidation matrix](consolidation.md)
+documents the implemented rules and dossier screens.
 
 ## Durable jobs
 
@@ -148,5 +150,4 @@ through a former member's scope. Existing observations remain untouched.
 CI executes the SQL cases on disposable SQL Server and runs Pester before validating
 its generated packages. Local SQL skips are intentional when `CLARITY_TEST_SQL`
 is absent. Live AD/Graph/Key Vault validation is an operator pilot, not a claim made
-by synthetic acceptance. Lot 3 projection/matching and Lot 4 collection families
-are not implemented by this delivery.
+by synthetic acceptance. Lot 4 collection families are not implemented by this delivery.

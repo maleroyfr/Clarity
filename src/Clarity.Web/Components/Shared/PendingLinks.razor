@@ -1,0 +1,23 @@
+@using Clarity.Infrastructure
+@inject InventoryGraph Graph
+<h2>@Text["PendingLinks"] · @Text[Side.ToString()]</h2>
+<ClarityGrid TGridItem="PendingEdge" Load="@((p, ct) => Graph.PendingAsync(ProjectId, Side, p, ct))">
+    <Columns>
+        <PropertyColumn Property="@(r => r.Environment)" Title="@Text["CollectionEnvironment"]" />
+        <PropertyColumn Property="@(r => r.Relation)" Title="@Text["Relation"]" />
+        <TemplateColumn Title="@Text["Endpoints"]" Context="r">
+            @if (r.FromId.HasValue) { <a href="@Sheet(r.FromId.Value)">@r.From.ExternalId</a> } else { @r.From.ExternalId }
+            · @Text[$"Endpoint{r.FromMethod}"] →
+            @if (r.ToId.HasValue) { <a href="@Sheet(r.ToId.Value)">@r.To.ExternalId</a> } else { @r.To.ExternalId }
+            · @Text[$"Endpoint{r.ToMethod}"]
+        </TemplateColumn>
+        <TemplateColumn Title="@Text["Actions"]" Context="r"><FluentButton OnClick="@(() => _proof = new(ProofKind.Relationship, r.Id))">@Text["Provenance"]</FluentButton></TemplateColumn>
+    </Columns><EmptyContent><p>@Text["NoResults"]</p></EmptyContent>
+</ClarityGrid>
+@if (_proof != null) { <ProvenancePanel @key="_proof" ProjectId="ProjectId" Target="_proof" Close="@(() => _proof = null)" /> }
+@code {
+    [Parameter] public Guid ProjectId { get; set; }
+    [Parameter] public EnvironmentRole Side { get; set; }
+    private ProofRef? _proof;
+    private string Sheet(Guid id) => $"/projects/{ProjectId}/inventory?side={Side}&object={id}";
+}

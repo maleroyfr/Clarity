@@ -37,7 +37,9 @@ collection access and rebuilds from published evidence, not staging data.
 For each explicitly reported field, sort by catalog reference producer, verified
 server connection for that producer, complete coverage, observation time, then
 stable run/section identifiers. JSON `null`, `[]` and `""` are values; no row
-means not observed. Comparable streams that disagree retain both observations
+means not observed. A successful Graph user delta is comparable for its
+explicitly reported fields, never for omitted objects or fields.
+Comparable streams that disagree retain both observations
 and flag the current field. The winning observation carries the freshness date.
 
 Presence is separate from values. A reference-producer deletion signal is dated
@@ -162,3 +164,44 @@ original rejection and new validation commit together. Both histories remain;
 no unrelated validated link is silently displaced. The configured-anchor SQL
 case above also exercises batch counts, stale and foreign confirmations,
 manual correction and preservation after a projection rebuild.
+
+## Overview and acceptance run
+
+Vue d’ensemble counts observed users, not accounts in an entire unobserved
+tenant. A validated AD/Entra pair contributes its observed Entra representative
+once; a proposal or ambiguity never silently merges the population. Known
+license units are summed per observed SKU resource only for nonconflicting,
+reported fields. Each total links to those exact rows and shows contributing
+versus observed subscriptions. When no measurement is known, the overview
+displays *unknown*, not zero. No mailbox or storage estimates are inferred.
+
+Latest published coverage is grouped by environment, capability and exact
+scope; its dated link opens that section’s observed rows and its proof explains
+failed/partial outcomes. Recent property changes link to sheets. Pending links
+include references with **neither** endpoint resolved. Review counts use the
+same state selection as the queue. A planned target has no pretend inventory.
+
+| Acceptance | Executable case |
+| --- | --- |
+| Deduplicated population and actionable decision count | `GraphTests.VerifiedConsistencyAnchorAndReviewedUpnSurviveUnrelatedRefreshButNotANewCandidate` |
+| Measured zero, unknown SKU, partial totals, contributing grid and exact section drill-down | `GraphTests.OverviewReconcilesKnownLicenseUnitsAndUnknownValuesToTheirFilteredRows` |
+| Pending-edge count resolves to its row | `PublicationTests.MembershipPathsResolveLaterArrivalsPreserveProofAndTerminateOnCycles` |
+| Second consultant’s Discovery → dashboard → object sheet and mapping queue, using real SQL and the worker | `DiscoveryEndpointTests.SqlSeparateMachineJourneyDownloadsUploadsPreviewsConfirmsAndPreservesCoverage` |
+
+Run the whole Lot 3 matrix from the repository root:
+
+```powershell
+dotnet test -c Release --filter 'FullyQualifiedName~PublicationTests|FullyQualifiedName~GraphTests|FullyQualifiedName~ComponentTests|FullyQualifiedName~DiscoveryEndpointTests|FullyQualifiedName~RowLevelSecurityTests|FullyQualifiedName~DiscoveryModelTests'
+```
+
+Set `CLARITY_TEST_SQL` to a **disposable** SQL instance to execute SQL cases;
+without it, SQL integrations skip locally. CI also runs the entire baseline,
+Pester output contracts, migration bundle twice, Bicep and self-contained Linux
+smoke. Use a verified same-side forest/tenant anchor in the review screen;
+leave it unverified when unavailable. No production tenant consent, live AD
+module run, pilot-sized throughput, or workload not in the catalog is certified
+by this matrix. Large dossiers merit a timed pilot: read grids page in SQL;
+association refresh and relationship reconciliation process the relevant
+project/environment evidence during publication. Upgrade existing inventories
+by selecting each environment in Inventaire and recalculating from its published
+observations. The migration does not manufacture historical evidence.

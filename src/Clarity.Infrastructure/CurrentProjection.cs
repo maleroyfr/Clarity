@@ -38,6 +38,13 @@ internal static class CurrentProjection
         SectionRun? published, IReadOnlyList<Guid> changed, CancellationToken token)
     {
         var sections = (await ProjectedSection.LoadAsync(db, workspace, environment, token)).ToDictionary(s => s.Section.Id);
+        var comparableFields = sections.Values.Where(s =>
+        {
+            if (s.Section.Coverage == CoverageStatus.Complete) { return true; }
+            if (s.Section.Coverage != CoverageStatus.Partial || s.Connection == null || s.Section.CapabilityId != "entra.users") { return false; }
+            var result = JsonSerializer.Deserialize<SectionResult>(s.Section.ResultJson, ContractJson.Options)!;
+            return result.Errors.Count == 0 && result.Warnings.Count == 1 && result.Warnings[0].Code == "IncrementalChanges";
+        }).Select(s => s.Section.Id).ToHashSet();
         var exhaustive = sections.Values.Where(x => x.IsExhaustive(catalog)).ToLookup(x => x.Stream);
         var inventory = db.InventoryObjects.Where(x => x.WorkspaceId == workspace && x.EnvironmentId == environment);
         var affected = changed.ToHashSet();
@@ -64,6 +71,7 @@ internal static class CurrentProjection
                     .ThenBy(e => e.Source.Section.SectionId, StringComparer.Ordinal).ToList();
                 if (evidence.Count == 0) { continue; }
                 item.LastObservedAtUtc = evidence[0].Observation.ObservedAtUtc;
+                item.LastChangedAtUtc = evidence[^1].Observation.ObservedAtUtc;
                 item.PresenceSectionId = evidence[0].Source.Section.Id;
                 item.Presence = InventoryPresence.Observed;
                 if (evidence[0].Attributes.TryGetProperty("deleted", out var tombstone) && tombstone.ValueKind == JsonValueKind.True
@@ -82,7 +90,9 @@ internal static class CurrentProjection
                     if (absences.TrueForAll(s => s is not null))
                     {
                         item.Presence = InventoryPresence.AbsentFromScope;
-                        item.PresenceSectionId = absences.MaxBy(s => (s!.Completed, s.ExternalRunId))!.Section.Id;
+                        var absence = absences.MaxBy(s => (s!.Completed, s.ExternalRunId))!;
+                        item.PresenceSectionId = absence.Section.Id;
+                        item.LastChangedAtUtc = absence.Completed;
                     }
                 }
                 var values = evidence.SelectMany(e => e.Attributes.EnumerateObject().Select(f =>
@@ -92,7 +102,11 @@ internal static class CurrentProjection
                 {
                     var winner = field.OrderByDescending(c => c.Reference)
                         .ThenByDescending(c => c.Reference && c.Evidence.Source.Connection != null)
-                        .ThenByDescending(c => c.Evidence.Source.Section.Coverage == CoverageStatus.Complete).First();
+                        .ThenByDescending(c => comparableFields.Contains(c.Evidence.Source.Section.Id)).First();
+                    var since = field.Where(c => c.Evidence.Source.Stream == winner.Evidence.Source.Stream
+                            && c.Evidence.Observation.ObservedAtUtc <= winner.Evidence.Observation.ObservedAtUtc)
+                        .SkipWhile(c => c != winner).TakeWhile(c => JsonElement.DeepEquals(c.Value, winner.Value)).Last().Evidence.Observation.ObservedAtUtc;
+                    if (since > item.LastChangedAtUtc) { item.LastChangedAtUtc = since; }
                     var conflicts = field.Where(c => c.Evidence.Source.Section.ScopeHash == winner.Evidence.Source.Section.ScopeHash
                             && c.Evidence.Source.Stream != winner.Evidence.Source.Stream)
                         .GroupBy(c => c.Evidence.Source.Stream)

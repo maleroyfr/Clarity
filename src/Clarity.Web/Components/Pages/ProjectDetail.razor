@@ -28,19 +28,19 @@
         <nav class="toolbar" aria-label="@Text["Inventory"]">
             <a href="@($"/projects/{ProjectId}/inventory?side={_side}")">@Text["Inventory"]</a>
             <a href="@($"/projects/{ProjectId}/inventory?side={_side}&view=Mappings")">@Text["MappingReview"]</a>
+            <a href="@($"/projects/{ProjectId}/inventory?side={_side}&view=PendingLinks")">@Text["PendingLinks"]</a>
         </nav>
         @if (DiscoveryView == "Mappings")
         { <MappingPanel @key="(ProjectId, _side)" ProjectId="ProjectId" Side="_side" /> }
+        else if (DiscoveryView == "PendingLinks")
+        { <PendingLinks @key="(ProjectId, _side)" ProjectId="ProjectId" Side="_side" /> }
         else
         { <InventoryPanel @key="(ProjectId, _side)" ProjectId="ProjectId" Side="_side" /> }
     }
     else if (Section is null or "overview")
     {
-        <div class="summary-cards">
-            <article><h2>@Text["LastInventory"]</h2><p><a href="@($"/projects/{ProjectId}/discovery?view=Collections")">@Text["ViewCollections"]</a></p></article>
-            <article><h2>@Text["SectionsToVerify"]</h2><p><a href="@($"/projects/{ProjectId}/discovery?view=Coverage")">@Text["Coverage"]</a></p></article>
-            <article><h2>@Text["TargetPresence"]</h2><p>@Text[_environments.Any(x => x.Role == EnvironmentRole.Target) ? "Present" : "Absent"]</p></article>
-        </div>
+        <p>@Text["TargetPresence"] : <a href="@($"/projects/{ProjectId}/overview?side=Target")">@Text[_environments.Any(x => x.Role == EnvironmentRole.Target) ? "Present" : "Absent"]</a></p>
+        <OverviewPanel @key="(ProjectId, _side)" ProjectId="ProjectId" Side="_side" />
         <div class="section-heading"><h2>@Text["Environments"] · @Text[_side.ToString()]</h2>
             <FluentButton OnClick="OpenEnvironment">@Text[_side == EnvironmentRole.Source ? "AddSource" : "AddTarget"]</FluentButton></div>
         @if (!_environments.Any(x => x.Role == _side))
@@ -57,7 +57,7 @@
                 <p>@Text[environment.TargetState.ToString()] · @environment.Hypotheses</p>
             </article>
         }
-        <p><a href="@($"/projects/{ProjectId}/discovery")">@Text["ViewCollections"]</a></p>
+        <p><a href="@($"/projects/{ProjectId}/discovery?side={_side}")">@Text["ViewCollections"]</a></p>
     }
     else
     {

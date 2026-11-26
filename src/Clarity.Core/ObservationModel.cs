@@ -18,6 +18,7 @@ public sealed class InventoryObject : WorkspaceEntity
     public string? Site { get; set; }
     public bool? Enabled { get; set; }
     public DateTimeOffset? LastObservedAtUtc { get; set; }
+    public DateTimeOffset? LastChangedAtUtc { get; set; }
     public InventoryPresence Presence { get; set; }
     public Guid? PresenceSectionId { get; set; }
 }

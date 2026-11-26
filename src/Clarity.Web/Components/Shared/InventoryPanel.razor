@@ -33,6 +33,12 @@
     </form>
     @if (_filter is not null)
     {
+        @if (Population == true || Unresolved == true || Conflicts == true || Volume != null || SectionId.HasValue)
+        {
+            <p class="notice">@Text[Population == true ? "ObservedPopulation" : Unresolved == true ? "ObjectsWithPendingLinks" :
+                Conflicts == true ? "ConflictingObjects" : Volume ?? "SectionObjects"] ·
+                <a href="@($"/projects/{ProjectId}/inventory?side={Side}")">@Text["ClearFilters"]</a></p>
+        }
         <ClarityGrid TGridItem="InventoryRow" @key="(_filter, _appliedSearch, _revision)" Load="LoadAsync" Search="@_appliedSearch">
             <Columns>
                 <PropertyColumn Property="@(r => r.DisplayName)" Title="@Text["Name"]" Sortable="true" />
@@ -55,6 +61,10 @@
                 @if (_filter.Type == "subscribedSku")
                 {
                     <TemplateColumn Title="SKU" Context="r">@JsonDisplay(r.Sku)</TemplateColumn>
+                }
+                @if (_filter.Volume is { } volume)
+                {
+                    <TemplateColumn Title="@Text[volume]" Context="r">@r.VolumeValue</TemplateColumn>
                 }
                 <PropertyColumn Property="@(r => r.LastObservedAtUtc)" Title="@Text["LastValidObservation"]" Sortable="true" />
                 <TemplateColumn Title="@Text["Actions"]" Context="r">
@@ -90,6 +100,10 @@
     [SupplyParameterFromQuery(Name = "status")] public string? StatusQuery { get; set; }
     [SupplyParameterFromQuery(Name = "run")] public string? RunQuery { get; set; }
     [SupplyParameterFromQuery(Name = "conflicts")] public bool? Conflicts { get; set; }
+    [SupplyParameterFromQuery(Name = "population")] public bool? Population { get; set; }
+    [SupplyParameterFromQuery(Name = "unresolved")] public bool? Unresolved { get; set; }
+    [SupplyParameterFromQuery(Name = "volume")] public string? Volume { get; set; }
+    [SupplyParameterFromQuery(Name = "sectionId")] public Guid? SectionId { get; set; }
     [SupplyParameterFromQuery(Name = "object")] public Guid? SelectedObject { get; set; }
     private static readonly string[] Statuses = ["Observed", "AbsentFromScope", "Deleted", "Unknown", "Enabled", "Disabled"];
     private string _search = "", _environment = "", _domain = "", _site = "", _type = "", _status = "", _run = "", _appliedSearch = "";
@@ -112,14 +126,15 @@
         _options = await Queries.OptionsAsync(ProjectId, Side);
         _appliedSearch = _search = Query ?? ""; _environment = EnvironmentQuery ?? ""; _domain = DomainQuery ?? "";
         _site = SiteQuery ?? ""; _type = TypeQuery ?? ""; _status = StatusQuery ?? ""; _run = RunQuery ?? "";
-        _filter = new(Side, ParseId(_environment), _domain, _site, _type, _status, ParseId(_run), Conflicts == true);
+        _filter = new(Side, ParseId(_environment), _domain, _site, _type, _status, ParseId(_run), Conflicts == true,
+            Population == true, Unresolved == true, Volume, SectionId);
     });
     private Task Apply() => RunAsync(() =>
     {
         var url = Navigation.GetUriWithQueryParameters(new Dictionary<string, object?>
         {
             ["side"] = Side.ToString(), ["q"] = _search.Trim(), ["environment"] = ParseId(_environment), ["domain"] = _domain.Trim(),
-            ["site"] = _site.Trim(), ["type"] = _type, ["status"] = _status, ["run"] = ParseId(_run), ["conflicts"] = null
+            ["site"] = _site.Trim(), ["type"] = _type, ["status"] = _status, ["run"] = ParseId(_run)
         });
         Navigation.NavigateTo(url);
         return Task.CompletedTask;

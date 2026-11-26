@@ -238,6 +238,18 @@ public sealed class GraphTests
         item.DisplayName.ShouldBe("Synthetic");
         item.Smtp.ShouldBe("updated@example.test");
 
+        using var delta = new SyntheticGraph(_ => Organization(), request =>
+        {
+            request.RequestUri!.Query.ShouldContain("$deltatoken=full");
+            return Response("""{"value":[{"id":"user-a","displayName":"Renamed"}],"@odata.deltaLink":"https://graph.microsoft.com/v1.0/users/delta?$deltatoken=renamed"}""");
+        });
+        await service.LaunchAsync(fixture.Project.Id, environment.Id, connection, Guid.NewGuid(), Scope, ["entra.users"]);
+        await new CollectionJobProcessor(queue, [Handler(new SyntheticSessions(delta.Transport), store)], NullLogger<CollectionJobProcessor>.Instance).ProcessOneAsync(default);
+        var renamed = await check.InventoryObjects.AsNoTracking().SingleAsync();
+        renamed.DisplayName.ShouldBe("Renamed");
+        renamed.Smtp.ShouldBe(item.Smtp);
+        (renamed.LastChangedAtUtc > item.LastChangedAtUtc).ShouldBeTrue();
+
         var date = DateTimeOffset.UtcNow;
         var supplement = new DiscoveryPackage(new PackageManifest("1.0", Guid.NewGuid(), "clarity.graph.entra", "1.0.0", "M365Tenant",
             Tenant.ToString(), Scope, date, date, new Dictionary<string, string>(), "Offline synthetic report"),
@@ -253,7 +265,7 @@ public sealed class GraphTests
         await fixture.Publisher.RebuildEnvironmentAsync(fixture.Project.Id, environment.Id);
         (await check.InventoryObjects.AsNoTracking().SingleAsync()).Id.ShouldBe(item.Id);
         var current = await check.CurrentValues.AsNoTracking().ToDictionaryAsync(x => x.Field);
-        current["displayName"].ValueJson.ShouldBe("\"Synthetic\"");
+        current["displayName"].ValueJson.ShouldBe("\"Renamed\"");
         current["displayName"].Conflicting.ShouldBeTrue();
         current["proxyAddresses"].ValueJson.ShouldBe("[]");
         current.ContainsKey("userType").ShouldBeFalse();
@@ -272,7 +284,7 @@ public sealed class GraphTests
         JsonSerializer.Serialize(directProof).ShouldNotContain("deltatoken");
         var other = await fixture.OtherWorkspaceAsync();
         await Should.ThrowAsync<AccessDeniedException>(() => new InventoryProof(other.Factory, other.Access).ReadAsync(other.Project.Id, target));
-        (await check.ObjectObservations.Select(x => x.SectionRunId).Distinct().CountAsync()).ShouldBe(3);
+        (await check.ObjectObservations.Select(x => x.SectionRunId).Distinct().CountAsync()).ShouldBe(4);
         await using var isolated = PersistenceTests.Create(fixture.ConnectionString, []);
         (await isolated.GraphCursors.IgnoreQueryFilters().CountAsync()).ShouldBe(0);
         (await isolated.CurrentValues.IgnoreQueryFilters().CountAsync()).ShouldBe(0);
@@ -356,10 +368,45 @@ public sealed class GraphTests
         validated.EntraId.ShouldBe(corrected);
         validated.Rule.ShouldBe(AssociationRule.ConsultantQualified);
         (await db.MappingDecisions.AsNoTracking().SingleAsync(x => x.Id == weak.Id)).State.ShouldBe(MappingState.Rejected);
+        var overview = await new InventoryOverview(fixture.Factory, fixture.Access).ReadAsync(fixture.Project.Id, EnvironmentRole.Source);
+        var population = overview.Metrics.Single(m => m.Label == "ObservedPopulation");
+        population.Amount.ShouldBe(5m);
+        var inventory = new InventoryQueries(fixture.Factory, fixture.Access);
+        (await inventory.PageAsync(fixture.Project.Id, population.Filter, new())).TotalCount.ShouldBe(5);
+        overview.ReviewCount.ShouldBe((await review.PageAsync(fixture.Project.Id, EnvironmentRole.Source, "Queue", new())).TotalCount);
+        overview.Metrics.Single(m => m.Label == "enabledUnits").Amount.ShouldBeNull();
         await using var outside = PersistenceTests.Create(fixture.ConnectionString, []);
         (await outside.MappingDecisions.IgnoreQueryFilters().CountAsync()).ShouldBe(0);
         (await outside.MappingRevisions.IgnoreQueryFilters().CountAsync()).ShouldBe(0);
         (await outside.SyncBindings.IgnoreQueryFilters().CountAsync()).ShouldBe(0);
+    }
+
+    [SqlFact]
+    public async Task OverviewReconcilesKnownLicenseUnitsAndUnknownValuesToTheirFilteredRows()
+    {
+        await using var fixture = await DiscoveryFixture.CreateAsync();
+        var environment = await AddTenantAsync(fixture);
+        using var http = new SyntheticGraph(_ => Organization(), _ => Response("""
+            {"value":[{"id":"known","skuId":"a","prepaidUnits":{"enabled":15},"consumedUnits":0},{"id":"unknown","skuId":"b"}]}
+            """), _ => Response("""{"value":[]}"""));
+        var sessions = new SyntheticSessions(http.Transport);
+        var graph = new GraphDiscoveryService(fixture.Factory, fixture.Access, fixture.Scope, Catalog, sessions);
+        var connection = await graph.ConnectAsync(fixture.Project.Id, environment.Id, "Synthetic");
+        await graph.LaunchAsync(fixture.Project.Id, environment.Id, connection, Guid.NewGuid(), Scope, ["entra.licenses"]);
+        await new CollectionJobProcessor(new SqlJobQueue(fixture.ConnectionString, TimeProvider.System),
+            [Handler(sessions, new MemoryArtifactStore())], NullLogger<CollectionJobProcessor>.Instance).ProcessOneAsync(default);
+        var overview = new InventoryOverview(fixture.Factory, fixture.Access);
+        var data = await overview.ReadAsync(fixture.Project.Id, EnvironmentRole.Source);
+        var known = data.Metrics.Single(m => m.Label == "enabledUnits");
+        known.Amount.ShouldBe(15m);
+        known.KnownResources.ShouldBe(1);
+        known.ObservedResources.ShouldBe(2);
+        data.Metrics.Single(m => m.Label == "consumedUnits").Amount.ShouldBe(0m);
+        var inventory = new InventoryQueries(fixture.Factory, fixture.Access);
+        (await inventory.PageAsync(fixture.Project.Id, known.Filter, new())).Items.Single().VolumeValue.ShouldBe("15");
+        var unit = data.Units.Single();
+        (await inventory.PageAsync(fixture.Project.Id, new(EnvironmentRole.Source, environment.Id, Run: unit.RunId, Section: unit.SectionId), new())).TotalCount.ShouldBe(2);
+        (await overview.ReadAsync(fixture.Project.Id, EnvironmentRole.Target)).Metrics.Single(m => m.Label == "enabledUnits").Amount.ShouldBeNull();
     }
 
     [SqlFact]

@@ -1,0 +1,72 @@
+@using Clarity.Contracts
+@using Clarity.Infrastructure
+@using Microsoft.AspNetCore.WebUtilities
+@inherits FoundationPage
+@inject InventoryOverview Overview
+
+@if (Error is not null) { <p role="alert" class="error">@Error</p> }
+@if (_data is { } data)
+{
+    @if (!data.HasObservations)
+    {
+        <EmptyState Title="@Text["NoInventory"]" Description="@Text["OverviewEmptyHint"]">
+            <a href="@DiscoveryLink">@Text["ViewCollections"]</a>
+        </EmptyState>
+    }
+    <div class="summary-cards">
+        @foreach (var metric in data.Metrics)
+        {
+            <article><h3>@Text[metric.Label]</h3>
+                @if (metric.Amount.HasValue)
+                {
+                    <a href="@InventoryLink(metric.Filter)">@metric.Amount.Value.ToString("N0")</a>
+                    @if (metric.KnownResources.HasValue) { <small>@Text["KnownSubscriptions"] : @metric.KnownResources / @metric.ObservedResources</small> }
+                }
+                else { <p>@Text["Unknown"] · <a href="@DiscoveryLink">@Text["Coverage"]</a></p> }
+            </article>
+        }
+        <article><h3>@Text["MappingReview"]</h3><a href="@($"/projects/{ProjectId}/inventory?view=Mappings&side={Side}&state=Queue")">@data.ReviewCount</a></article>
+        <article><h3>@Text["PendingLinks"]</h3><a href="@($"/projects/{ProjectId}/inventory?view=PendingLinks&side={Side}")">@data.PendingLinks</a></article>
+    </div>
+    @if (data.Units.Count > 0)
+    {
+        <h3>@Text["InventoryDatesCoverage"]</h3>
+        @foreach (var unit in data.Units)
+        {
+            var scope = System.Text.Json.JsonSerializer.Deserialize<CollectionScope>(unit.ScopeJson, ContractJson.Options)!;
+            <article class="environment-card"><strong>@unit.Environment · @Text[$"Section_{unit.Capability}"]</strong>
+                <p>@Text[$"ScopeKind_{scope.Kind}"] : @scope.Value · @Text[unit.Status.ToString()]</p>
+                <a href="@InventoryLink(new(Side, unit.EnvironmentId, Run: unit.RunId, Section: unit.SectionId))">@unit.Date.ToString("u") · @Text["SectionObjects"]</a>
+                <FluentButton OnClick="@(() => _proof = new(ProofKind.Section, unit.SectionId))">@Text["Provenance"]</FluentButton>
+            </article>
+        }
+        <a href="@DiscoveryLink">@Text["Coverage"]</a>
+    }
+    @if (data.Changes.Count > 0)
+    {
+        <h3>@Text["RecentChanges"]</h3>
+        <ul>@foreach (var change in data.Changes)
+            {
+                <li><a href="@($"/projects/{ProjectId}/inventory?side={Side}&object={change.Id}")">@change.Label</a> · @change.Changed?.ToString("u")</li>
+            }</ul>
+    }
+}
+@if (_proof is not null)
+{
+    <ProvenancePanel ProjectId="ProjectId" Target="_proof" Close="@(() => _proof = null)" />
+}
+
+@code {
+    [Parameter] public Guid ProjectId { get; set; }
+    [Parameter] public EnvironmentRole Side { get; set; }
+    private OverviewData? _data;
+    private ProofRef? _proof;
+    private string DiscoveryLink => $"/projects/{ProjectId}/discovery?side={Side}&view=Coverage";
+    private string InventoryLink(InventoryFilter f) => QueryHelpers.AddQueryString($"/projects/{ProjectId}/inventory", new Dictionary<string, string?>
+    {
+        ["side"] = f.Side.ToString(), ["population"] = f.Population ? "true" : null, ["conflicts"] = f.ConflictsOnly ? "true" : null,
+        ["unresolved"] = f.Unresolved ? "true" : null, ["volume"] = f.Volume, ["type"] = f.Type, ["environment"] = f.Environment?.ToString(),
+        ["run"] = f.Run?.ToString(), ["sectionId"] = f.Section?.ToString()
+    });
+    protected override Task OnParametersSetAsync() => RunAsync(async () => { _data = null; _proof = null; _data = await Overview.ReadAsync(ProjectId, Side); });
+}

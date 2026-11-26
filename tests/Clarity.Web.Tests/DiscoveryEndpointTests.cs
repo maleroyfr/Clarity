@@ -144,6 +144,17 @@ public sealed class DiscoveryEndpointTests
         await using var check = app.CreateUnscopedContext();
         (await check.ObjectObservations.CountAsync(TestContext.Current.CancellationToken)).ShouldBe(1);
         (await check.CollectionRequests.SingleAsync(TestContext.Current.CancellationToken)).State.ShouldBe(CollectionRequestState.Integrated);
+        var overview = WebUtility.HtmlDecode(await otherMachine.GetStringAsync($"/projects/{alpha}/overview", TestContext.Current.CancellationToken));
+        overview.ShouldContain("population=true");
+        overview.ShouldContain("Unités de licence activées connues");
+        overview.ShouldContain("Dernier résultat publié");
+        var id = (await check.InventoryObjects.SingleAsync(TestContext.Current.CancellationToken)).Id;
+        var inventory = WebUtility.HtmlDecode(await otherMachine.GetStringAsync($"/projects/{alpha}/inventory?population=true&object={id}", TestContext.Current.CancellationToken));
+        inventory.ShouldContain("Identifiant interne de la fiche");
+        inventory.ShouldContain("synthetic-user");
+        inventory.ShouldContain("Historique des observations");
+        var queue = WebUtility.HtmlDecode(await otherMachine.GetStringAsync($"/projects/{alpha}/inventory?view=Mappings", TestContext.Current.CancellationToken));
+        queue.ShouldContain("Prévisualiser la validation");
     }
 
     [Fact]

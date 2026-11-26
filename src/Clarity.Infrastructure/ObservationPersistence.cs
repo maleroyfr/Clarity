@@ -30,6 +30,7 @@ public sealed partial class ClarityDbContext
         item.HasIndex(x => new { x.WorkspaceId, x.SearchName });
         item.HasIndex(x => new { x.WorkspaceId, x.EnvironmentId, x.Domain });
         item.HasIndex(x => new { x.WorkspaceId, x.EnvironmentId, x.Site });
+        item.HasIndex(x => new { x.WorkspaceId, x.EnvironmentId, x.LastChangedAtUtc });
         item.HasIndex(x => new { x.WorkspaceId, x.EnvironmentId, x.Presence, x.Type, x.DisplayName });
         item.HasOne<SectionRun>().WithMany().HasForeignKey(x => new { x.WorkspaceId, x.PresenceSectionId })
             .OnDelete(DeleteBehavior.NoAction);

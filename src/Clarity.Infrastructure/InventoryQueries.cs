@@ -4,10 +4,11 @@ using Microsoft.EntityFrameworkCore;
 namespace Clarity.Infrastructure;
 
 public sealed record InventoryFilter(EnvironmentRole Side, Guid? Environment = null, string? Domain = null, string? Site = null,
-    string? Type = null, string? Status = null, Guid? Run = null, bool ConflictsOnly = false);
+    string? Type = null, string? Status = null, Guid? Run = null, bool ConflictsOnly = false, bool Population = false,
+    bool Unresolved = false, string? Volume = null, Guid? Section = null);
 public sealed record InventoryRow(Guid Id, Guid EnvironmentId, string Environment, string? DisplayName, string Type, InventoryPresence Presence,
     string? Domain, string? Site, string? Upn, string? Smtp, bool? Enabled, DateTimeOffset? LastObservedAtUtc, string? TechnicalId,
-    string? OperatingSystem, string? Sku, Guid? PresenceSectionId, bool UpnReported, bool SmtpReported);
+    string? OperatingSystem, string? Sku, Guid? PresenceSectionId, bool UpnReported, bool SmtpReported, string? VolumeValue);
 
 public sealed class InventoryQueries(IDbContextFactory<ClarityDbContext> factory, IProjectAccess access)
 {
@@ -57,6 +58,28 @@ public sealed class InventoryQueries(IDbContextFactory<ClarityDbContext> factory
                                       select o.Id).Any());
         }
         if (filter.ConflictsOnly) { query = query.Where(i => db.CurrentValues.Any(v => v.WorkspaceId == workspace && v.ObjectId == i.Id && v.Conflicting)); }
+        if (filter.Population)
+        {
+            query = query.Where(i => i.Type == "user" && i.Presence == InventoryPresence.Observed
+                && !db.MappingDecisions.Any(m => m.WorkspaceId == workspace && m.ProjectId == project.Id && m.AdObjectId == i.Id
+                    && m.State == MappingState.Validated && db.InventoryObjects.Any(c => c.WorkspaceId == workspace && c.Id == m.EntraObjectId
+                        && c.Presence == InventoryPresence.Observed)));
+        }
+        if (filter.Unresolved)
+        {
+            query = query.Where(i => db.InventoryRelationships.Any(e => e.WorkspaceId == workspace && e.EnvironmentId == i.EnvironmentId && e.IsCurrent
+                && (e.FromObjectId == i.Id && e.ToObjectId == null || e.ToObjectId == i.Id && e.FromObjectId == null)));
+        }
+        if (filter.Section is { } section)
+        {
+            query = query.Where(i => db.ObjectObservations.Any(o => o.WorkspaceId == workspace && o.ObjectId == i.Id && o.SectionRunId == section));
+        }
+        if (filter.Volume is { } volume)
+        {
+            if (volume is not ("enabledUnits" or "consumedUnits")) { throw new ArgumentException("Invalid volume field."); }
+            query = query.Where(i => i.Type == "subscribedSku" && i.Presence == InventoryPresence.Observed
+                && db.CurrentValues.Any(v => v.WorkspaceId == workspace && v.ObjectId == i.Id && v.Field == volume && v.ValueJson != "null" && !v.Conflicting));
+        }
         var term = search.Trim().ToUpperInvariant();
         if (term.Length != 0)
         {
@@ -95,7 +118,9 @@ public sealed class InventoryQueries(IDbContextFactory<ClarityDbContext> factory
                               db.CurrentValues.Where(v => v.WorkspaceId == i.WorkspaceId && v.ObjectId == i.Id && v.Field == "skuPartNumber").Select(v => v.ValueJson).FirstOrDefault(),
                               i.PresenceSectionId,
                               db.CurrentValues.Any(v => v.WorkspaceId == i.WorkspaceId && v.ObjectId == i.Id && v.Field == "userPrincipalName"),
-                              db.CurrentValues.Any(v => v.WorkspaceId == i.WorkspaceId && v.ObjectId == i.Id && v.Field == "mail"))).ToListAsync(token);
+                              db.CurrentValues.Any(v => v.WorkspaceId == i.WorkspaceId && v.ObjectId == i.Id && v.Field == "mail"),
+                              db.CurrentValues.Where(v => v.WorkspaceId == i.WorkspaceId && v.ObjectId == i.Id && v.Field == filter.Volume)
+                                  .Select(v => v.ValueJson).FirstOrDefault())).ToListAsync(token);
         return new(rows, count);
     }
 }

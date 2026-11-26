@@ -43,6 +43,8 @@ Never use a production database for tests.
 - [Product specification (original French, authoritative)](docs/specification.md)
 - [Architecture decision](docs/adr/0001-architecture.md)
 - [Architecture and isolation](docs/architecture.md)
+- [Discovery collection and import acceptance](docs/discovery.md)
+- [Consolidation rules, acceptance matrix and pilot limits](docs/consolidation.md)
 - [Azure provisioning, deployment and rollback](docs/deployment.md)
 - [Contributor conventions](.github/copilot-instructions.md)
 

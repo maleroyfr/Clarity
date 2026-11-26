@@ -229,6 +229,9 @@ public sealed class PublicationTests
         var groupId = await db.ExternalKeys.Where(k => k.ExternalId == "group").Select(k => k.ObjectId).SingleAsync();
         var pending = (await sheets.EdgesAsync(fixture.Project.Id, groupId, new())).Items.Single(e => e.OtherId == null);
         pending.OtherLabel.ShouldBe("parent");
+        var before = await new InventoryOverview(fixture.Factory, fixture.Access).ReadAsync(fixture.Project.Id, EnvironmentRole.Source);
+        before.PendingLinks.ShouldBe(1);
+        (await new InventoryGraph(fixture.Factory, fixture.Access).PendingAsync(fixture.Project.Id, EnvironmentRole.Source, new())).Items.Single().Id.ShouldBe(original);
         await Publish(1, [parent], [(group, parent), (parent, group)]);
         (await db.InventoryRelationships.CountAsync()).ShouldBe(3);
         (await db.InventoryRelationships.CountAsync(x => x.ToMethod == EndpointResolution.Pending)).ShouldBe(0);

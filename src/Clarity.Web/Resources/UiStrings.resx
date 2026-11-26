@@ -122,6 +122,9 @@
   <data name="PrepareGraphHint" xml:space="preserve"><value>Préparez la connexion et vérifiez la configuration dans Connexions avant de lancer Graph.</value></data>
   <data name="ScopeKind" xml:space="preserve"><value>Unité de périmètre comparable</value></data>
   <data name="ScopeKind_domain" xml:space="preserve"><value>Domaine AD</value></data>
+  <data name="ScopeKind_tenant" xml:space="preserve"><value>Tenant Microsoft 365</value></data>
+  <data name="ScopeKind_forest" xml:space="preserve"><value>Forêt AD</value></data>
+  <data name="ScopeKind_resource" xml:space="preserve"><value>Ressource</value></data>
   <data name="ScopeKind_ou" xml:space="preserve"><value>Unité d'organisation AD</value></data>
   <data name="ScopeValue" xml:space="preserve"><value>Domaine DNS ou nom distinctif de l'OU</value></data>
   <data name="AdDomain" xml:space="preserve"><value>Domaine DNS contenant l'OU</value></data>
@@ -295,4 +298,17 @@
   <data name="AnchorEvidence" xml:space="preserve"><value>Justification de la configuration, sans secret</value></data>
   <data name="ConsultantQualified" xml:space="preserve"><value>Association qualifiée par le consultant</value></data>
   <data name="ChangesSaved" xml:space="preserve"><value>Modifications enregistrées dans le dossier.</value></data>
+  <data name="OverviewEmptyHint" xml:space="preserve"><value>Déclarez un environnement existant, puis publiez une collecte dans Discovery. Une cible prévue ne constitue pas un inventaire.</value></data>
+  <data name="ObservedPopulation" xml:space="preserve"><value>Utilisateurs observés, liens validés dédupliqués</value></data>
+  <data name="ConflictingObjects" xml:space="preserve"><value>Objets dont les sources divergent</value></data>
+  <data name="ObjectsWithPendingLinks" xml:space="preserve"><value>Objets avec une référence à vérifier</value></data>
+  <data name="enabledUnits" xml:space="preserve"><value>Unités de licence activées connues</value></data>
+  <data name="consumedUnits" xml:space="preserve"><value>Unités de licence consommées connues</value></data>
+  <data name="KnownSubscriptions" xml:space="preserve"><value>Abonnements renseignés / observés</value></data>
+  <data name="InventoryDatesCoverage" xml:space="preserve"><value>Dernier résultat publié par domaine et périmètre</value></data>
+  <data name="SectionObjects" xml:space="preserve"><value>Objets observés dans cette section</value></data>
+  <data name="RecentChanges" xml:space="preserve"><value>Changements récents des fiches</value></data>
+  <data name="ClearFilters" xml:space="preserve"><value>Effacer les filtres</value></data>
+  <data name="PendingLinks" xml:space="preserve"><value>Relations en attente de résolution</value></data>
+  <data name="Endpoints" xml:space="preserve"><value>Extrémités de la relation</value></data>
 </root>
