@@ -108,3 +108,25 @@ worker interruption and cursors advance only after publication. Graph launch is 
 authorized collection action, while uploaded artifacts require explicit confirmation.
 The connection carries a server configuration reference only. Live consent,
 managed identity and Key Vault certificate access remain operator configuration.
+
+## Authorized Discovery screens
+
+The Fluent UI v5 Discovery panel exposes French Connexions, Collectes and Couverture
+views, separated by the selected source/target environment. Grids page and sort
+in SQL. Coverage units are capability plus exact scope, never a conflation of
+different domains/OUs. Pending results do not replace a last-valid link; failed
+counts stay unknown. Raw proof, portable parameters and immutable bundles use
+reauthorized, no-store download endpoints without public Blob URLs.
+
+All mutation endpoints validate antiforgery tokens. Interactive callbacks use the
+same authorized services; hiding a button is never the authorization boundary.
+Script requests and Graph launches use stable operation IDs. Uploading result
+bytes triggers no execution and requires explicit confirmation before publication.
+Preview/list DTOs intentionally omit private Graph continuations and Blob paths.
+
+The worker is registered only when both SQL and Blob configuration are present;
+missing configuration produces explicit disabled actions, never local persistence.
+Job state is authoritative for execution/history and is synchronized to its run
+on authorized completion, cancellation and retry. If membership was revoked, the
+dispatcher still records the terminal job metadata but must not update inventory
+through a former member's scope. Existing observations remain untouched.

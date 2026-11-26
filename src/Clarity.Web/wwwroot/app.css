@@ -48,6 +48,10 @@ p { line-height: 1.6; }
 .environment-card { margin: 16px 0; }
 .breadcrumbs { font-size: 13px; }
 #blazor-error-ui { display: none; position: fixed; bottom: 0; width: 100%; padding: 16px; background: #fdf0f1; z-index: 100; }
+.discovery-toolbar { flex-wrap: wrap; }
+.discovery-form { display: grid; gap: 16px; max-width: 700px; padding: 20px; border: 1px solid #e0e5eb; border-radius: 8px; background: white; }
+.detail-panel pre { white-space: pre-wrap; overflow-wrap: anywhere; padding: 12px; background: #f6f7f9; }
+.detail-panel code, .environment-card code { overflow-wrap: anywhere; }
 @media (max-width: 850px) {
     .app-shell { grid-template-columns: 1fr; }
     .app-nav { padding: 8px 16px; border-right: none; }

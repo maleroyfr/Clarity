@@ -10,6 +10,8 @@ public sealed class SafeExceptionHandler(ILogger<SafeExceptionHandler> logger) :
         var status = exception switch
         {
             AccessDeniedException => StatusCodes.Status403Forbidden,
+            Clarity.Infrastructure.DiscoveryConfigurationException or Clarity.Infrastructure.GraphReadException =>
+                StatusCodes.Status503ServiceUnavailable,
             ConflictException => StatusCodes.Status409Conflict,
             Microsoft.EntityFrameworkCore.DbUpdateException { InnerException: Microsoft.Data.SqlClient.SqlException { Number: 2601 or 2627 } } =>
                 StatusCodes.Status409Conflict,

@@ -28,6 +28,7 @@ builder.Services.AddScoped<WorkspaceContext>();
 builder.Services.AddScoped<IWorkspaceContext>(services => services.GetRequiredService<WorkspaceContext>());
 builder.Services.AddScoped<WorkspaceAuthorization>();
 builder.Services.AddScoped<FoundationService>();
+builder.Services.AddDiscovery(builder.Configuration);
 builder.Services.AddExceptionHandler<SafeExceptionHandler>();
 builder.Services.AddProblemDetails();
 builder.Services.AddAntiforgery(options => options.HeaderName = "X-CSRF-TOKEN");
@@ -68,6 +69,7 @@ app.UseAntiforgery();
 app.MapStaticAssets();
 app.MapClarityHealth();
 app.MapFoundationEndpoints();
+app.MapDiscoveryEndpoints();
 app.MapGet("/authentication/login", () => Results.Challenge(new AuthenticationProperties { RedirectUri = "/" }));
 if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"))
 {

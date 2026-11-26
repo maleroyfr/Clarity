@@ -6,9 +6,9 @@ using Clarity.Core;
 
 namespace Clarity.Infrastructure;
 
-public sealed class BlobArtifactStore(BlobServiceClient blobs) : IArtifactStore
+public sealed class BlobArtifactStore(BlobServiceClient? blobs = null) : IArtifactStore
 {
-    private BlobContainerClient Container => blobs.GetBlobContainerClient("raw-artifacts");
+    private BlobContainerClient Container => (blobs ?? throw new DiscoveryConfigurationException()).GetBlobContainerClient("raw-artifacts");
 
     public async Task<StoredArtifact> SaveAsync(Guid workspaceId, Stream source, long maxBytes, CancellationToken cancellationToken)
     {
@@ -61,4 +61,9 @@ public sealed class BlobArtifactStore(BlobServiceClient blobs) : IArtifactStore
             throw new AccessDeniedException();
         }
     }
+}
+
+public sealed class DiscoveryConfigurationException : Exception
+{
+    public DiscoveryConfigurationException() : base("Discovery storage is not configured.") { }
 }

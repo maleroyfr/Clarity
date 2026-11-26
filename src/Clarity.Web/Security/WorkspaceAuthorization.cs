@@ -48,9 +48,13 @@ public sealed class WorkspaceAuthorization(
             throw new AccessDeniedException();
         }
 
-        scope.Identity = new UserIdentity(tenant, subject);
-        scope.WorkspaceIds = [];
-        scope.IsPlatformAdmin = false;
+        var identity = new UserIdentity(tenant, subject);
+        if (scope.Identity != identity)
+        {
+            scope.WorkspaceIds = [];
+            scope.IsPlatformAdmin = false;
+        }
+        scope.Identity = identity;
         await using var db = await factory.CreateDbContextAsync(cancellationToken);
         _members = await db.Members.AsNoTracking().Where(x => x.TenantId == tenant && x.ObjectId == subject).ToListAsync(cancellationToken);
         scope.IsPlatformAdmin = await db.PlatformAdmins.AnyAsync(cancellationToken);
@@ -87,7 +91,11 @@ public sealed class WorkspaceAuthorization(
         {
             throw new AccessDeniedException();
         }
+
     }
+
+    public bool Allows(Guid workspaceId, WorkspaceOperation operation) => _principal.Identity?.IsAuthenticated == true
+        && WorkspacePolicy.Allows(_members.FirstOrDefault(x => x.WorkspaceId == workspaceId)?.Role, operation, scope.IsPlatformAdmin);
 
     private void AuthenticationChanged(Task<AuthenticationState> state)
     {

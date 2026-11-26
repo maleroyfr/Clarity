@@ -1,5 +1,7 @@
 using System.Data.Common;
+using Clarity.Contracts;
 using Clarity.Core;
+using Clarity.Infrastructure;
 using Clarity.Web.Operations;
 using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
@@ -28,7 +30,9 @@ public abstract class FoundationPage : ComponentBase
         {
             await action();
         }
-        catch (Exception exception) when (exception is AccessDeniedException or ArgumentException or ConflictException or DbException or DbUpdateException)
+        catch (Exception exception) when (exception is AccessDeniedException or ArgumentException or ConflictException or DbException or DbUpdateException
+            or ContractException or GraphReadException or DiscoveryConfigurationException or Azure.RequestFailedException
+            or Azure.Identity.AuthenticationFailedException or IOException or HttpRequestException or OperationCanceledException)
         {
             Logger.LogWarning("UI operation failed with {ErrorType}", exception.GetType().Name);
             Error = Messages[exception switch
@@ -36,6 +40,10 @@ public abstract class FoundationPage : ComponentBase
                 AccessDeniedException => "Denied",
                 ArgumentException => "Invalid",
                 ConflictException => "Conflict",
+                ContractException contract => contract.Code is "EnvironmentOrScopeMismatch" or "EnvironmentMismatch" or "RequestMismatch" ? "PackageMismatch" : "InvalidPackage",
+                GraphReadException => "GraphRemediation",
+                DiscoveryConfigurationException => "StorageRequired",
+                OperationCanceledException => "OperationInterrupted",
                 _ => "Error"
             }];
         }

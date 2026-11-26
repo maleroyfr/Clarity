@@ -1,0 +1,310 @@
+@using System.Text.Json
+@using Clarity.Contracts
+@using Clarity.Infrastructure
+@inherits FoundationPage
+@inject FoundationService Foundation
+@inject DiscoveryQueries Queries
+@inject GraphDiscoveryService Graph
+@inject ScriptRequestService Scripts
+@inject ImportService Imports
+@inject JobService Jobs
+@inject DiscoveryCatalog Catalog
+@inject DiscoveryAvailability Availability
+@inject WorkspaceAuthorization Authorization
+
+<section aria-label="@Text["Discovery"]">
+    @if (Error is not null) { <p class="error" role="alert">@Error</p> }
+    @if (_message is not null) { <p class="notice" role="status">@_message</p> }
+    <div class="toolbar discovery-toolbar">
+        <FluentSelect TOption="ProjectEnvironment" TValue="Guid" Items="_environments"
+                      OptionText="@(x => $"{Text[x.Kind.ToString()]} · {x.ExternalId}")" OptionValue="@(x => x.Id)"
+                      Value="_environmentId" ValueChanged="SelectAsync" Label="@Text["CollectionEnvironment"]" Disabled="Busy" />
+        <FluentButton OnClick="ReloadAsync" Disabled="Busy">@Text["Reload"]</FluentButton>
+    </div>
+    @if (SelectedEnvironment is null)
+    {
+        <EmptyState Title="@Text["NoCollectionEnvironment"]" Description="@Text["NoSourceHint"]">
+            <a href="@($"/projects/{ProjectId}/overview")">@Text["AddEnvironment"]</a>
+        </EmptyState>
+    }
+    else
+    {
+        <nav class="toolbar" aria-label="@Text["Discovery"]">
+            @foreach (var tab in new[] { "Connections", "Collections", "Coverage" })
+            {
+                <FluentButton Appearance="@(_view == tab ? ButtonAppearance.Primary : ButtonAppearance.Default)" OnClick="@(() => _view = tab)">@Text[tab]</FluentButton>
+            }
+        </nav>
+        <section @key="(_environmentId, _revision)">
+        @if (_view == "Connections")
+        {
+            <h2>@Text["Connections"]</h2>
+            @if (SelectedEnvironment.Kind == EnvironmentKind.M365Tenant)
+            {
+                <p class="notice">@Text["ConnectionConsentHint"]</p>
+                @if (_connection is null)
+                {
+                    <FluentTextInput Label="@Text["Name"]" @bind-Value="_connectionName" Disabled="@(!_canManage || Busy)" />
+                    <FluentButton OnClick="ConnectAsync" Disabled="@(!_canManage || Busy)">@Text["DeclareConnection"]</FluentButton>
+                }
+                else
+                {
+                    <article class="environment-card">
+                        <h3>@_connection.Name</h3><p>@_connection.TenantId</p>
+                        <p>@Text["LastAccessTest"] : @Date(_connection.TestedAtUtc)</p>
+                        <FluentButton OnClick="TestAsync" Disabled="@(!_canCollect || !Availability.Graph || Busy)">@Text["TestSections"]</FluentButton>
+                    </article>
+                    @foreach (var check in _connection.Checks)
+                    {
+                        <article class="environment-card">
+                            <h3>@SectionName(check.CapabilityId) · @Text[check.Available ? "AccessAvailable" : "AccessUnavailable"]</h3>
+                            <p>@Text["Permissions"] : @string.Join(", ", check.Permissions)</p>
+                            @if (check.Code != "Available") { <p>@Issue(check.Code) <code>@check.Code</code></p> }
+                        </article>
+                    }
+                }
+                @if (!Availability.Graph) { <p class="notice">@Text["GraphConfigurationRequired"]</p> }
+                <p>@Text["GraphAlternativeHint"]</p>
+            }
+            else
+            {
+                <p>@Text["LocalScriptConnectionHint"]</p>
+            }
+        }
+        else if (_view == "Collections")
+        {
+            <h2>@Text["Collections"]</h2>
+            @if (_availableSections.Length > 0)
+            {
+                <div class="discovery-form">
+                    <FluentSelect TOption="string" TValue="string" Items="_availableSections" Multiple="true"
+                        @bind-SelectedItems="_sections" OptionText="SectionName" Label="@Text["SelectSections"]" Disabled="@(!_canCollect || Busy)" />
+                    @if (SelectedEnvironment.Kind == EnvironmentKind.M365Tenant)
+                    {
+                        <p>@Text["Scope"] : @SelectedEnvironment.ExternalId</p>
+                        <FluentButton Appearance="ButtonAppearance.Primary" OnClick="LaunchAsync"
+                            Disabled="@(!_canCollect || !Availability.Graph || _connection is null || Busy)">@Text["LaunchCollection"]</FluentButton>
+                        @if (_connection is null || !Availability.Graph) { <p class="notice">@Text["PrepareGraphHint"]</p> }
+                    }
+                    else if (SelectedEnvironment.Kind == EnvironmentKind.AdForest)
+                    {
+                        <FluentSelect TOption="string" TValue="string" Items="@(new[] { "domain", "ou" })"
+                            @bind-Value="_scopeKind" OptionText="@(kind => Text[$"ScopeKind_{kind}"])" Label="@Text["ScopeKind"]" Disabled="@(!_canCollect || Busy)" />
+                        <FluentTextInput Label="@Text["ScopeValue"]" @bind-Value="_scopeValue" Disabled="@(!_canCollect || Busy)" />
+                        @if (_scopeKind == "ou") { <FluentTextInput Label="@Text["AdDomain"]" @bind-Value="_domain" Disabled="@(!_canCollect || Busy)" /> }
+                        <FluentButton Appearance="ButtonAppearance.Primary" OnClick="RequestAsync" Disabled="@(!_canCollect || Busy)">@Text["CreateScriptRequest"]</FluentButton>
+                    }
+                </div>
+            }
+            else { <p class="notice">@Text["ProducerUnavailable"]</p> }
+            <article class="environment-card">
+                <h3>@Text["UploadResult"]</h3>
+                <p>@Text["UploadResultHint"]</p>
+                @if (Availability.Storage && _canCollect)
+                {
+                    <label for="discovery-zip">@Text["ResultFile"]</label>
+                    <InputFile id="discovery-zip" OnChange="UploadAsync" accept=".zip" disabled="@Busy" />
+                }
+                else if (!Availability.Storage) { <p class="notice">@Text["StorageRequired"]</p> }
+                else { <p>@Text["ReadOnlyDiscovery"]</p> }
+            </article>
+            <h3>@Text["RequestHistory"]</h3>
+            <ClarityGrid TGridItem="RequestView" Load="LoadRequestsAsync">
+                <Columns>
+                    <PropertyColumn Property="@(x => x.CreatedAtUtc)" Title="@Text["Date"]" Sortable="true" />
+                    <TemplateColumn Title="@Text["Scope"]" Context="request">@ScopeValue(request.ScopeJson)</TemplateColumn>
+                    <TemplateColumn Title="@Text["Status"]" Context="request">@Text[request.State.ToString()]</TemplateColumn>
+                    <TemplateColumn Title="@Text["Actions"]" Context="request"><FluentButton OnClick="@(() => _request = request)">@Text["ScriptDownloads"]</FluentButton></TemplateColumn>
+                </Columns>
+                <EmptyContent><p>@Text["NoRequests"]</p></EmptyContent>
+            </ClarityGrid>
+            <h3>@Text["RunHistory"]</h3>
+            <ClarityGrid TGridItem="RunView" Load="LoadRunsAsync">
+                <Columns>
+                    <PropertyColumn Property="@(x => x.StartedAtUtc)" Title="@Text["Date"]" Sortable="true" />
+                    <TemplateColumn Title="@Text["Producer"]" Context="run">@run.ProducerId @run.ProducerVersion</TemplateColumn>
+                    <TemplateColumn Title="@Text["Status"]" Context="run">@Text[run.ConfirmedAtUtc is null ? "FileToConfirm" : run.State.ToString()]</TemplateColumn>
+                    <TemplateColumn Title="@Text["Actions"]" Context="run"><FluentButton OnClick="@(() => PreviewAsync(run.Id))">@Text["Preview"]</FluentButton></TemplateColumn>
+                </Columns>
+                <EmptyContent><p>@Text["NoRuns"]</p></EmptyContent>
+            </ClarityGrid>
+            <h3>@Text["ProjectJobs"]</h3>
+            <ClarityGrid TGridItem="JobView" Load="LoadJobsAsync">
+                <Columns>
+                    <PropertyColumn Property="@(x => x.CreatedAtUtc)" Title="@Text["Date"]" Sortable="true" />
+                    <TemplateColumn Title="@Text["Status"]" Context="job">
+                        @Text[job.State.ToString()]
+                        @if (job.CancellationRequested) { <span> · @Text["CancellationRequested"]</span> }
+                        @if (job.ErrorCode is not null) { <p>@Issue(job.ErrorCode) <code>@job.ErrorCode</code></p> }
+                        <small>@Text["Correlation"] : @job.CorrelationId</small>
+                    </TemplateColumn>
+                    <TemplateColumn Title="@Text["Progress"]" Context="job">@job.Progress @Text["PublishedSections"] · @Text["Attempt"] @job.Attempt</TemplateColumn>
+                    <TemplateColumn Title="@Text["Actions"]" Context="job">
+                        @if (job.State is CollectionRunState.Failed or CollectionRunState.Cancelled)
+                        { <FluentButton OnClick="@(() => RetryAsync(job.Id))" Disabled="@(!_canCollect || Busy)">@Text["Retry"]</FluentButton> }
+                        else if (job.State is CollectionRunState.Pending or CollectionRunState.Running)
+                        { <FluentButton OnClick="@(() => CancelAsync(job.Id))" Disabled="@(!_canCollect || Busy || job.CancellationRequested)">@Text["Cancel"]</FluentButton> }
+                    </TemplateColumn>
+                </Columns>
+                <EmptyContent><p>@Text["NoJobs"]</p></EmptyContent>
+            </ClarityGrid>
+        }
+        else
+        {
+            <h2>@Text["Coverage"]</h2>
+            <p class="notice">@Text["CoverageLegend"]</p>
+            @foreach (var capability in _uncollected)
+            { <p>@SectionName(capability) : @Text["NotCollected"]</p> }
+            <ClarityGrid TGridItem="CoverageView" Load="LoadCoverageAsync">
+                <Columns>
+                    <PropertyColumn Property="@(x => x.CapabilityId)" Title="@Text["Section"]" Sortable="true" />
+                    <TemplateColumn Title="@Text["Scope"]" Context="row">@ScopeValue(row.ScopeJson)</TemplateColumn>
+                    <TemplateColumn Title="@Text["Coverage"]" Context="row">@Text[row.Coverage?.ToString() ?? "NotPublished"]</TemplateColumn>
+                    <TemplateColumn Title="@Text["ObjectsRelations"]" Context="row">@Count(row.ObjectCount, row.Coverage) / @Count(row.RelationshipCount, row.Coverage)</TemplateColumn>
+                    <TemplateColumn Title="@Text["LastValidObservation"]" Context="row">
+                        @if (row.LastValidRunId is { } validId) { <FluentButton OnClick="@(() => PreviewAsync(validId))">@Date(row.LastValidAtUtc)</FluentButton> }
+                        else { @Text["Unknown"] }
+                    </TemplateColumn>
+                    <TemplateColumn Title="@Text["Actions"]" Context="row"><FluentButton OnClick="@(() => PreviewAsync(row.RunId))">@Text["SectionResults"]</FluentButton></TemplateColumn>
+                </Columns>
+                <EmptyContent><p>@Text["NoInventory"]</p></EmptyContent>
+            </ClarityGrid>
+        }
+        </section>
+    }
+</section>
+@if (_request is not null)
+{
+    <DetailPanel Title="@Text["ScriptDownloads"]" Close="@(() => _request = null)">
+        <p>@_request.Id · @_request.ScriptVersion</p>
+        <p>@Text["Scope"] : @ScopeValue(_request.ScopeJson)</p>
+        <p><a href="@RequestUrl(_request.Id, "bundle")" download>@Text["DownloadScriptBundle"]</a></p>
+        <p><a href="@RequestUrl(_request.Id, "parameters")" download>@Text["DownloadParameters"]</a></p>
+        <p>@Text["ScriptCommandHint"]</p>
+        <pre><code>.\ad\Collect-AD.ps1 -ParameterFile .\parameters.json -OutputPath .\result.zip</code></pre>
+        <p>@Text["SeparateMachineHint"]</p>
+    </DetailPanel>
+}
+@if (_preview is not null)
+{
+    <DetailPanel Title="@Text["Preview"]" Error="@Error" Close="@(() => _preview = null)">
+        <p>@_preview.Run.ProducerId @_preview.Run.ProducerVersion</p>
+        <p>@Text["Scope"] : @ScopeValue(_preview.Run.ScopeJson)</p>
+        <p>@Date(_preview.Run.StartedAtUtc) — @Date(_preview.Run.CompletedAtUtc)</p>
+        <p>@Text["RunIdentifier"] : @_preview.Run.ExternalRunId</p>
+        <p>SHA-256 : <code>@_preview.Run.ContentHash</code></p>
+        <p>@Text["NewObjects"] : @_preview.NewObjects · @Text["ExistingObjects"] : @_preview.ExistingObjects</p>
+        @foreach (var result in _preview.Sections)
+        {
+            <article class="environment-card">
+                <h3>@SectionName(result.CapabilityId) · @Text[result.Status.ToString()]</h3>
+                <p>@Text["ObjectsRelations"] : @Count(result.ObjectCount, result.Status) / @Count(result.RelationshipCount, result.Status)</p>
+                <p>@Text["CoveredFields"] : @string.Join(", ", result.CoveredFields)</p>
+                <p>@Text["CoveredRelations"] : @string.Join(", ", result.CoveredRelations)</p>
+                @foreach (var issue in result.Warnings.Concat(result.Errors)) { <p>@Issue(issue.Code) <code>@issue.Code</code></p> }
+            </article>
+        }
+        <p>@Text["PreviewSampleHint"]</p>
+        <details><summary>@Text["ObjectSample"]</summary><pre>@JsonSerializer.Serialize(_preview.Objects, ContractJson.Options)</pre></details>
+        <details><summary>@Text["RelationSample"]</summary><pre>@JsonSerializer.Serialize(_preview.Relationships, ContractJson.Options)</pre></details>
+        <p><a href="@($"/api/projects/{ProjectId}/discovery/runs/{_preview.Run.Id}/download")" download>@Text["DownloadRawResult"]</a></p>
+        @if (_preview.Run.ConfirmedAtUtc is null)
+        {
+            <p class="notice">@Text["ConfirmationHint"]</p>
+            <FluentButton Appearance="ButtonAppearance.Primary" OnClick="ConfirmAsync" Disabled="@(!_canCollect || Busy)">@Text["ConfirmPublication"]</FluentButton>
+        }
+    </DetailPanel>
+}
+
+@code {
+    [Parameter] public Guid ProjectId { get; set; }
+    [Parameter] public EnvironmentRole Side { get; set; }
+    [Parameter] public string? InitialView { get; set; }
+    private IReadOnlyList<ProjectEnvironment> _environments = [];
+    private ProjectEnvironment? SelectedEnvironment => _environments.FirstOrDefault(x => x.Id == _environmentId);
+    private Guid _environmentId, _operationId = Guid.NewGuid();
+    private string _view = "Connections", _connectionName = "Microsoft Graph", _scopeKind = "domain", _scopeValue = "", _domain = "";
+    private string? _message;
+    private bool _canCollect, _canManage;
+    private int _revision;
+    private string[] _availableSections = [];
+    private IEnumerable<string> _sections = [];
+    private IReadOnlyList<string> _uncollected = [];
+    private ConnectionView? _connection;
+    private RequestView? _request;
+    private PreviewView? _preview;
+
+    protected override Task OnParametersSetAsync() => RunAsync(async () =>
+    {
+        if (InitialView is "Connections" or "Collections" or "Coverage") { _view = InitialView; }
+        await LoadAsync();
+    });
+    private async Task LoadAsync()
+    {
+        var project = await Foundation.GetProjectAsync(ProjectId);
+        _canCollect = project.Status == ProjectStatus.Active && Authorization.Allows(project.WorkspaceId, WorkspaceOperation.Collect);
+        _canManage = project.Status == ProjectStatus.Active && Authorization.Allows(project.WorkspaceId, WorkspaceOperation.ManageConnections);
+        _environments = (await Foundation.ListEnvironmentsAsync(ProjectId)).Where(x => x.Role == Side && x.TargetState == TargetState.Existing).ToArray();
+        if (!_environments.Any(x => x.Id == _environmentId)) { _environmentId = _environments.FirstOrDefault()?.Id ?? Guid.Empty; }
+        await LoadSelectedAsync();
+    }
+    private async Task LoadSelectedAsync()
+    {
+        _connection = null; _preview = null; _request = null; _uncollected = [];
+        _availableSections = SelectedEnvironment is null ? [] : Catalog.Families.Where(x => x.EnvironmentKind == SelectedEnvironment.Kind.ToString())
+            .SelectMany(x => x.Sections).Where(x => x.ProducerIds.Any(id => Catalog.Producers[id].Readiness == "SyntheticValidated")).Select(x => x.Id).ToArray();
+        _sections = _availableSections;
+        if (SelectedEnvironment is not null)
+        {
+            _connection = await Queries.ConnectionAsync(ProjectId, _environmentId);
+            _uncollected = await Queries.UncollectedAsync(ProjectId, _environmentId);
+        }
+        _revision++;
+    }
+    private Task SelectAsync(Guid id) => RunAsync(async () => { _environmentId = id; _operationId = Guid.NewGuid(); _message = null; await LoadSelectedAsync(); });
+    private Task ReloadAsync() => RunAsync(LoadAsync);
+    private Task ConnectAsync() => RunAsync(async () => { await Graph.ConnectAsync(ProjectId, _environmentId, _connectionName); await LoadSelectedAsync(); });
+    private Task TestAsync() => RunAsync(async () =>
+    {
+        await Graph.TestAsync(ProjectId, _environmentId, _connection!.Id);
+        _connection = await Queries.ConnectionAsync(ProjectId, _environmentId);
+    });
+    private Task LaunchAsync() => RunAsync(async () =>
+    {
+        await Graph.LaunchAsync(ProjectId, _environmentId, _connection!.Id, _operationId,
+            new("tenant", Guid.Parse(SelectedEnvironment!.ExternalId).ToString()), _sections.ToArray());
+        _operationId = Guid.NewGuid(); _message = Text["CollectionQueued"]; _revision++;
+    });
+    private Task RequestAsync() => RunAsync(async () =>
+    {
+        var id = await Scripts.CreateAsync(ProjectId, _environmentId, _operationId, new(_scopeKind, _scopeValue), _sections.ToArray(), _domain);
+        _request = new RequestView(id, DiscoveryScope.Serialize(new(_scopeKind, _scopeValue)), "1.0.0", CollectionRequestState.AwaitingFile, DateTimeOffset.UtcNow);
+        _operationId = Guid.NewGuid(); _revision++;
+    });
+    private Task UploadAsync(InputFileChangeEventArgs args) => RunAsync(async () =>
+    {
+        await using var stream = args.File.OpenReadStream(new PackageLimits().CompressedBytes);
+        var id = await Imports.UploadAsync(ProjectId, _environmentId, stream, args.File.Name);
+        _preview = DiscoveryQueries.Present(await Imports.PreviewAsync(ProjectId, id)); _revision++;
+    });
+    private Task PreviewAsync(Guid id) => RunAsync(async () => _preview = DiscoveryQueries.Present(await Imports.PreviewAsync(ProjectId, id)));
+    private Task ConfirmAsync() => RunAsync(async () =>
+    {
+        await Imports.ConfirmAsync(ProjectId, _preview!.Run.Id);
+        _preview = null; _message = Text["CollectionQueued"]; _view = "Collections"; await LoadSelectedAsync();
+    });
+    private Task CancelAsync(Guid id) => RunAsync(async () => { await Jobs.CancelAsync(ProjectId, id); _revision++; });
+    private Task RetryAsync(Guid id) => RunAsync(async () => { await Jobs.RetryAsync(ProjectId, id); _revision++; });
+    private Task<PageResult<RunView>> LoadRunsAsync(PageRequest page, CancellationToken ct) => Queries.RunsAsync(ProjectId, _environmentId, page, ct);
+    private Task<PageResult<RequestView>> LoadRequestsAsync(PageRequest page, CancellationToken ct) => Queries.RequestsAsync(ProjectId, _environmentId, page, ct);
+    private Task<PageResult<JobView>> LoadJobsAsync(PageRequest page, CancellationToken ct) => Queries.JobsAsync(ProjectId, page, ct);
+    private Task<PageResult<CoverageView>> LoadCoverageAsync(PageRequest page, CancellationToken ct) => Queries.CoverageAsync(ProjectId, _environmentId, page, ct);
+    private string RequestUrl(Guid id, string kind) => $"/api/projects/{ProjectId}/discovery/requests/{id}/{kind}";
+    private string SectionName(string id) => Text[$"Section_{id}"];
+    private string Issue(string code) => Text[$"Issue_{code}"].ResourceNotFound ? Text["CollectionRemediation"] : Text[$"Issue_{code}"];
+    private string Date(DateTimeOffset? date) => date is null ? Text["Unknown"]
+        : date.Value.UtcDateTime.ToString("g", System.Globalization.CultureInfo.GetCultureInfo("fr-FR")) + " UTC";
+    private string Count(long? value, CoverageStatus? status) => status == CoverageStatus.NotApplicable ? Text["NotApplicable"]
+        : value is null ? Text["Unknown"] : value == 0 && status == CoverageStatus.Complete ? Text["KnownZero"] : value.Value.ToString(System.Globalization.CultureInfo.CurrentCulture);
+    private static string ScopeValue(string json) => JsonSerializer.Deserialize<CollectionScope>(json, ContractJson.Options)!.Value;
+}

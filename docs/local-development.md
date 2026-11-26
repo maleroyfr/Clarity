@@ -39,9 +39,33 @@ Production requires Entra configuration and SQL; missing configuration does not
 fall back to a fake identity. Business labels are neutral French resources with
 `fr-FR` request culture. The foundation shell intentionally uses a light theme.
 
-Discovery collection/import buttons and later-lot sections are explicitly
-unavailable placeholders. Client/project creation, search, archive, membership
-assignment and source/target environment declaration are implemented.
+Discovery provides **Connexions**, **Collectes** and **Couverture** for existing
+source or target environments. A planned target cannot be collected. AD script
+requests and their separate downloads require SQL. Result uploads and background
+processing also require private Blob Storage. Graph additionally requires the
+managed-identity certificate configuration in
+[the connector guide](connectors/microsoft-graph.md). Nothing deploys automatically.
+Inventory projection, matching and other later-lot sections remain unavailable.
+
+Use **Collectes** to select AD sections and a domain/OU, create a request and
+download the immutable script ZIP plus separate `parameters.json`. Run the displayed
+command on an authorized AD machine, then upload **result.zip**, not the script
+ZIP. Preview the observed scope, counts and errors before explicit confirmation.
+Another authorized consultant can upload and confirm the result from a different
+machine. Requests retain their identity and history in the dossier.
+
+For Graph, a workspace manager declares/reuses a connection for an existing M365
+environment with a real tenant GUID. A consultant tests section permissions and
+launches selected sections. Grant `Organization.Read.All` for observed-tenant
+verification in addition to section-specific rights. Local personas need real
+stored workspace membership for jobs; the worker never fabricates membership.
+
+**Recharger** refreshes persisted jobs and section history. Retry failed/cancelled
+jobs to resume prepared work without duplicate publication; launch another Graph
+collection to obtain fresh source data. **Couverture** preserves links to the last
+valid source ZIP through pending/failed updates and distinguishes unknown from
+known zero. The preview shows source-key changes, not Lot 3 matching decisions.
+Read-only members can inspect/download, but cannot collect, upload or confirm.
 
 SQL-dependent tests require `CLARITY_TEST_SQL` pointing to a disposable SQL Server
 or Azure SQL database. Tests may create and remove test databases. Without the

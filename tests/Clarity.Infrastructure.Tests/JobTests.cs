@@ -126,6 +126,51 @@ public sealed class JobTests
         fixture.Jobs.EnqueueAsync(fixture.Project.Id, id, CollectionJobKind.Import, "{}",
             new string('a', 64), Guid.NewGuid().ToString("N"));
 
+    [SqlFact]
+    public async Task CancellationAndRetrySynchronizeRunStateWithoutErasingPublishedSections()
+    {
+        await using var fixture = await DiscoveryFixture.CreateAsync();
+        var package = DiscoveryFixture.Package();
+        var run = await fixture.StageAsync(package);
+        await EnqueueAsync(fixture, run.Id);
+        var processor = new CollectionJobProcessor(new SqlJobQueue(fixture.ConnectionString, TimeProvider.System),
+            [new CancelAfterPublication(package, run.Id)], NullLogger<CollectionJobProcessor>.Instance);
+        await processor.ProcessOneAsync(default);
+        await using (var db = await fixture.Factory.CreateDbContextAsync())
+        {
+            (await db.CollectionRuns.SingleAsync()).State.ShouldBe(CollectionRunState.Cancelled);
+            (await db.CollectionJobs.SingleAsync()).State.ShouldBe(CollectionRunState.Cancelled);
+            (await db.ObjectObservations.CountAsync()).ShouldBe(1);
+        }
+        await fixture.Jobs.RetryAsync(fixture.Project.Id, run.Id);
+        await using (var db = await fixture.Factory.CreateDbContextAsync())
+        {
+            (await db.CollectionRuns.SingleAsync()).State.ShouldBe(CollectionRunState.Pending);
+        }
+        await processor.ProcessOneAsync(default);
+        await using var check = await fixture.Factory.CreateDbContextAsync();
+        (await check.CollectionRuns.SingleAsync()).State.ShouldBe(CollectionRunState.Completed);
+        (await check.ObjectObservations.CountAsync()).ShouldBe(1);
+    }
+
+    private sealed class CancelAfterPublication(DiscoveryPackage package, Guid runId) : ICollectionJobHandler
+    {
+        private bool cancel = true;
+        public CollectionJobKind Kind => CollectionJobKind.Import;
+        public async Task ExecuteAsync(JobExecution execution, CancellationToken cancellationToken)
+        {
+            await new PublicationService(execution.Factory, execution.Access, new PackageValidator())
+                .PublishSectionAsync(execution.Job.ProjectId, runId, package, package.Results[0].SectionId, cancellationToken);
+            if (cancel)
+            {
+                cancel = false;
+                var scope = new WorkspaceScope(new UserIdentity(execution.Job.ActorTenantId, execution.Job.ActorObjectId), [execution.Job.WorkspaceId]);
+                await new JobService(execution.Factory, execution.Access, scope).CancelAsync(execution.Job.ProjectId, execution.Job.Id, cancellationToken);
+            }
+            await execution.ReportProgressAsync(1, cancellationToken);
+        }
+    }
+
     private sealed class ManualClock : TimeProvider
     {
         private DateTimeOffset now = DateTimeOffset.UtcNow.AddSeconds(1);

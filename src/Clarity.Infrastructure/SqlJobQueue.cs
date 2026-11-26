@@ -60,18 +60,18 @@ public sealed class SqlJobQueue(string connectionString, TimeProvider time)
                 cancellationToken) == 1;
     }
 
-    public async Task FinishAsync(CollectionJob job, string? errorCode, bool retryable, CancellationToken cancellationToken)
+    public async Task<bool> FinishAsync(CollectionJob job, string? errorCode, bool retryable, CancellationToken cancellationToken)
     {
         await using var db = await dispatcher.CreateDbContextAsync(cancellationToken);
         var now = time.GetUtcNow();
         var state = errorCode is null ? CollectionRunState.Completed
             : retryable && job.Attempt < MaxAttempts ? CollectionRunState.Pending : CollectionRunState.Failed;
-        await OwnedLease(db, job, now).ExecuteUpdateAsync(update => update
+        return await OwnedLease(db, job, now).ExecuteUpdateAsync(update => update
             .SetProperty(x => x.State, x => x.CancellationRequested ? CollectionRunState.Cancelled : state)
             .SetProperty(x => x.ErrorCode, errorCode)
             .SetProperty(x => x.AvailableAtUtc, now.AddSeconds(Math.Pow(2, job.Attempt) * 5))
             .SetProperty(x => x.LeaseToken, (Guid?)null)
-            .SetProperty(x => x.LeaseExpiresAtUtc, (DateTimeOffset?)null), cancellationToken);
+            .SetProperty(x => x.LeaseExpiresAtUtc, (DateTimeOffset?)null), cancellationToken) == 1;
     }
 
     public static IQueryable<CollectionJob> OwnedLease(ClarityDbContext db, CollectionJob job, DateTimeOffset now) =>

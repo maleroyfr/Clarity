@@ -50,7 +50,7 @@ public sealed class CollectionJobProcessor(SqlJobQueue queue, IEnumerable<IColle
                     throw new OperationCanceledException("Job lease lost or cancellation requested.", token);
                 }
             }), lease.Token);
-            await queue.FinishAsync(job, null, false, stoppingToken);
+            await FinishAsync(job, null, false, stoppingToken);
         }
         catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
         {
@@ -58,7 +58,7 @@ public sealed class CollectionJobProcessor(SqlJobQueue queue, IEnumerable<IColle
         }
         catch (OperationCanceledException)
         {
-            await queue.FinishAsync(job, "CancelledOrLeaseLost", false, stoppingToken);
+            await FinishAsync(job, "CancelledOrLeaseLost", false, stoppingToken);
         }
         catch (Exception exception)
         {
@@ -72,7 +72,7 @@ public sealed class CollectionJobProcessor(SqlJobQueue queue, IEnumerable<IColle
             };
             logger.LogWarning("Collection job failed with {ErrorType}; attempt {Attempt}; correlation {CorrelationId}",
                 exception.GetType().Name, job.Attempt, job.CorrelationId);
-            await queue.FinishAsync(job, code, retryable, stoppingToken);
+            await FinishAsync(job, code, retryable, stoppingToken);
         }
         finally
         {
@@ -80,6 +80,25 @@ public sealed class CollectionJobProcessor(SqlJobQueue queue, IEnumerable<IColle
             await heartbeat;
         }
         return true;
+    }
+
+    private async Task FinishAsync(CollectionJob job, string? errorCode, bool retryable, CancellationToken ct)
+    {
+        if (!await queue.FinishAsync(job, errorCode, retryable, ct)) { return; }
+        var factory = queue.CreateFactory(job);
+        var workspace = new WorkspaceScope(new UserIdentity(job.ActorTenantId, job.ActorObjectId), [job.WorkspaceId]);
+        try
+        {
+            await new StoredProjectAccess(factory, workspace).RequireAsync(job.ProjectId,
+                job.Kind == CollectionJobKind.Import ? WorkspaceOperation.Import : WorkspaceOperation.Collect, ct);
+        }
+        catch (AccessDeniedException)
+        {
+            logger.LogWarning("Run state synchronization denied; job state remains authoritative; correlation {CorrelationId}", job.CorrelationId);
+            return;
+        }
+        await using var db = await factory.CreateDbContextAsync(ct);
+        await JobService.SynchronizeRunAsync(db, job.WorkspaceId, job.Id, ct);
     }
 
     private async Task HeartbeatAsync(CollectionJob job, CancellationTokenSource lease)

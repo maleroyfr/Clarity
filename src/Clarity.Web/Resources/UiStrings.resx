@@ -65,7 +65,7 @@
   <data name="Planned" xml:space="preserve"><value>Prévue</value></data>
   <data name="Existing" xml:space="preserve"><value>Existante</value></data>
   <data name="TargetState" xml:space="preserve"><value>État de la cible</value></data>
-  <data name="LaterLot" xml:space="preserve"><value>Cette fonction sera disponible dans un prochain lot. Aucune collecte ni import n'est encore lancé.</value></data>
+  <data name="LaterLot" xml:space="preserve"><value>Cette fonction sera disponible dans un prochain lot. Les collectes et imports sont accessibles dans Discovery.</value></data>
   <data name="LaunchCollection" xml:space="preserve"><value>Lancer une collecte</value></data>
   <data name="ImportPackage" xml:space="preserve"><value>Importer un paquet</value></data>
   <data name="Loading" xml:space="preserve"><value>Chargement…</value></data>
@@ -102,4 +102,108 @@
   <data name="Retry" xml:space="preserve"><value>Réessayer</value></data>
   <data name="Paused" xml:space="preserve"><value>La session a été suspendue par le serveur.</value></data>
   <data name="Resume" xml:space="preserve"><value>Reprendre</value></data>
+  <data name="Connections" xml:space="preserve"><value>Connexions</value></data>
+  <data name="Collections" xml:space="preserve"><value>Collectes</value></data>
+  <data name="Coverage" xml:space="preserve"><value>Couverture</value></data>
+  <data name="ViewCollections" xml:space="preserve"><value>Consulter et actualiser les collectes</value></data>
+  <data name="CollectionEnvironment" xml:space="preserve"><value>Environnement de collecte</value></data>
+  <data name="NoCollectionEnvironment" xml:space="preserve"><value>Aucun environnement existant de ce côté</value></data>
+  <data name="ConnectionConsentHint" xml:space="preserve"><value>Cette connexion est réutilisable dans les dossiers autorisés du même client et tenant. Le consentement administrateur de chaque tenant doit viser l'application de collecte distincte de la connexion interactive. Organization.Read.All est nécessaire pour vérifier le tenant observé, en plus des droits de chaque section.</value></data>
+  <data name="DeclareConnection" xml:space="preserve"><value>Déclarer ou réutiliser la connexion</value></data>
+  <data name="LastAccessTest" xml:space="preserve"><value>Dernier test d'accès</value></data>
+  <data name="TestSections" xml:space="preserve"><value>Tester les accès par section</value></data>
+  <data name="AccessAvailable" xml:space="preserve"><value>Lecture testée</value></data>
+  <data name="AccessUnavailable" xml:space="preserve"><value>Accès à corriger</value></data>
+  <data name="Permissions" xml:space="preserve"><value>Autorisations d'application attendues</value></data>
+  <data name="GraphConfigurationRequired" xml:space="preserve"><value>Configurez SQL, le stockage privé et GraphCollector : application multi-tenant, certificat Key Vault et identité managée autorisée. Aucun identifiant secret n'est demandé ici. Un pilote réel reste nécessaire.</value></data>
+  <data name="GraphAlternativeHint" xml:space="preserve"><value>En cas de droit manquant, faites accorder les autorisations indiquées puis retestez. Le script AD peut documenter une source AD, mais ne remplace pas les données Entra et n'hérite pas du consentement Graph.</value></data>
+  <data name="LocalScriptConnectionHint" xml:space="preserve"><value>Le script AD utilise les droits de lecture de l'opérateur sur sa machine. Créez une demande dans Collectes, puis téléchargez séparément le script et ses paramètres. Aucun mot de passe local n'est conservé par Clarity.</value></data>
+  <data name="SelectSections" xml:space="preserve"><value>Sections à collecter</value></data>
+  <data name="PrepareGraphHint" xml:space="preserve"><value>Préparez la connexion et vérifiez la configuration dans Connexions avant de lancer Graph.</value></data>
+  <data name="ScopeKind" xml:space="preserve"><value>Unité de périmètre comparable</value></data>
+  <data name="ScopeKind_domain" xml:space="preserve"><value>Domaine AD</value></data>
+  <data name="ScopeKind_ou" xml:space="preserve"><value>Unité d'organisation AD</value></data>
+  <data name="ScopeValue" xml:space="preserve"><value>Domaine DNS ou nom distinctif de l'OU</value></data>
+  <data name="AdDomain" xml:space="preserve"><value>Domaine DNS contenant l'OU</value></data>
+  <data name="CreateScriptRequest" xml:space="preserve"><value>Créer une demande de script AD</value></data>
+  <data name="ProducerUnavailable" xml:space="preserve"><value>Aucun producteur validé n'est disponible pour cet environnement dans ce lot. Les familles futures ne sont pas exécutables.</value></data>
+  <data name="UploadResult" xml:space="preserve"><value>Déposer le ZIP de résultats</value></data>
+  <data name="UploadResultHint" xml:space="preserve"><value>Vous pouvez déposer ici un résultat produit sur une autre machine. Le ZIP de résultats est distinct du téléchargement du script. Limite : 16 Mio compressés ; seules les quatre données ZIP v1 sont acceptées.</value></data>
+  <data name="ResultFile" xml:space="preserve"><value>Fichier de résultats ZIP</value></data>
+  <data name="StorageRequired" xml:space="preserve"><value>Configurez SQL et Storage:BlobServiceUri avec le conteneur privé raw-artifacts. Aucun stockage local de remplacement n'est utilisé.</value></data>
+  <data name="ReadOnlyDiscovery" xml:space="preserve"><value>Votre accès permet la consultation et les téléchargements, mais pas les collectes ni les imports.</value></data>
+  <data name="RequestHistory" xml:space="preserve"><value>Demandes de scripts</value></data>
+  <data name="RunHistory" xml:space="preserve"><value>Historique des résultats</value></data>
+  <data name="ProjectJobs" xml:space="preserve"><value>Traitements du dossier</value></data>
+  <data name="Date" xml:space="preserve"><value>Date</value></data>
+  <data name="Actions" xml:space="preserve"><value>Actions</value></data>
+  <data name="ScriptDownloads" xml:space="preserve"><value>Script, paramètres et commande</value></data>
+  <data name="NoRequests" xml:space="preserve"><value>Aucune demande pour cet environnement.</value></data>
+  <data name="NoRuns" xml:space="preserve"><value>Aucun résultat reçu pour cet environnement.</value></data>
+  <data name="NoJobs" xml:space="preserve"><value>Aucun traitement lancé dans ce dossier.</value></data>
+  <data name="Producer" xml:space="preserve"><value>Producteur et version</value></data>
+  <data name="Preview" xml:space="preserve"><value>Prévisualiser les résultats</value></data>
+  <data name="Progress" xml:space="preserve"><value>Progression</value></data>
+  <data name="PublishedSections" xml:space="preserve"><value>sections publiées</value></data>
+  <data name="Attempt" xml:space="preserve"><value>Essai</value></data>
+  <data name="Cancel" xml:space="preserve"><value>Annuler</value></data>
+  <data name="CancellationRequested" xml:space="preserve"><value>Annulation demandée</value></data>
+  <data name="Correlation" xml:space="preserve"><value>Corrélation</value></data>
+  <data name="Complete" xml:space="preserve"><value>Complète</value></data>
+  <data name="Partial" xml:space="preserve"><value>Partielle</value></data>
+  <data name="Failed" xml:space="preserve"><value>Échec</value></data>
+  <data name="Cancelled" xml:space="preserve"><value>Annulé</value></data>
+  <data name="Pending" xml:space="preserve"><value>En attente</value></data>
+  <data name="Running" xml:space="preserve"><value>En cours</value></data>
+  <data name="Completed" xml:space="preserve"><value>Terminé</value></data>
+  <data name="NotApplicable" xml:space="preserve"><value>Non applicable</value></data>
+  <data name="AwaitingFile" xml:space="preserve"><value>En attente du fichier</value></data>
+  <data name="FileToConfirm" xml:space="preserve"><value>Fichier à confirmer</value></data>
+  <data name="Integrated" xml:space="preserve"><value>Intégré</value></data>
+  <data name="NotPublished" xml:space="preserve"><value>Résultat non publié</value></data>
+  <data name="KnownZero" xml:space="preserve"><value>0 confirmé</value></data>
+  <data name="NotCollected" xml:space="preserve"><value>Inconnu — à collecter</value></data>
+  <data name="CoverageLegend" xml:space="preserve"><value>0 confirmé signifie une lecture complète sans résultat. Inconnu ne signifie pas zéro. Une section partielle ne couvre que les champs et relations indiqués. Hors périmètre reste distinct de non applicable. Les observations valides précédentes restent consultables pendant un traitement ou après un échec ; les unités de périmètre différentes ne sont pas fusionnées.</value></data>
+  <data name="Section" xml:space="preserve"><value>Section</value></data>
+  <data name="ObjectsRelations" xml:space="preserve"><value>Objets / relations</value></data>
+  <data name="LastValidObservation" xml:space="preserve"><value>Dernière observation valide</value></data>
+  <data name="SectionResults" xml:space="preserve"><value>Résultat et provenance</value></data>
+  <data name="DownloadScriptBundle" xml:space="preserve"><value>Télécharger le ZIP du script AD 1.0.0</value></data>
+  <data name="DownloadParameters" xml:space="preserve"><value>Télécharger parameters.json</value></data>
+  <data name="ScriptCommandHint" xml:space="preserve"><value>Décompressez le script, placez parameters.json à la racine, puis exécutez dans PowerShell avec le module ActiveDirectory et vos droits de lecture :</value></data>
+  <data name="SeparateMachineHint" xml:space="preserve"><value>Aucun module n'est installé automatiquement. Corrigez les prérequis indiqués par le script. Rapportez result.zip dans ce dossier depuis toute machine autorisée, prévisualisez puis confirmez l'intégration.</value></data>
+  <data name="NewObjects" xml:space="preserve"><value>Nouvelles identités source</value></data>
+  <data name="ExistingObjects" xml:space="preserve"><value>Identités source déjà connues</value></data>
+  <data name="CoveredFields" xml:space="preserve"><value>Champs couverts</value></data>
+  <data name="CoveredRelations" xml:space="preserve"><value>Relations couvertes</value></data>
+  <data name="RunIdentifier" xml:space="preserve"><value>Identifiant du résultat</value></data>
+  <data name="PreviewSampleHint" xml:space="preserve"><value>Échantillons limités à 20 objets et 20 relations. Les décisions de rapprochement et les suppressions ne sont pas déduites de cette prévisualisation.</value></data>
+  <data name="ObjectSample" xml:space="preserve"><value>Échantillon d'objets source</value></data>
+  <data name="RelationSample" xml:space="preserve"><value>Échantillon de relations source</value></data>
+  <data name="DownloadRawResult" xml:space="preserve"><value>Télécharger la preuve ZIP d'origine</value></data>
+  <data name="ConfirmationHint" xml:space="preserve"><value>Vérifiez l'environnement, le périmètre et les sections avant de confirmer. Les sections conformes, même partielles, seront publiées sans effacer les observations précédentes.</value></data>
+  <data name="ConfirmPublication" xml:space="preserve"><value>Confirmer et publier</value></data>
+  <data name="CollectionQueued" xml:space="preserve"><value>Traitement enregistré. Rechargez pour suivre sa progression, puis consultez Couverture.</value></data>
+  <data name="InvalidPackage" xml:space="preserve"><value>Le paquet ne respecte pas ZIP v1 ou les limites de sécurité. Utilisez le ZIP de résultats, vérifiez la version du script et régénérez le résultat.</value></data>
+  <data name="PackageMismatch" xml:space="preserve"><value>L'environnement observé, le périmètre ou la demande ne correspondent pas à ce dossier. Sélectionnez le bon environnement ou refaites la collecte avec les paramètres téléchargés.</value></data>
+  <data name="GraphRemediation" xml:space="preserve"><value>La lecture Graph n'a pas abouti. Vérifiez le tenant, le consentement de collecte, les autorisations et le certificat Key Vault, puis retestez les sections.</value></data>
+  <data name="OperationInterrupted" xml:space="preserve"><value>L'opération a été interrompue. Rechargez son état avant de réessayer ; les sections déjà publiées restent conservées.</value></data>
+  <data name="CollectionRemediation" xml:space="preserve"><value>Vérifiez les prérequis, le périmètre et les droits du producteur. Consultez la preuve source, corrigez la cause puis relancez la section.</value></data>
+  <data name="Issue_MissingPermission" xml:space="preserve"><value>Autorisation Graph manquante : faites accorder les droits de la section et retestez.</value></data>
+  <data name="Issue_AccessDenied" xml:space="preserve"><value>L'accès au dossier a changé. Un membre autorisé doit reprendre le traitement.</value></data>
+  <data name="Issue_IncrementalChanges" xml:space="preserve"><value>Delta : seules les modifications sont présentes. Les objets inchangés restent dans les observations précédentes ; zéro modification ne signifie pas zéro objet.</value></data>
+  <data name="Issue_GraphV1MembershipLimit" xml:space="preserve"><value>Graph v1.0 peut omettre des principaux de service dans les membres. Les membres masqués nécessitent un droit supplémentaire ; cette couverture n'est pas exhaustive.</value></data>
+  <data name="Issue_MembershipNotTestedEmptyScope" xml:space="preserve"><value>Aucun groupe échantillon : les accès aux membres et propriétaires n'ont pas pu être testés.</value></data>
+  <data name="Issue_RetryAfterLimit" xml:space="preserve"><value>Graph impose une attente supérieure à une minute. Attendez avant de relancer la section.</value></data>
+  <data name="Issue_Throttled" xml:space="preserve"><value>La limite de tentatives Graph est atteinte. Attendez puis relancez les sections concernées.</value></data>
+  <data name="Section_ad.users" xml:space="preserve"><value>AD — utilisateurs</value></data>
+  <data name="Section_ad.computers" xml:space="preserve"><value>AD — ordinateurs</value></data>
+  <data name="Section_ad.groups" xml:space="preserve"><value>AD — groupes et appartenances</value></data>
+  <data name="Section_ad.ous" xml:space="preserve"><value>AD — unités d'organisation</value></data>
+  <data name="Section_entra.users" xml:space="preserve"><value>Entra — utilisateurs et invités</value></data>
+  <data name="Section_entra.groups" xml:space="preserve"><value>Entra — groupes, membres et propriétaires</value></data>
+  <data name="Section_entra.devices" xml:space="preserve"><value>Entra — appareils</value></data>
+  <data name="Section_entra.domains" xml:space="preserve"><value>Entra — domaines</value></data>
+  <data name="Section_entra.licenses" xml:space="preserve"><value>Entra — licences</value></data>
+  <data name="Section_entra.applications" xml:space="preserve"><value>Entra — applications et principaux de service</value></data>
 </root>

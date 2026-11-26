@@ -104,10 +104,18 @@ public class AuthorizationEndpointTests
     }
 }
 
-internal sealed class FoundationApplication(string environment = "Testing") : WebApplicationFactory<Program>
+internal sealed class FoundationApplication(string environment = "Testing", bool sql = false, bool discoveryStorage = false) : WebApplicationFactory<Program>
 {
-    private readonly DbContextOptions<ClarityDbContext> _options = new DbContextOptionsBuilder<ClarityDbContext>()
-        .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options;
+    private readonly DbContextOptions<ClarityDbContext> _options = CreateOptions(sql);
+
+    private static DbContextOptions<ClarityDbContext> CreateOptions(bool sql)
+    {
+        var builder = new DbContextOptionsBuilder<ClarityDbContext>();
+        if (!sql) { return builder.UseInMemoryDatabase(Guid.NewGuid().ToString()).Options; }
+        var connection = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(Environment.GetEnvironmentVariable("CLARITY_TEST_SQL"))
+        { InitialCatalog = $"ClarityWebTest_{Guid.NewGuid():N}" };
+        return builder.UseSqlServer(connection.ConnectionString).Options;
+    }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -121,21 +129,39 @@ internal sealed class FoundationApplication(string environment = "Testing") : We
             services.RemoveAll<IDbContextFactory<ClarityDbContext>>();
             services.AddScoped<IDbContextFactory<ClarityDbContext>>(provider =>
                 new TestContextFactory(_options, provider.GetRequiredService<IWorkspaceContext>()));
+            if (discoveryStorage)
+            {
+                services.RemoveAll<IArtifactStore>();
+                services.AddSingleton<IArtifactStore, TestArtifactStore>();
+                services.RemoveAll<DiscoveryAvailability>();
+                services.AddSingleton(new DiscoveryAvailability(true, false));
+            }
         });
     }
 
-    internal ClarityDbContext CreateUnscopedContext() =>
-        new(_options, new WorkspaceScope(default, [DevelopmentAuthenticationHandler.AlphaWorkspace, DevelopmentAuthenticationHandler.BetaWorkspace], true));
+    internal ClarityDbContext CreateUnscopedContext() => new TestContextFactory(_options,
+        new WorkspaceScope(default, [DevelopmentAuthenticationHandler.AlphaWorkspace, DevelopmentAuthenticationHandler.BetaWorkspace], true)).CreateDbContext();
 
     internal async Task<(Guid Alpha, Guid Beta)> SeedAsync()
     {
         await using var db = CreateUnscopedContext();
+        if (sql) { await db.Database.MigrateAsync(); }
         db.Workspaces.AddRange(
             new ClientWorkspace { Id = DevelopmentAuthenticationHandler.AlphaWorkspace, Name = "Synthetic Alpha" },
             new ClientWorkspace { Id = DevelopmentAuthenticationHandler.BetaWorkspace, Name = "Synthetic Beta" });
         var alpha = new Project { WorkspaceId = DevelopmentAuthenticationHandler.AlphaWorkspace, Name = "Alpha audit" };
         var beta = new Project { WorkspaceId = DevelopmentAuthenticationHandler.BetaWorkspace, Name = "Beta audit" };
         db.Projects.AddRange(alpha, beta);
+        foreach (var (persona, role) in new[] { ("manager", WorkspaceRole.WorkspaceManager), ("consultant", WorkspaceRole.Consultant), ("reader", WorkspaceRole.Reader) })
+        {
+            db.Members.Add(new WorkspaceMember
+            {
+                WorkspaceId = DevelopmentAuthenticationHandler.AlphaWorkspace,
+                Role = role,
+                TenantId = DevelopmentAuthenticationHandler.SyntheticTenant,
+                ObjectId = DevelopmentAuthenticationHandler.Personas[persona]
+            });
+        }
         await db.SaveChangesAsync();
         return (alpha.Id, beta.Id);
     }
@@ -152,6 +178,17 @@ internal sealed class FoundationApplication(string environment = "Testing") : We
     private sealed record AntiforgeryToken(string Token);
     private sealed class TestContextFactory(DbContextOptions<ClarityDbContext> options, IWorkspaceContext scope) : IDbContextFactory<ClarityDbContext>
     {
-        public ClarityDbContext CreateDbContext() => new(options, scope);
+        public ClarityDbContext CreateDbContext() =>
+            new(new DbContextOptionsBuilder<ClarityDbContext>(options).AddInterceptors(new WorkspaceConnectionInterceptor(scope)).Options, scope);
+    }
+
+    public override async ValueTask DisposeAsync()
+    {
+        await base.DisposeAsync();
+        if (sql)
+        {
+            await using var db = CreateUnscopedContext();
+            await db.Database.EnsureDeletedAsync();
+        }
     }
 }

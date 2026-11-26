@@ -46,24 +46,21 @@ public sealed class JobService(IDbContextFactory<ClarityDbContext> factory, IPro
     {
         var project = await access.RequireAsync(projectId, WorkspaceOperation.Collect, cancellationToken);
         await using var db = await factory.CreateDbContextAsync(cancellationToken);
-        var job = await db.CollectionJobs.SingleOrDefaultAsync(x => x.WorkspaceId == project.WorkspaceId
-            && x.ProjectId == projectId && x.Id == jobId, cancellationToken) ?? throw new AccessDeniedException();
-        if (job.State is CollectionRunState.Completed or CollectionRunState.Failed or CollectionRunState.Cancelled)
-        {
-            return;
-        }
-        job.CancellationRequested = true;
-        if (job.State == CollectionRunState.Pending)
-        {
-            job.State = CollectionRunState.Cancelled;
-        }
-        await db.SaveChangesAsync(cancellationToken);
+        var query = db.CollectionJobs.Where(x => x.WorkspaceId == project.WorkspaceId && x.ProjectId == projectId && x.Id == jobId);
+        if (!await query.AnyAsync(cancellationToken)) { throw new AccessDeniedException(); }
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        await query.Where(x => x.State == CollectionRunState.Pending || x.State == CollectionRunState.Running)
+            .ExecuteUpdateAsync(update => update.SetProperty(x => x.CancellationRequested, true)
+                .SetProperty(x => x.State, x => x.State == CollectionRunState.Pending ? CollectionRunState.Cancelled : x.State), cancellationToken);
+        await SynchronizeRunAsync(db, project.WorkspaceId, jobId, cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
     }
 
     public async Task RetryAsync(Guid projectId, Guid jobId, CancellationToken cancellationToken = default)
     {
         var project = await access.RequireAsync(projectId, WorkspaceOperation.Collect, cancellationToken);
         await using var db = await factory.CreateDbContextAsync(cancellationToken);
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         var changed = await db.CollectionJobs.Where(x => x.WorkspaceId == project.WorkspaceId && x.ProjectId == project.Id && x.Id == jobId
             && (x.State == CollectionRunState.Failed || x.State == CollectionRunState.Cancelled))
             .ExecuteUpdateAsync(update => update.SetProperty(x => x.State, CollectionRunState.Pending)
@@ -75,5 +72,12 @@ public sealed class JobService(IDbContextFactory<ClarityDbContext> factory, IPro
         {
             throw new ConflictException();
         }
+        await SynchronizeRunAsync(db, project.WorkspaceId, jobId, cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
     }
+
+    internal static Task SynchronizeRunAsync(ClarityDbContext db, Guid workspaceId, Guid jobId, CancellationToken ct) =>
+        db.CollectionRuns.Where(x => x.WorkspaceId == workspaceId && x.Id == jobId)
+            .ExecuteUpdateAsync(update => update.SetProperty(x => x.State,
+                x => db.CollectionJobs.Where(job => job.WorkspaceId == workspaceId && job.Id == jobId).Select(job => job.State).First()), ct);
 }
