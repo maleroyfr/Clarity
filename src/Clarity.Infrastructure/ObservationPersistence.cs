@@ -7,6 +7,7 @@ public sealed partial class ClarityDbContext
 {
     public DbSet<InventoryObject> InventoryObjects => Set<InventoryObject>();
     public DbSet<ExternalKey> ExternalKeys => Set<ExternalKey>();
+    public DbSet<AlternateKeyPeriod> AlternateKeyPeriods => Set<AlternateKeyPeriod>();
     public DbSet<ObjectObservation> ObjectObservations => Set<ObjectObservation>();
     public DbSet<RelationshipObservation> RelationshipObservations => Set<RelationshipObservation>();
 
@@ -24,7 +25,19 @@ public sealed partial class ClarityDbContext
         key.Property(x => x.Type).HasMaxLength(100).UseCollation("Latin1_General_100_BIN2");
         key.Property(x => x.Namespace).HasMaxLength(100).UseCollation("Latin1_General_100_BIN2");
         key.Property(x => x.ExternalId).HasMaxLength(500).UseCollation("Latin1_General_100_BIN2");
-        key.HasIndex(x => new { x.WorkspaceId, x.EnvironmentId, x.Namespace, x.Type, x.ExternalId }).IsUnique();
+        key.Property(x => x.IsPrimary).HasDefaultValue(true);
+        key.HasIndex(x => new { x.WorkspaceId, x.EnvironmentId, x.Namespace, x.Type, x.ExternalId }).IsUnique()
+            .HasFilter("[IsPrimary] = 1");
+
+        var alias = DiscoveryOwned<AlternateKeyPeriod>(model);
+        alias.HasOne<InventoryObject>().WithMany().HasForeignKey(x => new { x.WorkspaceId, x.EnvironmentId, x.ObjectId })
+            .HasPrincipalKey(x => new { x.WorkspaceId, x.EnvironmentId, x.Id }).OnDelete(DeleteBehavior.NoAction);
+        alias.HasOne<ObjectObservation>().WithMany().HasForeignKey(x => new { x.WorkspaceId, x.ObjectId, x.ObservationId })
+            .HasPrincipalKey(x => new { x.WorkspaceId, x.ObjectId, x.Id }).OnDelete(DeleteBehavior.NoAction);
+        alias.Property(x => x.Namespace).HasMaxLength(100).UseCollation("Latin1_General_100_BIN2");
+        alias.Property(x => x.Type).HasMaxLength(100).UseCollation("Latin1_General_100_BIN2");
+        alias.Property(x => x.NormalizedValue).HasMaxLength(500).UseCollation("Latin1_General_100_BIN2");
+        alias.HasIndex(x => new { x.WorkspaceId, x.EnvironmentId, x.Namespace, x.Type, x.NormalizedValue });
 
         var observation = DiscoveryOwned<ObjectObservation>(model);
         observation.HasOne<InventoryObject>().WithMany().HasForeignKey(x => new { x.WorkspaceId, x.ObjectId })

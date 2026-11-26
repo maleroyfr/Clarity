@@ -130,7 +130,7 @@ public sealed class ImportService(
             foreach (var chunk in group.Chunk(500))
             {
                 var ids = chunk.Select(x => x.ExternalId).ToArray();
-                existing += await db.ExternalKeys.CountAsync(x => x.WorkspaceId == project.WorkspaceId && x.EnvironmentId == run.EnvironmentId
+                existing += await db.ExternalKeys.CountAsync(x => x.IsPrimary && x.WorkspaceId == project.WorkspaceId && x.EnvironmentId == run.EnvironmentId
                     && x.Namespace == group.Key.Namespace && x.Type == group.Key.Type && ids.Contains(x.ExternalId), cancellationToken);
             }
         }

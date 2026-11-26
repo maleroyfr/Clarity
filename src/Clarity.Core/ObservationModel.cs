@@ -19,6 +19,20 @@ public sealed class ExternalKey : WorkspaceEntity
     public required string Namespace { get; init; }
     public required string Type { get; init; }
     public required string ExternalId { get; init; }
+    public bool IsPrimary { get; init; } = true;
+}
+
+public sealed class AlternateKeyPeriod : WorkspaceEntity
+{
+    public Guid EnvironmentId { get; init; }
+    public Guid ObjectId { get; init; }
+    public Guid ObservationId { get; init; }
+    public required string Namespace { get; init; }
+    public required string Type { get; init; }
+    public required string OriginalValue { get; init; }
+    public required string NormalizedValue { get; init; }
+    public DateTimeOffset ValidFromUtc { get; init; }
+    public DateTimeOffset? ValidUntilUtc { get; set; }
 }
 
 public sealed class ObjectObservation : WorkspaceEntity
@@ -27,6 +41,7 @@ public sealed class ObjectObservation : WorkspaceEntity
     public Guid SectionRunId { get; init; }
     public DateTimeOffset ObservedAtUtc { get; init; }
     public required string AttributesJson { get; init; }
+    public string? AlternativeKeysJson { get; init; }
     public string? UserPrincipalName { get; init; }
     public string? Smtp { get; init; }
     public string? Status { get; init; }

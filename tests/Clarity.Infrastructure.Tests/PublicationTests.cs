@@ -70,7 +70,7 @@ public sealed class PublicationTests
     }
 
     [SqlFact]
-    public async Task InvalidEnvironmentAndMidSectionIdentityConflictPublishNothing()
+    public async Task InvalidEnvironmentAndMidSectionFieldErrorPublishNothing()
     {
         await using var fixture = await DiscoveryFixture.CreateAsync();
         var package = DiscoveryFixture.Package();
@@ -79,23 +79,69 @@ public sealed class PublicationTests
         (await Should.ThrowAsync<ContractException>(() => fixture.Publisher.PublishSectionAsync(
             fixture.Project.Id, wrongRun.Id, wrong, wrong.Results[0].SectionId))).Code.ShouldBe("EnvironmentMismatch");
 
-        var alias = new ExternalReference("user", "ad.objectSid", "S-1-5-21-100-200-300-1001");
         var conflicting = DiscoveryFixture.Package() with
         {
             Objects =
             [
-                package.Objects[0] with { AlternativeKeys = [alias] },
-                package.Objects[0] with { ExternalId = "different-user", AlternativeKeys = [alias] }
+                package.Objects[0],
+                package.Objects[0] with { ExternalId = "different-user", Attributes = new Dictionary<string, JsonElement>
+                {
+                    ["displayName"] = JsonSerializer.SerializeToElement(new string('a', 501))
+                } }
             ],
             Results = [package.Results[0] with { ObjectCount = 2 }]
         };
         var run = await fixture.StageAsync(conflicting);
         (await Should.ThrowAsync<ContractException>(() => fixture.Publisher.PublishSectionAsync(
-            fixture.Project.Id, run.Id, conflicting, conflicting.Results[0].SectionId))).Code.ShouldBe("AmbiguousExternalKey");
+            fixture.Project.Id, run.Id, conflicting, conflicting.Results[0].SectionId))).Code.ShouldBe("IndexedAttributeLength");
         await using var db = await fixture.Factory.CreateDbContextAsync();
         (await db.ObjectObservations.CountAsync()).ShouldBe(0);
         (await db.InventoryObjects.CountAsync()).ShouldBe(0);
         (await db.SectionRuns.AnyAsync(x => x.PublishedAtUtc != null)).ShouldBeFalse();
+    }
+
+    [SqlFact]
+    public async Task RenameAndLateObservationKeepStableIdentityAndAmbiguousAliasesSeparate()
+    {
+        await using var fixture = await DiscoveryFixture.CreateAsync();
+        var original = DiscoveryFixture.Package();
+        var template = original.Objects[0];
+        var alias = new ExternalReference("user", "synthetic.reference", "shared-alias");
+        async Task Publish(int day, params (string Id, string Upn)[] users)
+        {
+            var date = template.ObservedAtUtc.AddDays(day);
+            var package = original with
+            {
+                Manifest = original.Manifest with { RunId = Guid.NewGuid(), StartedAtUtc = date, CompletedAtUtc = date },
+                Objects = users.Select(user => template with
+                {
+                    ExternalId = user.Id,
+                    ObservedAtUtc = date,
+                    AlternativeKeys = [alias],
+                    Attributes = new Dictionary<string, JsonElement> { ["userPrincipalName"] = JsonSerializer.SerializeToElement(user.Upn) }
+                }).ToArray(),
+                Results = [original.Results[0] with { CoveredFields = ["userPrincipalName"], ObjectCount = users.Length }]
+            };
+            var run = await fixture.StageAsync(package);
+            await fixture.Publisher.PublishSectionAsync(fixture.Project.Id, run.Id, package, template.SectionId);
+        }
+        await Publish(0, ("one", "Old@example.test"), ("two", "Old@example.test"));
+        await using var db = await fixture.Factory.CreateDbContextAsync();
+        var id = await db.ExternalKeys.Where(k => k.ExternalId == "one").Select(k => k.ObjectId).SingleAsync();
+        await Publish(2, ("one", "New@example.test"));
+        await Publish(1, ("one", "Middle@example.test"));
+        (await db.InventoryObjects.CountAsync()).ShouldBe(2);
+        (await db.AlternateKeyPeriods.Where(k => k.Namespace == alias.Namespace && k.ValidUntilUtc == null)
+            .Select(k => k.ObjectId).Distinct().CountAsync()).ShouldBe(2);
+        var history = await db.AlternateKeyPeriods.Where(k => k.ObjectId == id && k.Namespace == "upn")
+            .OrderBy(k => k.ValidFromUtc).ToListAsync();
+        history.Select(k => k.OriginalValue).ShouldBe(["Old@example.test", "Middle@example.test", "New@example.test"]);
+        history[0].ValidUntilUtc.ShouldBe(history[1].ValidFromUtc);
+        history[1].ValidUntilUtc.ShouldBe(history[2].ValidFromUtc);
+        history[2].ValidUntilUtc.ShouldBeNull();
+        history[2].NormalizedValue.ShouldBe("NEW@EXAMPLE.TEST");
+        await using var outsider = PersistenceTests.Create(fixture.ConnectionString, [Guid.NewGuid()]);
+        (await outsider.AlternateKeyPeriods.IgnoreQueryFilters().CountAsync()).ShouldBe(0);
     }
 
     [SqlFact]

@@ -48,6 +48,7 @@ public sealed class PublicationService(
         {
             throw new ContractException("EnvironmentMismatch", "manifest.json");
         }
+        var changedObjects = new List<Guid>();
         foreach (var record in package.Objects.Where(x => x.SectionId == sectionId))
         {
             var reference = new ExternalReference(record.Type, record.Namespace, record.ExternalId);
@@ -64,18 +65,7 @@ public sealed class PublicationService(
                 });
                 AddKey(reference, objectId);
             }
-            foreach (var alternative in record.AlternativeKeys ?? [])
-            {
-                var alternativeKey = await FindKeyAsync(alternative);
-                if (alternativeKey is not null && alternativeKey.ObjectId != objectId)
-                {
-                    throw new ContractException("AmbiguousExternalKey", "objects.jsonl");
-                }
-                if (alternativeKey is null)
-                {
-                    AddKey(alternative, objectId);
-                }
-            }
+            changedObjects.Add(objectId);
             db.ObjectObservations.Add(new ObjectObservation
             {
                 WorkspaceId = project.WorkspaceId,
@@ -83,6 +73,7 @@ public sealed class PublicationService(
                 SectionRunId = section.Id,
                 ObservedAtUtc = record.ObservedAtUtc,
                 AttributesJson = JsonSerializer.Serialize(record.Attributes, ContractJson.Options),
+                AlternativeKeysJson = JsonSerializer.Serialize(record.AlternativeKeys, ContractJson.Options),
                 UserPrincipalName = Text(record, "userPrincipalName", 500),
                 Smtp = Text(record, "mail", 500),
                 DisplayName = Text(record, "displayName", 500),
@@ -108,13 +99,15 @@ public sealed class PublicationService(
         }
         section.PublishedAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync(cancellationToken);
+        await AlternateKeyProjection.RebuildAsync(db, project.WorkspaceId, run.EnvironmentId, changedObjects, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return;
 
         async Task<ExternalKey?> FindKeyAsync(ExternalReference reference) =>
-            db.ExternalKeys.Local.FirstOrDefault(x => x.WorkspaceId == project.WorkspaceId && x.EnvironmentId == run.EnvironmentId
+            db.ExternalKeys.Local.FirstOrDefault(x => x.IsPrimary && x.WorkspaceId == project.WorkspaceId && x.EnvironmentId == run.EnvironmentId
                 && x.Namespace == reference.Namespace && x.Type == reference.Type && x.ExternalId == reference.ExternalId)
-            ?? await db.ExternalKeys.SingleOrDefaultAsync(x => x.WorkspaceId == project.WorkspaceId && x.EnvironmentId == run.EnvironmentId
+            ?? await db.ExternalKeys.SingleOrDefaultAsync(x => x.IsPrimary && x.WorkspaceId == project.WorkspaceId && x.EnvironmentId == run.EnvironmentId
                 && x.Namespace == reference.Namespace && x.Type == reference.Type && x.ExternalId == reference.ExternalId, cancellationToken);
 
         void AddKey(ExternalReference reference, Guid objectId) => db.ExternalKeys.Add(new ExternalKey

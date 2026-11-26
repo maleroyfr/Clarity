@@ -16,7 +16,7 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261126182928_GraphCursors";
+    public override string LastMigrationId => "20261126190910_HistoricalAlternateKeys";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -26,6 +26,62 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
             .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
         SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+        modelBuilder.Entity("Clarity.Core.AlternateKeyPeriod", b =>
+            {
+                b.Property<Guid>("WorkspaceId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("Id")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("EnvironmentId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<string>("Namespace")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("nvarchar(100)")
+                    .UseCollation("Latin1_General_100_BIN2");
+
+                b.Property<string>("NormalizedValue")
+                    .IsRequired()
+                    .HasMaxLength(500)
+                    .HasColumnType("nvarchar(500)")
+                    .UseCollation("Latin1_General_100_BIN2");
+
+                b.Property<Guid>("ObjectId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("ObservationId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<string>("OriginalValue")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("Type")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("nvarchar(100)")
+                    .UseCollation("Latin1_General_100_BIN2");
+
+                b.Property<DateTimeOffset>("ValidFromUtc")
+                    .HasColumnType("datetimeoffset");
+
+                b.Property<DateTimeOffset?>("ValidUntilUtc")
+                    .HasColumnType("datetimeoffset");
+
+                b.HasKey("WorkspaceId", "Id");
+
+                b.HasIndex("WorkspaceId", "EnvironmentId", "ObjectId");
+
+                b.HasIndex("WorkspaceId", "ObjectId", "ObservationId");
+
+                b.HasIndex("WorkspaceId", "EnvironmentId", "Namespace", "Type", "NormalizedValue");
+
+                b.ToTable("AlternateKeyPeriods");
+            });
 
         modelBuilder.Entity("Clarity.Core.AuditEvent", b =>
             {
@@ -386,6 +442,11 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
                     .HasColumnType("nvarchar(500)")
                     .UseCollation("Latin1_General_100_BIN2");
 
+                b.Property<bool>("IsPrimary")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("bit")
+                    .HasDefaultValue(true);
+
                 b.Property<string>("Namespace")
                     .IsRequired()
                     .HasMaxLength(100)
@@ -406,7 +467,8 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
                 b.HasIndex("WorkspaceId", "EnvironmentId", "ObjectId");
 
                 b.HasIndex("WorkspaceId", "EnvironmentId", "Namespace", "Type", "ExternalId")
-                    .IsUnique();
+                    .IsUnique()
+                    .HasFilter("[IsPrimary] = 1");
 
                 b.ToTable("ExternalKeys");
             });
@@ -485,6 +547,9 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
 
                 b.Property<Guid>("Id")
                     .HasColumnType("uniqueidentifier");
+
+                b.Property<string>("AlternativeKeysJson")
+                    .HasColumnType("nvarchar(max)");
 
                 b.Property<string>("AttributesJson")
                     .IsRequired()
@@ -794,6 +859,29 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
                     .IsUnique();
 
                 b.ToTable("Members");
+            });
+
+        modelBuilder.Entity("Clarity.Core.AlternateKeyPeriod", b =>
+            {
+                b.HasOne("Clarity.Core.ClientWorkspace", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+
+                b.HasOne("Clarity.Core.InventoryObject", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId", "EnvironmentId", "ObjectId")
+                    .HasPrincipalKey("WorkspaceId", "EnvironmentId", "Id")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+
+                b.HasOne("Clarity.Core.ObjectObservation", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId", "ObjectId", "ObservationId")
+                    .HasPrincipalKey("WorkspaceId", "ObjectId", "Id")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
             });
 
         modelBuilder.Entity("Clarity.Core.AuditEvent", b =>
