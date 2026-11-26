@@ -8,22 +8,12 @@ namespace Clarity.Infrastructure;
 
 public sealed class InventoryMatching(IDbContextFactory<ClarityDbContext> factory, IProjectAccess access, IWorkspaceContext scope)
 {
-    public async Task DecideAsync(Guid projectId, Guid decisionId, long revision, bool validate, string reason, CancellationToken token = default)
+    public async Task<SyncBinding?> GetBindingAsync(Guid projectId, Guid adId, Guid entraId, CancellationToken token = default)
     {
-        var project = await access.RequireAsync(projectId, WorkspaceOperation.Qualify, token);
-        ValidateReason(reason);
+        var project = await access.RequireAsync(projectId, WorkspaceOperation.Read, token);
         await using var db = await factory.CreateDbContextAsync(token);
-        await using var transaction = await db.Database.BeginTransactionAsync(token);
-        await LockProjectAsync(db, project, token);
-        var decisions = db.MappingDecisions.Where(x => x.WorkspaceId == project.WorkspaceId && x.ProjectId == project.Id);
-        var decision = await decisions.SingleOrDefaultAsync(x => x.Id == decisionId, token) ?? throw new AccessDeniedException();
-        if (decision.Revision != revision || validate && (decision.Rule == AssociationRule.NoCurrentCandidate
-            || await decisions.AnyAsync(x => x.Id != decisionId && x.State == MappingState.Validated
-                && (x.AdObjectId == decision.AdObjectId || x.EntraObjectId == decision.EntraObjectId), token)))
-        { throw new ConflictException(); }
-        Record(db, decision, validate ? MappingState.Validated : MappingState.Rejected, reason.Trim(), scope.Identity);
-        await db.SaveChangesAsync(token);
-        await transaction.CommitAsync(token);
+        return await db.SyncBindings.AsNoTracking().SingleOrDefaultAsync(x => x.WorkspaceId == project.WorkspaceId
+            && x.ProjectId == projectId && x.AdEnvironmentId == adId && x.EntraEnvironmentId == entraId, token);
     }
 
     public async Task VerifyAnchorAsync(Guid projectId, Guid adId, Guid entraId, SourceAnchor? anchor, string reason, CancellationToken token = default)
@@ -164,6 +154,16 @@ public sealed class InventoryMatching(IDbContextFactory<ClarityDbContext> factor
         }
         var decisions = await db.MappingDecisions.Where(x => x.WorkspaceId == workspace && x.ProjectId == project.Id)
             .ToDictionaryAsync(x => (x.AdObjectId, x.EntraObjectId), token);
+        var matched = matches.Select(m => (m.Ad.Item.Id, m.Entra.Item.Id)).ToHashSet();
+        var byId = identities.ToDictionary(i => i.Item.Id);
+        foreach (var qualified in decisions.Values.Where(d => d.ConsultantQualified))
+        {
+            if (!matched.Contains((qualified.AdObjectId, qualified.EntraObjectId)) && byId.TryGetValue(qualified.AdObjectId, out var ad)
+                && byId.TryGetValue(qualified.EntraObjectId, out var entra))
+            {
+                matches.Add(new(ad, entra, AssociationRule.ConsultantQualified, false, true, null));
+            }
+        }
         var forAd = matches.ToLookup(x => x.Ad.Item.Id, x => x.Entra.Item.Id);
         var forCloud = matches.ToLookup(x => x.Entra.Item.Id, x => x.Ad.Item.Id);
         foreach (var match in matches)

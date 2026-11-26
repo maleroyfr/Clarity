@@ -275,4 +275,24 @@
   <data name="AlternateKeys" xml:space="preserve"><value>Historique des identifiants secondaires</value></data>
   <data name="Validity" xml:space="preserve"><value>Période observée</value></data>
   <data name="OpenPeriod" xml:space="preserve"><value>dernière valeur connue</value></data>
+  <data name="MappingReview" xml:space="preserve"><value>Revue des rapprochements</value></data>
+  <data name="Queue" xml:space="preserve"><value>Proposés et à revoir</value></data>
+  <data name="SelectAssociation" xml:space="preserve"><value>Sélectionner le rapprochement</value></data>
+  <data name="NoMappings" xml:space="preserve"><value>Aucun rapprochement dans cette liste. Vérifiez la collecte des deux annuaires.</value></data>
+  <data name="CorrectAssociation" xml:space="preserve"><value>Corriger le lien</value></data>
+  <data name="Justification" xml:space="preserve"><value>Justification de la décision</value></data>
+  <data name="PreviewValidate" xml:space="preserve"><value>Prévisualiser la validation</value></data>
+  <data name="PreviewReject" xml:space="preserve"><value>Prévisualiser le rejet</value></data>
+  <data name="AffectedAssociations" xml:space="preserve"><value>Rapprochements qui changeront d’état</value></data>
+  <data name="ConfirmDecisions" xml:space="preserve"><value>Confirmer ces décisions</value></data>
+  <data name="InternalObjectId" xml:space="preserve"><value>Identifiant interne de la fiche</value></data>
+  <data name="ReplacementEntra" xml:space="preserve"><value>Identifiant interne de la fiche Entra de remplacement</value></data>
+  <data name="ReplacementPreview" xml:space="preserve"><value>Le lien précédent sera rejeté et ce lien sera validé</value></data>
+  <data name="ConfirmCorrection" xml:space="preserve"><value>Confirmer la correction</value></data>
+  <data name="VerifySourceAnchor" xml:space="preserve"><value>Configuration vérifiée de la synchronisation</value></data>
+  <data name="AnchorHint" xml:space="preserve"><value>Relevez le sourceAnchor réellement configuré pour cette forêt et ce tenant. En cas de doute, laissez la configuration non vérifiée.</value></data>
+  <data name="Unverified" xml:space="preserve"><value>Non vérifiée</value></data>
+  <data name="AnchorEvidence" xml:space="preserve"><value>Justification de la configuration, sans secret</value></data>
+  <data name="ConsultantQualified" xml:space="preserve"><value>Association qualifiée par le consultant</value></data>
+  <data name="ChangesSaved" xml:space="preserve"><value>Modifications enregistrées dans le dossier.</value></data>
 </root>

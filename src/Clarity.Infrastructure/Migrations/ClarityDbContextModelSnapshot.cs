@@ -16,7 +16,7 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261126193706_IndexedInventorySearch";
+    public override string LastMigrationId => "20261126194739_ConsultantQualifiedAssociations";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -700,6 +700,9 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
 
                 b.Property<Guid>("AdObjectId")
                     .HasColumnType("uniqueidentifier");
+
+                b.Property<bool>("ConsultantQualified")
+                    .HasColumnType("bit");
 
                 b.Property<Guid>("EntraEnvironmentId")
                     .HasColumnType("uniqueidentifier");

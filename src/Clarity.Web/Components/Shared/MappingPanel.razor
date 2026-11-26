@@ -1,0 +1,141 @@
+@using Clarity.Infrastructure
+@inherits FoundationPage
+@inject MappingReview Review
+@inject InventoryMatching Matching
+@inject FoundationService Foundation
+@inject WorkspaceAuthorization Authorization
+@inject NavigationManager Navigation
+
+<section aria-label="@Text["MappingReview"]">
+    <h2>@Text["MappingReview"] · @Text[Side.ToString()]</h2>
+    @if (Error is not null) { <p class="error" role="alert">@Error</p> }
+    @if (_message is not null) { <p role="status">@_message</p> }
+    <label>@Text["Status"] <select value="@_state" @onchange="ChangeState">
+        @foreach (var s in States) { <option value="@s">@Text[s]</option> }
+    </select></label>
+    <ClarityGrid @key="(ProjectId, Side, _state, _revision)" TGridItem="MappingRow" Load="@((p, ct) => Review.PageAsync(ProjectId, Side, _state, p, ct))">
+        <Columns>
+            <TemplateColumn Title="@Text["SelectAssociation"]" Context="r">
+                <input type="checkbox" aria-label="@($"{Text["SelectAssociation"]} : {r.AdLabel} / {r.EntraLabel}")" disabled="@(!_canQualify || Busy)"
+                       checked="@_selected.ContainsKey(r.Id)" @onchange="e => Select(r, e.Value is true)" />
+            </TemplateColumn>
+            <TemplateColumn Title="AD" Context="r"><a href="@Sheet(r.AdId)">@r.AdLabel</a><small>@r.Forest</small></TemplateColumn>
+            <TemplateColumn Title="Entra" Context="r"><a href="@Sheet(r.EntraId)">@r.EntraLabel</a><small>@r.Tenant</small></TemplateColumn>
+            <TemplateColumn Title="@Text["Status"]" Context="r">@Text[r.State.ToString()] · @Text[r.Rule.ToString()]</TemplateColumn>
+            <TemplateColumn Title="@Text["Actions"]" Context="r">
+                <FluentButton OnClick="@(() => _proof = new(ProofKind.Mapping, r.Id))">@Text["Provenance"]</FluentButton>
+                @if (_canQualify) { <FluentButton OnClick="@(() => BeginCorrection(r))">@Text["CorrectAssociation"]</FluentButton> }
+            </TemplateColumn>
+        </Columns>
+        <EmptyContent><p>@Text["NoMappings"] <a href="@($"/projects/{ProjectId}/discovery?side={Side}")">Discovery</a></p></EmptyContent>
+    </ClarityGrid>
+    @if (_canQualify)
+    {
+        <FluentTextInput Label="@Text["Justification"]" @bind-Value="_reason" />
+        <FluentButton OnClick="@(() => PreviewAsync(true))" Disabled="@(_selected.Count == 0 || Busy)">@Text["PreviewValidate"]</FluentButton>
+        <FluentButton OnClick="@(() => PreviewAsync(false))" Disabled="@(_selected.Count == 0 || Busy)">@Text["PreviewReject"]</FluentButton>
+        @if (_batch is { } batch)
+        {
+            <p role="status">@Text["AffectedAssociations"] : @batch.Count · @Text[batch.Validate ? "Validated" : "Rejected"]</p>
+            <FluentButton OnClick="ApplyAsync" Disabled="@(Busy || batch.Count == 0 || string.IsNullOrWhiteSpace(_reason))">@Text["ConfirmDecisions"]</FluentButton>
+        }
+        @if (_original is { } original)
+        {
+            <article><h3>@Text["CorrectAssociation"]</h3><p>@original.AdLabel → @original.EntraLabel</p>
+                <FluentTextInput Label="@Text["ReplacementEntra"]" @bind-Value="_replacement" />
+                <FluentButton OnClick="PreviewCorrectionAsync">@Text["Preview"]</FluentButton>
+                @if (_correction is { } correction && _replacement == correction.ReplacementId.ToString())
+                {
+                    <p>@Text["ReplacementPreview"] : @original.AdLabel → @correction.ReplacementLabel</p>
+                    <FluentButton OnClick="CorrectAsync" Disabled="@(Busy || string.IsNullOrWhiteSpace(_reason))">@Text["ConfirmCorrection"]</FluentButton>
+                }
+            </article>
+        }
+        @if (_forests.Count != 0 && _tenants.Count != 0)
+        {
+            <details><summary>@Text["VerifySourceAnchor"]</summary>
+                <p>@Text["AnchorHint"]</p>
+                <label>AD <select @bind="_forest" @bind:after="LoadBindingAsync">@foreach (var e in _forests) { <option value="@e.Id">@e.ExternalId</option> }</select></label>
+                <label>Entra <select @bind="_tenant" @bind:after="LoadBindingAsync">@foreach (var e in _tenants) { <option value="@e.Id">@e.ExternalId</option> }</select></label>
+                @if (_binding != null) { <p>@_binding.VerifiedAtUtc.ToString("u") · @_binding.VerifiedByObjectId · @_binding.Reason</p> }
+                <label>sourceAnchor <select @bind="_anchor"><option value="">@Text["Unverified"]</option>
+                    <option value="ObjectGuid">objectGUID</option><option value="ConsistencyGuid">mS-DS-ConsistencyGuid</option>
+                </select></label>
+                <FluentTextInput Label="@Text["AnchorEvidence"]" @bind-Value="_anchorReason" />
+                <FluentButton OnClick="VerifyAsync" Disabled="@(Busy || string.IsNullOrWhiteSpace(_anchorReason))">@Text["Save"]</FluentButton>
+            </details>
+        }
+    }
+</section>
+@if (_proof is not null)
+{
+    <ProvenancePanel @key="(ProjectId, _proof)" ProjectId="ProjectId" Target="_proof" Close="@(() => _proof = null)" />
+}
+
+@code {
+    [Parameter] public Guid ProjectId { get; set; }
+    [Parameter] public EnvironmentRole Side { get; set; }
+    [SupplyParameterFromQuery(Name = "state")] public string? State { get; set; }
+    private static readonly string[] States = ["Queue", "Proposed", "ToReview", "Validated", "Rejected", "All"];
+    private readonly Dictionary<Guid, MappingSelection> _selected = [];
+    private (MappingSelection[] Selection, bool Validate, int Count)? _batch;
+    private MappingRow? _original;
+    private CorrectionPreview? _correction;
+    private ProofRef? _proof;
+    private SyncBinding? _binding;
+    private string _state = "Queue", _reason = "", _replacement = "", _anchor = "", _anchorReason = "";
+    private string? _message;
+    private bool _canQualify;
+    private int _revision;
+    private IReadOnlyList<ProjectEnvironment> _forests = [], _tenants = [];
+    private Guid _forest, _tenant;
+    protected override Task OnParametersSetAsync() => RunAsync(async () =>
+    {
+        ClearSelection(); _message = null; _proof = null; _state = State ?? "Queue";
+        var project = await Foundation.GetProjectAsync(ProjectId);
+        _canQualify = project.Status == ProjectStatus.Active && Authorization.Allows(project.WorkspaceId, WorkspaceOperation.Qualify);
+        var envs = (await Foundation.ListEnvironmentsAsync(ProjectId)).Where(x => x.Role == Side && x.TargetState == TargetState.Existing);
+        _forests = envs.Where(x => x.Kind == EnvironmentKind.AdForest).ToList(); _tenants = envs.Where(x => x.Kind == EnvironmentKind.M365Tenant).ToList();
+        _forest = _forests.FirstOrDefault()?.Id ?? Guid.Empty; _tenant = _tenants.FirstOrDefault()?.Id ?? Guid.Empty;
+        await ReadBindingAsync();
+    });
+    private async Task ReadBindingAsync()
+    {
+        _binding = _forest == Guid.Empty || _tenant == Guid.Empty ? null : await Matching.GetBindingAsync(ProjectId, _forest, _tenant);
+        _anchor = _binding?.Anchor?.ToString() ?? ""; _anchorReason = "";
+    }
+    private Task LoadBindingAsync() => RunAsync(ReadBindingAsync);
+    private Task VerifyAsync() => RunAsync(async () =>
+    {
+        await Matching.VerifyAnchorAsync(ProjectId, _forest, _tenant, _anchor == "" ? null : Enum.Parse<SourceAnchor>(_anchor), _anchorReason);
+        await ReadBindingAsync(); Updated();
+    });
+    private string Sheet(Guid id) => $"/projects/{ProjectId}/inventory?side={Side}&object={id}";
+    private void ChangeState(ChangeEventArgs e) => Navigation.NavigateTo(Navigation.GetUriWithQueryParameter("state", e.Value?.ToString()));
+    private void Select(MappingRow row, bool select)
+    {
+        if (select) { _selected[row.Id] = new(row.Id, row.Revision); } else { _selected.Remove(row.Id); }
+        _batch = null; _message = null;
+    }
+    private Task PreviewAsync(bool validate) => RunAsync(async () =>
+    {
+        _batch = null;
+        var rows = _selected.Values.ToArray();
+        _batch = (rows, validate, await Review.PreviewAsync(ProjectId, rows, validate));
+    });
+    private Task ApplyAsync() => RunAsync(async () =>
+    {
+        var batch = _batch!.Value; _batch = null;
+        await Review.ApplyAsync(ProjectId, batch.Selection, batch.Validate, batch.Count, _reason); Updated();
+    });
+    private void BeginCorrection(MappingRow row) { ClearSelection(); _original = row; }
+    private Task PreviewCorrectionAsync() => RunAsync(async () =>
+    {
+        _correction = null;
+        if (!Guid.TryParse(_replacement, out var id)) { throw new ArgumentException("Invalid replacement."); }
+        _replacement = id.ToString(); _correction = await Review.PreviewCorrectionAsync(ProjectId, new(_original!.Id, _original.Revision), id);
+    });
+    private Task CorrectAsync() => RunAsync(async () => { await Review.CorrectAsync(ProjectId, _correction!, _reason); Updated(); });
+    private void ClearSelection() { _selected.Clear(); _batch = null; _original = null; _correction = null; _reason = ""; _replacement = ""; }
+    private void Updated() { ClearSelection(); _revision++; _message = Text["ChangesSaved"]; }
+}

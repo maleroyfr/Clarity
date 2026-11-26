@@ -25,7 +25,14 @@
     }
     else if (Section == "inventory")
     {
-        <InventoryPanel @key="(ProjectId, _side)" ProjectId="ProjectId" Side="_side" />
+        <nav class="toolbar" aria-label="@Text["Inventory"]">
+            <a href="@($"/projects/{ProjectId}/inventory?side={_side}")">@Text["Inventory"]</a>
+            <a href="@($"/projects/{ProjectId}/inventory?side={_side}&view=Mappings")">@Text["MappingReview"]</a>
+        </nav>
+        @if (DiscoveryView == "Mappings")
+        { <MappingPanel @key="(ProjectId, _side)" ProjectId="ProjectId" Side="_side" /> }
+        else
+        { <InventoryPanel @key="(ProjectId, _side)" ProjectId="ProjectId" Side="_side" /> }
     }
     else if (Section is null or "overview")
     {

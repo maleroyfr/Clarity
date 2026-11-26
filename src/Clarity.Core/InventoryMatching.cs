@@ -2,7 +2,7 @@ namespace Clarity.Core;
 
 public enum SourceAnchor { ObjectGuid, ConsistencyGuid }
 public enum MappingState { Proposed, Validated, Rejected, ToReview }
-public enum AssociationRule { ConfiguredAnchor, SecurityIdentifier, ExactUpn, ExactSmtp, DeviceIdentifier, DeviceHint, NoCurrentCandidate }
+public enum AssociationRule { ConfiguredAnchor, SecurityIdentifier, ExactUpn, ExactSmtp, DeviceIdentifier, DeviceHint, NoCurrentCandidate, ConsultantQualified }
 
 public sealed class SyncBinding : WorkspaceEntity
 {
@@ -28,6 +28,7 @@ public sealed class MappingDecision : WorkspaceEntity
     public required string Fingerprint { get; set; }
     public required string EvidenceJson { get; set; }
     public long Revision { get; set; }
+    public bool ConsultantQualified { get; set; }
 }
 
 public sealed class MappingRevision : WorkspaceEntity

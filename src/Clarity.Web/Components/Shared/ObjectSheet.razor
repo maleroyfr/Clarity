@@ -15,6 +15,7 @@ else
         @if (_sheet is { } sheet)
         {
             <p>@Text[sheet.Side.ToString()] · @sheet.Environment · @sheet.Type · @Text[sheet.Presence.ToString()]</p>
+            <p>@Text["InternalObjectId"] : <code>@sheet.Id</code></p>
             @foreach (var k in sheet.Keys) { <p>@k.Namespace : <code>@k.ExternalId</code></p> }
             @if (sheet.PresenceSection.HasValue) { <FluentButton OnClick="@(() => Show(ProofKind.Section, sheet.PresenceSection.Value))">@Text["PresenceProof"]</FluentButton> }
             <h3>@Text["CurrentProperties"]</h3>

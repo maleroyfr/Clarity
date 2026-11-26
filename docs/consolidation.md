@@ -145,3 +145,20 @@ primary user and basic application metadata does not establish user access.
 
 The cyclic-membership SQL case above opens the pending and resolved sheets,
 follows a reverse link, and verifies both source observations and isolation.
+
+## Association review
+
+Inventaire → Revue des rapprochements opens proposals and cases requiring
+attention. The reviewer can inspect both objects and their evidence, attest the
+environment pair's source anchor, and view any decision state. Select up to 100
+rows and preview validation or rejection. The preview counts actual state
+changes, excluding already-satisfied rows. Confirmation reauthorizes, locks the
+dossier and rechecks IDs, revisions, count and one-to-one conflicts. A stale or
+mixed-workspace selection changes nothing.
+
+To correct a link, copy the internal ID from the replacement Entra sheet in
+the same tenant, preview the named replacement, and confirm with a reason. The
+original rejection and new validation commit together. Both histories remain;
+no unrelated validated link is silently displaced. The configured-anchor SQL
+case above also exercises batch counts, stale and foreign confirmations,
+manual correction and preservation after a projection rebuild.

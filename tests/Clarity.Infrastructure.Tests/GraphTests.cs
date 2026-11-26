@@ -311,7 +311,7 @@ public sealed class GraphTests
         using var http = new SyntheticGraph(_ => Organization(), _ => Response(JsonSerializer.Serialize(new Dictionary<string, object>
         {
             ["value"] = new object[] { new { id = "strong", onPremisesSyncEnabled = true, onPremisesImmutableId = anchor },
-                new { id = "weak", userPrincipalName = "SHARED@example.test" } },
+                new { id = "weak", userPrincipalName = "SHARED@example.test" }, new { id = "corrected", displayName = "Confirmed account" } },
             ["@odata.deltaLink"] = "https://graph.microsoft.com/v1.0/users/delta?$deltatoken=test"
         })));
         var sessions = new SyntheticSessions(http.Transport);
@@ -325,7 +325,11 @@ public sealed class GraphTests
         strong.State.ShouldBe(MappingState.Validated);
         var weak = await db.MappingDecisions.AsNoTracking().SingleAsync(x => x.Rule == AssociationRule.ExactUpn);
         weak.State.ShouldBe(MappingState.Proposed);
-        await matching.DecideAsync(fixture.Project.Id, weak.Id, weak.Revision, true, "Confirmed against synthetic directory");
+        var review = new MappingReview(fixture.Factory, fixture.Access, fixture.Scope);
+        MappingSelection[] selection = [new(strong.Id, strong.Revision), new(weak.Id, weak.Revision)];
+        (await review.PreviewAsync(fixture.Project.Id, selection, true)).ShouldBe(1);
+        await review.ApplyAsync(fixture.Project.Id, selection, true, 1, "Confirmed against synthetic directory");
+        await Should.ThrowAsync<ConflictException>(() => review.ApplyAsync(fixture.Project.Id, selection, true, 1, "Stale preview"));
         await Ad((weakUser, "shared@example.test", null));
         (await db.MappingDecisions.AsNoTracking().SingleAsync(x => x.Id == weak.Id)).State.ShouldBe(MappingState.Validated);
         await Ad((Guid.NewGuid().ToString(), "shared@example.test", null));
@@ -337,7 +341,21 @@ public sealed class GraphTests
         history.Sources.Count.ShouldBeGreaterThanOrEqualTo(2);
         await matching.VerifyAnchorAsync(fixture.Project.Id, fixture.Environment.Id, environment.Id, SourceAnchor.ObjectGuid, "Different verified configuration");
         (await db.MappingDecisions.AsNoTracking().SingleAsync(x => x.Id == strong.Id)).State.ShouldBe(MappingState.ToReview);
-        await Should.ThrowAsync<AccessDeniedException>(() => matching.DecideAsync(Guid.NewGuid(), weak.Id, 3, false, "Wrong dossier"));
+        var other = await fixture.OtherWorkspaceAsync();
+        var outsider = new MappingReview(other.Factory, other.Access, other.Scope);
+        await Should.ThrowAsync<AccessDeniedException>(() => outsider.ApplyAsync(other.Project.Id, selection, false, 2, "Wrong dossier"));
+        await Should.ThrowAsync<AccessDeniedException>(() => outsider.PreviewAsync(other.Project.Id, selection, false));
+        var queueRows = await review.PageAsync(fixture.Project.Id, EnvironmentRole.Source, "Queue", new());
+        var candidate = queueRows.Items.Single(r => r.Id == weak.Id);
+        var corrected = await db.ExternalKeys.Where(k => k.EnvironmentId == environment.Id && k.ExternalId == "corrected").Select(k => k.ObjectId).SingleAsync();
+        var correction = await review.PreviewCorrectionAsync(fixture.Project.Id, new(candidate.Id, candidate.Revision), corrected);
+        await Should.ThrowAsync<AccessDeniedException>(() => outsider.CorrectAsync(other.Project.Id, correction, "Wrong dossier"));
+        await review.CorrectAsync(fixture.Project.Id, correction, "Confirmed by synthetic account owner");
+        await fixture.Publisher.RebuildEnvironmentAsync(fixture.Project.Id, environment.Id);
+        var validated = (await review.PageAsync(fixture.Project.Id, EnvironmentRole.Source, "Validated", new())).Items.Single();
+        validated.EntraId.ShouldBe(corrected);
+        validated.Rule.ShouldBe(AssociationRule.ConsultantQualified);
+        (await db.MappingDecisions.AsNoTracking().SingleAsync(x => x.Id == weak.Id)).State.ShouldBe(MappingState.Rejected);
         await using var outside = PersistenceTests.Create(fixture.ConnectionString, []);
         (await outside.MappingDecisions.IgnoreQueryFilters().CountAsync()).ShouldBe(0);
         (await outside.MappingRevisions.IgnoreQueryFilters().CountAsync()).ShouldBe(0);
