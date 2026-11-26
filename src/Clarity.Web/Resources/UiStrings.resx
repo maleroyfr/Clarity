@@ -230,4 +230,28 @@
   <data name="CandidateObserved" xml:space="preserve"><value>Candidat observé</value></data>
   <data name="AssociationEvidenceChanged" xml:space="preserve"><value>Les preuves ou les candidats ont changé.</value></data>
   <data name="CandidateNoLongerObserved" xml:space="preserve"><value>Les données actuelles ne confirment plus ce rapprochement.</value></data>
+  <data name="InventorySearch" xml:space="preserve"><value>Nom, UPN, SMTP, URL ou identifiant (début de valeur)</value></data>
+  <data name="ObjectType" xml:space="preserve"><value>Type d’objet</value></data>
+  <data name="All" xml:space="preserve"><value>Tous</value></data>
+  <data name="Domain" xml:space="preserve"><value>Domaine</value></data>
+  <data name="Site" xml:space="preserve"><value>Site</value></data>
+  <data name="CollectionFilter" xml:space="preserve"><value>Collecte (identifiant du résultat)</value></data>
+  <data name="TechnicalId" xml:space="preserve"><value>Identifiant technique</value></data>
+  <data name="Observed" xml:space="preserve"><value>Observé</value></data>
+  <data name="AbsentFromScope" xml:space="preserve"><value>Absent du périmètre vérifié</value></data>
+  <data name="Deleted" xml:space="preserve"><value>Suppression observée</value></data>
+  <data name="Enabled" xml:space="preserve"><value>Activé</value></data>
+  <data name="Disabled" xml:space="preserve"><value>Désactivé</value></data>
+  <data name="ExplicitEmpty" xml:space="preserve"><value>Vide observé</value></data>
+  <data name="OperatingSystem" xml:space="preserve"><value>Système d’exploitation</value></data>
+  <data name="RebuildInventory" xml:space="preserve"><value>Recalculer cet inventaire à partir des observations publiées</value></data>
+  <data name="ObjectType_user" xml:space="preserve"><value>Utilisateur</value></data>
+  <data name="ObjectType_group" xml:space="preserve"><value>Groupe</value></data>
+  <data name="ObjectType_device" xml:space="preserve"><value>Appareil</value></data>
+  <data name="ObjectType_computer" xml:space="preserve"><value>Ordinateur AD</value></data>
+  <data name="ObjectType_domain" xml:space="preserve"><value>Domaine</value></data>
+  <data name="ObjectType_subscribedSku" xml:space="preserve"><value>Abonnement SKU</value></data>
+  <data name="ObjectType_application" xml:space="preserve"><value>Application</value></data>
+  <data name="ObjectType_servicePrincipal" xml:space="preserve"><value>Principal de service</value></data>
+  <data name="ObjectType_organizationalUnit" xml:space="preserve"><value>Unité d’organisation</value></data>
 </root>

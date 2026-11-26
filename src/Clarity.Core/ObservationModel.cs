@@ -13,6 +13,10 @@ public sealed class InventoryObject : WorkspaceEntity
     public string? DisplayName { get; set; }
     public string? UserPrincipalName { get; set; }
     public string? Smtp { get; set; }
+    public string? SearchName { get; private set; }
+    public string? Domain { get; set; }
+    public string? Site { get; set; }
+    public bool? Enabled { get; set; }
     public DateTimeOffset? LastObservedAtUtc { get; set; }
     public InventoryPresence Presence { get; set; }
     public Guid? PresenceSectionId { get; set; }
@@ -37,6 +41,7 @@ public sealed class ExternalKey : WorkspaceEntity
     public required string Type { get; init; }
     public required string ExternalId { get; init; }
     public bool IsPrimary { get; init; } = true;
+    public string? SearchId { get; private set; }
 }
 
 public sealed class AlternateKeyPeriod : WorkspaceEntity

@@ -3,6 +3,7 @@
 @attribute [Authorize]
 @inherits FoundationPage
 @inject FoundationService Service
+@inject NavigationManager Navigation
 
 <PageTitle>@(_project?.Name ?? Text["Projects"]) · Clarity</PageTitle>
 @if (Error is not null) { <p class="error" role="alert">@Error</p> }
@@ -10,17 +11,21 @@
 {
     <div class="breadcrumbs"><a href="/">@Text["Clients"]</a> / <a href="@($"/clients/{_project.WorkspaceId}/projects")">@_clientName · @Text["Projects"]</a></div>
     <div class="page-heading"><div><p class="eyebrow">@Text[_project.Scenario.ToString()] · @Text[_project.Status.ToString()]</p><h1>@_project.Name</h1><p>@_project.Description</p></div>
-        <FluentSelect TOption="EnvironmentRole" TValue="EnvironmentRole" Items="Enum.GetValues<EnvironmentRole>()" OptionText="@(role => Text[role.ToString()])" @bind-Value="_side" Label="@Text["ActiveSide"]" />
+        <FluentSelect TOption="EnvironmentRole" TValue="EnvironmentRole" Items="Enum.GetValues<EnvironmentRole>()" OptionText="@(role => Text[role.ToString()])" Value="_side" ValueChanged="ChangeSide" Label="@Text["ActiveSide"]" />
     </div>
     <nav class="project-tabs" aria-label="@Text["Projects"]">
         @foreach (var section in Sections)
         {
-            <NavLink href="@($"/projects/{ProjectId}/{section.Key}")">@Text[section.Value]</NavLink>
+            <NavLink href="@($"/projects/{ProjectId}/{section.Key}{(_side == EnvironmentRole.Target ? "?side=Target" : "")}")">@Text[section.Value]</NavLink>
         }
     </nav>
     @if (Section == "discovery")
     {
         <DiscoveryPanel ProjectId="ProjectId" Side="_side" InitialView="@DiscoveryView" />
+    }
+    else if (Section == "inventory")
+    {
+        <InventoryPanel @key="(ProjectId, _side)" ProjectId="ProjectId" Side="_side" />
     }
     else if (Section is null or "overview")
     {
@@ -76,6 +81,8 @@
     [Parameter] public Guid ProjectId { get; set; }
     [Parameter] public string? Section { get; set; }
     [SupplyParameterFromQuery(Name = "view")] public string? DiscoveryView { get; set; }
+    [SupplyParameterFromQuery(Name = "side")] public string? SideQuery { get; set; }
+    private void ChangeSide(EnvironmentRole side) => Navigation.NavigateTo($"/projects/{ProjectId}/{Section ?? "overview"}?side={side}");
     private static readonly Dictionary<string, string> Sections = new()
     {
         ["overview"] = "Overview", ["discovery"] = "Discovery", ["inventory"] = "Inventory",
@@ -91,7 +98,11 @@
     private string _externalId = "", _declaredScope = "", _hypotheses = "";
     private Guid _operationId = Guid.NewGuid();
 
-    protected override Task OnParametersSetAsync() => RunAsync(LoadAsync);
+    protected override Task OnParametersSetAsync()
+    {
+        _side = SideQuery == "Target" ? EnvironmentRole.Target : EnvironmentRole.Source;
+        return RunAsync(LoadAsync);
+    }
     private async Task LoadAsync()
     {
         _project = null;

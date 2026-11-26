@@ -1,0 +1,123 @@
+@using Clarity.Infrastructure
+@inherits FoundationPage
+@inject InventoryQueries Queries
+@inject PublicationService Publication
+@inject FoundationService Foundation
+@inject WorkspaceAuthorization Authorization
+@inject NavigationManager Navigation
+
+<section aria-label="@Text["Inventory"]">
+    <h2>@Text["Inventory"] · @Text[Side.ToString()]</h2>
+    @if (Error is not null) { <p role="alert" class="error">@Error</p> }
+    <form class="toolbar" @onsubmit="Apply" @onsubmit:preventDefault>
+        <FluentTextInput Label="@Text["InventorySearch"]" @bind-Value="_search" />
+        <label>@Text["CollectionEnvironment"]
+            <select @bind="_environment"><option value="">@Text["All"]</option>
+                @foreach (var e in _environments) { <option value="@e.Id">@e.ExternalId</option> }
+            </select>
+        </label>
+        <label>@Text["ObjectType"]
+            <select @bind="_type"><option value="">@Text["All"]</option>
+                @foreach (var t in _options.Types) { <option value="@t">@TypeName(t)</option> }
+            </select>
+        </label>
+        <FluentTextInput Label="@Text["Domain"]" @bind-Value="_domain" />
+        <FluentTextInput Label="@Text["Site"]" @bind-Value="_site" />
+        <label>@Text["Status"]<select @bind="_status"><option value="">@Text["All"]</option>
+            @foreach (var s in Statuses) { <option value="@s">@Text[s]</option> }
+        </select></label>
+        <label>@Text["CollectionFilter"]<input list="inventory-runs" @bind="_run" />
+            <datalist id="inventory-runs">@foreach (var r in _options.RecentRuns) { <option value="@r.Id">@r.Date.ToString("g") · @r.Producer</option> }</datalist>
+        </label>
+        <FluentButton Type="ButtonType.Submit" Appearance="ButtonAppearance.Primary">@Text["SearchAction"]</FluentButton>
+    </form>
+    @if (_filter is not null)
+    {
+        <ClarityGrid TGridItem="InventoryRow" @key="(_filter, _appliedSearch, _revision)" Load="LoadAsync" Search="@_appliedSearch">
+            <Columns>
+                <PropertyColumn Property="@(r => r.DisplayName)" Title="@Text["Name"]" Sortable="true" />
+                <PropertyColumn Property="@(r => r.Type)" Title="@Text["ObjectType"]" Sortable="true" />
+                <PropertyColumn Property="@(r => r.Environment)" Title="@Text["CollectionEnvironment"]" />
+                <TemplateColumn Title="@Text["TechnicalId"]" Context="r">@r.TechnicalId</TemplateColumn>
+                <TemplateColumn Title="@Text["Status"]" Context="r">@Text[r.Presence.ToString()]</TemplateColumn>
+                @if (_filter.Type is "user" or "group")
+                {
+                    <TemplateColumn Title="SMTP" Context="r">@Display(r.Smtp, r.SmtpReported)</TemplateColumn>
+                }
+                @if (_filter.Type == "user")
+                {
+                    <TemplateColumn Title="UPN" Context="r">@Display(r.Upn, r.UpnReported)</TemplateColumn>
+                }
+                @if (_filter.Type is "device" or "computer")
+                {
+                    <TemplateColumn Title="@Text["OperatingSystem"]" Context="r">@JsonDisplay(r.OperatingSystem)</TemplateColumn>
+                }
+                @if (_filter.Type == "subscribedSku")
+                {
+                    <TemplateColumn Title="SKU" Context="r">@JsonDisplay(r.Sku)</TemplateColumn>
+                }
+                <PropertyColumn Property="@(r => r.LastObservedAtUtc)" Title="@Text["LastValidObservation"]" Sortable="true" />
+                <TemplateColumn Title="@Text["Actions"]" Context="r">
+                    @if (r.PresenceSectionId.HasValue) { <FluentButton OnClick="@(() => _proof = new(ProofKind.Section, r.PresenceSectionId.Value))">@Text["Provenance"]</FluentButton> }
+                </TemplateColumn>
+            </Columns>
+            <EmptyContent><p>@Text["NoResults"] <a href="@($"/projects/{ProjectId}/discovery?side={Side}")">@Text["ViewCollections"]</a></p></EmptyContent>
+        </ClarityGrid>
+        @if (_canRebuild && _filter.Environment.HasValue)
+        {
+            <FluentButton OnClick="RebuildAsync" Disabled="Busy">@Text["RebuildInventory"]</FluentButton>
+        }
+    }
+</section>
+@if (_proof is not null)
+{
+    <ProvenancePanel @key="(ProjectId, _proof)" ProjectId="ProjectId" Target="_proof" Close="@(() => _proof = null)" />
+}
+
+@code {
+    [Parameter] public Guid ProjectId { get; set; }
+    [Parameter] public EnvironmentRole Side { get; set; }
+    [SupplyParameterFromQuery(Name = "q")] public string? Query { get; set; }
+    [SupplyParameterFromQuery(Name = "environment")] public string? EnvironmentQuery { get; set; }
+    [SupplyParameterFromQuery(Name = "domain")] public string? DomainQuery { get; set; }
+    [SupplyParameterFromQuery(Name = "site")] public string? SiteQuery { get; set; }
+    [SupplyParameterFromQuery(Name = "type")] public string? TypeQuery { get; set; }
+    [SupplyParameterFromQuery(Name = "status")] public string? StatusQuery { get; set; }
+    [SupplyParameterFromQuery(Name = "run")] public string? RunQuery { get; set; }
+    [SupplyParameterFromQuery(Name = "conflicts")] public bool? Conflicts { get; set; }
+    private static readonly string[] Statuses = ["Observed", "AbsentFromScope", "Deleted", "Unknown", "Enabled", "Disabled"];
+    private string _search = "", _environment = "", _domain = "", _site = "", _type = "", _status = "", _run = "", _appliedSearch = "";
+    private IReadOnlyList<ProjectEnvironment> _environments = [];
+    private InventoryQueries.Options _options = new([], []);
+    private InventoryFilter? _filter;
+    private ProofRef? _proof;
+    private bool _canRebuild;
+    private int _revision;
+    private string TypeName(string type) => Text[$"ObjectType_{type}"] is { ResourceNotFound: false } label ? label.Value : type;
+    private string Display(string? value, bool reported = false) => string.IsNullOrEmpty(value) ? Text[reported || value != null ? "ExplicitEmpty" : "Unknown"] : value;
+    private string JsonDisplay(string? value) => value == null ? Text["Unknown"] : value == "null" ? Text["ExplicitEmpty"] : Display(System.Text.Json.JsonSerializer.Deserialize<string>(value));
+    private static Guid? ParseId(string text) => text.Length == 0 ? null : Guid.TryParse(text, out var id) ? id : throw new ArgumentException("Invalid inventory filter.");
+    protected override Task OnParametersSetAsync() => RunAsync(async () =>
+    {
+        _filter = null; _proof = null;
+        _environments = (await Foundation.ListEnvironmentsAsync(ProjectId)).Where(e => e.Role == Side && e.TargetState == TargetState.Existing).ToList();
+        var project = await Foundation.GetProjectAsync(ProjectId);
+        _canRebuild = project.Status == ProjectStatus.Active && Authorization.Allows(project.WorkspaceId, WorkspaceOperation.Collect);
+        _options = await Queries.OptionsAsync(ProjectId, Side);
+        _appliedSearch = _search = Query ?? ""; _environment = EnvironmentQuery ?? ""; _domain = DomainQuery ?? "";
+        _site = SiteQuery ?? ""; _type = TypeQuery ?? ""; _status = StatusQuery ?? ""; _run = RunQuery ?? "";
+        _filter = new(Side, ParseId(_environment), _domain, _site, _type, _status, ParseId(_run), Conflicts == true);
+    });
+    private Task Apply() => RunAsync(() =>
+    {
+        var url = Navigation.GetUriWithQueryParameters(new Dictionary<string, object?>
+        {
+            ["side"] = Side.ToString(), ["q"] = _search.Trim(), ["environment"] = ParseId(_environment), ["domain"] = _domain.Trim(),
+            ["site"] = _site.Trim(), ["type"] = _type, ["status"] = _status, ["run"] = ParseId(_run), ["conflicts"] = null
+        });
+        Navigation.NavigateTo(url);
+        return Task.CompletedTask;
+    });
+    private Task<PageResult<InventoryRow>> LoadAsync(PageRequest page, CancellationToken token) => Queries.PageAsync(ProjectId, _filter!, page, token);
+    private Task RebuildAsync() => RunAsync(async () => { await Publication.RebuildEnvironmentAsync(ProjectId, _filter!.Environment!.Value); _revision++; });
+}

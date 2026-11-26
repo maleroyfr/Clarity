@@ -24,6 +24,12 @@ public sealed partial class ClarityDbContext
         item.Property(x => x.DisplayName).HasMaxLength(500);
         item.Property(x => x.UserPrincipalName).HasMaxLength(500);
         item.Property(x => x.Smtp).HasMaxLength(500);
+        item.Property(x => x.SearchName).HasMaxLength(500).HasComputedColumnSql("UPPER([DisplayName])", stored: true);
+        item.Property(x => x.Domain).HasMaxLength(500);
+        item.Property(x => x.Site).HasMaxLength(500);
+        item.HasIndex(x => new { x.WorkspaceId, x.SearchName });
+        item.HasIndex(x => new { x.WorkspaceId, x.EnvironmentId, x.Domain });
+        item.HasIndex(x => new { x.WorkspaceId, x.EnvironmentId, x.Site });
         item.HasIndex(x => new { x.WorkspaceId, x.EnvironmentId, x.Presence, x.Type, x.DisplayName });
         item.HasOne<SectionRun>().WithMany().HasForeignKey(x => new { x.WorkspaceId, x.PresenceSectionId })
             .OnDelete(DeleteBehavior.NoAction);
@@ -41,6 +47,8 @@ public sealed partial class ClarityDbContext
         key.Property(x => x.Namespace).HasMaxLength(100).UseCollation("Latin1_General_100_BIN2");
         key.Property(x => x.ExternalId).HasMaxLength(500).UseCollation("Latin1_General_100_BIN2");
         key.Property(x => x.IsPrimary).HasDefaultValue(true);
+        key.Property(x => x.SearchId).HasMaxLength(500).HasComputedColumnSql("UPPER([ExternalId])", stored: true);
+        key.HasIndex(x => new { x.WorkspaceId, x.SearchId });
         key.HasIndex(x => new { x.WorkspaceId, x.EnvironmentId, x.Namespace, x.Type, x.ExternalId }).IsUnique()
             .HasFilter("[IsPrimary] = 1");
 
@@ -53,6 +61,7 @@ public sealed partial class ClarityDbContext
         alias.Property(x => x.Type).HasMaxLength(100).UseCollation("Latin1_General_100_BIN2");
         alias.Property(x => x.NormalizedValue).HasMaxLength(500).UseCollation("Latin1_General_100_BIN2");
         alias.HasIndex(x => new { x.WorkspaceId, x.EnvironmentId, x.Namespace, x.Type, x.NormalizedValue });
+        alias.HasIndex(x => new { x.WorkspaceId, x.NormalizedValue });
 
         var observation = DiscoveryOwned<ObjectObservation>(model);
         observation.HasOne<InventoryObject>().WithMany().HasForeignKey(x => new { x.WorkspaceId, x.ObjectId })

@@ -118,9 +118,13 @@ public sealed class PublicationTests
                     ExternalId = user.Id,
                     ObservedAtUtc = date,
                     AlternativeKeys = [alias],
-                    Attributes = new Dictionary<string, JsonElement> { ["userPrincipalName"] = JsonSerializer.SerializeToElement(user.Upn) }
+                    Attributes = new Dictionary<string, JsonElement>
+                    {
+                        ["userPrincipalName"] = JsonSerializer.SerializeToElement(user.Upn),
+                        ["displayName"] = JsonSerializer.SerializeToElement(user.Id)
+                    }
                 }).ToArray(),
-                Results = [original.Results[0] with { CoveredFields = ["userPrincipalName"], ObjectCount = users.Length }]
+                Results = [original.Results[0] with { CoveredFields = ["userPrincipalName", "displayName"], ObjectCount = users.Length }]
             };
             var run = await fixture.StageAsync(package);
             await fixture.Publisher.PublishSectionAsync(fixture.Project.Id, run.Id, package, template.SectionId);
@@ -140,6 +144,16 @@ public sealed class PublicationTests
         history[1].ValidUntilUtc.ShouldBe(history[2].ValidFromUtc);
         history[2].ValidUntilUtc.ShouldBeNull();
         history[2].NormalizedValue.ShouldBe("NEW@EXAMPLE.TEST");
+        var inventory = new InventoryQueries(fixture.Factory, fixture.Access);
+        var filter = new InventoryFilter(EnvironmentRole.Source, fixture.Environment.Id, "example.test", Type: "user", Status: "Observed");
+        var page = await inventory.PageAsync(fixture.Project.Id, filter, new(1, 1, "oLd@", true, "DisplayName"));
+        page.TotalCount.ShouldBe(2);
+        page.Items.Single().Id.ShouldBe(id);
+        var found = await inventory.PageAsync(fixture.Project.Id, filter, new(Search: "ONE"));
+        found.Items.Single().Upn.ShouldBe("New@example.test");
+        (await inventory.PageAsync(fixture.Project.Id, filter with { Side = EnvironmentRole.Target }, new())).TotalCount.ShouldBe(0);
+        var other = await fixture.OtherWorkspaceAsync();
+        (await new InventoryQueries(other.Factory, other.Access).PageAsync(other.Project.Id, filter, new())).TotalCount.ShouldBe(0);
         await using var outsider = PersistenceTests.Create(fixture.ConnectionString, [Guid.NewGuid()]);
         (await outsider.AlternateKeyPeriods.IgnoreQueryFilters().CountAsync()).ShouldBe(0);
     }

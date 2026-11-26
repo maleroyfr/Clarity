@@ -29,7 +29,7 @@ public sealed class ConflictException : Exception
     public ConflictException() : base("The operation identifier is already used with different content.") { }
 }
 
-public sealed record PageRequest(int Start = 0, int Count = 20, string Search = "", bool Descending = false)
+public sealed record PageRequest(int Start = 0, int Count = 20, string Search = "", bool Descending = false, string? Sort = null)
 {
     public void Validate()
     {

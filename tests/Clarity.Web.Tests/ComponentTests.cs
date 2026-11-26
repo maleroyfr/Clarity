@@ -70,5 +70,6 @@ public class ComponentTests : BunitContext
         await component.InvokeAsync(() => component.FindComponent<FluentDataGrid<ClientWorkspace>>().Instance
             .SortByColumnAsync("Nom", DataGridSortDirection.Descending));
         component.WaitForAssertion(() => requests[^1].Descending.ShouldBeTrue());
+        requests[^1].Sort.ShouldBe("Name");
     }
 }

@@ -32,8 +32,9 @@
 
     private async ValueTask<GridItemsProviderResult<TGridItem>> ProvideAsync(GridItemsProviderRequest<TGridItem> request)
     {
-        var descending = request.GetSortByProperties().FirstOrDefault().Direction == DataGridSortDirection.Descending;
-        var result = await Load(new(request.StartIndex, request.Count ?? 20, Search, descending), request.CancellationToken);
+        var sort = request.GetSortByProperties().FirstOrDefault();
+        var result = await Load(new(request.StartIndex, request.Count ?? 20, Search, sort.Direction == DataGridSortDirection.Descending,
+            sort.PropertyName), request.CancellationToken);
         return GridItemsProviderResult.From(result.Items.ToArray(), result.TotalCount);
     }
 

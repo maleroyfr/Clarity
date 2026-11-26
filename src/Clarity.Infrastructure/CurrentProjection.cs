@@ -112,8 +112,16 @@ internal static class CurrentProjection
                         case "displayName": item.DisplayName = text; break;
                         case "userPrincipalName": item.UserPrincipalName = text; break;
                         case "mail": item.Smtp = text; break;
+                        case "siteId" or "siteUrl": item.Site = text; break;
+                        case "enabled" or "accountEnabled":
+                            item.Enabled = winner.Value.ValueKind switch
+                            { JsonValueKind.True => true, JsonValueKind.False => false, _ => null }; break;
                     }
                 }
+                item.Domain = evidence.Select(e => JsonSerializer.Deserialize<CollectionScope>(e.Source.Section.ScopeJson, ContractJson.Options)!)
+                    .FirstOrDefault(s => s.Kind == "domain")?.Value;
+                if (item.Domain == null && item.UserPrincipalName?.LastIndexOf('@') is > 0 and var separator)
+                { item.Domain = item.UserPrincipalName[(separator + 1)..]; }
             }
         }
         bool Reference(ProjectedSection s, string field) => catalog.Sections.TryGetValue(s.Section.CapabilityId, out var capability)

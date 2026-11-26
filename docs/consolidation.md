@@ -113,3 +113,20 @@ mapping histories distinguish dated human justifications from rule revisions.
 
 The Graph/ZIP and configured-anchor SQL acceptance cases above exercise proof
 lookups, both channels, human history and guessed IDs from another workspace.
+
+## Inventory search
+
+Inventaire uses indexed prefix search on names, primary IDs and dated alternate
+keys, including former addresses. Exact filters cover side, environment, domain,
+site, object type, presence/account status and collection run. The domain is
+the observed domain scope or, if none is available, the reported UPN suffix.
+Site is only populated from a reported site field, not a presumed location.
+The collection selector suggests recent runs and accepts an older internal run
+ID. Count, stable sorting and page boundaries are evaluated in SQL. Type-specific
+columns avoid implying that a group has a UPN or a device has a primary user.
+Select an environment to rebuild its projections from the published history.
+
+`PublicationTests.RenameAndLateObservationKeepStableIdentityAndAmbiguousAliasesSeparate`
+queries a former UPN, combines filters and checks a descending second page and
+cross-workspace isolation. `ComponentTests.Grid_forwards_paging_and_sorting_to_the_server_provider`
+exercises the actual grid sort property and direction.

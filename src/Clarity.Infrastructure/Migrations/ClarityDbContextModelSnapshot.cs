@@ -16,7 +16,7 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261126192622_InventoryAssociations";
+    public override string LastMigrationId => "20261126193706_IndexedInventorySearch";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -73,6 +73,8 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
                     .HasColumnType("datetimeoffset");
 
                 b.HasKey("WorkspaceId", "Id");
+
+                b.HasIndex("WorkspaceId", "NormalizedValue");
 
                 b.HasIndex("WorkspaceId", "EnvironmentId", "ObjectId");
 
@@ -493,6 +495,12 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
                 b.Property<Guid>("ObjectId")
                     .HasColumnType("uniqueidentifier");
 
+                b.Property<string>("SearchId")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasMaxLength(500)
+                    .HasColumnType("nvarchar(500)")
+                    .HasComputedColumnSql("UPPER([ExternalId])", true);
+
                 b.Property<string>("Type")
                     .IsRequired()
                     .HasMaxLength(100)
@@ -500,6 +508,8 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
                     .UseCollation("Latin1_General_100_BIN2");
 
                 b.HasKey("WorkspaceId", "Id");
+
+                b.HasIndex("WorkspaceId", "SearchId");
 
                 b.HasIndex("WorkspaceId", "EnvironmentId", "ObjectId");
 
@@ -568,6 +578,13 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
                     .HasMaxLength(500)
                     .HasColumnType("nvarchar(500)");
 
+                b.Property<string>("Domain")
+                    .HasMaxLength(500)
+                    .HasColumnType("nvarchar(500)");
+
+                b.Property<bool?>("Enabled")
+                    .HasColumnType("bit");
+
                 b.Property<Guid>("EnvironmentId")
                     .HasColumnType("uniqueidentifier");
 
@@ -579,6 +596,16 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
 
                 b.Property<Guid?>("PresenceSectionId")
                     .HasColumnType("uniqueidentifier");
+
+                b.Property<string>("SearchName")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasMaxLength(500)
+                    .HasColumnType("nvarchar(500)")
+                    .HasComputedColumnSql("UPPER([DisplayName])", true);
+
+                b.Property<string>("Site")
+                    .HasMaxLength(500)
+                    .HasColumnType("nvarchar(500)");
 
                 b.Property<string>("Smtp")
                     .HasMaxLength(500)
@@ -596,6 +623,12 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
                 b.HasKey("WorkspaceId", "Id");
 
                 b.HasIndex("WorkspaceId", "PresenceSectionId");
+
+                b.HasIndex("WorkspaceId", "SearchName");
+
+                b.HasIndex("WorkspaceId", "EnvironmentId", "Domain");
+
+                b.HasIndex("WorkspaceId", "EnvironmentId", "Site");
 
                 b.HasIndex("WorkspaceId", "EnvironmentId", "Presence", "Type", "DisplayName");
 
