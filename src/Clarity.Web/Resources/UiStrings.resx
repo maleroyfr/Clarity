@@ -521,4 +521,54 @@
   <data name="Issue_UnresolvedMembers" xml:space="preserve"><value>Des membres de groupe sans identifiant Exchange lisible ont été omis ; l'appartenance est partielle.</value></data>
   <data name="Issue_UnresolvedTrustees" xml:space="preserve"><value>Des bénéficiaires de délégation n'ont pas pu être rapprochés d'un destinataire observé unique et ont été omis ; la couverture des délégations est partielle.</value></data>
   <data name="Issue_UnlinkedMailbox" xml:space="preserve"><value>Des boîtes utilisateur n'ont aucun identifiant exploitable pour les rattacher à un utilisateur : le lien reste en attente.</value></data>
+  <data name="Producer_clarity.graph.sharepoint" xml:space="preserve"><value>Microsoft Graph — sites SharePoint (v1.0)</value></data>
+  <data name="Producer_clarity.graph.onedrive" xml:space="preserve"><value>Microsoft Graph — comptes OneDrive (v1.0)</value></data>
+  <data name="Section_sharepoint.sites" xml:space="preserve"><value>SharePoint — sites et identifiants</value></data>
+  <data name="Section_sharepoint.groupSites" xml:space="preserve"><value>SharePoint — sites associés aux groupes et à Teams</value></data>
+  <data name="Section_sharepoint.siteDetails" xml:space="preserve"><value>SharePoint — détails du site (script PnP)</value></data>
+  <data name="Section_sharepoint.libraries" xml:space="preserve"><value>SharePoint — bibliothèques de documents (script PnP)</value></data>
+  <data name="Section_sharepoint.sitePermissions" xml:space="preserve"><value>SharePoint — permissions du site (script PnP)</value></data>
+  <data name="Section_sharepoint.siteSharing" xml:space="preserve"><value>SharePoint — paramètres de partage (script PnP)</value></data>
+  <data name="Section_onedrive.accounts" xml:space="preserve"><value>OneDrive — association des comptes</value></data>
+  <data name="Section_onedrive.personalSites" xml:space="preserve"><value>OneDrive — sites personnels et volumes (script SharePoint Online)</value></data>
+  <data name="SharePointPrerequisiteHint" xml:space="preserve"><value>Consentement d’application Sites.Read.All et Group.Read.All requis. Graph fournit les sites, identifiants et sites des groupes ; les rapports d’utilisation (Reports.Read.All) se téléchargent séparément. Les bibliothèques, permissions et partages relèvent du script PnP.PowerShell.</value></data>
+  <data name="OneDrivePrerequisiteHint" xml:space="preserve"><value>Consentement d’application User.Read.All et Files.Read.All ou Sites.Read.All requis. Seules les métadonnées des espaces OneDrive sont lues. Les sites personnels non provisionnés ou inaccessibles sont signalés, jamais déduits absents.</value></data>
+  <data name="ObjectType_documentLibrary" xml:space="preserve"><value>Bibliothèque de documents</value></data>
+  <data name="ObjectType_sharepointGroup" xml:space="preserve"><value>Groupe SharePoint</value></data>
+  <data name="Relation_groupSite" xml:space="preserve"><value>Site du groupe</value></data>
+  <data name="Relation_partOf" xml:space="preserve"><value>Fait partie de</value></data>
+  <data name="Relation_sitePermission" xml:space="preserve"><value>Permission sur le site</value></data>
+  <data name="Relation_ownerOf" xml:space="preserve"><value>Propriétaire de</value></data>
+  <data name="Issue_SiteIdentifierUnavailable" xml:space="preserve"><value>Un site n’expose pas d’identifiant exploitable : il est signalé et non publié.</value></data>
+  <data name="Issue_DuplicateSiteCollection" xml:space="preserve"><value>Le même site a été renvoyé plusieurs fois : une seule observation est conservée.</value></data>
+  <data name="Issue_GroupSiteUnavailable" xml:space="preserve"><value>Le site d’un groupe n’est pas accessible ou pas provisionné : la liaison reste non résolue.</value></data>
+  <data name="Issue_GroupSitesNotTestedEmptyScope" xml:space="preserve"><value>Aucun groupe Microsoft 365 échantillon : l’accès aux sites des groupes n’a pas pu être testé.</value></data>
+  <data name="Issue_OneDriveNotProvisioned" xml:space="preserve"><value>Espace OneDrive non provisionné ou inaccessible pour un compte : aucune absence n’est déduite.</value></data>
+  <data name="Issue_SiteIdUnavailable" xml:space="preserve"><value>L’identifiant SharePoint d’un espace OneDrive n’est pas fourni : la liaison au site reste non résolue.</value></data>
+  <data name="Issue_DrivesNotTestedEmptyScope" xml:space="preserve"><value>Aucun utilisateur échantillon : l’accès aux espaces OneDrive n’a pas pu être testé.</value></data>
+  <data name="Issue_ReportDownloadHostRejected" xml:space="preserve"><value>Le service de rapports a redirigé vers un hôte non autorisé : le téléchargement a été refusé.</value></data>
+  <data name="Issue_ReportDownloadFailed" xml:space="preserve"><value>Le téléchargement du rapport a échoué. Retestez la connexion ou déposez le rapport manuellement.</value></data>
+  <data name="Issue_ReportDownloadUnavailable" xml:space="preserve"><value>Le rapport n’est pas téléchargeable avec cette connexion : vérifiez Reports.Read.All.</value></data>
+  <data name="Issue_UserLimit" xml:space="preserve"><value>Limite d’utilisateurs atteinte : la collecte OneDrive est partielle.</value></data>
+  <data name="Issue_PrincipalUnresolved" xml:space="preserve"><value>Un principal de permission n’a pas pu être associé à un utilisateur ou un groupe connu : il est signalé sans être publié.</value></data>
+  <data name="Issue_OwnerUnresolved" xml:space="preserve"><value>Un site personnel n’indique pas de propriétaire : la liaison au compte est signalée non résolue.</value></data>
+  <data name="Issue_OwnerMasked" xml:space="preserve"><value>Le propriétaire d’un site personnel est masqué ou n’est pas un UPN : la liaison au compte est signalée non résolue.</value></data>
+  <data name="Issue_SharingReadFailed" xml:space="preserve"><value>Les paramètres de partage n’ont pas pu être lus : un rôle administrateur SharePoint est nécessaire.</value></data>
+  <data name="Issue_PnPReadFailed" xml:space="preserve"><value>Une lecture PnP.PowerShell a échoué : la section est signalée en échec sans donnée inventée.</value></data>
+  <data name="Issue_SpoReadFailed" xml:space="preserve"><value>Une lecture SharePoint Online a échoué : la section est signalée en échec sans donnée inventée.</value></data>
+  <data name="Producer_clarity.sharepoint" xml:space="preserve"><value>SharePoint — script PnP.PowerShell (site ciblé)</value></data>
+  <data name="Producer_clarity.onedrive" xml:space="preserve"><value>OneDrive — script SharePoint Online (sites personnels)</value></data>
+  <data name="LocalScriptConnectionHint_clarity.sharepoint" xml:space="preserve"><value>Le script SharePoint utilise PnP.PowerShell sous PowerShell 7.4 avec une connexion interactive de l’opérateur. Il demande au lancement l’identifiant client d’une inscription d’application Entra autorisée par le client pour PnP.PowerShell ; Clarity ne conserve ni cet identifiant, ni mot de passe, ni jeton. Le tenant et le site sont vérifiés avant toute lecture ; les paramètres de partage exigent un administrateur SharePoint.</value></data>
+  <data name="LocalScriptConnectionHint_clarity.onedrive" xml:space="preserve"><value>Le script OneDrive utilise Microsoft.Online.SharePoint.PowerShell sous Windows PowerShell 5.1 avec la connexion interactive d’un administrateur SharePoint, sur l’URL d’administration saisie au lancement. Clarity ne conserve ni mot de passe ni jeton ; le tenant est vérifié avant toute lecture.</value></data>
+  <data name="ScopeValue_clarity.sharepoint" xml:space="preserve"><value>URL racine du site SharePoint (https://…sharepoint.com/sites/…)</value></data>
+  <data name="CreateScriptRequest_clarity.sharepoint" xml:space="preserve"><value>Créer une demande de script SharePoint</value></data>
+  <data name="CreateScriptRequest_clarity.onedrive" xml:space="preserve"><value>Créer une demande de script OneDrive</value></data>
+  <data name="DownloadScriptBundle_clarity.sharepoint" xml:space="preserve"><value>Télécharger le ZIP du script SharePoint 1.0.0</value></data>
+  <data name="DownloadScriptBundle_clarity.onedrive" xml:space="preserve"><value>Télécharger le ZIP du script OneDrive 1.0.0</value></data>
+  <data name="ScriptCommandHint_clarity.sharepoint" xml:space="preserve"><value>Décompressez le script, placez parameters.json à la racine, puis exécutez dans PowerShell 7.4 avec PnP.PowerShell. Saisissez l’identifiant client autorisé lorsqu’il est demandé, puis connectez-vous de façon interactive :</value></data>
+  <data name="ScriptCommandHint_clarity.onedrive" xml:space="preserve"><value>Décompressez le script, placez parameters.json à la racine, puis exécutez dans Windows PowerShell 5.1 avec Microsoft.Online.SharePoint.PowerShell. Saisissez l’URL d’administration SharePoint lorsqu’elle est demandée, puis connectez-vous avec un compte administrateur SharePoint :</value></data>
+  <data name="Issue_SiteUsageUnavailable" xml:space="preserve"><value>Le volume de stockage du site n’a pas pu être lu avec ce compte : il reste non observé.</value></data>
+  <data name="Issue_LibraryIdentifierUnavailable" xml:space="preserve"><value>Des bibliothèques sans identifiant lisible ont été omises ; la section est partielle.</value></data>
+  <data name="Issue_LibraryAttributesMissing" xml:space="preserve"><value>Des valeurs de bibliothèque n’ont pas été renvoyées et restent non observées.</value></data>
+  <data name="Issue_PersonalSiteAttributesMissing" xml:space="preserve"><value>Des valeurs de sites personnels n’ont pas été renvoyées et restent non observées.</value></data>
 </root>

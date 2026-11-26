@@ -1,24 +1,103 @@
 {
   "schemaVersion": "1.0", "id": "sharepoint", "version": "1.0.0", "environmentKind": "M365Tenant",
   "producers": [{
-    "id": "clarity.pnp", "channel": "PowerShell", "version": "planned", "apiVersion": "PnP.PowerShell",
-    "preview": false, "readiness": "Planned", "testedVersions": [],
-    "prerequisites": ["Future Lot 4 implementation; authorized Entra app for local PnP authentication"],
-    "limits": ["No executable producer or certified module/OS version yet; Graph consent is unrelated"]
+    "id": "clarity.graph.sharepoint", "channel": "Graph", "version": "1.0.0", "apiVersion": "v1.0",
+    "preview": false, "readiness": "SyntheticValidated", "testedVersions": [".NET 11; Microsoft Graph REST v1.0 synthetic HTTP fixtures only"],
+    "prerequisites": ["A Clarity Graph connection for this producer on the tenant (multi-tenant collector app with per-customer admin consent)", "Admin consent for the section application permissions listed below", "Organization.Read.All to verify the observed tenant before collecting any section"],
+    "limits": ["Synthetic HTTP tests do not certify a live tenant or Key Vault access", "Graph consent does not authorize PnP.PowerShell or SharePoint Online Management Shell", "Site metadata only; no file contents, permissions or sharing settings", "Public Graph cloud only; tenant-wide scope; bounded ZIP v1 package sizes"]
+  }, {
+    "id": "clarity.sharepoint", "channel": "PowerShell", "version": "1.0.0", "apiVersion": "PnP.PowerShell (SharePoint CSOM)",
+    "preview": false, "readiness": "SyntheticValidated",
+    "testedVersions": ["Pester 5.7.1 with mocked PnP.PowerShell cmdlets on PowerShell 7; no live PnP.PowerShell module version is certified"],
+    "prerequisites": ["PowerShell 7.4 or newer on an authorized workstation", "PnP.PowerShell installed separately by an administrator", "Client ID of a customer-authorized Entra app registration for PnP interactive sign-in, typed at launch and never stored", "Signed-in account with read access to the targeted site; SharePoint administrator rights for sharepoint.siteSharing"],
+    "limits": ["One targeted site collection URL per request (resource scope); not a tenant-wide inventory", "Graph consent is unrelated: PnP uses the customer app registration and the signed-in account's rights", "Metadata only; no file or list item contents"]
   }, {
     "id": "report.m365.sharePointSiteUsageDetail", "channel": "Import", "version": "1.0.0", "apiVersion": "Microsoft Graph v1.0 usage report CSV",
     "preview": false, "readiness": "SyntheticValidated",
     "testedVersions": ["Synthetic CSV fixtures of the documented Graph v1.0 getSharePointSiteUsageDetail column set (byte units)"],
-    "prerequisites": ["Consultant upload of a report downloaded with Reports.Read.All and a Microsoft 365 reports role; tenant attested by the consultant"],
-    "limits": ["File import through report profile m365.sharePointSiteUsageDetail 1.0.0; not verified Graph connection evidence", "Admin center MB exports, localized headers and multi-geo files are rejected"]
+    "prerequisites": ["Consultant upload of a report downloaded with Reports.Read.All and a Microsoft 365 reports role; tenant attested by the consultant", "Or a server download through the tenant's clarity.graph.sharepoint connection with Reports.Read.All (application); tenant observed"],
+    "limits": ["Interpreted only through report profile m365.sharePointSiteUsageDetail 1.0.0, whether uploaded or downloaded", "Admin center MB exports, localized headers and multi-geo files are rejected"]
   }],
   "sections": [{
-    "id": "sharepoint.sitePermissions", "producerIds": ["clarity.pnp"], "supportedScopes": ["resource"],
-    "attributes": { "url": { "type": "string", "referenceProducer": "clarity.pnp" } },
-    "relations": ["sitePermission"], "permissions": ["Future targeted site permission/RBAC validation required"],
-    "endpoints": ["Planned: Get-PnPWeb; role assignments require separate verification"],
-    "refreshStrategy": "Planned targeted site snapshot",
-    "limits": ["Not available; sharing/effective access must not be inferred from this catalog declaration"]
+    "id": "sharepoint.sites", "producerIds": ["clarity.graph.sharepoint"], "supportedScopes": ["tenant"],
+    "attributes": {
+      "graphId": { "type": "string", "referenceProducer": "clarity.graph.sharepoint" },
+      "name": { "type": "string", "referenceProducer": "clarity.graph.sharepoint" },
+      "displayName": { "type": "string", "referenceProducer": "clarity.graph.sharepoint" },
+      "webUrl": { "type": "string", "referenceProducer": "clarity.graph.sharepoint" },
+      "hostName": { "type": "string", "referenceProducer": "clarity.graph.sharepoint" },
+      "dataLocationCode": { "type": "string", "referenceProducer": "clarity.graph.sharepoint" },
+      "createdDateTime": { "type": "utc", "referenceProducer": "clarity.graph.sharepoint" },
+      "lastModifiedDateTime": { "type": "utc", "referenceProducer": "clarity.graph.sharepoint" }
+    },
+    "relations": [], "permissions": ["Sites.Read.All (application)"],
+    "endpoints": ["GET /v1.0/sites/getAllSites (no documented query options; Clarity keeps only id, name, displayName, webUrl, createdDateTime, lastModifiedDateTime, isPersonalSite, root and siteCollection)"],
+    "refreshStrategy": "Full tenant site snapshot per run; no delta cursor",
+    "limits": ["Personal (OneDrive) sites are excluded; see the onedrive family", "One object per site collection keyed by its collection GUID; subsites are not collected", "No permissions, sharing settings or storage volumes"]
+  }, {
+    "id": "sharepoint.groupSites", "producerIds": ["clarity.graph.sharepoint"], "supportedScopes": ["tenant"],
+    "attributes": {
+      "graphId": { "type": "string", "referenceProducer": "clarity.graph.sharepoint" },
+      "webUrl": { "type": "string", "referenceProducer": "clarity.graph.sharepoint" },
+      "teamsConnected": { "type": "boolean", "referenceProducer": "clarity.graph.sharepoint" }
+    },
+    "relations": ["groupSite"],
+    "permissions": ["Group.Read.All (application)", "Sites.Read.All (application)"],
+    "endpoints": ["GET /v1.0/groups?$filter=groupTypes/any(c:c eq 'Unified')&$select=id,resourceProvisioningOptions", "GET /v1.0/groups/{id}/sites/root?$select=id,webUrl"],
+    "refreshStrategy": "Full Microsoft 365 group snapshot per run; one root-site read per group",
+    "limits": ["Only Microsoft 365 (Unified) groups; teamsConnected comes from the group's resourceProvisioningOptions", "Teams channels and private/shared channel sites are not collected", "A group whose site is not provisioned or not readable is counted as GroupSiteUnavailable and has no relation"]
+  }, {
+    "id": "sharepoint.siteDetails", "producerIds": ["clarity.sharepoint"], "supportedScopes": ["resource"],
+    "attributes": {
+      "title": { "type": "string", "referenceProducer": "clarity.sharepoint" },
+      "url": { "type": "string", "referenceProducer": "clarity.sharepoint" },
+      "webTemplate": { "type": "string", "referenceProducer": "clarity.sharepoint" },
+      "language": { "type": "integer", "referenceProducer": "clarity.sharepoint" },
+      "storageUsedBytes": { "type": "bytes", "referenceProducer": "clarity.sharepoint" },
+      "lastItemUserModifiedDate": { "type": "utc", "referenceProducer": "clarity.sharepoint" }
+    },
+    "relations": [], "permissions": ["Read access to the targeted site collection for the signed-in account"],
+    "endpoints": ["Get-PnPTenantId and Get-PnPSite -Includes Id,Url (tenant and site collection identity check before packaging)", "Get-PnPWeb -Includes Title,WebTemplate,Configuration,Language,LastItemUserModifiedDate", "Get-PnPSite -Includes Usage"],
+    "refreshStrategy": "Targeted site snapshot per request",
+    "limits": ["Root web only; subsites are not enumerated", "storageUsedBytes is omitted and the section is Partial (SiteUsageUnavailable) when the account cannot read site usage"]
+  }, {
+    "id": "sharepoint.libraries", "producerIds": ["clarity.sharepoint"], "supportedScopes": ["resource"],
+    "attributes": {
+      "title": { "type": "string", "referenceProducer": "clarity.sharepoint" },
+      "url": { "type": "string", "referenceProducer": "clarity.sharepoint" },
+      "itemCount": { "type": "integer", "referenceProducer": "clarity.sharepoint" },
+      "created": { "type": "utc", "referenceProducer": "clarity.sharepoint" },
+      "lastItemUserModifiedDate": { "type": "utc", "referenceProducer": "clarity.sharepoint" },
+      "enableVersioning": { "type": "boolean", "referenceProducer": "clarity.sharepoint" },
+      "hasUniqueRoleAssignments": { "type": "boolean", "referenceProducer": "clarity.sharepoint" }
+    },
+    "relations": ["partOf"], "permissions": ["Read access to the targeted site collection for the signed-in account"],
+    "endpoints": ["Get-PnPList -Includes RootFolder,HasUniqueRoleAssignments (document libraries: BaseTemplate 101, not hidden)"],
+    "refreshStrategy": "Targeted site snapshot per request",
+    "limits": ["Root web document libraries only; hidden and system lists are excluded", "Library-level unique permissions are flagged, not expanded"]
+  }, {
+    "id": "sharepoint.sitePermissions", "producerIds": ["clarity.sharepoint"], "supportedScopes": ["resource"],
+    "attributes": {
+      "title": { "type": "string", "referenceProducer": "clarity.sharepoint" }
+    },
+    "relations": ["sitePermission", "memberOf"],
+    "permissions": ["Site collection administrator or permission to enumerate permissions on the targeted site"],
+    "endpoints": ["Get-PnPProperty -ClientObject (Get-PnPWeb) -Property RoleAssignments (Member, RoleDefinitionBindings)", "Get-PnPGroupMember -Group <SharePoint group ID>"],
+    "refreshStrategy": "Targeted root-web role assignment snapshot per request",
+    "limits": ["Root web role assignments only; item, folder and library unique permissions are not expanded", "Claims other than Entra users, Entra groups and SharePoint groups are counted as PrincipalUnresolved", "Effective access is not computed"]
+  }, {
+    "id": "sharepoint.siteSharing", "producerIds": ["clarity.sharepoint"], "supportedScopes": ["resource"],
+    "attributes": {
+      "sharingCapability": { "type": "string", "referenceProducer": "clarity.sharepoint" },
+      "sharingDomainRestrictionMode": { "type": "string", "referenceProducer": "clarity.sharepoint" },
+      "defaultSharingLinkType": { "type": "string", "referenceProducer": "clarity.sharepoint" },
+      "defaultLinkPermission": { "type": "string", "referenceProducer": "clarity.sharepoint" },
+      "lockState": { "type": "string", "referenceProducer": "clarity.sharepoint" }
+    },
+    "relations": [], "permissions": ["SharePoint administrator (tenant administration site access)"],
+    "endpoints": ["Get-PnPTenantSite -Identity <site URL>"],
+    "refreshStrategy": "Targeted site setting snapshot per request",
+    "limits": ["Site-level sharing settings only; individual sharing links and external users are not collected", "Fails explicitly without SharePoint administrator rights"]
   }, {
     "id": "sharepoint.siteUsage", "producerIds": ["report.m365.sharePointSiteUsageDetail"], "supportedScopes": ["tenant"],
     "attributes": {
@@ -39,8 +118,8 @@
     },
     "relations": ["ownerOf"],
     "permissions": ["Reports.Read.All (delegated or application) to download the report; delegated users also need a Microsoft 365 reports role"],
-    "endpoints": ["Consultant upload of GET /v1.0/reports/getSharePointSiteUsageDetail(period='D7|D30|D90|D180') or (date=YYYY-MM-DD) CSV"],
-    "refreshStrategy": "Consultant-uploaded report snapshot observed at the report refresh date",
+    "endpoints": ["Consultant upload of GET /v1.0/reports/getSharePointSiteUsageDetail(period='D7|D30|D90|D180') or (date=YYYY-MM-DD) CSV", "Server download of GET /v1.0/reports/getSharePointSiteUsageDetail(period='D30') through the clarity.graph.sharepoint connection (302 to a pre-authenticated CSV URL)"],
+    "refreshStrategy": "Report snapshot observed at the report refresh date",
     "limits": ["Not a tenant-wide exhaustive site inventory; absence from a report never proves deletion", "Concealed names and URLs are not converted or guessed", "Site list can differ from the SharePoint admin center Active sites list"]
   }]
 }

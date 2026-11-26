@@ -50,6 +50,7 @@ Never use a production database for tests.
 - [Applications, SSO metadata and consultant qualification](docs/connectors/applications-sso.md)
 - [Exchange Online collection script](docs/connectors/exchange.md)
 - [Office settings, GPO links and security filtering](docs/connectors/office-gpo.md)
+- [SharePoint and OneDrive collection](docs/connectors/sharepoint-onedrive.md)
 - [Azure provisioning, deployment and rollback](docs/deployment.md)
 - [Contributor conventions](.github/copilot-instructions.md)
 

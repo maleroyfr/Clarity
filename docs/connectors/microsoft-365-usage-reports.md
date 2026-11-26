@@ -34,8 +34,12 @@ Delegated callers additionally need one of Global Administrator, Exchange
 Administrator, SharePoint Administrator, Skype for Business (Lync) Administrator,
 Teams Service Administrator, Teams Communications Administrator or Reports Reader.
 Global Reader and Usage Summary Reports Reader see tenant summaries only and cannot
-download these user-level detail reports. Clarity itself performs no Graph report
-download in this slice and stores no report credential.
+download these user-level detail reports. The mailbox report is upload-only. The
+OneDrive and SharePoint reports can also be downloaded by the server through the
+tenant's `clarity.graph.onedrive` or `clarity.graph.sharepoint` connection
+(application `Reports.Read.All`, period `D30`), interpreted by the same profiles;
+see [SharePoint and OneDrive](sharepoint-onedrive.md#server-report-downloads).
+Clarity stores no report credential.
 
 Sources: [getMailboxUsageDetail](https://learn.microsoft.com/graph/api/reportroot-getmailboxusagedetail?view=graph-rest-1.0),
 [getOneDriveUsageAccountDetail](https://learn.microsoft.com/graph/api/reportroot-getonedriveusageaccountdetail?view=graph-rest-1.0),

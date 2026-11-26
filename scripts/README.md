@@ -52,3 +52,11 @@ only while the catalog version equals the version recorded in the request.
 ExchangeOnlineManagement 3.x cmdlets; it never connects, and requires one
 operator-opened session for the requested tenant. See
 [Exchange Online](../docs/connectors/exchange.md).
+
+`sharepoint/Collect-SharePoint.ps1` (PowerShell 7.4, PnP.PowerShell) uses the
+`resource` scope: the request carries one normalized site collection URL, and the
+script prompts for the client ID of the customer-authorized Entra app registration
+for interactive sign-in without storing it. `onedrive/Collect-OneDrive.ps1`
+(Windows PowerShell 5.1, Microsoft.Online.SharePoint.PowerShell) is bound to the
+tenant and prompts for the admin URL, whose tenant is checked before sign-in. See
+[SharePoint and OneDrive](../docs/connectors/sharepoint-onedrive.md).

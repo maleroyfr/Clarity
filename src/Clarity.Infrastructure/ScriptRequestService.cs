@@ -19,11 +19,14 @@ public sealed class ScriptRequestService(IDbContextFactory<ClarityDbContext> fac
         // A tenant collection is always bound to the environment's tenant, never to a client-supplied identifier.
         var boundToTenant = requestedScope.Kind == "tenant" && string.Equals(requestedScope.Value, environment.ExternalId, StringComparison.OrdinalIgnoreCase);
         if (boundToTenant) { requestedScope = new CollectionScope("tenant", environment.ExternalId); }
+        var resource = requestedScope.Kind == "resource" ? ResourceScope(producer.Id, requestedScope.Value) : null;
+        if (resource is not null) { requestedScope = resource; }
         if (operationId == Guid.Empty || sections.Length == 0
             || sections.Distinct(StringComparer.Ordinal).Count() != sections.Length
             || sections.Any(x => !catalog.Sections[x].SupportedScopes.Contains(requestedScope.Kind))
             || requestedScope.Kind == "ou" && string.IsNullOrWhiteSpace(domain)
-            || requestedScope.Kind == "tenant" && (!boundToTenant || !string.IsNullOrWhiteSpace(domain)))
+            || requestedScope.Kind == "tenant" && (!boundToTenant || !string.IsNullOrWhiteSpace(domain))
+            || requestedScope.Kind == "resource" && (resource is null || !string.IsNullOrWhiteSpace(domain)))
         {
             throw new ArgumentException("Invalid script request scope or sections.");
         }
@@ -31,7 +34,7 @@ public sealed class ScriptRequestService(IDbContextFactory<ClarityDbContext> fac
             requestedScope, sections, producer.Version, requestedScope.Kind switch
             {
                 "domain" => requestedScope.Value,
-                "tenant" => null,
+                "tenant" or "resource" => null,
                 _ => domain
             });
 
@@ -78,6 +81,17 @@ public sealed class ScriptRequestService(IDbContextFactory<ClarityDbContext> fac
         return catalog.Producers.TryGetValue(request.ProducerId, out var producer) && producer.Version == request.ScriptVersion
             ? ScriptBundle.Build(producer.Id, producer.Version) ?? throw new ConflictException() : throw new ConflictException();
     }
+
+    /// <summary>
+    /// Normalizes a resource scope for the producers that define one. Only <c>clarity.sharepoint</c> does: one SharePoint Online
+    /// site collection URL, normalized like the report adapter, never an admin or personal (OneDrive) host.
+    /// </summary>
+    public static CollectionScope? ResourceScope(string producerId, string? value) =>
+        producerId == SharePointScriptProducerId && GraphValues.SharePointUrl(value?.Trim()) is { } url
+            && new Uri(url).Host is var host && !host.EndsWith("-admin.sharepoint.com", StringComparison.Ordinal)
+            && !host.EndsWith("-my.sharepoint.com", StringComparison.Ordinal) ? new("resource", url) : null;
+
+    public const string SharePointScriptProducerId = "clarity.sharepoint";
 
     /// <summary>The validated PowerShell producers a user can request for an environment kind.</summary>
     public IReadOnlyList<CatalogProducer> Producers(EnvironmentKind kind) => ScriptBundle.Registry.Producers(catalog, kind.ToString());

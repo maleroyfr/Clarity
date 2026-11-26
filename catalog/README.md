@@ -21,13 +21,16 @@ also checks that every profile field and relation exists in its family; see
 [import profiles](../docs/import-profiles.md). Lot 4 also adds the separate
 [Intune / Autopilot Graph v1.0 producer](../docs/connectors/intune-autopilot.md);
 its declared beta limits are not selectable endpoints. The Exchange Online PowerShell
-producer is `SyntheticValidated` (see [Exchange Online](../docs/connectors/exchange.md)),
-and the PnP producer remains `planned`, unavailable and untested. The remaining planned
-families below are not selectable:
+producer is `SyntheticValidated` (see [Exchange Online](../docs/connectors/exchange.md)).
+The SharePoint/OneDrive collection family adds `SyntheticValidated` Graph producers
+(`clarity.graph.sharepoint`, `clarity.graph.onedrive`) and PowerShell producers
+(`clarity.sharepoint`, PnP.PowerShell for one targeted site; `clarity.onedrive`,
+Microsoft.Online.SharePoint.PowerShell for personal sites); see
+[SharePoint and OneDrive](../docs/connectors/sharepoint-onedrive.md). The remaining
+planned families below are not selectable:
 
 | Family | Intended producer / data | Required future verification |
 | --- | --- | --- |
-| OneDrive (beyond usage reports) | Graph plus SharePoint/PnP | Personal-site provisioning, separate local permissions, sharing |
 | Teams | Graph teams, channels and associated sites | Endpoint permissions and hidden/shared channel scope |
 | Power BI | Power BI script or administrative export | API/report schema, tenant admin/scanner rights and resource scope |
 | Azure / infrastructure | Az and targeted local scripts/imports | Subscription RBAC, OS/modules, servers/DNS/shares/services metadata boundaries |

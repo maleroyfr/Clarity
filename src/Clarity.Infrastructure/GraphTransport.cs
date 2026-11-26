@@ -76,7 +76,68 @@ public sealed class GraphTransport(HttpClient http, Func<CancellationToken, Valu
         return uri;
     }
 
-    public async Task<JsonDocument> GetAsync(string path, CancellationToken cancellationToken)
+    public async Task<JsonDocument> GetAsync(string path, CancellationToken cancellationToken) =>
+        await SendAsync(path, false, cancellationToken) ?? throw new GraphReadException("GraphReadFailed");
+
+    /// <summary>Reads a Graph resource whose absence is an expected outcome; returns null on HTTP 404.</summary>
+    public Task<JsonDocument?> GetOptionalAsync(string path, CancellationToken cancellationToken) =>
+        SendAsync(path, true, cancellationToken);
+
+    /// <summary>
+    /// Requests a Graph v1.0 usage report. Graph answers with a redirect to a pre-authenticated download URL that is fetched
+    /// without the Graph bearer token, only on an allow-listed Microsoft reports host and within <paramref name="maxBytes"/>.
+    /// A probe stops after Graph accepted the request and returns null.
+    /// </summary>
+    public async Task<byte[]?> DownloadReportAsync(string path, long maxBytes, bool probe, CancellationToken cancellationToken)
+    {
+        var uri = ValidateUri(path);
+        if (!uri.AbsolutePath.StartsWith("/v1.0/reports/", StringComparison.Ordinal)) { throw new GraphReadException("UnsafeGraphLink"); }
+        for (var attempt = 0; attempt < 4; attempt++)
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Get, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await token(cancellationToken));
+            using var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+            if (response.StatusCode is HttpStatusCode.Found or HttpStatusCode.SeeOther or HttpStatusCode.TemporaryRedirect)
+            {
+                var target = ValidateReportLocation(response.Headers.Location);
+                if (probe) { return null; }
+                using var download = new HttpRequestMessage(HttpMethod.Get, target);
+                using var file = await http.SendAsync(download, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+                if (!file.IsSuccessStatusCode) { throw new GraphReadException("ReportDownloadFailed"); }
+                return await ReadBoundedAsync(file, maxBytes, cancellationToken);
+            }
+            if (response.IsSuccessStatusCode) { return probe ? null : await ReadBoundedAsync(response, maxBytes, cancellationToken); }
+            if (await RetryAsync(response, attempt, cancellationToken)) { continue; }
+            throw new GraphReadException(Code(response.StatusCode));
+        }
+        throw new GraphReadException("GraphReadFailed");
+    }
+
+    /// <summary>Accepts only the documented HTTPS Microsoft 365 reports download host family for the public cloud.</summary>
+    public static Uri ValidateReportLocation(Uri? location)
+    {
+        if (location is null || !location.IsAbsoluteUri || location.Scheme != Uri.UriSchemeHttps || !location.IsDefaultPort
+            || location.UserInfo.Length != 0 || location.Fragment.Length != 0 || location.AbsoluteUri.Length > 4096
+            || !System.Text.RegularExpressions.Regex.IsMatch(location.Host, "^reports[a-z0-9-]{0,20}\\.office\\.com$",
+                System.Text.RegularExpressions.RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1)))
+        {
+            throw new GraphReadException("ReportDownloadHostRejected");
+        }
+        return location;
+    }
+
+    private async Task<byte[]> ReadBoundedAsync(HttpResponseMessage response, long maxBytes, CancellationToken cancellationToken)
+    {
+        if (response.Content.Headers.ContentLength > maxBytes) { throw new GraphReadException("ReportFileTooLarge"); }
+        await using var stream = new LimitedReadStream(await response.Content.ReadAsStreamAsync(cancellationToken), maxBytes);
+        using var buffer = new MemoryStream();
+        try { await stream.CopyToAsync(buffer, cancellationToken); }
+        catch (ContractException error) when (error.Code == "SizeLimit") { throw new GraphReadException("ReportFileTooLarge"); }
+        receivedBytes += buffer.Length;
+        return buffer.ToArray();
+    }
+
+    private async Task<JsonDocument?> SendAsync(string path, bool optional, CancellationToken cancellationToken)
     {
         var uri = ValidateUri(path);
         for (var attempt = 0; attempt < 4; attempt++)
@@ -96,18 +157,8 @@ public sealed class GraphTransport(HttpClient http, Func<CancellationToken, Valu
                 }
                 return document;
             }
-            if (response.StatusCode is HttpStatusCode.TooManyRequests or HttpStatusCode.ServiceUnavailable
-                or HttpStatusCode.BadGateway or HttpStatusCode.GatewayTimeout)
-            {
-                if (attempt == 3) { throw new GraphReadException("Throttled"); }
-                var wait = response.Headers.RetryAfter?.Delta
-                    ?? (response.Headers.RetryAfter?.Date - DateTimeOffset.UtcNow)
-                    ?? TimeSpan.FromSeconds(Math.Pow(2, attempt));
-                if (wait > TimeSpan.FromSeconds(60)) { throw new GraphReadException("RetryAfterLimit"); }
-                wait = TimeSpan.FromSeconds(Math.Max(wait.TotalSeconds, 0));
-                await (delay?.Invoke(wait, cancellationToken) ?? Task.Delay(wait, cancellationToken));
-                continue;
-            }
+            if (await RetryAsync(response, attempt, cancellationToken)) { continue; }
+            if (optional && response.StatusCode == HttpStatusCode.NotFound) { return null; }
             if (response.StatusCode is HttpStatusCode.BadRequest or HttpStatusCode.NotFound)
             {
                 await using var errorStream = new LimitedReadStream(await response.Content.ReadAsStreamAsync(cancellationToken), 2 * 1024 * 1024);
@@ -119,16 +170,32 @@ public sealed class GraphTransport(HttpClient http, Func<CancellationToken, Valu
                 }
                 catch (JsonException) { throw new GraphReadException("InvalidGraphError"); }
             }
-            throw new GraphReadException(response.StatusCode switch
-            {
-                HttpStatusCode.Unauthorized => "AuthenticationRequired",
-                HttpStatusCode.Forbidden => "MissingPermission",
-                HttpStatusCode.Gone => "CursorExpired",
-                _ => "GraphReadFailed"
-            });
+            throw new GraphReadException(Code(response.StatusCode));
         }
         throw new GraphReadException("GraphReadFailed");
     }
+
+    private async Task<bool> RetryAsync(HttpResponseMessage response, int attempt, CancellationToken cancellationToken)
+    {
+        if (response.StatusCode is not (HttpStatusCode.TooManyRequests or HttpStatusCode.ServiceUnavailable
+            or HttpStatusCode.BadGateway or HttpStatusCode.GatewayTimeout)) { return false; }
+        if (attempt == 3) { throw new GraphReadException("Throttled"); }
+        var wait = response.Headers.RetryAfter?.Delta
+            ?? (response.Headers.RetryAfter?.Date - DateTimeOffset.UtcNow)
+            ?? TimeSpan.FromSeconds(Math.Pow(2, attempt));
+        if (wait > TimeSpan.FromSeconds(60)) { throw new GraphReadException("RetryAfterLimit"); }
+        wait = TimeSpan.FromSeconds(Math.Max(wait.TotalSeconds, 0));
+        await (delay?.Invoke(wait, cancellationToken) ?? Task.Delay(wait, cancellationToken));
+        return true;
+    }
+
+    private static string Code(HttpStatusCode status) => status switch
+    {
+        HttpStatusCode.Unauthorized => "AuthenticationRequired",
+        HttpStatusCode.Forbidden => "MissingPermission",
+        HttpStatusCode.Gone => "CursorExpired",
+        _ => "GraphReadFailed"
+    };
 
     public async Task<string?> PagesAsync(string path, Func<JsonElement, Task> consume, CancellationToken cancellationToken)
     {

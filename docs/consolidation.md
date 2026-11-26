@@ -177,6 +177,16 @@ separate AD family publishes evidence; unknown principals remain pending. A
 configured Office setting belongs to a GPO, not directly to a computer. A direct
 link or a `GpoApply` permission is not a membership or effective policy claim.
 
+The [SharePoint and OneDrive family](connectors/sharepoint-onedrive.md) keys Graph
+sites, PnP targeted sites and Graph OneDrive drives by the immutable site
+collection GUID (`sharepoint.siteId`), so these sources describe the same object.
+Report rows without a `Site Id` (`m365report.siteUrl`) and SharePoint Online
+personal sites (`sharepoint.siteUrl`) stay provisional URL objects. Every
+source indexes the site URL as dated alternate `url` evidence; provisional
+objects join immutable sites only through the reviewable association path above,
+never by automatic merge. Drive and personal-site owners link to users by Entra object ID
+or exact UPN; empty, masked and unresolved owners are counted, not guessed.
+
 The cyclic-membership SQL case above opens the pending and resolved sheets,
 follows a reverse link, and verifies both source observations and isolation.
 

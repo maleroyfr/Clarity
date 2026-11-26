@@ -59,9 +59,11 @@ ReportConversion result = ReportAdapter.Convert(bytes, profile, context, ReportL
 `ReportAdapter.Convert(CsvTable, profile, context)` converts an already-read table.
 `ReportDiagnostics.Identities` lists the column/namespace/format mappings used by
 usable rows in profile priority order (available candidates when no row is usable).
-A later Graph report download must call the same `Convert` with the tenant it
-authenticated, `ScopeObserved: true` and its own `SourceId`, then hand the package
-to the common publication path. It must not reimplement CSV parsing.
+Graph report downloads call the same `Convert` with the tenant they
+authenticated, `ScopeObserved: true` and their own `SourceId`, then hand the
+package to the common publication path; they do not reimplement CSV parsing. The
+SharePoint and OneDrive Graph connections do this for their two reports (see
+[SharePoint and OneDrive](connectors/sharepoint-onedrive.md#server-report-downloads)).
 
 Conventions the next collection families must keep:
 

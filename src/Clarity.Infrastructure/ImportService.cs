@@ -115,6 +115,54 @@ public sealed class ImportService(
         }
     }
 
+    /// <summary>
+    /// Stages a usage report downloaded by a Graph job. The tenant was verified on the authenticated connection before the
+    /// download, so the scope is recorded as observed with the Graph reports source; the same profile interprets the bytes.
+    /// </summary>
+    internal async Task<Guid> StageReportAsync(Guid projectId, Guid environmentId, ReportProfile profile, byte[] content,
+        Guid connectionId, Guid jobId, CancellationToken cancellationToken = default)
+    {
+        var project = await access.RequireAsync(projectId, WorkspaceOperation.Collect, cancellationToken);
+        await using var db = await factory.CreateDbContextAsync(cancellationToken);
+        var environment = await EnvironmentAsync(db, project, environmentId, cancellationToken);
+        catalog.RequireProducer(profile.ProducerId);
+        var connection = await GraphDiscoveryService.ConnectionAsync(db, project, environment, connectionId, cancellationToken);
+        if (environment.Kind.ToString() != profile.EnvironmentKind || profile.ScopeKind != "tenant"
+            || catalog.Sections.Values.All(x => GraphReportDownloads.ReportProducer(x, connection.ProducerId) != profile.ProducerId))
+        {
+            throw new ContractException("ReportEnvironmentUnsupported", "profile");
+        }
+        StoredArtifact artifact;
+        try
+        {
+            using var source = new MemoryStream(content, writable: false);
+            artifact = await store.SaveAsync(project.WorkspaceId, source, limits.CompressedBytes, cancellationToken);
+        }
+        catch (ContractException error) when (error.Code is "CompressedSizeLimit" or "SizeLimit")
+        {
+            throw new ContractException("ReportFileTooLarge", CsvReportReader.FileName);
+        }
+        var retain = false;
+        try
+        {
+            var context = new ReportContext(environment.ExternalId, new CollectionScope(profile.ScopeKind, environment.ExternalId),
+                artifact.ContentHash, ScopeObserved: true, SourceId: GraphReportDownloads.SourceId);
+            var conversion = await ConvertReportAsync(project.WorkspaceId, artifact.BlobName, artifact.ContentHash, profile, context,
+                cancellationToken);
+            catalog.ValidatePackage(conversion.Package);
+            await ValidateContextAsync(db, project, environment, conversion.Package, cancellationToken);
+            await ValidateReportEvidenceAsync(db, project, environment, conversion.Diagnostics, cancellationToken);
+            var (id, created) = await RecordAsync(db, project, environment, conversion.Package, artifact, "graph-report.csv", artifact.Bytes,
+                CollectionChannel.Report, connectionId, jobId, "[]", cancellationToken);
+            retain = created;
+            return id;
+        }
+        finally
+        {
+            if (!retain) { await store.DeleteAsync(project.WorkspaceId, artifact.BlobName, CancellationToken.None); }
+        }
+    }
+
     private async Task<(Guid Id, bool Created)> RecordAsync(ClarityDbContext db, Project project, ProjectEnvironment environment,
         DiscoveryPackage package, StoredArtifact artifact, string fileName, long uncompressedBytes, CollectionChannel channel,
         Guid? connectionId, Guid? jobId, string continuationJson, CancellationToken cancellationToken)

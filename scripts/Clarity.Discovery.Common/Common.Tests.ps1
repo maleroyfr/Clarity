@@ -36,6 +36,15 @@ Describe 'Canonical Discovery package' {
         { Read-DiscoveryParameters -Path $path } | Should -Throw '*Do not place credentials*'
     }
 
+    It 'normalizes SharePoint Online URLs exactly like the server report adapter' {
+        ConvertTo-DiscoverySharePointUrl 'https://Contoso.SharePoint.com/sites/Finance/' | Should -BeExactly 'https://contoso.sharepoint.com/sites/Finance'
+        ConvertTo-DiscoverySharePointUrl 'https://contoso-my.sharepoint.com/personal/a_example_test' | Should -BeExactly 'https://contoso-my.sharepoint.com/personal/a_example_test'
+        foreach ($invalid in @($null, '', 'http://contoso.sharepoint.com/sites/x', 'https://contoso.example.test/sites/x',
+                'https://contoso.sharepoint.com/sites/x?a=1', 'https://contoso.sharepoint.com:8443/sites/x', 'https://contoso.sharepoint.com/sites/a b')) {
+            ConvertTo-DiscoverySharePointUrl $invalid | Should -BeNullOrEmpty
+        }
+    }
+
     It 'reports missing prerequisites without installing modules' {
         { Assert-DiscoveryPrerequisites -Modules 'Clarity.Synthetic.Nonexistent.Module' } | Should -Throw '*install*separately*'
     }
