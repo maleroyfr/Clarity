@@ -112,6 +112,11 @@ authorized collection action, while uploaded artifacts require explicit confirma
 The connection carries a server configuration reference only. Live consent,
 managed identity and Key Vault certificate access remain operator configuration.
 
+[Intune and Windows Autopilot](connectors/intune-autopilot.md) use a separate
+v1.0 Graph producer and per-family connection for the same verified tenant. Its
+access tests and section selections are independent of Entra. It uses full
+paged reads with explicit visibility limits rather than directory delta cursors.
+
 ## Authorized Discovery screens
 
 The Fluent UI v5 Discovery panel exposes French Connexions, Collectes and Couverture
@@ -161,4 +166,4 @@ mailboxes, OneDrive accounts and SharePoint sites in an M365 tenant environment.
 They reuse the same private Blob retention, preview, explicit confirmation, leased
 job and `PublicationService` path, arrive on channel `ReportImport`, and never count
 as a verified Graph connection. The other Lot 4 collection families (Exchange
-Online PowerShell, PnP, Teams, Intune, GPO, Power BI and Azure) are not implemented.
+Online PowerShell, PnP, Teams, GPO, Power BI and Azure) are not implemented.

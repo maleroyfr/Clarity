@@ -1,0 +1,115 @@
+{
+  "schemaVersion": "1.0", "id": "intune", "version": "1.0.0", "environmentKind": "M365Tenant",
+  "producers": [{
+    "id": "clarity.graph.intune", "channel": "Graph", "version": "1.0.0", "apiVersion": "v1.0",
+    "preview": false, "readiness": "SyntheticValidated", "testedVersions": [".NET 11; Microsoft Graph REST v1.0 synthetic HTTP fixtures only"],
+    "prerequisites": ["Active Intune tenant license", "Collector certificate in Key Vault, per-tenant application consent and Organization.Read.All for tenant verification"],
+    "limits": ["Public Graph cloud only; visible tenant scope is not proof of absence", "No beta calls: Autopilot deployment profiles and settings catalog configurationPolicies are not covered", "No live tenant, effective targeting, policy settings, secrets or content"]
+  }],
+  "sections": [
+    {
+      "id": "intune.managedDevices", "producerIds": ["clarity.graph.intune"], "supportedScopes": ["tenant"],
+      "attributes": {
+        "deviceName": { "type": "string", "referenceProducer": "clarity.graph.intune" },
+        "serialNumber": { "type": "string", "referenceProducer": "clarity.graph.intune" },
+        "azureADDeviceId": { "type": "string", "referenceProducer": "clarity.graph.intune" },
+        "operatingSystem": { "type": "string", "referenceProducer": "clarity.graph.intune" },
+        "osVersion": { "type": "string", "referenceProducer": "clarity.graph.intune" },
+        "managementAgent": { "type": "string", "referenceProducer": "clarity.graph.intune" },
+        "managedDeviceOwnerType": { "type": "string", "referenceProducer": "clarity.graph.intune" },
+        "complianceState": { "type": "string", "referenceProducer": "clarity.graph.intune" }
+      },
+      "relations": ["referencesEntraDevice"], "permissions": ["DeviceManagementManagedDevices.Read.All"],
+      "endpoints": ["GET /v1.0/deviceManagement/managedDevices"],
+      "refreshStrategy": "Paged snapshot of visible managed devices",
+      "limits": ["Reported management and device-level compliance only, not per-setting compliance", "Names and serials are not identity keys"]
+    },
+    {
+      "id": "intune.primaryUsers", "producerIds": ["clarity.graph.intune"], "supportedScopes": ["tenant"], "attributes": {},
+      "relations": ["intunePrimaryUserOf"], "permissions": ["DeviceManagementManagedDevices.Read.All"],
+      "endpoints": ["GET /v1.0/deviceManagement/managedDevices", "GET /v1.0/deviceManagement/managedDevices/{id}/users"],
+      "refreshStrategy": "Page each visible managed device's users navigation",
+      "limits": ["Zero or more primary users; userId, enrollment identity and UPN are not substituted"]
+    },
+    {
+      "id": "intune.registeredOwners", "producerIds": ["clarity.graph.intune"], "supportedScopes": ["tenant"], "attributes": {},
+      "relations": ["entraRegisteredOwnerOf"], "permissions": ["Device.Read.All"],
+      "endpoints": ["GET /v1.0/devices", "GET /v1.0/devices/{id}/registeredOwners"],
+      "refreshStrategy": "Page visible directory devices and their registered owners",
+      "limits": ["Directory ownership only; not an Intune primary user or a consultant-confirmed association"]
+    },
+    {
+      "id": "intune.autopilotIdentities", "producerIds": ["clarity.graph.intune"], "supportedScopes": ["tenant"],
+      "attributes": {
+        "serialNumber": { "type": "string", "referenceProducer": "clarity.graph.intune" },
+        "manufacturer": { "type": "string", "referenceProducer": "clarity.graph.intune" },
+        "model": { "type": "string", "referenceProducer": "clarity.graph.intune" },
+        "enrollmentState": { "type": "string", "referenceProducer": "clarity.graph.intune" },
+        "managedDeviceId": { "type": "string", "referenceProducer": "clarity.graph.intune" },
+        "azureActiveDirectoryDeviceId": { "type": "string", "referenceProducer": "clarity.graph.intune" }
+      },
+      "relations": ["referencesManagedDevice", "referencesEntraDevice"], "permissions": ["DeviceManagementServiceConfig.Read.All"],
+      "endpoints": ["GET /v1.0/deviceManagement/windowsAutopilotDeviceIdentities"],
+      "refreshStrategy": "Paged snapshot of visible Windows Autopilot identities",
+      "limits": ["No hardware hashes, product keys or deployment profiles", "Deprecated directory-device identifier is used only when exposed and nonzero"]
+    },
+    {
+      "id": "intune.apps", "producerIds": ["clarity.graph.intune"], "supportedScopes": ["tenant"],
+      "attributes": {
+        "displayName": { "type": "string", "referenceProducer": "clarity.graph.intune" },
+        "publisher": { "type": "string", "referenceProducer": "clarity.graph.intune" }
+      },
+      "relations": [], "permissions": ["DeviceManagementApps.Read.All"], "endpoints": ["GET /v1.0/deviceAppManagement/mobileApps"],
+      "refreshStrategy": "Paged visible app definitions", "limits": ["Not installed applications, packages or installation status"]
+    },
+    {
+      "id": "intune.profiles", "producerIds": ["clarity.graph.intune"], "supportedScopes": ["tenant"],
+      "attributes": {
+        "displayName": { "type": "string", "referenceProducer": "clarity.graph.intune" },
+        "version": { "type": "integer", "referenceProducer": "clarity.graph.intune" }
+      },
+      "relations": [], "permissions": ["DeviceManagementConfiguration.Read.All"], "endpoints": ["GET /v1.0/deviceManagement/deviceConfigurations"],
+      "refreshStrategy": "Paged visible device configuration profiles", "limits": ["Classic profiles only; no settings payloads or beta profile types"]
+    },
+    {
+      "id": "intune.policies", "producerIds": ["clarity.graph.intune"], "supportedScopes": ["tenant"],
+      "attributes": {
+        "displayName": { "type": "string", "referenceProducer": "clarity.graph.intune" },
+        "version": { "type": "integer", "referenceProducer": "clarity.graph.intune" }
+      },
+      "relations": [], "permissions": ["DeviceManagementConfiguration.Read.All"], "endpoints": ["GET /v1.0/deviceManagement/deviceCompliancePolicies"],
+      "refreshStrategy": "Paged visible compliance policies", "limits": ["Compliance definitions only; no policy settings or effective state"]
+    },
+    {
+      "id": "intune.appAssignments", "producerIds": ["clarity.graph.intune"], "supportedScopes": ["tenant"],
+      "attributes": {
+        "intent": { "type": "string", "referenceProducer": "clarity.graph.intune" },
+        "targetType": { "type": "string", "referenceProducer": "clarity.graph.intune" },
+        "groupId": { "type": "string", "referenceProducer": "clarity.graph.intune" }
+      },
+      "relations": ["assignmentOf", "targetsGroup"], "permissions": ["DeviceManagementApps.Read.All"],
+      "endpoints": ["GET /v1.0/deviceAppManagement/mobileApps", "GET /v1.0/deviceAppManagement/mobileApps/{id}/assignments"],
+      "refreshStrategy": "Page assignments per visible app", "limits": ["Declared intent and target only, not effective installs, filters or group expansion"]
+    },
+    {
+      "id": "intune.profileAssignments", "producerIds": ["clarity.graph.intune"], "supportedScopes": ["tenant"],
+      "attributes": {
+        "targetType": { "type": "string", "referenceProducer": "clarity.graph.intune" },
+        "groupId": { "type": "string", "referenceProducer": "clarity.graph.intune" }
+      },
+      "relations": ["assignmentOf", "targetsGroup"], "permissions": ["DeviceManagementConfiguration.Read.All"],
+      "endpoints": ["GET /v1.0/deviceManagement/deviceConfigurations", "GET /v1.0/deviceManagement/deviceConfigurations/{id}/assignments"],
+      "refreshStrategy": "Page assignments per visible configuration", "limits": ["Classic profiles only; includes exclusions as target types, not positive group membership"]
+    },
+    {
+      "id": "intune.policyAssignments", "producerIds": ["clarity.graph.intune"], "supportedScopes": ["tenant"],
+      "attributes": {
+        "targetType": { "type": "string", "referenceProducer": "clarity.graph.intune" },
+        "groupId": { "type": "string", "referenceProducer": "clarity.graph.intune" }
+      },
+      "relations": ["assignmentOf", "targetsGroup"], "permissions": ["DeviceManagementConfiguration.Read.All"],
+      "endpoints": ["GET /v1.0/deviceManagement/deviceCompliancePolicies", "GET /v1.0/deviceManagement/deviceCompliancePolicies/{id}/assignments"],
+      "refreshStrategy": "Page assignments per visible policy", "limits": ["No targeting-filter evaluation, effective compliance or user/device expansion"]
+    }
+  ]
+}

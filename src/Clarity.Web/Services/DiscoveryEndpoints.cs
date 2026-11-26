@@ -25,10 +25,10 @@ public static class DiscoveryEndpoints
             queries.CoverageAsync(projectId, environmentId, new(), ct));
         api.MapGet("/{environmentId:guid}/requests", (Guid projectId, Guid environmentId, DiscoveryQueries queries, CancellationToken ct) =>
             queries.RequestsAsync(projectId, environmentId, new(), ct));
-        api.MapGet("/{environmentId:guid}/connection", (Guid projectId, Guid environmentId, DiscoveryQueries queries, CancellationToken ct) =>
-            queries.ConnectionAsync(projectId, environmentId, ct));
+        api.MapGet("/{environmentId:guid}/connection", (Guid projectId, Guid environmentId, string? producerId, DiscoveryQueries queries, CancellationToken ct) =>
+            queries.ConnectionAsync(projectId, environmentId, ct, producerId ?? GraphDiscoveryService.EntraProducerId));
         api.MapPost("/{environmentId:guid}/connection", (Guid projectId, Guid environmentId, ConnectionInput input, GraphDiscoveryService service, CancellationToken ct) =>
-            service.ConnectAsync(projectId, environmentId, input.Name, ct));
+            service.ConnectAsync(projectId, environmentId, input.Name, ct, input.ProducerId));
         api.MapPost("/{environmentId:guid}/connection/{connectionId:guid}/test", (Guid projectId, Guid environmentId, Guid connectionId, GraphDiscoveryService service, CancellationToken ct) =>
             service.TestAsync(projectId, environmentId, connectionId, ct));
         api.MapPost("/{environmentId:guid}/graph", (Guid projectId, Guid environmentId, GraphInput input, GraphDiscoveryService service, CancellationToken ct) =>
@@ -60,6 +60,6 @@ public static class DiscoveryEndpoints
     }
 }
 
-public sealed record ConnectionInput(string Name);
+public sealed record ConnectionInput(string Name, string ProducerId = GraphDiscoveryService.EntraProducerId);
 public sealed record GraphInput(Guid OperationId, Guid ConnectionId, CollectionScope Scope, string[] Sections);
 public sealed record ScriptInput(Guid OperationId, CollectionScope Scope, string[] Sections, string? Domain);

@@ -47,8 +47,8 @@ public sealed class ImportService(
             await ValidateContextAsync(db, project, environment, read.Package, cancellationToken);
             if (connectionId is { } connected)
             {
-                await GraphDiscoveryService.ConnectionAsync(db, project, environment, connected, cancellationToken);
-                if (read.Package.Manifest.RunId != jobId || read.Package.Manifest.ProducerId != "clarity.graph.entra"
+                var connection = await GraphDiscoveryService.ConnectionAsync(db, project, environment, connected, cancellationToken);
+                if (read.Package.Manifest.RunId != jobId || read.Package.Manifest.ProducerId != connection.ProducerId
                     || read.Package.Manifest.RequestId is not null) { throw new ConflictException(); }
             }
             var (id, created) = await RecordAsync(db, project, environment, read.Package, artifact, fileName, read.UncompressedBytes,

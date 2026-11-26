@@ -10,7 +10,7 @@ using Shouldly;
 namespace Clarity.Infrastructure.Tests;
 
 [Collection("SQL lifecycle")]
-public sealed class GraphTests
+public sealed partial class GraphTests
 {
     private static readonly Guid Tenant = Guid.Parse("00000000-0000-0000-0000-000000000123");
     private static readonly CollectionScope Scope = new("tenant", Tenant.ToString());
@@ -448,9 +448,9 @@ public sealed class GraphTests
         return environment;
     }
 
-    private static async Task ValidateAsync(GraphSectionData data)
+    private static async Task ValidateAsync(GraphSectionData data, string producer = GraphDiscoveryService.EntraProducerId)
     {
-        var package = new DiscoveryPackage(new PackageManifest("1.0", Guid.NewGuid(), "clarity.graph.entra", "1.0.0", "M365Tenant",
+        var package = new DiscoveryPackage(new PackageManifest("1.0", Guid.NewGuid(), producer, "1.0.0", "M365Tenant",
             Tenant.ToString(), Scope, DateTimeOffset.UtcNow.AddMinutes(-1), DateTimeOffset.UtcNow,
             new Dictionary<string, string>(), "Synthetic Graph"), data.Objects, data.Relationships, [data.Result]);
         var parsed = await new ZipPackageReader(new PackageValidator(), new PackageLimits())

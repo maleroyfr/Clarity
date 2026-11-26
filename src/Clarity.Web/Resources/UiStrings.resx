@@ -206,6 +206,22 @@
   <data name="Section_entra.users" xml:space="preserve"><value>Entra — utilisateurs et invités</value></data>
   <data name="Section_entra.groups" xml:space="preserve"><value>Entra — groupes, membres et propriétaires</value></data>
   <data name="Section_entra.devices" xml:space="preserve"><value>Entra — appareils</value></data>
+  <data name="Producer_clarity.graph.entra" xml:space="preserve"><value>Microsoft Graph — Entra</value></data>
+  <data name="Producer_clarity.graph.intune" xml:space="preserve"><value>Microsoft Graph — Intune et Autopilot (v1.0)</value></data>
+  <data name="Section_intune.managedDevices" xml:space="preserve"><value>Intune — gestion et conformité des appareils</value></data>
+  <data name="Section_intune.primaryUsers" xml:space="preserve"><value>Intune — utilisateurs principaux des appareils</value></data>
+  <data name="Section_intune.registeredOwners" xml:space="preserve"><value>Entra — propriétaires inscrits des appareils</value></data>
+  <data name="Section_intune.autopilotIdentities" xml:space="preserve"><value>Windows Autopilot — identités des appareils</value></data>
+  <data name="Section_intune.apps" xml:space="preserve"><value>Intune — applications</value></data>
+  <data name="Section_intune.profiles" xml:space="preserve"><value>Intune — profils de configuration classiques</value></data>
+  <data name="Section_intune.policies" xml:space="preserve"><value>Intune — stratégies de conformité</value></data>
+  <data name="Section_intune.appAssignments" xml:space="preserve"><value>Intune — affectations des applications</value></data>
+  <data name="Section_intune.profileAssignments" xml:space="preserve"><value>Intune — affectations des profils classiques</value></data>
+  <data name="Section_intune.policyAssignments" xml:space="preserve"><value>Intune — affectations des stratégies de conformité</value></data>
+  <data name="Issue_IntuneVisibleScope" xml:space="preserve"><value>Seules les ressources visibles et les relations déclarées sont couvertes. Une omission ne prouve pas une absence.</value></data>
+  <data name="Issue_IntuneChildNotTested" xml:space="preserve"><value>Aucun objet dans la page échantillonnée : l’accès aux relations n’a pas pu être vérifié.</value></data>
+  <data name="Issue_IntuneTargetUnavailable" xml:space="preserve"><value>La cible d’une affectation n’a pas pu être identifiée.</value></data>
+  <data name="IntunePrerequisiteHint" xml:space="preserve"><value>Une licence Intune active et les autorisations d’application de chaque section sont nécessaires. Seules les API v1.0 indiquées sont couvertes ; les profils de déploiement Autopilot et les stratégies du catalogue de paramètres en version bêta ne sont pas collectés.</value></data>
   <data name="Section_entra.domains" xml:space="preserve"><value>Entra — domaines</value></data>
   <data name="Section_entra.licenses" xml:space="preserve"><value>Entra — licences</value></data>
   <data name="Section_entra.applications" xml:space="preserve"><value>Entra — applications et principaux de service</value></data>

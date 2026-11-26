@@ -25,7 +25,7 @@ internal static class RelationshipProjection
         var keys = (await db.ExternalKeys.AsNoTracking().Where(x => x.WorkspaceId == workspace && x.EnvironmentId == environment && x.IsPrimary)
             .ToListAsync(token)).ToLookup(x => (x.Namespace, x.ExternalId));
         var aliases = (await db.AlternateKeyPeriods.AsNoTracking().Where(x => x.WorkspaceId == workspace && x.EnvironmentId == environment)
-            .ToListAsync(token)).ToLookup(x => (x.Namespace, x.NormalizedValue));
+            .ToListAsync(token)).ToLookup(x => (x.Namespace, AlternateKeyProjection.Normalize(x.Namespace, x.OriginalValue)));
         var sections = (await ProjectedSection.LoadAsync(db, workspace, environment, token)).ToDictionary(x => x.Section.Id);
         var exhaustive = sections.Values.Where(x => x.IsExhaustive(catalog)).ToLookup(x => x.Stream);
         var edges = db.InventoryRelationships.Where(x => x.WorkspaceId == workspace && x.EnvironmentId == environment);

@@ -27,6 +27,12 @@
                       OptionText="@(x => $"{Text[x.Kind.ToString()]} · {x.ExternalId}")" OptionValue="@(x => x.Id)"
                       Value="_environmentId" ValueChanged="SelectAsync" Label="@Text["CollectionEnvironment"]" Disabled="Busy" />
         <FluentButton OnClick="ReloadAsync" Disabled="Busy">@Text["Reload"]</FluentButton>
+        @if (SelectedEnvironment?.Kind == EnvironmentKind.M365Tenant)
+        {
+            <FluentSelect TOption="string" TValue="string" Items="@(new[] { GraphDiscoveryService.EntraProducerId, IntuneCollector.ProducerId })"
+                          OptionText="@(id => Text[$"Producer_{id}"])" Value="_graphProducer" ValueChanged="SelectProducerAsync"
+                          Label="@Text["Producer"]" Disabled="Busy" />
+        }
     </div>
     @if (SelectedEnvironment is null)
     {
@@ -71,7 +77,7 @@
                     }
                 }
                 @if (!Availability.Graph) { <p class="notice">@Text["GraphConfigurationRequired"]</p> }
-                <p>@Text["GraphAlternativeHint"]</p>
+                <p>@Text[_graphProducer == IntuneCollector.ProducerId ? "IntunePrerequisiteHint" : "GraphAlternativeHint"]</p>
             }
             else
             {
@@ -286,6 +292,7 @@
     private bool _canCollect, _canManage;
     private int _revision;
     private string[] _availableSections = [];
+    private string _graphProducer = GraphDiscoveryService.EntraProducerId;
     private IEnumerable<string> _sections = [];
     private IReadOnlyList<string> _uncollected = [];
     private IReadOnlyList<ReportProfile> _profiles = [];
@@ -316,7 +323,8 @@
         _connection = null; _preview = null; _request = null; _proof = null; _uncollected = [];
         _availableSections = SelectedEnvironment is null ? [] : Catalog.Families.Where(x => x.EnvironmentKind == SelectedEnvironment.Kind.ToString())
             .SelectMany(x => x.Sections).Where(x => x.ProducerIds.Any(id => Catalog.Producers[id].Readiness == "SyntheticValidated"
-                && Catalog.Producers[id].Channel != "Import")).Select(x => x.Id).ToArray();
+                && !Catalog.Producers[id].Preview && (SelectedEnvironment.Kind == EnvironmentKind.M365Tenant
+                    ? id == _graphProducer : Catalog.Producers[id].Channel != "Import"))).Select(x => x.Id).ToArray();
         _sections = _availableSections;
         _profiles = SelectedEnvironment is null ? [] : Reports.Supported.Where(x => x.EnvironmentKind == SelectedEnvironment.Kind.ToString()).ToArray();
         if (SelectedProfile is null) { _profileKey = _profiles.Count > 0 ? ProfileKey(_profiles[0]) : ""; }
@@ -324,18 +332,22 @@
         _reportAttested = false;
         if (SelectedEnvironment is not null)
         {
-            _connection = await Queries.ConnectionAsync(ProjectId, _environmentId);
+            _connection = await Queries.ConnectionAsync(ProjectId, _environmentId, producerId: _graphProducer);
             _uncollected = await Queries.UncollectedAsync(ProjectId, _environmentId);
         }
         _revision++;
     }
     private Task SelectAsync(Guid id) => RunAsync(async () => { _environmentId = id; _operationId = Guid.NewGuid(); _message = null; await LoadSelectedAsync(); });
     private Task ReloadAsync() => RunAsync(LoadAsync);
-    private Task ConnectAsync() => RunAsync(async () => { await Graph.ConnectAsync(ProjectId, _environmentId, _connectionName); await LoadSelectedAsync(); });
+    private Task SelectProducerAsync(string id) => RunAsync(async () =>
+    {
+        _graphProducer = id; _operationId = Guid.NewGuid(); _message = null; await LoadSelectedAsync();
+    });
+    private Task ConnectAsync() => RunAsync(async () => { await Graph.ConnectAsync(ProjectId, _environmentId, _connectionName, producerId: _graphProducer); await LoadSelectedAsync(); });
     private Task TestAsync() => RunAsync(async () =>
     {
         await Graph.TestAsync(ProjectId, _environmentId, _connection!.Id);
-        _connection = await Queries.ConnectionAsync(ProjectId, _environmentId);
+        _connection = await Queries.ConnectionAsync(ProjectId, _environmentId, producerId: _graphProducer);
     });
     private Task LaunchAsync() => RunAsync(async () =>
     {

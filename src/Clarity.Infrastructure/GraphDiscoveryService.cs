@@ -10,9 +10,13 @@ public sealed record SectionAccess(string CapabilityId, bool Available, string C
 public sealed class GraphDiscoveryService(IDbContextFactory<ClarityDbContext> factory, IProjectAccess access,
     IWorkspaceContext scope, DiscoveryCatalog catalog, IGraphSessionFactory sessions)
 {
-    public async Task<Guid> ConnectAsync(Guid projectId, Guid environmentId, string name, CancellationToken cancellationToken = default)
+    public const string EntraProducerId = "clarity.graph.entra";
+    public async Task<Guid> ConnectAsync(Guid projectId, Guid environmentId, string name, CancellationToken cancellationToken = default,
+        string producerId = EntraProducerId)
     {
         var project = await access.RequireAsync(projectId, WorkspaceOperation.ManageConnections, cancellationToken);
+        if (producerId is not (EntraProducerId or IntuneCollector.ProducerId)) { throw new ContractException("ProducerUnavailable", "catalog"); }
+        catalog.RequireProducer(producerId);
         await using var db = await factory.CreateDbContextAsync(cancellationToken);
         var environment = await ImportService.EnvironmentAsync(db, project, environmentId, cancellationToken);
         if (environment.Kind != EnvironmentKind.M365Tenant || !Guid.TryParse(environment.ExternalId, out var tenant))
@@ -22,14 +26,14 @@ public sealed class GraphDiscoveryService(IDbContextFactory<ClarityDbContext> fa
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         await PublicationService.LockEnvironmentAsync(db, project.WorkspaceId, tenant, cancellationToken);
         var connection = await db.Connections.SingleOrDefaultAsync(x => x.WorkspaceId == project.WorkspaceId
-            && x.TenantId == tenant && x.ProducerId == "clarity.graph.entra", cancellationToken);
+            && x.TenantId == tenant && x.ProducerId == producerId, cancellationToken);
         if (connection is not null) { return connection.Id; }
         connection = new Connection
         {
             WorkspaceId = project.WorkspaceId,
             TenantId = tenant,
             Name = name,
-            ProducerId = "clarity.graph.entra",
+            ProducerId = producerId,
             ConfigurationReference = "collector"
         };
         db.Connections.Add(connection);
@@ -42,21 +46,26 @@ public sealed class GraphDiscoveryService(IDbContextFactory<ClarityDbContext> fa
         CollectionScope requestedScope, string[] sections, CancellationToken cancellationToken = default)
     {
         var project = await access.RequireAsync(projectId, WorkspaceOperation.Collect, cancellationToken);
-        catalog.RequireProducer("clarity.graph.entra");
         await using var db = await factory.CreateDbContextAsync(cancellationToken);
         var environment = await ImportService.EnvironmentAsync(db, project, environmentId, cancellationToken);
         var connection = await ConnectionAsync(db, project, environment, connectionId, cancellationToken);
+        ValidateSelection(catalog, connection, requestedScope, sections);
+        var payload = JsonSerializer.Serialize(new GraphJobPayload(environmentId, connectionId, requestedScope, sections), ContractJson.Options);
+        await new JobService(factory, access, scope).EnqueueAsync(projectId, operationId, CollectionJobKind.Graph, payload,
+            DiscoveryScope.Hash(new CollectionScope("tenant", connection.TenantId + ":Microsoft.Graph")),
+            System.Diagnostics.Activity.Current?.TraceId.ToString() ?? Guid.NewGuid().ToString("N"), cancellationToken);
+        return operationId;
+    }
+
+    internal static void ValidateSelection(DiscoveryCatalog catalog, Connection connection, CollectionScope requestedScope, string[] sections)
+    {
+        catalog.RequireProducer(connection.ProducerId);
         if (requestedScope.Kind != "tenant" || requestedScope.Value != connection.TenantId.ToString()
             || sections.Length == 0 || sections.Distinct(StringComparer.Ordinal).Count() != sections.Length
             || sections.Any(x => !catalog.Sections.TryGetValue(x, out var section) || !section.ProducerIds.Contains(connection.ProducerId)))
         {
             throw new ArgumentException("Invalid Graph tenant scope or sections.");
         }
-        var payload = JsonSerializer.Serialize(new GraphJobPayload(environmentId, connectionId, requestedScope, sections), ContractJson.Options);
-        await new JobService(factory, access, scope).EnqueueAsync(projectId, operationId, CollectionJobKind.Graph, payload,
-            DiscoveryScope.Hash(new CollectionScope("tenant", connection.TenantId + ":Microsoft.Graph")),
-            System.Diagnostics.Activity.Current?.TraceId.ToString() ?? Guid.NewGuid().ToString("N"), cancellationToken);
-        return operationId;
     }
 
     public async Task<IReadOnlyList<SectionAccess>> TestAsync(Guid projectId, Guid environmentId, Guid connectionId,
@@ -71,6 +80,15 @@ public sealed class GraphDiscoveryService(IDbContextFactory<ClarityDbContext> fa
         var checks = new List<SectionAccess>();
         foreach (var section in catalog.Sections.Values.Where(x => x.ProducerIds.Contains(connection.ProducerId)))
         {
+            if (connection.ProducerId == IntuneCollector.ProducerId)
+            {
+                try { checks.Add(await IntuneCollector.ProbeAsync(session.Transport, section, cancellationToken)); }
+                catch (Exception error) when (error is GraphReadException or HttpRequestException or JsonException or InvalidOperationException or ContractException)
+                {
+                    checks.Add(new(section.Id, false, error is GraphReadException read ? read.Code : "GraphDataUnavailable", section.Permissions));
+                }
+                continue;
+            }
             string[] paths = section.Id switch
             {
                 "entra.users" => ["/v1.0/users?$top=1&$select=id"],
@@ -120,7 +138,7 @@ public sealed class GraphDiscoveryService(IDbContextFactory<ClarityDbContext> fa
         var connection = await db.Connections.SingleOrDefaultAsync(x => x.WorkspaceId == project.WorkspaceId && x.Id == connectionId,
             cancellationToken) ?? throw new AccessDeniedException();
         if (environment.Kind != EnvironmentKind.M365Tenant || !Guid.TryParse(environment.ExternalId, out var tenant)
-            || connection.TenantId != tenant || connection.ProducerId != "clarity.graph.entra")
+            || connection.TenantId != tenant || connection.ProducerId is not (EntraProducerId or IntuneCollector.ProducerId))
         {
             throw new ContractException("EnvironmentMismatch", "Graph");
         }

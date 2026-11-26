@@ -27,6 +27,7 @@ public static class DiscoveryRegistration
         services.AddSingleton<ZipPackageReader>();
         services.AddSingleton<IArtifactStore, BlobArtifactStore>();
         services.AddHttpClient("DiscoveryGraph", client => client.Timeout = TimeSpan.FromSeconds(90))
+            .RemoveAllLoggers()
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
         services.AddSingleton<IGraphSessionFactory>(provider => new KeyVaultGraphSessionFactory(
             () => provider.GetRequiredService<IHttpClientFactory>().CreateClient("DiscoveryGraph"), options));

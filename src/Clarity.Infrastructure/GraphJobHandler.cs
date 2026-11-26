@@ -30,6 +30,7 @@ public sealed class GraphJobHandler(IGraphSessionFactory sessions, EntraCollecto
                 && x.ProjectId == project.Id && x.EnvironmentId == payload.EnvironmentId && x.ExternalRunId == job.Id, cancellationToken);
             var environment = await ImportService.EnvironmentAsync(db, project, payload.EnvironmentId, cancellationToken);
             connection = await GraphDiscoveryService.ConnectionAsync(db, project, environment, payload.ConnectionId, cancellationToken);
+            GraphDiscoveryService.ValidateSelection(catalog, connection, payload.Scope, payload.Sections);
         }
         if (prepared is not null && (prepared.ConnectionId != connection.Id || prepared.ConfirmedAtUtc is null
             || prepared.ProducerId != connection.ProducerId)) { throw new ConflictException(); }
@@ -42,29 +43,34 @@ public sealed class GraphJobHandler(IGraphSessionFactory sessions, EntraCollecto
             var relationships = new List<RelationshipRecord>();
             var results = new List<SectionResult>();
             var continuations = new List<GraphContinuation>();
+            var intune = new IntuneCollector(catalog);
             foreach (var capability in payload.Sections)
             {
                 await execution.ReportProgressAsync(0, cancellationToken);
                 await execution.Access.RequireAsync(job.ProjectId, WorkspaceOperation.Collect, cancellationToken);
-                var hash = CursorScopeHash(payload.Scope, catalog);
+                string? hash = null;
                 string? delta = null;
                 if (capability == "entra.users")
                 {
+                    hash = CursorScopeHash(payload.Scope, catalog);
                     await using var db = await execution.Factory.CreateDbContextAsync(cancellationToken);
                     var oldest = DateTimeOffset.UtcNow.AddDays(-6);
                     delta = await db.GraphCursors.Where(x => x.WorkspaceId == project.WorkspaceId && x.EnvironmentId == payload.EnvironmentId
                         && x.ConnectionId == connection.Id && x.CapabilityId == capability && x.ScopeHash == hash && x.PublishedAtUtc > oldest)
                         .Select(x => x.DeltaLink).SingleOrDefaultAsync(cancellationToken);
                 }
-                var section = await collector.CollectAsync(session.Transport, capability, payload.Scope, delta, cancellationToken);
+                var section = connection.ProducerId == IntuneCollector.ProducerId
+                    ? await intune.CollectAsync(session.Transport, capability, payload.Scope, cancellationToken)
+                    : await collector.CollectAsync(session.Transport, capability, payload.Scope, delta, cancellationToken);
                 objects.AddRange(section.Objects);
                 relationships.AddRange(section.Relationships);
                 results.Add(section.Result);
-                if (section.DeltaLink is not null) { continuations.Add(new(capability, hash, section.DeltaLink)); }
+                if (section.DeltaLink is not null && hash is not null) { continuations.Add(new(capability, hash, section.DeltaLink)); }
             }
-            var package = new DiscoveryPackage(new PackageManifest("1.0", job.Id, "clarity.graph.entra", "1.0.0", "M365Tenant",
+            var producer = catalog.RequireProducer(connection.ProducerId);
+            var package = new DiscoveryPackage(new PackageManifest("1.0", job.Id, producer.Id, producer.Version, "M365Tenant",
                 connection.TenantId.ToString(), payload.Scope, started, DateTimeOffset.UtcNow,
-                new Dictionary<string, string> { ["Microsoft.Graph"] = "REST v1.0" }, "Microsoft Graph"), objects, relationships, results);
+                new Dictionary<string, string> { ["Microsoft.Graph"] = $"REST {producer.ApiVersion}" }, "Microsoft Graph"), objects, relationships, results);
             using var zip = new MemoryStream();
             await PackageZipWriter.WriteAsync(package, zip, cancellationToken);
             zip.Position = 0;

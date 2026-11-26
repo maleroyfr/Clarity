@@ -97,6 +97,7 @@ internal static class AlternateKeyProjection
     {
         "smtp" when value.StartsWith("smtp:", StringComparison.OrdinalIgnoreCase) => value[5..].Trim().ToUpperInvariant(),
         "upn" or "smtp" or "ad.distinguishedName" or "dnsHostName" or "sAMAccountName" => value.Trim().ToUpperInvariant(),
+        "deviceId" when Guid.TryParse(value, out var deviceId) => deviceId.ToString(),
         _ => value
     };
 }

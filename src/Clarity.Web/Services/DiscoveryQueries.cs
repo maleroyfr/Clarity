@@ -106,7 +106,8 @@ public sealed class DiscoveryQueries(IDbContextFactory<ClarityDbContext> factory
             .Select(x => x.Id).Except(collected, StringComparer.Ordinal).ToArray();
     }
 
-    public async Task<ConnectionView?> ConnectionAsync(Guid projectId, Guid environmentId, CancellationToken ct = default)
+    public async Task<ConnectionView?> ConnectionAsync(Guid projectId, Guid environmentId, CancellationToken ct = default,
+        string producerId = GraphDiscoveryService.EntraProducerId)
     {
         var project = await access.RequireAsync(projectId, WorkspaceOperation.Read, ct);
         await using var db = await factory.CreateDbContextAsync(ct);
@@ -114,7 +115,7 @@ public sealed class DiscoveryQueries(IDbContextFactory<ClarityDbContext> factory
             && x.ProjectId == projectId && x.Id == environmentId, ct) ?? throw new AccessDeniedException();
         if (environment.Kind != EnvironmentKind.M365Tenant || !Guid.TryParse(environment.ExternalId, out var tenant)) { return null; }
         var connection = await db.Connections.AsNoTracking().SingleOrDefaultAsync(x => x.WorkspaceId == project.WorkspaceId
-            && x.TenantId == tenant && x.ProducerId == "clarity.graph.entra", ct);
+            && x.TenantId == tenant && x.ProducerId == producerId, ct);
         return connection is null ? null : new(connection.Id, connection.Name, tenant, connection.TestedAtUtc,
             JsonSerializer.Deserialize<SectionAccess[]>(connection.AccessResultsJson, ContractJson.Options)!);
     }

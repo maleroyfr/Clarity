@@ -151,6 +151,11 @@ merging the two source objects. Links to devices, subscriptions, applications or
 later resource types appear only when evidence exists: a device has no implied
 primary user and basic application metadata does not establish user access.
 
+The [Intune / Autopilot connector](connectors/intune-autopilot.md) preserves
+managed and directory devices independently, linking by an exposed managed ID
+or Entra `deviceId`. Intune primary users and Entra registered owners remain
+distinct directed observations. Neither creates a confirmed AD/Entra decision.
+
 The cyclic-membership SQL case above opens the pending and resolved sheets,
 follows a reverse link, and verifies both source observations and isolation.
 
