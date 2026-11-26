@@ -15,6 +15,10 @@ public class StartupTests
         using var response = await client.GetAsync("/", TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        (await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken)).ShouldContain("<h1>");
+        var html = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        html.ShouldContain("<h1>Clients</h1>");
+        html.ShouldContain("Aucun espace client");
+        html.ShouldContain("SQL n");
+        html.ShouldNotContain("Hello, world!");
     }
 }

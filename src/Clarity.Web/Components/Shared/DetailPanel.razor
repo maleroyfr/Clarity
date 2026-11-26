@@ -1,0 +1,19 @@
+<aside class="detail-panel" role="region" aria-labelledby="@_titleId" tabindex="-1" @onkeydown="OnKeyDown" @ref="_panel">
+    <header><h2 id="@_titleId">@Title</h2><FluentButton OnClick="Close">@Text["Close"]</FluentButton></header>
+    @if (Error is not null) { <p role="alert" class="error">@Error</p> }
+    @ChildContent
+</aside>
+
+@code {
+    private readonly string _titleId = $"detail-{Guid.NewGuid():N}";
+    [Parameter, EditorRequired] public string Title { get; set; } = "";
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public EventCallback Close { get; set; }
+    [Parameter] public string? Error { get; set; }
+    private ElementReference _panel;
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender) { await _panel.FocusAsync(); }
+    }
+    private Task OnKeyDown(KeyboardEventArgs args) => args.Key == "Escape" ? Close.InvokeAsync() : Task.CompletedTask;
+}

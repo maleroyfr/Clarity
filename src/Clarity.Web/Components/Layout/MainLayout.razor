@@ -1,9 +1,45 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
+@inject IWebHostEnvironment Environment
+@inject IThemeService ThemeService
 
-@Body
+<a class="skip-link" href="#main-content">@Text["SkipNavigation"]</a>
+<header class="app-header">
+    <a class="brand" href="/">Clarity<span class="brand-dot" aria-hidden="true">.</span></a>
+    <span class="tagline">@Text["Tagline"]</span>
+    <AuthorizeView><Authorized><span class="identity">@(Environment.IsDevelopment() || Environment.IsEnvironment("Testing") ? Text[$"Persona_{context.User.Identity?.Name}"] : context.User.Identity?.Name)</span></Authorized></AuthorizeView>
+</header>
+<div class="app-shell">
+    <nav class="app-nav" aria-label="@Text["Clients"]">
+        <NavLink href="/" Match="NavLinkMatch.All">@Text["Clients"]</NavLink>
+    </nav>
+    <main id="main-content">
+        @if (Environment.IsDevelopment() || Environment.IsEnvironment("Testing"))
+        {
+            <AuthorizeView Context="personaState"><Authorized>
+            <form class="persona-bar" action="/development/persona" method="post">
+                <AntiforgeryToken />
+                <label for="persona">@Text["LocalPersona"]</label>
+                <select id="persona" name="persona">
+                    @foreach (var persona in DevelopmentAuthenticationHandler.Personas.Keys)
+                    {
+                        <option value="@persona" selected="@(persona == personaState.User.Identity?.Name)">@Text[$"Persona_{persona}"]</option>
+                    }
+                </select>
+                <button type="submit">@Text["SwitchPersona"]</button>
+            </form>
+            </Authorized></AuthorizeView>
+        }
+        @Body
+    </main>
+</div>
 
-<div id="blazor-error-ui" data-nosnippet>
-    An unhandled error has occurred.
-    <a href="." class="reload">Reload</a>
-    <span class="dismiss">🗙</span>
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender) { await ThemeService.SetThemeAsync(ThemeMode.Light); }
+    }
+}
+<FluentProviders />
+<div id="blazor-error-ui" data-nosnippet role="alert">
+    @Text["Error"] <a href="." class="reload">@Text["Reload"]</a>
 </div>

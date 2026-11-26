@@ -11,9 +11,37 @@ dotnet restore
 dotnet run --project src\Clarity.Web -- --environment Development
 ```
 
-The initial bootstrap contains the default empty Blazor host; the foundation
-slices replace it with an empty client screen and Development-only personas.
-No client data is seeded during application startup.
+The first screen is an empty client screen. No client data is seeded during
+application startup. Without `ConnectionStrings:Clarity`, Development displays a
+configuration notice and disables creation; it never substitutes an in-memory
+database. Use a reachable SQL Server/Azure SQL database to persist real local work.
+
+```powershell
+$env:ConnectionStrings__Clarity = '<your development SQL connection string>'
+$env:CLARITY_MIGRATION_SQL = $env:ConnectionStrings__Clarity
+dotnet tool restore
+dotnet ef database update --project src\Clarity.Infrastructure
+dotnet run --project src\Clarity.Web -- --environment Development
+```
+
+The selector provides manager, consultant and reader personas for a synthetic
+Alpha workspace, a Beta manager, and a platform administrator. Their fixed
+identities are in `DevelopmentAuthenticationHandler`; the handler does not seed
+those workspaces. To start from empty, select the platform administrator, create
+a client, then use **Attribuer un accès** with the synthetic tenant/object pair
+of your chosen persona. Switch to that persona and create a dossier. The
+administrator needs explicit membership for inventory access too. Existing SQL
+memberships are honored for all local personas.
+
+Fake authentication, its cookie selector and the `X-Clarity-Persona` test header
+exist only in Development/Testing. Never expose a Development deployment publicly.
+Production requires Entra configuration and SQL; missing configuration does not
+fall back to a fake identity. Business labels are neutral French resources with
+`fr-FR` request culture. The foundation shell intentionally uses a light theme.
+
+Discovery collection/import buttons and later-lot sections are explicitly
+unavailable placeholders. Client/project creation, search, archive, membership
+assignment and source/target environment declaration are implemented.
 
 SQL-dependent tests require `CLARITY_TEST_SQL` pointing to a disposable SQL Server
 or Azure SQL database. Tests may create and remove test databases. Without the

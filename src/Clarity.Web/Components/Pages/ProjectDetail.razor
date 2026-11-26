@@ -1,0 +1,107 @@
+@page "/projects/{ProjectId:guid}"
+@page "/projects/{ProjectId:guid}/{Section}"
+@attribute [Authorize]
+@inherits FoundationPage
+@inject FoundationService Service
+
+<PageTitle>@(_project?.Name ?? Text["Projects"]) · Clarity</PageTitle>
+@if (Error is not null) { <p class="error" role="alert">@Error</p> }
+@if (_project is not null)
+{
+    <div class="breadcrumbs"><a href="/">@Text["Clients"]</a> / <a href="@($"/clients/{_project.WorkspaceId}/projects")">@_clientName · @Text["Projects"]</a></div>
+    <div class="page-heading"><div><p class="eyebrow">@Text[_project.Scenario.ToString()] · @Text[_project.Status.ToString()]</p><h1>@_project.Name</h1><p>@_project.Description</p></div>
+        <FluentSelect TOption="EnvironmentRole" TValue="EnvironmentRole" Items="Enum.GetValues<EnvironmentRole>()" OptionText="@(role => Text[role.ToString()])" @bind-Value="_side" Label="@Text["ActiveSide"]" />
+    </div>
+    <nav class="project-tabs" aria-label="@Text["Projects"]">
+        @foreach (var section in Sections)
+        {
+            <NavLink href="@($"/projects/{ProjectId}/{section.Key}")">@Text[section.Value]</NavLink>
+        }
+    </nav>
+    @if (Section is null or "overview" or "discovery")
+    {
+        <div class="summary-cards">
+            <article><h2>@Text["LastInventory"]</h2><p>@Text["NoInventory"]</p></article>
+            <article><h2>@Text["SectionsToVerify"]</h2><p>@Text["Unknown"]</p></article>
+            <article><h2>@Text["TargetPresence"]</h2><p>@Text[_environments.Any(x => x.Role == EnvironmentRole.Target) ? "Present" : "Absent"]</p></article>
+        </div>
+        <div class="section-heading"><h2>@Text["Environments"] · @Text[_side.ToString()]</h2>
+            <FluentButton OnClick="OpenEnvironment">@Text[_side == EnvironmentRole.Source ? "AddSource" : "AddTarget"]</FluentButton></div>
+        @if (!_environments.Any(x => x.Role == _side))
+        {
+            <EmptyState Title="@Text[_side == EnvironmentRole.Source ? "NoSource" : "AddTarget"]" Description="@Text["NoSourceHint"]">
+                <FluentButton Appearance="ButtonAppearance.Primary" OnClick="OpenEnvironment">@Text[_side == EnvironmentRole.Source ? "AddSource" : "AddTarget"]</FluentButton>
+            </EmptyState>
+        }
+        @foreach (var environment in _environments.Where(x => x.Role == _side))
+        {
+            <article class="environment-card">
+                <h3>@Text[environment.Kind.ToString()] · @Text[environment.Role.ToString()]</h3>
+                <p>@environment.ExternalId</p><p>@Text["DeclaredScope"] : @environment.DeclaredScope</p>
+                <p>@Text[environment.TargetState.ToString()] · @environment.Hypotheses</p>
+            </article>
+        }
+        <p class="notice">@Text["LaterLot"]</p>
+        <div class="toolbar"><FluentButton Disabled="true">@Text["LaunchCollection"]</FluentButton><FluentButton Disabled="true">@Text["ImportPackage"]</FluentButton></div>
+    }
+    else
+    {
+        <EmptyState Title="@Text[Sections.GetValueOrDefault(Section, "NotFound")]" Description="@Text["LaterLot"]">
+            <a href="@($"/projects/{ProjectId}/discovery")">@Text["Discovery"]</a>
+        </EmptyState>
+    }
+}
+@if (_addEnvironment)
+{
+    <DetailPanel Title="@Text["AddEnvironment"]" Error="@Error" Close="@(() => _addEnvironment = false)">
+        <form @onsubmit="AddEnvironmentAsync" @onsubmit:preventDefault>
+            <FluentSelect TOption="EnvironmentRole" TValue="EnvironmentRole" Items="Enum.GetValues<EnvironmentRole>()" OptionText="@(role => Text[role.ToString()])" @bind-Value="_role" Label="@Text["Role"]" />
+            <FluentSelect TOption="EnvironmentKind" TValue="EnvironmentKind" Items="Enum.GetValues<EnvironmentKind>()" OptionText="@(kind => Text[kind.ToString()])" @bind-Value="_kind" Label="@Text["Kind"]" />
+            @if (_role == EnvironmentRole.Target)
+            {
+                <FluentSelect TOption="TargetState" TValue="TargetState" Items="Enum.GetValues<TargetState>()" OptionText="@(state => Text[state.ToString()])" @bind-Value="_targetState" Label="@Text["TargetState"]" />
+            }
+            <FluentTextInput Label="@Text["ExternalId"]" @bind-Value="_externalId" />
+            <FluentTextInput Label="@Text["DeclaredScope"]" @bind-Value="_declaredScope" />
+            <FluentTextInput Label="@Text["Hypotheses"]" @bind-Value="_hypotheses" />
+            <FluentButton Type="ButtonType.Submit" Appearance="ButtonAppearance.Primary" Disabled="Busy">@Text["Save"]</FluentButton>
+        </form>
+    </DetailPanel>
+}
+
+@code {
+    [Parameter] public Guid ProjectId { get; set; }
+    [Parameter] public string? Section { get; set; }
+    private static readonly Dictionary<string, string> Sections = new()
+    {
+        ["overview"] = "Overview", ["discovery"] = "Discovery", ["inventory"] = "Inventory",
+        ["scope"] = "Scope", ["comparison"] = "Comparison", ["exports"] = "Exports"
+    };
+    private Project? _project;
+    private string _clientName = "";
+    private IReadOnlyList<ProjectEnvironment> _environments = [];
+    private EnvironmentRole _side, _role;
+    private EnvironmentKind _kind;
+    private TargetState _targetState = TargetState.Existing;
+    private bool _addEnvironment;
+    private string _externalId = "", _declaredScope = "", _hypotheses = "";
+    private Guid _operationId = Guid.NewGuid();
+
+    protected override Task OnParametersSetAsync() => RunAsync(LoadAsync);
+    private async Task LoadAsync()
+    {
+        _project = null;
+        var project = await Service.GetProjectAsync(ProjectId);
+        _clientName = (await Service.GetWorkspaceAsync(project.WorkspaceId)).Name;
+        _environments = await Service.ListEnvironmentsAsync(ProjectId);
+        _project = project;
+    }
+    private void OpenEnvironment() { _role = _side; _addEnvironment = true; }
+    private Task AddEnvironmentAsync() => RunAsync(async () =>
+    {
+        await Service.AddEnvironmentAsync(ProjectId, _operationId, _role, _kind, _externalId, _declaredScope,
+            _role == EnvironmentRole.Source ? TargetState.Existing : _targetState, _hypotheses);
+        _side = _role; _addEnvironment = false; _externalId = ""; _declaredScope = ""; _hypotheses = "";
+        _operationId = Guid.NewGuid(); await LoadAsync();
+    });
+}

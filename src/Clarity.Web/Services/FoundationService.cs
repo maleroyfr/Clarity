@@ -9,6 +9,15 @@ namespace Clarity.Web.Services;
 public sealed class FoundationService(
     IDbContextFactory<ClarityDbContext> factory, WorkspaceAuthorization authorization, IWorkspaceContext scope)
 {
+    public async Task<ClientWorkspace> GetWorkspaceAsync(Guid workspaceId, CancellationToken cancellationToken = default)
+    {
+        await authorization.RefreshAsync(cancellationToken);
+        await authorization.DemandAsync(workspaceId, WorkspaceOperation.Read);
+        await using var db = await factory.CreateDbContextAsync(cancellationToken);
+        return await db.Workspaces.AsNoTracking().SingleOrDefaultAsync(x => x.Id == workspaceId, cancellationToken)
+            ?? throw new AccessDeniedException();
+    }
+
     public async Task<PageResult<ClientWorkspace>> ListWorkspacesAsync(PageRequest request, CancellationToken cancellationToken = default)
     {
         request.Validate();

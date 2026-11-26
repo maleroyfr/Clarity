@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="Clients" xml:space="preserve"><value>Clients</value></data>
+  <data name="Projects" xml:space="preserve"><value>Dossiers</value></data>
+  <data name="Overview" xml:space="preserve"><value>Vue d'ensemble</value></data>
+  <data name="Discovery" xml:space="preserve"><value>Discovery</value></data>
+  <data name="Inventory" xml:space="preserve"><value>Inventaire</value></data>
+  <data name="Scope" xml:space="preserve"><value>Périmètre</value></data>
+  <data name="Comparison" xml:space="preserve"><value>Comparaison</value></data>
+  <data name="Exports" xml:space="preserve"><value>Exports</value></data>
+  <data name="Tagline" xml:space="preserve"><value>Préparer la migration, comprendre l'existant.</value></data>
+  <data name="ClientIntro" xml:space="preserve"><value>Retrouvez vos espaces clients et leurs dossiers d'inventaire.</value></data>
+  <data name="Search" xml:space="preserve"><value>Rechercher par nom</value></data>
+  <data name="SearchAction" xml:space="preserve"><value>Rechercher</value></data>
+  <data name="Name" xml:space="preserve"><value>Nom</value></data>
+  <data name="Status" xml:space="preserve"><value>Statut</value></data>
+  <data name="Active" xml:space="preserve"><value>Actif</value></data>
+  <data name="Archived" xml:space="preserve"><value>Archivé</value></data>
+  <data name="Archive" xml:space="preserve"><value>Archiver</value></data>
+  <data name="ArchiveConfirm" xml:space="preserve"><value>Confirmez l'archivage. Le dossier reste consultable.</value></data>
+  <data name="NewClient" xml:space="preserve"><value>Créer un espace client</value></data>
+  <data name="NewProject" xml:space="preserve"><value>Créer un dossier</value></data>
+  <data name="NoClients" xml:space="preserve"><value>Aucun espace client</value></data>
+  <data name="NoClientsHint" xml:space="preserve"><value>Un administrateur peut créer un espace puis vous attribuer un accès explicite.</value></data>
+  <data name="NoProjects" xml:space="preserve"><value>Aucun dossier</value></data>
+  <data name="NoProjectsHint" xml:space="preserve"><value>Créez un dossier pour déclarer la source de votre mission.</value></data>
+  <data name="NoResults" xml:space="preserve"><value>Aucun résultat pour cette recherche.</value></data>
+  <data name="SqlRequired" xml:space="preserve"><value>SQL n'est pas configuré. L'écran reste vide et aucune donnée n'est enregistrée. Configurez ConnectionStrings:Clarity pour créer des espaces et dossiers.</value></data>
+  <data name="Save" xml:space="preserve"><value>Enregistrer</value></data>
+  <data name="Close" xml:space="preserve"><value>Fermer</value></data>
+  <data name="Description" xml:space="preserve"><value>Description</value></data>
+  <data name="Scenario" xml:space="preserve"><value>Scénario</value></data>
+  <data name="TenantToTenant" xml:space="preserve"><value>Tenant-to-tenant</value></data>
+  <data name="CarveOut" xml:space="preserve"><value>Carve-out</value></data>
+  <data name="CarveIn" xml:space="preserve"><value>Carve-in</value></data>
+  <data name="AuditOnly" xml:space="preserve"><value>Audit seul</value></data>
+  <data name="Source" xml:space="preserve"><value>Source</value></data>
+  <data name="Target" xml:space="preserve"><value>Cible</value></data>
+  <data name="ActiveSide" xml:space="preserve"><value>Côté actif</value></data>
+  <data name="Environments" xml:space="preserve"><value>Environnements déclarés</value></data>
+  <data name="AddSource" xml:space="preserve"><value>Ajouter une source</value></data>
+  <data name="AddTarget" xml:space="preserve"><value>Ajouter une cible</value></data>
+  <data name="AddEnvironment" xml:space="preserve"><value>Déclarer un environnement</value></data>
+  <data name="NoSource" xml:space="preserve"><value>Commencez par votre source</value></data>
+  <data name="NoSourceHint" xml:space="preserve"><value>Déclarez un tenant Microsoft 365, une forêt AD ou un autre périmètre. La cible peut être ajoutée plus tard.</value></data>
+  <data name="NoInventory" xml:space="preserve"><value>Aucun inventaire publié</value></data>
+  <data name="LastInventory" xml:space="preserve"><value>Dernier inventaire</value></data>
+  <data name="SectionsToVerify" xml:space="preserve"><value>Sections à vérifier</value></data>
+  <data name="Unknown" xml:space="preserve"><value>Inconnu</value></data>
+  <data name="TargetPresence" xml:space="preserve"><value>Cible</value></data>
+  <data name="Present" xml:space="preserve"><value>Déclarée</value></data>
+  <data name="Absent" xml:space="preserve"><value>Non déclarée</value></data>
+  <data name="Kind" xml:space="preserve"><value>Type d'environnement</value></data>
+  <data name="M365Tenant" xml:space="preserve"><value>Tenant Microsoft 365</value></data>
+  <data name="AdForest" xml:space="preserve"><value>Forêt Active Directory</value></data>
+  <data name="AzureScope" xml:space="preserve"><value>Périmètre Azure</value></data>
+  <data name="Other" xml:space="preserve"><value>Autre</value></data>
+  <data name="ExternalId" xml:space="preserve"><value>Identifiant externe du tenant ou domaine</value></data>
+  <data name="DeclaredScope" xml:space="preserve"><value>Périmètre déclaré</value></data>
+  <data name="Hypotheses" xml:space="preserve"><value>Hypothèses, par exemple le domaine cible prévu</value></data>
+  <data name="Planned" xml:space="preserve"><value>Prévue</value></data>
+  <data name="Existing" xml:space="preserve"><value>Existante</value></data>
+  <data name="TargetState" xml:space="preserve"><value>État de la cible</value></data>
+  <data name="LaterLot" xml:space="preserve"><value>Cette fonction sera disponible dans un prochain lot. Aucune collecte ni import n'est encore lancé.</value></data>
+  <data name="LaunchCollection" xml:space="preserve"><value>Lancer une collecte</value></data>
+  <data name="ImportPackage" xml:space="preserve"><value>Importer un paquet</value></data>
+  <data name="Loading" xml:space="preserve"><value>Chargement…</value></data>
+  <data name="Previous" xml:space="preserve"><value>Précédent</value></data>
+  <data name="Next" xml:space="preserve"><value>Suivant</value></data>
+  <data name="Page" xml:space="preserve"><value>Page</value></data>
+  <data name="Items" xml:space="preserve"><value>éléments</value></data>
+  <data name="Error" xml:space="preserve"><value>Impossible de terminer l'opération. Vérifiez la configuration et réessayez.</value></data>
+  <data name="Denied" xml:space="preserve"><value>Vous n'avez pas accès à cette ressource ou à cette action.</value></data>
+  <data name="Invalid" xml:space="preserve"><value>Vérifiez les champs obligatoires et les valeurs saisies.</value></data>
+  <data name="Conflict" xml:space="preserve"><value>Une opération utilise déjà cet identifiant. Réessayez la demande originale.</value></data>
+  <data name="SignIn" xml:space="preserve"><value>Se connecter</value></data>
+  <data name="SkipNavigation" xml:space="preserve"><value>Aller au contenu</value></data>
+  <data name="LocalPersona" xml:space="preserve"><value>Identité locale de développement</value></data>
+  <data name="Persona_manager" xml:space="preserve"><value>Gestionnaire — espace Alpha</value></data>
+  <data name="Persona_consultant" xml:space="preserve"><value>Consultant — espace Alpha</value></data>
+  <data name="Persona_reader" xml:space="preserve"><value>Lecteur — espace Alpha</value></data>
+  <data name="Persona_platform-admin" xml:space="preserve"><value>Administrateur de plateforme</value></data>
+  <data name="Persona_beta-manager" xml:space="preserve"><value>Gestionnaire — espace Beta</value></data>
+  <data name="SwitchPersona" xml:space="preserve"><value>Changer d'identité</value></data>
+  <data name="ManageMembers" xml:space="preserve"><value>Attribuer un accès</value></data>
+  <data name="TenantId" xml:space="preserve"><value>Tenant d'authentification (tid)</value></data>
+  <data name="ObjectId" xml:space="preserve"><value>Identifiant Entra du membre (oid)</value></data>
+  <data name="Role" xml:space="preserve"><value>Rôle</value></data>
+  <data name="WorkspaceManager" xml:space="preserve"><value>Gestionnaire d'espace</value></data>
+  <data name="Consultant" xml:space="preserve"><value>Consultant</value></data>
+  <data name="Reader" xml:space="preserve"><value>Lecteur</value></data>
+  <data name="Reload" xml:space="preserve"><value>Recharger</value></data>
+  <data name="NotFound" xml:space="preserve"><value>Page introuvable</value></data>
+  <data name="Rejoining" xml:space="preserve"><value>Reconnexion au serveur…</value></data>
+  <data name="RetryIn" xml:space="preserve"><value>Nouvel essai dans</value></data>
+  <data name="Seconds" xml:space="preserve"><value>secondes</value></data>
+  <data name="ReconnectFailed" xml:space="preserve"><value>La reconnexion a échoué. Réessayez ou rechargez la page.</value></data>
+  <data name="Retry" xml:space="preserve"><value>Réessayer</value></data>
+  <data name="Paused" xml:space="preserve"><value>La session a été suspendue par le serveur.</value></data>
+  <data name="Resume" xml:space="preserve"><value>Reprendre</value></data>
+</root>

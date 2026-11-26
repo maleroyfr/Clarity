@@ -6,10 +6,17 @@ using Clarity.Web.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.FluentUI.AspNetCore.Components;
 using Microsoft.Identity.Web;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddFluentUIComponents();
+builder.Services.AddLocalization();
+builder.Services.Configure<RequestLocalizationOptions>(options =>
+{
+    options.SetDefaultCulture("fr-FR").AddSupportedCultures("fr-FR").AddSupportedUICultures("fr-FR");
+});
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddAuthorization();
@@ -43,6 +50,7 @@ builder.Services.AddRazorComponents()
 var app = builder.Build();
 
 app.UseExceptionHandler();
+app.UseRequestLocalization();
 if (!app.Environment.IsDevelopment())
 {
     app.UseHsts();
@@ -55,6 +63,20 @@ app.UseAntiforgery();
 
 app.MapStaticAssets();
 app.MapFoundationEndpoints();
+app.MapGet("/authentication/login", () => Results.Challenge(new AuthenticationProperties { RedirectUri = "/" }));
+if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"))
+{
+    app.MapPost("/development/persona", async (HttpContext context, Microsoft.AspNetCore.Antiforgery.IAntiforgery antiforgery) =>
+    {
+        await antiforgery.ValidateRequestAsync(context);
+        var form = await context.Request.ReadFormAsync();
+        var persona = form["persona"].ToString();
+        if (!DevelopmentAuthenticationHandler.Personas.ContainsKey(persona)) { return Results.BadRequest(); }
+        context.Response.Cookies.Append("Clarity.Persona", persona,
+            new CookieOptions { HttpOnly = true, SameSite = SameSiteMode.Strict, Secure = context.Request.IsHttps, IsEssential = true });
+        return Results.Redirect("/");
+    }).RequireAuthorization();
+}
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 

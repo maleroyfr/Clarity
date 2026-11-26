@@ -17,6 +17,29 @@ namespace Clarity.Web.Tests;
 public class AuthorizationEndpointTests
 {
     [Fact]
+    public async Task Source_only_project_can_add_a_planned_target_later_and_render_navigation()
+    {
+        await using var app = new FoundationApplication();
+        var (alpha, _) = await app.SeedAsync();
+        using var client = await app.CreatePersonaClientAsync("manager");
+        var source = new EnvironmentInput(Guid.NewGuid(), EnvironmentRole.Source, EnvironmentKind.M365Tenant,
+            "synthetic-tenant", "Declared scope", TargetState.Existing, "");
+        (await client.PostAsJsonAsync($"/api/projects/{alpha}/environments", source, cancellationToken: TestContext.Current.CancellationToken)).StatusCode.ShouldBe(HttpStatusCode.OK);
+        var target = new EnvironmentInput(Guid.NewGuid(), EnvironmentRole.Target, EnvironmentKind.M365Tenant,
+            "", "", TargetState.Planned, "target.example.invalid");
+        (await client.PostAsJsonAsync($"/api/projects/{alpha}/environments", target, cancellationToken: TestContext.Current.CancellationToken)).StatusCode.ShouldBe(HttpStatusCode.OK);
+        var environments = await client.GetFromJsonAsync<ProjectEnvironment[]>($"/api/projects/{alpha}/environments", cancellationToken: TestContext.Current.CancellationToken);
+        environments!.Length.ShouldBe(2);
+        environments.ShouldContain(x => x.TargetState == TargetState.Planned && x.Role == EnvironmentRole.Target);
+        var html = System.Net.WebUtility.HtmlDecode(await client.GetStringAsync($"/projects/{alpha}", TestContext.Current.CancellationToken));
+        html.ShouldContain("Synthetic Alpha");
+        html.ShouldContain("Vue d'ensemble");
+        html.ShouldContain("Discovery");
+        html.ShouldContain("Déclarée");
+        html.ShouldContain("Côté actif");
+    }
+
+    [Fact]
     public async Task Guessed_project_id_in_another_workspace_cannot_be_read_or_archived()
     {
         await using var app = new FoundationApplication();

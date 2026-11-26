@@ -49,3 +49,12 @@ their flag does not bypass inventory predicates. The list is a delimited ASCII
 set in SQL's 8 KB session value; scopes exceeding that capacity fail explicitly
 rather than truncating access. Revisit the representation before more than 216
 simultaneous workspace memberships per user are required.
+
+## UI foundation
+
+Fluent UI v5 owns inputs, buttons, providers and data grids. `ClarityGrid` forwards
+paging, search and the exposed name sort to SQL-backed services, with a localized
+paginator and explicit empty/error/loading states. Later lots can extend the
+sort contract when adding new sortable fields. Detail panels receive focus and
+support Escape. The selected project tab uses a conventional bottom underline
+(not an accent border on a rounded card); notices use thin neutral outlines.

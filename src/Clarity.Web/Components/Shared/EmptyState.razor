@@ -1,0 +1,13 @@
+<section class="empty-state" aria-labelledby="@_titleId">
+    <div class="empty-mark" aria-hidden="true">+</div>
+    <h2 id="@_titleId">@Title</h2>
+    <p>@Description</p>
+    @ChildContent
+</section>
+
+@code {
+    private readonly string _titleId = $"empty-{Guid.NewGuid():N}";
+    [Parameter, EditorRequired] public string Title { get; set; } = "";
+    [Parameter] public string Description { get; set; } = "";
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}
