@@ -64,7 +64,8 @@ public sealed class SharePointScriptTests
             .ShouldBe((tenant, new CollectionScope("resource", "https://synthetic.sharepoint.com/sites/Alpha"), null));
         (await service.DownloadBundleAsync(fixture.Project.Id, operation)).FileName.ShouldBe("Clarity.Discovery.SharePoint.1.0.0.zip");
 
-        foreach (var invalid in new[] { "https://synthetic-admin.sharepoint.com", "https://synthetic-my.sharepoint.com/personal/user_synthetic_example", "not a url" })
+        foreach (var invalid in new[] { "https://synthetic-admin.sharepoint.com", "https://synthetic-my.sharepoint.com/personal/user_synthetic_example", "not a url",
+            "/subscriptions/55555555-0000-0000-0000-000000000002/resourceGroups/Pilot", "server.example.test" })
         {
             await Should.ThrowAsync<ArgumentException>(() => service.CreateAsync(fixture.Project.Id, environment.Id, Guid.NewGuid(),
                 new("resource", invalid), sections, null));

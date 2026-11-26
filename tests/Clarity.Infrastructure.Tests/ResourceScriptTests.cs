@@ -78,6 +78,12 @@ public sealed class ResourceScriptTests
         var processor = ZipImportTests.Processor(f, store);
         var manifest = full.Manifest;
         var sections = full.Results.Select(x => x.CapabilityId).ToArray();
+        foreach (var foreignTarget in new[] { "https://synthetic.sharepoint.com/sites/Alpha",
+            kind == EnvironmentKind.AzureScope ? "server.example.test" : Subscription })
+        {
+            await Should.ThrowAsync<ArgumentException>(() => requests.CreateAsync(project, env.Id, Guid.NewGuid(),
+                new("resource", foreignTarget), sections, null));
+        }
         var requestId = await requests.CreateAsync(project, env.Id, manifest.RequestId!.Value, manifest.Scope, sections, null);
         (await requests.CreateAsync(project, env.Id, requestId, manifest.Scope, sections, null)).ShouldBe(requestId);
         var parameters = JsonSerializer.Deserialize<ScriptParameters>(await requests.DownloadParametersAsync(project, requestId), ContractJson.Options)!;
