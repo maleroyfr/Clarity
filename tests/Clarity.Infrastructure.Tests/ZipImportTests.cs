@@ -1,3 +1,4 @@
+using System.Buffers.Binary;
 using System.Collections.Concurrent;
 using System.IO.Compression;
 using System.Security.Cryptography;
@@ -13,6 +14,25 @@ namespace Clarity.Infrastructure.Tests;
 [Collection("SQL lifecycle")]
 public sealed class ZipImportTests
 {
+    [Fact]
+    public async Task AdvertisedEntrySizesCannotBypassTheActualExpandedByteLimit()
+    {
+        var bytes = await BytesAsync(DiscoveryFixture.Package());
+        var offset = BinaryPrimitives.ReadInt32LittleEndian(bytes.AsSpan(bytes.Length - 6));
+        for (var entry = 0; entry < 4; entry++)
+        {
+            BinaryPrimitives.ReadUInt32LittleEndian(bytes.AsSpan(offset)).ShouldBe(0x02014b50u);
+            var local = BinaryPrimitives.ReadInt32LittleEndian(bytes.AsSpan(offset + 42));
+            BinaryPrimitives.WriteUInt32LittleEndian(bytes.AsSpan(offset + 24), 1);
+            BinaryPrimitives.WriteUInt32LittleEndian(bytes.AsSpan(local + 22), 1);
+            offset += 46 + BinaryPrimitives.ReadUInt16LittleEndian(bytes.AsSpan(offset + 28))
+                + BinaryPrimitives.ReadUInt16LittleEndian(bytes.AsSpan(offset + 30))
+                + BinaryPrimitives.ReadUInt16LittleEndian(bytes.AsSpan(offset + 32));
+        }
+        var reader = new ZipPackageReader(new PackageValidator(), new PackageLimits(UncompressedBytes: 100));
+        await Should.ThrowAsync<ContractException>(() => reader.ReadAsync(new MemoryStream(bytes)));
+    }
+
     [Fact]
     public async Task ZipReaderRejectsUnsafeEntriesEncodingAndEveryResourceLimit()
     {
