@@ -1,1 +1,49 @@
 # Clarity
+
+Clarity gives migration consultants a shared, traceable inventory of their clients'
+Microsoft 365 and Active Directory environments. **Discovery** collects inventory;
+Clarity does not execute migrations. This public repository contains synthetic data only.
+
+## Prerequisites
+
+- .NET 11 SDK (the supported patch band is pinned in `global.json`).
+- PowerShell 7 and Pester 5 for collection-package tests when those packages exist.
+- SQL Server or Azure SQL for persistence and SQL integration tests.
+
+The application uses Blazor Interactive Server, Fluent UI Blazor v5, EF Core 11,
+and Azure SQL in a layered modular monolith. Code and documentation are English;
+business UI resources are French (`fr-FR`).
+
+## Local start
+
+```powershell
+dotnet restore
+dotnet run --project src\Clarity.Web -- --environment Development
+```
+
+Local startup and authentication configuration are documented in
+[local development](docs/local-development.md). The first screen starts empty;
+synthetic workspaces belong only in tests.
+
+## Validation
+
+```powershell
+dotnet restore
+dotnet build --no-restore --configuration Release -warnaserror
+dotnet format --verify-no-changes --no-restore
+dotnet test --no-build --configuration Release
+```
+
+SQL integration tests use `CLARITY_TEST_SQL`. Without that variable, they are
+explicitly skipped locally; GitHub Actions provides a SQL Server service container.
+Never use a production database for tests.
+
+## Product and architecture
+
+- [Product specification (original French, authoritative)](docs/specification.md)
+- [Architecture decision](docs/adr/0001-architecture.md)
+- [Contributor conventions](.github/copilot-instructions.md)
+
+Delivery proceeds in focused, independently validated slices. Each commit records
+the validation commands and their results. Azure deployment remains disabled until
+its GitHub environment and OIDC configuration have been explicitly provisioned.

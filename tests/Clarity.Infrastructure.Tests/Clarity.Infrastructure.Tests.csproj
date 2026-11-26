@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="../../src/Clarity.Infrastructure/Clarity.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>
