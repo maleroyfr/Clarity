@@ -191,6 +191,23 @@ public sealed class GraphTests
             (await db.GraphCursors.SingleAsync()).DeltaLink.ShouldEndWith("=first");
             (await db.CollectionJobs.SingleAsync()).State.ShouldBe(CollectionRunState.Completed);
         }
+        using var partial = new SyntheticGraph(_ => Organization(), request =>
+        {
+            request.RequestUri!.Query.ShouldContain("$deltatoken=first");
+            return Response("""{"value":[{"id":"user-a","mail":"updated@example.test"}],"@odata.nextLink":"https://graph.microsoft.com/v1.0/users/delta?$skiptoken=limited"}""");
+        }, _ => Response("", HttpStatusCode.Forbidden));
+        var partialId = Guid.NewGuid();
+        await service.LaunchAsync(fixture.Project.Id, environment.Id, connection, partialId, Scope, ["entra.users"]);
+        await new CollectionJobProcessor(queue, [Handler(new SyntheticSessions(partial.Transport), store)],
+            NullLogger<CollectionJobProcessor>.Instance).ProcessOneAsync(default);
+        await using (var db = await fixture.Factory.CreateDbContextAsync())
+        {
+            (await db.ObjectObservations.CountAsync()).ShouldBe(2);
+            (await db.InventoryObjects.CountAsync()).ShouldBe(1);
+            (await db.SectionRuns.SingleAsync(x => x.RunId == partialId)).Coverage.ShouldBe(CoverageStatus.Partial);
+            (await db.SectionRuns.SingleAsync(x => x.RunId == partialId)).PublishedAtUtc.ShouldNotBeNull();
+            (await db.GraphCursors.SingleAsync()).DeltaLink.ShouldEndWith("=first");
+        }
         using var refresh = new SyntheticGraph(_ => Organization(), request =>
         {
             request.RequestUri!.Query.ShouldContain("$deltatoken=first");
@@ -202,7 +219,7 @@ public sealed class GraphTests
         await new CollectionJobProcessor(queue, [Handler(nextSessions, store)], NullLogger<CollectionJobProcessor>.Instance).ProcessOneAsync(default);
         await using (var db = await fixture.Factory.CreateDbContextAsync())
         {
-            (await db.ObjectObservations.CountAsync()).ShouldBe(1);
+            (await db.ObjectObservations.CountAsync()).ShouldBe(2);
             (await db.GraphCursors.SingleAsync()).DeltaLink.ShouldEndWith("=first");
             (await db.SectionRuns.SingleAsync(x => x.RunId == nextId)).Coverage.ShouldBe(CoverageStatus.Failed);
             await db.GraphCursors.ExecuteUpdateAsync(update => update.SetProperty(x => x.ScopeHash, new string('0', 64)));

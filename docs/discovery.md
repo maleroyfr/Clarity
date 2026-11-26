@@ -130,3 +130,22 @@ Job state is authoritative for execution/history and is synchronized to its run
 on authorized completion, cancellation and retry. If membership was revoked, the
 dispatcher still records the terminal job metadata but must not update inventory
 through a former member's scope. Existing observations remain untouched.
+
+## Lot 2 acceptance coverage
+
+| Journey | Executable evidence |
+| --- | --- |
+| ZIP v1 structure, references, absent/empty values and version rejection | `Clarity.Contracts.Tests` |
+| Valid and partial Graph publication through the actual ZIP/Blob/publisher pipeline, cursor retention on failure, interrupted-job resume | `GraphTests.GraphUsesCommonIngestionSurvivesRestartAndPersistsCursorOnlyAfterPublication` |
+| Identical parallel ZIP uploads integrated once, run-ID conflict, wrong environment/request/workspace, partial package | `ZipImportTests` |
+| Previous observations survive pending/failing sections and section rollback is atomic | `PublicationTests` |
+| Competing leases, restart, stale fencing, bounded attempts, cancellation/retry and preserved sections | `JobTests` |
+| Portable parameters, immutable separate bundle, AD range/primary group/external-reference behavior | `ScriptRequestTests`, Pester and generated-output `PowerShellContractTests` |
+| A second consultant downloads/uploads/previews/confirms a request; coverage retains last-valid proof through failure | `DiscoveryEndpointTests.SqlSeparateMachineJourneyDownloadsUploadsPreviewsConfirmsAndPreservesCoverage` |
+| Server authorization, antiforgery, French screens, private cursor exclusion and SQL isolation | Web endpoint tests and SQL RLS/filter tests |
+
+CI executes the SQL cases on disposable SQL Server and runs Pester before validating
+its generated packages. Local SQL skips are intentional when `CLARITY_TEST_SQL`
+is absent. Live AD/Graph/Key Vault validation is an operator pilot, not a claim made
+by synthetic acceptance. Lot 3 projection/matching and Lot 4 collection families
+are not implemented by this delivery.
