@@ -16,7 +16,7 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261126181552_ScriptRequestParameters";
+    public override string LastMigrationId => "20261126182928_GraphCursors";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -253,6 +253,10 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
                     .IsUnicode(false)
                     .HasColumnType("varchar(64)");
 
+                b.Property<string>("ContinuationJson")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
                 b.Property<string>("CorrelationId")
                     .IsRequired()
                     .HasMaxLength(100)
@@ -405,6 +409,49 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
                     .IsUnique();
 
                 b.ToTable("ExternalKeys");
+            });
+
+        modelBuilder.Entity("Clarity.Core.GraphCursor", b =>
+            {
+                b.Property<Guid>("WorkspaceId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("Id")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<string>("CapabilityId")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("nvarchar(100)");
+
+                b.Property<Guid>("ConnectionId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<string>("DeltaLink")
+                    .IsRequired()
+                    .HasMaxLength(16384)
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<Guid>("EnvironmentId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<DateTimeOffset>("PublishedAtUtc")
+                    .HasColumnType("datetimeoffset");
+
+                b.Property<string>("ScopeHash")
+                    .IsRequired()
+                    .HasMaxLength(64)
+                    .IsUnicode(false)
+                    .HasColumnType("varchar(64)");
+
+                b.HasKey("WorkspaceId", "Id");
+
+                b.HasIndex("WorkspaceId", "ConnectionId");
+
+                b.HasIndex("WorkspaceId", "EnvironmentId", "ConnectionId", "CapabilityId")
+                    .IsUnique();
+
+                b.ToTable("GraphCursors");
             });
 
         modelBuilder.Entity("Clarity.Core.InventoryObject", b =>
@@ -837,6 +884,27 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
                     .WithMany()
                     .HasForeignKey("WorkspaceId", "EnvironmentId", "ObjectId")
                     .HasPrincipalKey("WorkspaceId", "EnvironmentId", "Id")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+            });
+
+        modelBuilder.Entity("Clarity.Core.GraphCursor", b =>
+            {
+                b.HasOne("Clarity.Core.ClientWorkspace", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+
+                b.HasOne("Clarity.Core.Connection", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId", "ConnectionId")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+
+                b.HasOne("Clarity.Core.ProjectEnvironment", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId", "EnvironmentId")
                     .OnDelete(DeleteBehavior.NoAction)
                     .IsRequired();
             });

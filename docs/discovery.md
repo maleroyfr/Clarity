@@ -98,3 +98,13 @@ different bytes is a conflict. Rejected/duplicate uploads delete their temporary
 Blob; abrupt host death may leave an unreferenced Blob for operator retention
 cleanup before a real pilot. Raw downloads reauthorize the project; no SAS URL or
 Blob reference is handed to the browser.
+
+## Graph Entra
+
+The [Graph connector](connectors/microsoft-graph.md) produces the same canonical
+packages and uses the same atomic ingestion pipeline. Tenant verification precedes
+collection. SQL stores private delta continuations; a prepared package survives
+worker interruption and cursors advance only after publication. Graph launch is an
+authorized collection action, while uploaded artifacts require explicit confirmation.
+The connection carries a server configuration reference only. Live consent,
+managed identity and Key Vault certificate access remain operator configuration.

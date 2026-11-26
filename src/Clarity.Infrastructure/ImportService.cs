@@ -13,9 +13,14 @@ public sealed class ImportService(
     IArtifactStore store, ZipPackageReader reader, PackageLimits limits, DiscoveryCatalog catalog)
 {
     public async Task<Guid> UploadAsync(Guid projectId, Guid environmentId, Stream source, string fileName,
+        CancellationToken cancellationToken = default) =>
+        await StageAsync(projectId, environmentId, source, fileName, null, null, "[]", cancellationToken);
+
+    internal async Task<Guid> StageAsync(Guid projectId, Guid environmentId, Stream source, string fileName,
+        Guid? connectionId, Guid? jobId, string continuationJson,
         CancellationToken cancellationToken = default)
     {
-        var project = await access.RequireAsync(projectId, WorkspaceOperation.Import, cancellationToken);
+        var project = await access.RequireAsync(projectId, connectionId is null ? WorkspaceOperation.Import : WorkspaceOperation.Collect, cancellationToken);
         await using var db = await factory.CreateDbContextAsync(cancellationToken);
         var environment = await EnvironmentAsync(db, project, environmentId, cancellationToken);
         var artifact = await store.SaveAsync(project.WorkspaceId, source, limits.CompressedBytes, cancellationToken);
@@ -26,6 +31,12 @@ public sealed class ImportService(
             var read = await reader.ReadAsync(stored, artifact.ContentHash, cancellationToken);
             catalog.ValidatePackage(read.Package);
             await ValidateContextAsync(db, project, environment, read.Package, cancellationToken);
+            if (connectionId is { } connected)
+            {
+                await GraphDiscoveryService.ConnectionAsync(db, project, environment, connected, cancellationToken);
+                if (read.Package.Manifest.RunId != jobId || read.Package.Manifest.ProducerId != "clarity.graph.entra"
+                    || read.Package.Manifest.RequestId is not null) { throw new ConflictException(); }
+            }
             await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
             await PublicationService.LockEnvironmentAsync(db, project.WorkspaceId, environment.Id, cancellationToken);
             var manifest = read.Package.Manifest;
@@ -49,12 +60,16 @@ public sealed class ImportService(
             }
             var run = new CollectionRun
             {
+                Id = jobId ?? Guid.NewGuid(),
                 WorkspaceId = project.WorkspaceId,
                 ProjectId = project.Id,
                 EnvironmentId = environment.Id,
                 ExternalRunId = manifest.RunId,
                 RequestId = manifest.RequestId,
-                Channel = CollectionChannel.PowerShell,
+                ConnectionId = connectionId,
+                Channel = catalog.Producers[manifest.ProducerId].Channel == "Graph" ? CollectionChannel.Graph : CollectionChannel.PowerShell,
+                ContinuationJson = continuationJson,
+                ConfirmedAtUtc = connectionId is null ? null : DateTimeOffset.UtcNow,
                 ProducerId = manifest.ProducerId,
                 ProducerVersion = manifest.ProducerVersion,
                 ScopeJson = DiscoveryScope.Serialize(manifest.Scope),

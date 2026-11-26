@@ -2,9 +2,9 @@
   "schemaVersion": "1.0", "id": "entra", "version": "1.0.0", "environmentKind": "M365Tenant",
   "producers": [{
     "id": "clarity.graph.entra", "channel": "Graph", "version": "1.0.0", "apiVersion": "v1.0",
-    "preview": false, "readiness": "Planned", "testedVersions": [],
-    "prerequisites": ["Multi-tenant collector app with per-customer admin consent", "Server certificate in Key Vault accessible by managed identity"],
-    "limits": ["Not yet implemented; synthetic HTTP tests do not certify a live tenant", "Graph consent does not authorize local PowerShell modules", "Directory metadata only; no secrets or content"]
+    "preview": false, "readiness": "SyntheticValidated", "testedVersions": [".NET 11; Microsoft Graph REST v1.0 synthetic HTTP fixtures only"],
+    "prerequisites": ["Multi-tenant collector app with per-customer admin consent", "Server certificate in Key Vault accessible by managed identity", "Organization.Read.All to verify the observed tenant before collecting any section"],
+    "limits": ["Synthetic HTTP tests do not certify a live tenant or Key Vault access", "Graph consent does not authorize local PowerShell modules", "Directory metadata only; no secrets or content", "Public Graph cloud only; tenant-wide scope; bounded ZIP v1 package sizes"]
   }],
   "sections": [
     {

@@ -19,5 +19,6 @@
     <PackageVersion Include="Azure.Storage.Blobs" Version="12.30.2" />
     <PackageVersion Include="Azure.Identity" Version="1.21.0" />
     <PackageVersion Include="JsonSchema.Net" Version="9.7.0" />
+    <PackageVersion Include="Azure.Security.KeyVault.Certificates" Version="4.10.0" />
   </ItemGroup>
 </Project>

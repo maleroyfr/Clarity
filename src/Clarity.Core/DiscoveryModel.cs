@@ -49,6 +49,7 @@ public sealed class CollectionRun : WorkspaceEntity
     public required string ScopeJson { get; init; }
     public required string ScopeHash { get; init; }
     public required string ManifestJson { get; init; }
+    public string ContinuationJson { get; init; } = "[]";
     public required string ContentHash { get; init; }
     public CollectionRunState State { get; set; }
     public DateTimeOffset StartedAtUtc { get; init; }

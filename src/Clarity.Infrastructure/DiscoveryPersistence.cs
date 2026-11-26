@@ -65,7 +65,16 @@ public sealed partial class ClarityDbContext
         artifact.HasIndex(x => new { x.WorkspaceId, x.RunId }).IsUnique();
         ConfigureObservations(model);
         ConfigureJobs(model);
+        var cursor = DiscoveryOwned<GraphCursor>(model);
+        cursor.HasOne<ProjectEnvironment>().WithMany().HasForeignKey(x => new { x.WorkspaceId, x.EnvironmentId }).OnDelete(DeleteBehavior.NoAction);
+        cursor.HasOne<Connection>().WithMany().HasForeignKey(x => new { x.WorkspaceId, x.ConnectionId }).OnDelete(DeleteBehavior.NoAction);
+        cursor.Property(x => x.CapabilityId).HasMaxLength(100);
+        cursor.Property(x => x.ScopeHash).HasMaxLength(64).IsUnicode(false);
+        cursor.Property(x => x.DeltaLink).HasMaxLength(16384);
+        cursor.HasIndex(x => new { x.WorkspaceId, x.EnvironmentId, x.ConnectionId, x.CapabilityId }).IsUnique();
     }
+
+    public DbSet<GraphCursor> GraphCursors => Set<GraphCursor>();
 
     private EntityTypeBuilder<TEntity> DiscoveryOwned<TEntity>(ModelBuilder model) where TEntity : WorkspaceEntity
     {
