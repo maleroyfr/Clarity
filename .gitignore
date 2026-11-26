@@ -13,3 +13,4 @@ artifacts/
 *.coverage
 infra/main.json
 infra/parameters/*.json
+.impeccable/hook.cache.json
