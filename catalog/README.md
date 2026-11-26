@@ -20,8 +20,9 @@ selectable only through the matching profile in `report-profiles/`, whose loader
 also checks that every profile field and relation exists in its family; see
 [import profiles](../docs/import-profiles.md). Lot 4 also adds the separate
 [Intune / Autopilot Graph v1.0 producer](../docs/connectors/intune-autopilot.md);
-its declared beta limits are not selectable endpoints. The Exchange Online PowerShell and
-PnP producers remain `planned`, unavailable and untested. The remaining planned
+its declared beta limits are not selectable endpoints. The Exchange Online PowerShell
+producer is `SyntheticValidated` (see [Exchange Online](../docs/connectors/exchange.md)),
+and the PnP producer remains `planned`, unavailable and untested. The remaining planned
 families below are not selectable:
 
 | Family | Intended producer / data | Required future verification |

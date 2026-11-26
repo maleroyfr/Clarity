@@ -465,4 +465,34 @@
   <data name="Relation_servicePrincipalForApplication" xml:space="preserve"><value>Principal de service de l’application</value></data>
   <data name="Relation_appRoleAssignmentPrincipal" xml:space="preserve"><value>Principal explicitement attribué au rôle</value></data>
   <data name="Relation_appRoleAssignmentResource" xml:space="preserve"><value>Ressource de l’attribution du rôle</value></data>
+  <data name="Producer_clarity.exchange" xml:space="preserve"><value>Exchange Online — script PowerShell</value></data>
+  <data name="LocalScriptConnectionHint_clarity.exchange" xml:space="preserve"><value>Le script Exchange utilise le module ExchangeOnlineManagement 3.0.0 ou plus récent et une session Connect-ExchangeOnline en lecture seule, ouverte par l'opérateur sur sa machine, vers le tenant de cet environnement. Clarity ne conserve aucun mot de passe, jeton ni consentement pour ce script ; il vérifie le tenant avant toute lecture. Les rôles de lecture requis sont décrits dans la documentation du connecteur Exchange.</value></data>
+  <data name="CreateScriptRequest_clarity.exchange" xml:space="preserve"><value>Créer une demande de script Exchange</value></data>
+  <data name="DownloadScriptBundle_clarity.exchange" xml:space="preserve"><value>Télécharger le ZIP du script Exchange 1.0.0</value></data>
+  <data name="ScriptCommandHint_clarity.exchange" xml:space="preserve"><value>Décompressez le script, placez parameters.json à la racine, ouvrez une session Connect-ExchangeOnline en lecture seule vers ce tenant dans la même fenêtre PowerShell, puis exécutez :</value></data>
+  <data name="Section_exchange.recipients" xml:space="preserve"><value>Exchange — destinataires</value></data>
+  <data name="Section_exchange.mailboxes" xml:space="preserve"><value>Exchange — boîtes aux lettres, alias et archives</value></data>
+  <data name="Section_exchange.mailboxStatistics" xml:space="preserve"><value>Exchange — tailles des boîtes et des archives</value></data>
+  <data name="Section_exchange.mailboxPermissions" xml:space="preserve"><value>Exchange — délégations (accès total, Envoyer en tant que, Envoyer de la part de)</value></data>
+  <data name="Section_exchange.mailEnabledGroups" xml:space="preserve"><value>Exchange — groupes de messagerie et membres</value></data>
+  <data name="Section_exchange.acceptedDomains" xml:space="preserve"><value>Exchange — domaines acceptés</value></data>
+  <data name="Section_exchange.connectors" xml:space="preserve"><value>Exchange — connecteurs entrants et sortants</value></data>
+  <data name="Section_exchange.transportRules" xml:space="preserve"><value>Exchange — règles de transport</value></data>
+  <data name="ObjectType_sharedMailbox" xml:space="preserve"><value>Boîte aux lettres partagée</value></data>
+  <data name="ObjectType_resourceMailbox" xml:space="preserve"><value>Boîte aux lettres de ressource</value></data>
+  <data name="ObjectType_mailGroup" xml:space="preserve"><value>Groupe de messagerie</value></data>
+  <data name="ObjectType_recipient" xml:space="preserve"><value>Destinataire Exchange</value></data>
+  <data name="ObjectType_acceptedDomain" xml:space="preserve"><value>Domaine accepté</value></data>
+  <data name="ObjectType_connector" xml:space="preserve"><value>Connecteur Exchange</value></data>
+  <data name="ObjectType_transportRule" xml:space="preserve"><value>Règle de transport</value></data>
+  <data name="Issue_ExchangeReadFailed" xml:space="preserve"><value>Lecture Exchange impossible pour cette section : vérifiez la session Exchange Online et les rôles de lecture, puis relancez le script.</value></data>
+  <data name="Issue_MissingAttributes" xml:space="preserve"><value>Des valeurs d'attributs n'ont pas été renvoyées : vérifiez le rôle de lecture Exchange de cette section. Aucune valeur absente n'est déduite.</value></data>
+  <data name="Issue_MissingIdentity" xml:space="preserve"><value>Des objets sans identifiant Exchange lisible ont été omis ; la section est partielle.</value></data>
+  <data name="Issue_UnreadableSize" xml:space="preserve"><value>Des tailles de boîte n'ont pas pu être interprétées et restent vides.</value></data>
+  <data name="Issue_UnreadableMailbox" xml:space="preserve"><value>Des boîtes aux lettres n'ont pas pu être lues individuellement : vérifiez le rôle de lecture puis relancez.</value></data>
+  <data name="Issue_UnreadableArchive" xml:space="preserve"><value>Des archives n'ont pas pu être lues : vérifiez le rôle de lecture puis relancez.</value></data>
+  <data name="Issue_UnreadableGroup" xml:space="preserve"><value>Des groupes n'ont pas pu être lus individuellement : vérifiez le rôle de lecture puis relancez.</value></data>
+  <data name="Issue_UnresolvedMembers" xml:space="preserve"><value>Des membres de groupe sans identifiant Exchange lisible ont été omis ; l'appartenance est partielle.</value></data>
+  <data name="Issue_UnresolvedTrustees" xml:space="preserve"><value>Des bénéficiaires de délégation n'ont pas pu être rapprochés d'un destinataire observé unique et ont été omis ; la couverture des délégations est partielle.</value></data>
+  <data name="Issue_UnlinkedMailbox" xml:space="preserve"><value>Des boîtes utilisateur n'ont aucun identifiant exploitable pour les rattacher à un utilisateur : le lien reste en attente.</value></data>
 </root>

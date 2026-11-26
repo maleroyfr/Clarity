@@ -129,6 +129,13 @@ only while its catalog version matches the request, and the Discovery screen lis
 the producers that have a published bundle. A new family is registered by files
 alone; see [Registering a PowerShell collection family](../scripts/README.md).
 
+The [Exchange Online script](connectors/exchange.md) is a second PowerShell
+producer next to AD. Its request is bound to the tenant itself, the producer and
+the exact section set, its bundle is a separate deterministic ZIP, and the
+operator-owned read-only Exchange session is checked against the tenant before
+any read. Result ZIPs use the same upload, preview, confirmation and publication
+path as AD.
+
 ## Authorized Discovery screens
 
 The Fluent UI v5 Discovery panel exposes French Connexions, Collectes and Couverture
@@ -177,5 +184,6 @@ ZIP v1 upload. The first profiles interpret the
 mailboxes, OneDrive accounts and SharePoint sites in an M365 tenant environment.
 They reuse the same private Blob retention, preview, explicit confirmation, leased
 job and `PublicationService` path, arrive on channel `ReportImport`, and never count
-as a verified Graph connection. The other Lot 4 collection families (Exchange
-Online PowerShell, PnP, Teams, GPO, Power BI and Azure) are not implemented.
+as a verified Graph connection. The Exchange Online PowerShell family is documented
+in [Exchange Online](connectors/exchange.md); the other Lot 4 collection families
+(PnP, Teams, GPO, Power BI and Azure) are not implemented.

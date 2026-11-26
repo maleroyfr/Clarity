@@ -34,7 +34,7 @@ internal static class RelationshipProjection
         await edges.ExecuteDeleteAsync(token);
 
         var claims = observations.Select(o => new Claim(o, sections[o.SectionRunId], Resolve(o.FromJson, o.ObservedAtUtc),
-            Resolve(o.ToJson, o.ObservedAtUtc)));
+            ResolveTarget(o)));
         foreach (var group in claims.GroupBy(c => (c.Row.RelationType, c.From.Identity, c.To.Identity)))
         {
             var sorted = group.OrderByDescending(c => c.Row.ObservedAtUtc).ThenByDescending(c => c.Source.ExternalRunId)
@@ -63,13 +63,27 @@ internal static class RelationshipProjection
                 Origin = latest.Row.RelationType switch
                 {
                     "memberOf" or "primaryMemberOf" => RelationshipOrigin.Membership,
-                    "delegatedTo" or "delegation" => RelationshipOrigin.ObservedDelegation,
+                    "delegatedTo" or "delegation" or "fullAccessTo" or "sendAsOn" or "sendOnBehalfOf" => RelationshipOrigin.ObservedDelegation,
                     _ => RelationshipOrigin.Observed
                 }
             };
             db.InventoryRelationships.Add(edge);
             db.RelationshipSupports.AddRange(sorted.Select(c => new RelationshipSupport
             { WorkspaceId = workspace, RelationshipId = edge.Id, ObservationId = c.Row.Id }));
+        }
+
+        // A producer may list weaker identifiers of the same target in properties.fallbackTo, strongest first.
+        // They are tried in order only while the stronger one is unobserved; an ambiguous match is never overridden or skipped.
+        Endpoint ResolveTarget(RelationshipObservation row)
+        {
+            var target = Resolve(row.ToJson, row.ObservedAtUtc);
+            if (target.Method != EndpointResolution.Pending) { return target; }
+            foreach (var fallback in FallbackReferences(row))
+            {
+                var candidate = Resolve(fallback, row.ObservedAtUtc);
+                if (candidate.Method != EndpointResolution.Pending) { return candidate with { Reference = row.ToJson }; }
+            }
+            return target;
         }
 
         Endpoint Resolve(string json, DateTimeOffset at)
@@ -96,5 +110,25 @@ internal static class RelationshipProjection
                 _ => new(null, EndpointResolution.Ambiguous, json)
             };
         }
+    }
+
+    private const int MaxFallbackReferences = 8;
+
+    private static List<string> FallbackReferences(RelationshipObservation row)
+    {
+        var references = new List<string>();
+        using var properties = JsonDocument.Parse(row.PropertiesJson);
+        if (!properties.RootElement.TryGetProperty("fallbackTo", out var list) || list.ValueKind != JsonValueKind.Array) { return references; }
+        var primary = JsonSerializer.Deserialize<ExternalReference>(row.ToJson, ContractJson.Options)!;
+        foreach (var item in list.EnumerateArray().Take(MaxFallbackReferences))
+        {
+            ExternalReference? reference;
+            try { reference = item.ValueKind == JsonValueKind.Object ? item.Deserialize<ExternalReference>(ContractJson.Options) : null; }
+            catch (JsonException) { continue; }
+            if (reference is null || reference.Type != primary.Type || string.IsNullOrWhiteSpace(reference.Namespace)
+                || string.IsNullOrWhiteSpace(reference.ExternalId)) { continue; }
+            references.Add(JsonSerializer.Serialize(reference, ContractJson.Options));
+        }
+        return references;
     }
 }

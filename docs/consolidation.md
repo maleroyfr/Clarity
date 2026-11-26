@@ -163,6 +163,13 @@ managed and directory devices independently, linking by an exposed managed ID
 or Entra `deviceId`. Intune primary users and Entra registered owners remain
 distinct directed observations. Neither creates a confirmed AD/Entra decision.
 
+The [Exchange Online script](connectors/exchange.md) keeps Exchange mailboxes as
+independent objects in the `exchange.guid` namespace. A user mailbox links to the
+user by Entra object ID first, then an exact UPN, then an exact primary SMTP
+address; a weaker key is used only while the stronger one is unobserved and an
+ambiguous match is never guessed. Shared and resource mailboxes never link to a
+user. Graph usage-report mailboxes stay provisional `m365report.upn` objects and
+join Exchange objects only through the reviewable association path above.
 The cyclic-membership SQL case above opens the pending and resolved sheets,
 follows a reverse link, and verifies both source observations and isolation.
 

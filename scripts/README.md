@@ -47,3 +47,8 @@ cannot be mixed, and an unknown, planned or ambiguous selection is rejected. Sec
 only supported scope is `tenant` are bound to the environment's tenant; other families get
 the scope selector (and the domain for `ou`) in the Discovery screen. The bundle is served
 only while the catalog version equals the version recorded in the request.
+
+`exchange/Collect-Exchange.ps1` and its module follow the same rules for the
+ExchangeOnlineManagement 3.x cmdlets; it never connects, and requires one
+operator-opened session for the requested tenant. See
+[Exchange Online](../docs/connectors/exchange.md).

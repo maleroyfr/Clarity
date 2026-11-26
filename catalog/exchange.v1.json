@@ -1,10 +1,11 @@
 {
   "schemaVersion": "1.0", "id": "exchange", "version": "1.0.0", "environmentKind": "M365Tenant",
   "producers": [{
-    "id": "clarity.exchange", "channel": "PowerShell", "version": "planned", "apiVersion": "ExchangeOnlineManagement",
-    "preview": false, "readiness": "Planned", "testedVersions": [],
-    "prerequisites": ["Future Lot 4 implementation and separately authorized Exchange session"],
-    "limits": ["No executable producer or certified module/OS version yet"]
+    "id": "clarity.exchange", "channel": "PowerShell", "version": "1.0.0", "apiVersion": "ExchangeOnlineManagement",
+    "preview": false, "readiness": "SyntheticValidated",
+    "testedVersions": ["PowerShell 7.6.10; Pester 5.7.1; mocked ExchangeOnlineManagement 3.x cmdlet shapes", "Linux CI Pester with mocked Exchange cmdlets; not a live Exchange Online execution"],
+    "prerequisites": ["Windows PowerShell 5.1 or PowerShell 7.x with ExchangeOnlineManagement 3.0.0 or later installed separately by the administrator", "An already connected Connect-ExchangeOnline session to the requested tenant with read-only Exchange roles; no credentials in request parameters"],
+    "limits": ["Implemented with synthetic tests only; no live Exchange Online tenant or certified module version", "Read-only cmdlets only; recipients and permissions outside the connected session's RBAC scope are invisible", "No message, calendar or file contents, no mailbox folders and no transport-rule conditions or actions"]
   }, {
     "id": "report.m365.mailboxUsageDetail", "channel": "Import", "version": "1.0.0", "apiVersion": "Microsoft Graph v1.0 usage report CSV",
     "preview": false, "readiness": "SyntheticValidated",
@@ -13,11 +14,109 @@
     "limits": ["File import through report profile m365.mailboxUsageDetail 1.0.0; not verified Graph connection evidence", "Admin center MB exports and localized headers are rejected"]
   }],
   "sections": [{
-    "id": "exchange.mailboxStatistics", "producerIds": ["clarity.exchange"], "supportedScopes": ["tenant", "resource"],
-    "attributes": { "sizeBytes": { "type": "bytes", "referenceProducer": "clarity.exchange" } },
-    "relations": [], "permissions": ["Future Exchange read-only RBAC validation required"],
-    "endpoints": ["Planned: Get-EXOMailboxStatistics"], "refreshStrategy": "Planned full or targeted mailbox statistics",
-    "limits": ["Not available; actual fields, archive handling and cmdlet versions require Lot 4 verification"]
+    "id": "exchange.recipients", "producerIds": ["clarity.exchange"], "supportedScopes": ["tenant"],
+    "attributes": {
+      "displayName": { "type": "string", "referenceProducer": "clarity.exchange" },
+      "alias": { "type": "string", "referenceProducer": "clarity.exchange" },
+      "mail": { "type": "string", "referenceProducer": "clarity.exchange" },
+      "proxyAddresses": { "type": "strings", "referenceProducer": "clarity.exchange" },
+      "recipientType": { "type": "string", "referenceProducer": "clarity.exchange" },
+      "recipientTypeDetails": { "type": "string", "referenceProducer": "clarity.exchange" },
+      "externalDirectoryObjectId": { "type": "string", "referenceProducer": "clarity.exchange" }
+    },
+    "relations": [], "permissions": ["Exchange Online read-only recipient role such as View-Only Recipients in the connected session"],
+    "endpoints": ["Get-ConnectionInformation", "Get-EXORecipient -ResultSize Unlimited -Properties Alias,DisplayName,EmailAddresses,ExternalDirectoryObjectId,Guid,PrimarySmtpAddress,RecipientType,RecipientTypeDetails"],
+    "refreshStrategy": "Full comparable tenant snapshot; absence is inferred only from a later complete snapshot of the same fields",
+    "limits": ["Soft-deleted and inactive recipients are not requested", "Aliases include every EmailAddresses entry (SMTP, X500, SIP, SPO); only SMTP entries become match keys", "Microsoft 365 group mailboxes appear as generic recipients; group membership stays in Microsoft Graph"]
+  }, {
+    "id": "exchange.mailboxes", "producerIds": ["clarity.exchange"], "supportedScopes": ["tenant"],
+    "attributes": {
+      "displayName": { "type": "string", "referenceProducer": "clarity.exchange" },
+      "alias": { "type": "string", "referenceProducer": "clarity.exchange" },
+      "mail": { "type": "string", "referenceProducer": "clarity.exchange" },
+      "proxyAddresses": { "type": "strings", "referenceProducer": "clarity.exchange" },
+      "recipientTypeDetails": { "type": "string", "referenceProducer": "clarity.exchange" },
+      "externalDirectoryObjectId": { "type": "string", "referenceProducer": "clarity.exchange" },
+      "userPrincipalName": { "type": "string", "referenceProducer": "clarity.exchange" },
+      "exchangeGuid": { "type": "string", "referenceProducer": "clarity.exchange" },
+      "archiveStatus": { "type": "string", "referenceProducer": "clarity.exchange" },
+      "archiveState": { "type": "string", "referenceProducer": "clarity.exchange" }
+    },
+    "relations": ["mailboxOf"], "permissions": ["Exchange Online read-only recipient role such as View-Only Recipients in the connected session"],
+    "endpoints": ["Get-ConnectionInformation", "Get-EXOMailbox -ResultSize Unlimited -Properties Alias,ArchiveState,ArchiveStatus,DisplayName,EmailAddresses,ExchangeGuid,ExternalDirectoryObjectId,Guid,PrimarySmtpAddress,RecipientTypeDetails,UserPrincipalName"],
+    "refreshStrategy": "Full comparable tenant snapshot of user, shared, room and equipment mailboxes",
+    "limits": ["Inactive, soft-deleted and group mailboxes are not requested", "mailboxOf links only user mailboxes to a user: ExternalDirectoryObjectId first, then an exact UPN, then an exact primary SMTP address; shared and resource mailboxes stay independent objects", "Mailbox keys are Exchange object GUIDs, distinct from provisional usage-report UPN references"]
+  }, {
+    "id": "exchange.mailboxStatistics", "producerIds": ["clarity.exchange"], "supportedScopes": ["tenant"],
+    "attributes": {
+      "sizeBytes": { "type": "bytes", "referenceProducer": "clarity.exchange" },
+      "itemCount": { "type": "integer", "referenceProducer": "clarity.exchange" },
+      "archiveSizeBytes": { "type": "bytes", "referenceProducer": "clarity.exchange" },
+      "archiveItemCount": { "type": "integer", "referenceProducer": "clarity.exchange" },
+      "lastLogonTime": { "type": "utc", "referenceProducer": "clarity.exchange" }
+    },
+    "relations": [], "permissions": ["Exchange Online read-only recipient role such as View-Only Recipients in the connected session"],
+    "endpoints": ["Get-EXOMailbox -ResultSize Unlimited", "Get-EXOMailboxStatistics -UserPrincipalName <UPN>", "Get-EXOMailboxStatistics -UserPrincipalName <UPN> -Archive (only when the archive is active)"],
+    "refreshStrategy": "One statistics call per mailbox (and per active archive); a full snapshot is Complete only when every call succeeded",
+    "limits": ["Sizes are parsed from the documented 'n (n bytes)' value and are left null when unreadable; they are never estimated", "Archive sizes cover the primary archive only, not auto-expanding archive extensions or recoverable items detail", "Cost grows with the number of mailboxes; very large tenants need a maintenance window", "Mailbox statistics can lag behind live mailbox content"]
+  }, {
+    "id": "exchange.mailboxPermissions", "producerIds": ["clarity.exchange"], "supportedScopes": ["tenant"],
+    "attributes": {},
+    "relations": ["fullAccessTo", "sendAsOn", "sendOnBehalfOf"],
+    "permissions": ["Exchange Online read-only recipient role such as View-Only Recipients in the connected session"],
+    "endpoints": ["Get-EXOMailbox -ResultSize Unlimited -Properties GrantSendOnBehalfTo", "Get-EXOMailboxPermission -ExternalDirectoryObjectId <EDOID>", "Get-EXORecipientPermission -ExternalDirectoryObjectId <EDOID>", "Get-EXORecipient -ResultSize Unlimited"],
+    "refreshStrategy": "One permission read per mailbox; the trustee is resolved only against recipients observed in the same run",
+    "limits": ["Only explicit (non-inherited) Full Access, Send As and Send on Behalf grants are reported; Deny entries are never reported as grants and suppress the same trustee's grant; NT AUTHORITY\\SELF and orphaned SIDs are ignored", "A trustee that is not a unique observed recipient (for example a non-mail-enabled security group) is counted in a sanitized warning and never invented, so the section is Partial", "Folder-level permissions, calendar delegates, application access policies and Microsoft 365 group ownership are not collected", "An edge is evidence of an observed grant, not of effective access"]
+  }, {
+    "id": "exchange.mailEnabledGroups", "producerIds": ["clarity.exchange"], "supportedScopes": ["tenant"],
+    "attributes": {
+      "displayName": { "type": "string", "referenceProducer": "clarity.exchange" },
+      "alias": { "type": "string", "referenceProducer": "clarity.exchange" },
+      "mail": { "type": "string", "referenceProducer": "clarity.exchange" },
+      "proxyAddresses": { "type": "strings", "referenceProducer": "clarity.exchange" },
+      "recipientTypeDetails": { "type": "string", "referenceProducer": "clarity.exchange" },
+      "externalDirectoryObjectId": { "type": "string", "referenceProducer": "clarity.exchange" }
+    },
+    "relations": ["memberOf"], "permissions": ["Exchange Online read-only recipient role such as View-Only Recipients in the connected session"],
+    "endpoints": ["Get-DistributionGroup -ResultSize Unlimited", "Get-DistributionGroupMember -Identity <group GUID> -ResultSize Unlimited"],
+    "refreshStrategy": "Full comparable snapshot of distribution lists and mail-enabled security groups with direct members",
+    "limits": ["Only direct members are reported; nested groups are not expanded", "Dynamic distribution groups and Microsoft 365 groups are out of scope for this section", "Members without a readable Exchange GUID are counted in a sanitized warning, so the section is Partial"]
+  }, {
+    "id": "exchange.acceptedDomains", "producerIds": ["clarity.exchange"], "supportedScopes": ["tenant"],
+    "attributes": {
+      "displayName": { "type": "string", "referenceProducer": "clarity.exchange" },
+      "domainType": { "type": "string", "referenceProducer": "clarity.exchange" },
+      "isDefault": { "type": "boolean", "referenceProducer": "clarity.exchange" },
+      "isInitialDomain": { "type": "boolean", "referenceProducer": "clarity.exchange" }
+    },
+    "relations": [], "permissions": ["Exchange Online read-only configuration role such as View-Only Configuration in the connected session"],
+    "endpoints": ["Get-AcceptedDomain"], "refreshStrategy": "Full comparable tenant snapshot of accepted domains",
+    "limits": ["Optional scoping context; does not prove DNS, MX or domain ownership", "Optional section: run it only when the engagement needs mail-domain scoping"]
+  }, {
+    "id": "exchange.connectors", "producerIds": ["clarity.exchange"], "supportedScopes": ["tenant"],
+    "attributes": {
+      "displayName": { "type": "string", "referenceProducer": "clarity.exchange" },
+      "enabled": { "type": "boolean", "referenceProducer": "clarity.exchange" },
+      "direction": { "type": "string", "referenceProducer": "clarity.exchange" },
+      "connectorType": { "type": "string", "referenceProducer": "clarity.exchange" },
+      "senderDomains": { "type": "strings", "referenceProducer": "clarity.exchange" },
+      "recipientDomains": { "type": "strings", "referenceProducer": "clarity.exchange" }
+    },
+    "relations": [], "permissions": ["Exchange Online read-only configuration role such as View-Only Configuration in the connected session"],
+    "endpoints": ["Get-InboundConnector", "Get-OutboundConnector"], "refreshStrategy": "Full comparable tenant snapshot of inbound and outbound connectors",
+    "limits": ["Optional scoping context; smart hosts, TLS settings, certificates and IP addresses are not collected", "Does not prove mail flow works"]
+  }, {
+    "id": "exchange.transportRules", "producerIds": ["clarity.exchange"], "supportedScopes": ["tenant"],
+    "attributes": {
+      "displayName": { "type": "string", "referenceProducer": "clarity.exchange" },
+      "enabled": { "type": "boolean", "referenceProducer": "clarity.exchange" },
+      "mode": { "type": "string", "referenceProducer": "clarity.exchange" },
+      "priority": { "type": "integer", "referenceProducer": "clarity.exchange" },
+      "whenChanged": { "type": "utc", "referenceProducer": "clarity.exchange" }
+    },
+    "relations": [], "permissions": ["Exchange Online read-only configuration role such as View-Only Configuration in the connected session"],
+    "endpoints": ["Get-TransportRule"], "refreshStrategy": "Full comparable tenant snapshot of transport rule metadata",
+    "limits": ["Optional scoping context; rule conditions, actions, exceptions and comments are never collected", "A rule name can itself be sensitive: review before sharing the package"]
   }, {
     "id": "exchange.mailboxUsage", "producerIds": ["report.m365.mailboxUsageDetail"], "supportedScopes": ["tenant"],
     "attributes": {

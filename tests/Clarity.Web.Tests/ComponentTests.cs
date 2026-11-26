@@ -147,6 +147,16 @@ public class ComponentTests : BunitContext
     }
 
     [Fact]
+    public void Exchange_object_types_and_issue_codes_have_a_french_label()
+    {
+        var text = Services.GetRequiredService<Microsoft.Extensions.Localization.IStringLocalizer<UiStrings>>();
+        foreach (var key in new[] { "Issue_ExchangeReadFailed", "Issue_UnresolvedTrustees", "Issue_UnlinkedMailbox", "ObjectType_sharedMailbox", "ObjectType_resourceMailbox", "ObjectType_mailGroup" })
+        {
+            text[key].ResourceNotFound.ShouldBeFalse(key);
+        }
+    }
+
+    [Fact]
     public void Every_supported_report_profile_and_declared_limit_has_a_french_label()
     {
         var text = Services.GetRequiredService<Microsoft.Extensions.Localization.IStringLocalizer<UiStrings>>();
