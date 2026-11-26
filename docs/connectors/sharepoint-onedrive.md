@@ -191,8 +191,9 @@ the section `Partial` and are never guessed:
   library-level permission expansion (unique permissions are only flagged),
   individual sharing links, external users or effective access.
 - `getAllSites` returns site collections and possibly webs; only one object per
-  site collection is kept, preferring the entry Graph marks as root. Subsites,
-  Teams channels and private or shared channel sites are not collected.
+  site collection is kept, preferring the entry Graph marks as root. Subsites are
+  not collected. Teams channels and their independently resolved private/shared sites are
+  covered by the separate [Teams producer](teams.md), not this site enumeration.
 - The PnP script covers one site collection per request and its root web only.
   `storageUsedBytes` stays unobserved when usage is unreadable.
 - `onedrive.accounts` reads at most 20,000 users per run (`UserLimit`, then

@@ -35,12 +35,20 @@ else
                         <FluentButton OnClick="@(() => Show(ProofKind.Mapping, a.DecisionId))">@Text["Provenance"]</FluentButton></p>
                 }
             }
-            <h3>@Text["DirectRelationships"]</h3>
             @if (sheet.Type is "application" or "servicePrincipal" && sheet.Keys.Any(k => k.Namespace == "microsoft.graph"))
             {
                 <SsoQualificationPanel @key="(ProjectId, ObjectId)" ProjectId="ProjectId" ObjectId="ObjectId" Fields="sheet.Fields"
                                        ShowEvidence="@(id => Show(ProofKind.Observation, id))" />
             }
+            @if (sheet.Type == "team" && sheet.Keys.Any(k => k.Namespace == "microsoft.graph"))
+            {
+                @foreach (var kind in new[] { AssessmentKind.TeamsChatScope, AssessmentKind.TeamsTelephonyScope })
+                {
+                    <TeamsQualificationPanel @key="(ProjectId, ObjectId, kind)" ProjectId="ProjectId" ObjectId="ObjectId" Kind="kind"
+                                             Fields="sheet.Fields" ShowEvidence="@(id => Show(ProofKind.Observation, id))" />
+                }
+            }
+            <h3>@Text["DirectRelationships"]</h3>
             <ClarityGrid TGridItem="SheetEdge" Load="@((p, ct) => Sheets.EdgesAsync(ProjectId, ObjectId, p, ct))">
                 <Columns><TemplateColumn Title="@Text["Relation"]" Context="e">@(e.Outgoing ? "→" : "←") @(Text[$"Relation_{e.Type}"].ResourceNotFound ? e.Type : Text[$"Relation_{e.Type}"].Value) · @Text[e.Origin.ToString()]</TemplateColumn>
                     <TemplateColumn Title="@Text["RelatedObject"]" Context="e">

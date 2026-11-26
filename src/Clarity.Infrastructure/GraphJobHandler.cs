@@ -60,6 +60,7 @@ public sealed class GraphJobHandler(IGraphSessionFactory sessions, EntraCollecto
             var applicationsSso = new ApplicationsSsoCollector(catalog);
             var sharePoint = new SharePointCollector(catalog);
             var oneDrive = new OneDriveCollector(catalog);
+            var teams = new TeamsCollector(catalog);
             foreach (var capability in payload.Sections)
             {
                 await execution.ReportProgressAsync(0, cancellationToken);
@@ -81,6 +82,7 @@ public sealed class GraphJobHandler(IGraphSessionFactory sessions, EntraCollecto
                     ApplicationsSsoCollector.ProducerId => await applicationsSso.CollectAsync(session.Transport, capability, payload.Scope, cancellationToken),
                     SharePointCollector.ProducerId => await sharePoint.CollectAsync(session.Transport, capability, payload.Scope, cancellationToken),
                     OneDriveCollector.ProducerId => await oneDrive.CollectAsync(session.Transport, capability, payload.Scope, cancellationToken),
+                    TeamsCollector.ProducerId => await teams.CollectAsync(session.Transport, capability, payload.Scope, cancellationToken),
                     _ => await collector.CollectAsync(session.Transport, capability, payload.Scope, delta, cancellationToken)
                 };
                 objects.AddRange(section.Objects);

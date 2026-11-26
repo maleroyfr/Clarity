@@ -652,4 +652,39 @@
   <data name="Issue_InfrastructureReadFailed" xml:space="preserve"><value>Le fournisseur local ou le magasin est indisponible, illisible ou interrompu. Vérifiez le rôle Windows et les droits de lecture.</value></data>
   <data name="ScopeValue_clarity.azure" xml:space="preserve"><value>Chemin ARM de l’abonnement ou du groupe de ressources</value></data>
   <data name="ScopeValue_clarity.infrastructure" xml:space="preserve"><value>Nom DNS complet du serveur Windows autorisé</value></data>
+  <data name="Producer_clarity.graph.teams" xml:space="preserve"><value>Microsoft Graph — Teams (v1.0)</value></data>
+  <data name="Section_teams.teams" xml:space="preserve"><value>Teams — équipes et groupes Microsoft 365 associés</value></data>
+  <data name="Section_teams.members" xml:space="preserve"><value>Teams — propriétaires et membres directs</value></data>
+  <data name="Section_teams.channels" xml:space="preserve"><value>Teams — canaux standard, privés et partagés</value></data>
+  <data name="Section_teams.sites" xml:space="preserve"><value>Teams — sites des équipes et des canaux</value></data>
+  <data name="TeamsPrerequisiteHint" xml:space="preserve"><value>Connexion propre au producteur Teams : Organization.Read.All et Team.ReadBasic.All, puis TeamMember.Read.All, Channel.ReadBasic.All et Sites.Read.All selon les sections. Métadonnées uniquement, sans contenu de chat, configuration téléphonique ni accès effectif. Les sites privés et partagés sont résolus séparément ; les liens inconnus restent à vérifier.</value></data>
+  <data name="ObjectType_team" xml:space="preserve"><value>Équipe Teams</value></data>
+  <data name="ObjectType_teamChannel" xml:space="preserve"><value>Canal Teams</value></data>
+  <data name="ObjectType_teamMembership" xml:space="preserve"><value>Appartenance Teams</value></data>
+  <data name="Relation_teamGroup" xml:space="preserve"><value>Groupe Microsoft 365 de l’équipe</value></data>
+  <data name="Relation_teamSite" xml:space="preserve"><value>Site racine de l’équipe</value></data>
+  <data name="Relation_channelInTeam" xml:space="preserve"><value>Canal hébergé dans l’équipe</value></data>
+  <data name="Relation_channelSite" xml:space="preserve"><value>Site associé au canal</value></data>
+  <data name="Relation_membershipInTeam" xml:space="preserve"><value>Appartenance observée dans l’équipe</value></data>
+  <data name="Relation_membershipUser" xml:space="preserve"><value>Compte de l’appartenance observée</value></data>
+  <data name="Relation_memberOf" xml:space="preserve"><value>Membre direct de</value></data>
+  <data name="Issue_TeamsChildrenNotTested" xml:space="preserve"><value>Aucune équipe échantillon : l’accès aux membres ou canaux n’a pas pu être testé.</value></data>
+  <data name="Issue_TeamsSitesNotTested" xml:space="preserve"><value>Aucun canal échantillon : l’accès aux sites des canaux n’a pas pu être testé.</value></data>
+  <data name="Issue_TeamsSampleOnly" xml:space="preserve"><value>Test réussi sur un échantillon uniquement, sans garantie pour tous les canaux privés ou partagés.</value></data>
+  <data name="Issue_TeamsSiteUnavailable" xml:space="preserve"><value>Site non lisible ou non provisionné. Le lien reste à vérifier, sans remplacement par le site de l’équipe.</value></data>
+  <data name="Issue_TeamsSiteUnresolved" xml:space="preserve"><value>Identifiant de collection de sites absent. Une URL provisoire ou une référence de point d’accès reste à vérifier, sans rapprochement automatique.</value></data>
+  <data name="Issue_TeamsChannelTypeUnknown" xml:space="preserve"><value>Type de canal inconnu : aucune appartenance ni aucun accès n’est déduit.</value></data>
+  <data name="Issue_TeamsMemberRolesUnknown" xml:space="preserve"><value>Rôles d’appartenance indisponibles : aucun propriétaire n’est déduit.</value></data>
+  <data name="Issue_TeamsMemberUnresolved" xml:space="preserve"><value>Compte local non résolu : identifiant ou tenant absent ou externe. L’appartenance reste une preuve distincte à vérifier.</value></data>
+  <data name="Issue_TeamsLimit" xml:space="preserve"><value>Limite de 20 000 équipes atteinte pour la section. La couverture est incomplète.</value></data>
+  <data name="Qualification_TeamsChatScope" xml:space="preserve"><value>Qualification du périmètre des chats</value></data>
+  <data name="Qualification_TeamsTelephonyScope" xml:space="preserve"><value>Qualification du périmètre de la téléphonie</value></data>
+  <data name="TeamsManualOnly" xml:space="preserve"><value>Constat du consultant pour cette équipe dans ce dossier, distinct des observations Microsoft Graph. Aucun contenu de chat ni configuration téléphonique n’est collecté ; ce constat ne prouve aucun accès effectif. Préciser les populations et dépendances concernées dans la justification.</value></data>
+  <data name="TeamsMetadataChanged" xml:space="preserve"><value>La visibilité ou la présence de l’équipe a changé depuis ce constat. Qualification à revoir ; la décision du consultant est conservée.</value></data>
+  <data name="TeamsNotQualified" xml:space="preserve"><value>Périmètre non qualifié : inconnu, et non hors périmètre.</value></data>
+  <data name="TeamsScopeValue" xml:space="preserve"><value>Périmètre qualifié</value></data>
+  <data name="TeamsReason" xml:space="preserve"><value>Populations, dépendances et justification du périmètre</value></data>
+  <data name="QualificationScope_Unknown" xml:space="preserve"><value>À qualifier</value></data>
+  <data name="QualificationScope_Included" xml:space="preserve"><value>Inclus dans le périmètre</value></data>
+  <data name="QualificationScope_Excluded" xml:space="preserve"><value>Hors périmètre</value></data>
 </root>

@@ -14,7 +14,7 @@ public sealed class GraphDiscoveryService(IDbContextFactory<ClarityDbContext> fa
 
     /// <summary>Graph producers a tenant connection may be created for; each producer has its own connection and consent.</summary>
     public static readonly IReadOnlyList<string> ConnectionProducerIds =
-        [EntraProducerId, IntuneCollector.ProducerId, ApplicationsSsoCollector.ProducerId, SharePointCollector.ProducerId, OneDriveCollector.ProducerId];
+        [EntraProducerId, IntuneCollector.ProducerId, ApplicationsSsoCollector.ProducerId, SharePointCollector.ProducerId, OneDriveCollector.ProducerId, TeamsCollector.ProducerId];
 
     public async Task<Guid> ConnectAsync(Guid projectId, Guid environmentId, string name, CancellationToken cancellationToken = default,
         string producerId = EntraProducerId)
@@ -97,6 +97,7 @@ public sealed class GraphDiscoveryService(IDbContextFactory<ClarityDbContext> fa
             ApplicationsSsoCollector.ProducerId => ApplicationsSsoCollector.ProbeAsync,
             SharePointCollector.ProducerId => SharePointCollector.ProbeAsync,
             OneDriveCollector.ProducerId => OneDriveCollector.ProbeAsync,
+            TeamsCollector.ProducerId => TeamsCollector.ProbeAsync,
             _ => null
         };
         foreach (var section in catalog.Sections.Values.Where(x => x.ProducerIds.Contains(connection.ProducerId)

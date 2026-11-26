@@ -53,6 +53,7 @@ Never use a production database for tests.
 - [Azure and local Windows infrastructure collection scripts](docs/connectors/azure-infrastructure.md)
 - [Office settings, GPO links and security filtering](docs/connectors/office-gpo.md)
 - [SharePoint and OneDrive collection](docs/connectors/sharepoint-onedrive.md)
+- [Teams collection and chat/telephony qualifications](docs/connectors/teams.md)
 - [Azure provisioning, deployment and rollback](docs/deployment.md)
 - [Contributor conventions](.github/copilot-instructions.md)
 

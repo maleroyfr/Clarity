@@ -1,0 +1,62 @@
+{
+  "schemaVersion": "1.0", "id": "teams", "version": "1.0.0", "environmentKind": "M365Tenant",
+  "producers": [{
+    "id": "clarity.graph.teams", "channel": "Graph", "version": "1.0.0", "apiVersion": "v1.0",
+    "preview": false, "readiness": "SyntheticValidated",
+    "testedVersions": [".NET 11; Microsoft Graph REST v1.0 synthetic HTTP fixtures only"],
+    "prerequisites": ["Collector certificate in Key Vault", "Organization.Read.All application consent for tenant verification", "Team.ReadBasic.All application consent", "TeamMember.Read.All, Channel.ReadBasic.All and Sites.Read.All application consent for the selected child sections"],
+    "limits": ["Public Graph cloud only; no live tenant validation", "At most 20000 teams per section; full paged reads, no delta", "Metadata only: no messages, chat content, files, recordings, phone numbers or effective access", "Chat and telephony scope are consultant Assessments, not collection evidence"]
+  }],
+  "sections": [
+    {
+      "id": "teams.teams", "producerIds": ["clarity.graph.teams"], "supportedScopes": ["tenant"],
+      "attributes": {
+        "displayName": { "type": "string", "referenceProducer": "clarity.graph.teams" },
+        "visibility": { "type": "string", "referenceProducer": "clarity.graph.teams" }
+      },
+      "relations": ["teamGroup"], "permissions": ["Team.ReadBasic.All"],
+      "endpoints": ["GET /v1.0/teams?$select=id,displayName,visibility"],
+      "refreshStrategy": "Full paged snapshot of team identity and basic metadata",
+      "limits": ["The team ID equals its Microsoft 365 group ID, but team and group remain distinct object types", "No archive state or settings: list teams does not populate those fields", "Group references stay pending until collected in the same environment"]
+    },
+    {
+      "id": "teams.members", "producerIds": ["clarity.graph.teams"], "supportedScopes": ["tenant"],
+      "attributes": {
+        "displayName": { "type": "string", "referenceProducer": "clarity.graph.teams" },
+        "userId": { "type": "string", "referenceProducer": "clarity.graph.teams" },
+        "tenantId": { "type": "string", "referenceProducer": "clarity.graph.teams" },
+        "roles": { "type": "strings", "referenceProducer": "clarity.graph.teams" }
+      },
+      "relations": ["membershipInTeam", "membershipUser", "memberOf", "ownerOf"],
+      "permissions": ["Team.ReadBasic.All", "TeamMember.Read.All"],
+      "endpoints": ["GET /v1.0/teams?$select=id", "GET /v1.0/teams/{team-id}/members?$top=999&$select=id,displayName,userId,tenantId,roles"],
+      "refreshStrategy": "Page memberships independently per team, preserving successful parents and pages on failures",
+      "limits": ["Opaque membership IDs are prefixed with their team ID, never parsed", "Owners are memberships whose roles contain owner; direct team membership does not prove channel or site access", "Foreign or missing tenant/user IDs remain separate evidence, never resolved to a local user by name or email", "No private/shared channel membership expansion; tenant-wide application consent, not resource-specific consent"]
+    },
+    {
+      "id": "teams.channels", "producerIds": ["clarity.graph.teams"], "supportedScopes": ["tenant"],
+      "attributes": {
+        "displayName": { "type": "string", "referenceProducer": "clarity.graph.teams" },
+        "membershipType": { "type": "string", "referenceProducer": "clarity.graph.teams" },
+        "createdDateTime": { "type": "utc", "referenceProducer": "clarity.graph.teams" },
+        "webUrl": { "type": "string", "referenceProducer": "clarity.graph.teams" }
+      },
+      "relations": ["channelInTeam"], "permissions": ["Team.ReadBasic.All", "Channel.ReadBasic.All"],
+      "endpoints": ["GET /v1.0/teams?$select=id", "GET /v1.0/teams/{team-id}/channels?$select=id,displayName,membershipType,createdDateTime,webUrl"],
+      "refreshStrategy": "Full paged read of channels hosted by each team",
+      "limits": ["Standard, private and shared channel types are preserved", "Incoming shared channels hosted by other teams or tenants are not enumerated", "No messages, tabs, email addresses or channel membership; unknown types make coverage partial"]
+    },
+    {
+      "id": "teams.sites", "producerIds": ["clarity.graph.teams"], "supportedScopes": ["tenant"],
+      "attributes": {
+        "webUrl": { "type": "string", "referenceProducer": "clarity.graph.teams" },
+        "teamsConnected": { "type": "boolean", "referenceProducer": "clarity.graph.teams" }
+      },
+      "relations": ["groupSite", "teamSite", "channelSite"],
+      "permissions": ["Team.ReadBasic.All", "Channel.ReadBasic.All", "Sites.Read.All"],
+      "endpoints": ["GET /v1.0/teams?$select=id", "GET /v1.0/groups/{team-id}/sites/root?$select=id,webUrl", "GET /v1.0/teams/{team-id}/channels?$select=id,displayName,membershipType,createdDateTime,webUrl", "GET /v1.0/teams/{team-id}/channels/{channel-id}/filesFolder", "GET /v1.0/drives/{drive-id}/items/{item-id}?$select=sharepointIds,parentReference"],
+      "refreshStrategy": "Resolve each group root and channel filesFolder independently; inspect driveItem metadata only when filesFolder lacks a site collection ID",
+      "limits": ["Sites.Read.All also authorizes filesFolder and driveItem metadata; Files.Read.All alone does not cover group root sites", "filesFolder supports no query options; raw response, download URLs and content are discarded", "Same site collection GUID reuses site/sharepoint.siteId across producers; different private/shared site IDs remain distinct", "URLs are dated alternative evidence, not automatic merge keys; URL-only identities remain provisional", "Unreadable/unprovisioned sites leave endpoint references to verify; no fallback to team root, no URL guessing", "Access tests sample one team and one channel, not every private/shared channel"]
+    }
+  ]
+}

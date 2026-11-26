@@ -67,7 +67,7 @@
     [Parameter] public Guid ObjectId { get; set; }
     [Parameter] public IReadOnlyList<SheetField> Fields { get; set; } = [];
     [Parameter] public EventCallback<Guid> ShowEvidence { get; set; }
-    private SsoQualificationState? _state;
+    private QualificationState? _state;
     private SsoDependencyValue _value;
     private SsoProtocol _protocol;
     private string _reason = "", _reference = "", _observation = "";

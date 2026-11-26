@@ -1,8 +1,9 @@
 namespace Clarity.Core;
 
-public enum AssessmentKind { SsoDependency }
+public enum AssessmentKind { SsoDependency, TeamsChatScope, TeamsTelephonyScope }
 public enum SsoDependencyValue { Unknown, Required, NotRequired }
 public enum SsoProtocol { Unknown, Saml, OpenIdConnect, Password, Other }
+public enum QualificationScopeValue { Unknown, Included, Excluded }
 
 public sealed class Assessment : WorkspaceEntity
 {
@@ -13,6 +14,7 @@ public sealed class Assessment : WorkspaceEntity
     public long Revision { get; init; }
     public SsoDependencyValue Value { get; init; }
     public SsoProtocol Protocol { get; init; }
+    public QualificationScopeValue? ScopeValue { get; init; }
     public required string Reason { get; init; }
     public string EvidenceReference { get; init; } = "";
     public Guid? EvidenceObservationId { get; init; }

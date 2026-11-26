@@ -16,7 +16,7 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261126221438_SsoAssessments";
+    public override string LastMigrationId => "20261126234027_TeamsScopeAssessments";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -138,6 +138,9 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
 
                 b.Property<long>("Revision")
                     .HasColumnType("bigint");
+
+                b.Property<int?>("ScopeValue")
+                    .HasColumnType("int");
 
                 b.Property<int>("Value")
                     .HasColumnType("int");
