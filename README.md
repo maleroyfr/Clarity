@@ -49,6 +49,7 @@ Never use a production database for tests.
 - [Consolidation rules, acceptance matrix and pilot limits](docs/consolidation.md)
 - [Applications, SSO metadata and consultant qualification](docs/connectors/applications-sso.md)
 - [Exchange Online collection script](docs/connectors/exchange.md)
+- [Azure and local Windows infrastructure collection scripts](docs/connectors/azure-infrastructure.md)
 - [Office settings, GPO links and security filtering](docs/connectors/office-gpo.md)
 - [Azure provisioning, deployment and rollback](docs/deployment.md)
 - [Contributor conventions](.github/copilot-instructions.md)

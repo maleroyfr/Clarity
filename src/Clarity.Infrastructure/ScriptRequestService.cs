@@ -22,6 +22,8 @@ public sealed class ScriptRequestService(IDbContextFactory<ClarityDbContext> fac
         if (operationId == Guid.Empty || sections.Length == 0
             || sections.Distinct(StringComparer.Ordinal).Count() != sections.Length
             || sections.Any(x => !catalog.Sections[x].SupportedScopes.Contains(requestedScope.Kind))
+            || ResourceScriptScope.RequiresRequest(producer.Id) && (!ResourceScriptScope.Allows(environment.Kind, environment.ExternalId, requestedScope)
+                || !string.IsNullOrWhiteSpace(domain))
             || requestedScope.Kind == "ou" && string.IsNullOrWhiteSpace(domain)
             || requestedScope.Kind == "tenant" && (!boundToTenant || !string.IsNullOrWhiteSpace(domain)))
         {
@@ -31,7 +33,7 @@ public sealed class ScriptRequestService(IDbContextFactory<ClarityDbContext> fac
             requestedScope, sections, producer.Version, requestedScope.Kind switch
             {
                 "domain" => requestedScope.Value,
-                "tenant" => null,
+                "tenant" or "resource" => null,
                 _ => domain
             });
 

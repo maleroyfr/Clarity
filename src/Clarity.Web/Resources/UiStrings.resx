@@ -521,4 +521,56 @@
   <data name="Issue_UnresolvedMembers" xml:space="preserve"><value>Des membres de groupe sans identifiant Exchange lisible ont été omis ; l'appartenance est partielle.</value></data>
   <data name="Issue_UnresolvedTrustees" xml:space="preserve"><value>Des bénéficiaires de délégation n'ont pas pu être rapprochés d'un destinataire observé unique et ont été omis ; la couverture des délégations est partielle.</value></data>
   <data name="Issue_UnlinkedMailbox" xml:space="preserve"><value>Des boîtes utilisateur n'ont aucun identifiant exploitable pour les rattacher à un utilisateur : le lien reste en attente.</value></data>
+  <data name="Producer_clarity.azure" xml:space="preserve"><value>Azure — métadonnées des ressources (Az)</value></data>
+  <data name="CreateScriptRequest_clarity.azure" xml:space="preserve"><value>Créer une demande de script Azure</value></data>
+  <data name="DownloadScriptBundle_clarity.azure" xml:space="preserve"><value>Télécharger le script Azure (ZIP)</value></data>
+  <data name="LocalScriptConnectionHint_clarity.azure" xml:space="preserve"><value>Déclarez un environnement Azure identifié par {tenant}/subscriptions/{abonnement} (GUID). Saisissez le chemin ARM de cet abonnement ou de l’un de ses groupes de ressources. Le script vérifie le contexte Az actif, sans changer d’abonnement.</value></data>
+  <data name="ScriptCommandHint_clarity.azure" xml:space="preserve"><value>Décompressez le ZIP et placez parameters.json à sa racine. Dans PowerShell 7.4 ou ultérieur, utilisez votre contexte Az déjà autorisé pour cet abonnement :</value></data>
+  <data name="Section_azure.subscriptions" xml:space="preserve"><value>Azure — abonnement vérifié</value></data>
+  <data name="Section_azure.resourceGroups" xml:space="preserve"><value>Azure — groupes de ressources</value></data>
+  <data name="Section_azure.logAnalyticsWorkspaces" xml:space="preserve"><value>Azure — espaces de travail Log Analytics</value></data>
+  <data name="ObjectType_azureSubscription" xml:space="preserve"><value>Abonnement Azure</value></data>
+  <data name="ObjectType_azureResourceGroup" xml:space="preserve"><value>Groupe de ressources Azure</value></data>
+  <data name="ObjectType_logAnalyticsWorkspace" xml:space="preserve"><value>Espace de travail Log Analytics</value></data>
+  <data name="Relation_resourceGroupInSubscription" xml:space="preserve"><value>Groupe de ressources rattaché à l’abonnement</value></data>
+  <data name="Relation_workspaceInResourceGroup" xml:space="preserve"><value>Espace Log Analytics rattaché au groupe de ressources</value></data>
+  <data name="Issue_AzureVisibility" xml:space="preserve"><value>Seules les ressources lisibles par cette identité sont couvertes. Une omission ne prouve pas une absence.</value></data>
+  <data name="Issue_AzureParentOutsideScope" xml:space="preserve"><value>L’abonnement parent ne fait pas partie du groupe de ressources demandé.</value></data>
+  <data name="Issue_AzureUnreadableRow" xml:space="preserve"><value>Une ressource incomplète, en double ou hors périmètre a été omise.</value></data>
+  <data name="Issue_AzureReadFailed" xml:space="preserve"><value>La lecture Azure n’a pas abouti. Vérifiez les versions des modules et les droits de lecture dans ce périmètre.</value></data>
+  <data name="Producer_clarity.infrastructure" xml:space="preserve"><value>Infrastructure Windows Server locale</value></data>
+  <data name="CreateScriptRequest_clarity.infrastructure" xml:space="preserve"><value>Créer une demande de script d’infrastructure</value></data>
+  <data name="DownloadScriptBundle_clarity.infrastructure" xml:space="preserve"><value>Télécharger le script d’infrastructure (ZIP)</value></data>
+  <data name="LocalScriptConnectionHint_clarity.infrastructure" xml:space="preserve"><value>Déclarez un environnement « Autre » identifié par le domaine DNS, puis indiquez le nom DNS complet d’un seul serveur de ce domaine. Exécutez le script sur ce serveur sous votre identité autorisée.</value></data>
+  <data name="ScriptCommandHint_clarity.infrastructure" xml:space="preserve"><value>Décompressez le ZIP sur le serveur demandé et placez parameters.json à sa racine. Dans Windows PowerShell 5.1 64 bits :</value></data>
+  <data name="Section_infrastructure.servers" xml:space="preserve"><value>Serveur Windows vérifié</value></data>
+  <data name="Section_infrastructure.dnsZones" xml:space="preserve"><value>Zones DNS hébergées</value></data>
+  <data name="Section_infrastructure.shares" xml:space="preserve"><value>Partages locaux</value></data>
+  <data name="Section_infrastructure.printers" xml:space="preserve"><value>Files d’impression locales</value></data>
+  <data name="Section_infrastructure.services" xml:space="preserve"><value>Services Windows</value></data>
+  <data name="Section_infrastructure.certificates" xml:space="preserve"><value>Certificats du magasin personnel de la machine</value></data>
+  <data name="Section_infrastructure.serviceDependencies" xml:space="preserve"><value>Dépendances déclarées entre services</value></data>
+  <data name="Section_infrastructure.applicationPools" xml:space="preserve"><value>Pools d’applications IIS</value></data>
+  <data name="Section_infrastructure.applications" xml:space="preserve"><value>Applications IIS et pools configurés</value></data>
+  <data name="ObjectType_windowsServer" xml:space="preserve"><value>Serveur Windows</value></data>
+  <data name="ObjectType_dnsZone" xml:space="preserve"><value>Zone DNS</value></data>
+  <data name="ObjectType_windowsShare" xml:space="preserve"><value>Partage Windows</value></data>
+  <data name="ObjectType_printQueue" xml:space="preserve"><value>File d’impression</value></data>
+  <data name="ObjectType_windowsService" xml:space="preserve"><value>Service Windows</value></data>
+  <data name="ObjectType_machineCertificate" xml:space="preserve"><value>Certificat machine</value></data>
+  <data name="ObjectType_iisApplicationPool" xml:space="preserve"><value>Pool d’applications IIS</value></data>
+  <data name="ObjectType_iisApplication" xml:space="preserve"><value>Application IIS</value></data>
+  <data name="Relation_dnsZoneOnServer" xml:space="preserve"><value>Zone DNS hébergée sur le serveur</value></data>
+  <data name="Relation_shareOnServer" xml:space="preserve"><value>Partage publié sur le serveur</value></data>
+  <data name="Relation_printerOnServer" xml:space="preserve"><value>File d’impression sur le serveur</value></data>
+  <data name="Relation_serviceOnServer" xml:space="preserve"><value>Service installé sur le serveur</value></data>
+  <data name="Relation_certificateOnServer" xml:space="preserve"><value>Certificat présent sur le serveur</value></data>
+  <data name="Relation_poolOnServer" xml:space="preserve"><value>Pool IIS configuré sur le serveur</value></data>
+  <data name="Relation_applicationOnServer" xml:space="preserve"><value>Application IIS hébergée sur le serveur</value></data>
+  <data name="Relation_applicationUsesPool" xml:space="preserve"><value>Pool IIS désigné par la configuration de l’application</value></data>
+  <data name="Relation_serviceDependsOnService" xml:space="preserve"><value>Dépendance déclarée par le service Windows</value></data>
+  <data name="Issue_InfrastructureVisibility" xml:space="preserve"><value>Seules les métadonnées lisibles sur ce serveur sont couvertes. Une omission ne prouve pas une absence.</value></data>
+  <data name="Issue_InfrastructureMissingEndpoint" xml:space="preserve"><value>Le fournisseur IIS n’a pas indiqué de pool identifiable pour une application.</value></data>
+  <data name="Issue_InfrastructureUnreadableRow" xml:space="preserve"><value>Un élément incomplet ou en double a été omis.</value></data>
+  <data name="Issue_InfrastructureReadFailed" xml:space="preserve"><value>Le fournisseur local ou le magasin est indisponible, illisible ou interrompu. Vérifiez le rôle Windows et les droits de lecture.</value></data>
 </root>

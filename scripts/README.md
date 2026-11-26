@@ -52,3 +52,9 @@ only while the catalog version equals the version recorded in the request.
 ExchangeOnlineManagement 3.x cmdlets; it never connects, and requires one
 operator-opened session for the requested tenant. See
 [Exchange Online](../docs/connectors/exchange.md).
+
+`azure/Collect-Azure.ps1` and `infrastructure/Collect-Infrastructure.ps1` use
+the existing `resource` scope for a verified Azure subscription/resource group
+and one verified Windows server respectively. Their independent bundles, rights,
+scope formats and synthetic validation matrix are documented in
+[Azure and local infrastructure](../docs/connectors/azure-infrastructure.md).

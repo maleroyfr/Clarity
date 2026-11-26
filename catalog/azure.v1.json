@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "1.0", "id": "azure", "version": "1.0.0", "environmentKind": "AzureScope",
+  "producers": [{
+    "id": "clarity.azure", "channel": "PowerShell", "version": "1.0.0", "apiVersion": "Az 17.0.0 ARM cmdlets",
+    "preview": false, "readiness": "SyntheticValidated",
+    "testedVersions": ["PowerShell 7.6.10 Windows with mocked Az.Accounts 5.5.5, Az.Resources 10.2.3, Az.OperationalInsights 3.4.1; Pester 5.7.1"],
+    "prerequisites": ["PowerShell Core 7.4+; documented Az module versions installed separately; existing authorized public Azure context for the declared tenant and subscription."],
+    "limits": ["Synthetic validation only. No subscription switching, cross-tenant delegation, Azure Stack, sovereign clouds, data plane, logs, workspace keys or tags. Exact ARM paths only."]
+  }],
+  "sections": [
+    {
+      "id": "azure.subscriptions", "producerIds": ["clarity.azure"], "supportedScopes": ["resource"],
+      "attributes": {"displayName":{"type":"string","referenceProducer":"clarity.azure"},"status":{"type":"string","referenceProducer":"clarity.azure"}},
+      "relations": [], "permissions": ["Microsoft.Resources/subscriptions/read for the exact subscription (required for all sections)."],
+      "endpoints": ["Get-AzContext", "Get-AzSubscription -TenantId -SubscriptionId -DefaultProfile"],
+      "refreshStrategy": "One verified subscription; never list or switch subscriptions.",
+      "limits": ["NotApplicable when only a resource group was requested. Visible name and subscription state, never billing or identity details."]
+    },
+    {
+      "id": "azure.resourceGroups", "producerIds": ["clarity.azure"], "supportedScopes": ["resource"],
+      "attributes": {"displayName":{"type":"string","referenceProducer":"clarity.azure"},"location":{"type":"string","referenceProducer":"clarity.azure"}},
+      "relations": ["resourceGroupInSubscription"], "permissions": ["Subscription identity read plus Microsoft.Resources/subscriptions/resourceGroups/read in the requested scope."],
+      "endpoints": ["Get-AzResourceGroup [-Name] -DefaultProfile"],
+      "refreshStrategy": "Read visible groups within the verified subscription, or the single verified group.",
+      "limits": ["Supported group names are ASCII letters, digits, hyphen, underscore, parentheses and period (not final). Incomplete and out-of-scope rows are not published."]
+    },
+    {
+      "id": "azure.logAnalyticsWorkspaces", "producerIds": ["clarity.azure"], "supportedScopes": ["resource"],
+      "attributes": {"displayName":{"type":"string","referenceProducer":"clarity.azure"},"location":{"type":"string","referenceProducer":"clarity.azure"}},
+      "relations": ["workspaceInResourceGroup"], "permissions": ["Subscription identity read; Microsoft.OperationalInsights/workspaces/read within scope. Group scope additionally requires a direct resource group read."],
+      "endpoints": ["Get-AzOperationalInsightsWorkspace [-ResourceGroupName] -DefaultProfile"],
+      "refreshStrategy": "List workspace control-plane metadata in the exact subscription or group.",
+      "limits": ["No queries, events, tables, shared keys, retention contents or diagnostic records. Uncollected parent groups remain typed references."]
+    }
+  ]
+}

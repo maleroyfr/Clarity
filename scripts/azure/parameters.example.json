@@ -1,0 +1,9 @@
+{
+  "schemaVersion": "1.0",
+  "requestId": "55555555-0000-0000-0000-000000000010",
+  "environmentKind": "AzureScope",
+  "expectedEnvironmentExternalId": "55555555-0000-0000-0000-000000000001/subscriptions/55555555-0000-0000-0000-000000000002",
+  "scope": { "kind": "resource", "value": "/subscriptions/55555555-0000-0000-0000-000000000002" },
+  "sections": ["azure.subscriptions", "azure.resourceGroups", "azure.logAnalyticsWorkspaces"],
+  "producerVersion": "1.0.0"
+}

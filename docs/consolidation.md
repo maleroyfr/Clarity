@@ -73,6 +73,10 @@ stream's evidence. No single-owner or primary-user constraint is assumed.
 `InventoryGraph.MembershipsAsync` follows only current direct membership and
 primary-group edges, in either direction. It returns a shortest evidence path
 of relationship IDs for each reachable object and never returns the start node.
+The [Azure and infrastructure scripts](connectors/azure-infrastructure.md) publish
+ARM and host containment separately from Windows service dependencies and IIS
+pool assignments. None are membership or effective connectivity; unknown
+endpoints keep their source reference and proof.
 Delegation, ownership and qualification are not transitive membership or proof
 of effective access. Later workloads can supply other typed edges; this slice
 does not collect them.
