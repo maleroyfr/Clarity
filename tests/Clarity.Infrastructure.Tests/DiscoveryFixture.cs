@@ -8,6 +8,9 @@ namespace Clarity.Infrastructure.Tests;
 internal sealed class DiscoveryFixture(TestDatabase database) : IAsyncDisposable
 {
     private TestDatabase Database { get; } = database;
+    public string ConnectionString => Database.ConnectionString;
+    public WorkspaceScope Scope => new(Identity, [Workspace.Id]);
+    public JobService Jobs => new(Factory, Access, Scope);
     public ClientWorkspace Workspace { get; } = new() { Name = "Synthetic Discovery" };
     public Project Project { get; private set; } = null!;
     public ProjectEnvironment Environment { get; private set; } = null!;

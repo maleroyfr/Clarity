@@ -33,11 +33,13 @@ public sealed class WorkspaceConnectionInterceptor(IWorkspaceContext scope) : Db
             EXEC sys.sp_set_session_context @key=N'clarity.tenant', @value=@tenant;
             EXEC sys.sp_set_session_context @key=N'clarity.subject', @value=@subject;
             EXEC sys.sp_set_session_context @key=N'clarity.platformAdmin', @value=@admin;
+            EXEC sys.sp_set_session_context @key=N'clarity.jobDispatcher', @value=@dispatcher;
             """;
         Add(command, "@workspaces", DbType.AnsiString, workspaces);
         Add(command, "@tenant", DbType.Guid, scope.Identity.TenantId);
         Add(command, "@subject", DbType.Guid, scope.Identity.ObjectId);
         Add(command, "@admin", DbType.Boolean, scope.IsPlatformAdmin);
+        Add(command, "@dispatcher", DbType.Boolean, scope is JobDispatchScope);
         return command;
     }
 

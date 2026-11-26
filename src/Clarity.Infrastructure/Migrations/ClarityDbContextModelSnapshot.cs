@@ -16,7 +16,7 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261126174744_AtomicObservations";
+    public override string LastMigrationId => "20261126175339_DurableCollectionJobs";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -83,6 +83,80 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
                 b.HasIndex("Status", "Name");
 
                 b.ToTable("ClientWorkspaces");
+            });
+
+        modelBuilder.Entity("Clarity.Core.CollectionJob", b =>
+            {
+                b.Property<Guid>("WorkspaceId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("Id")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("ActorObjectId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("ActorTenantId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<int>("Attempt")
+                    .HasColumnType("int");
+
+                b.Property<DateTimeOffset>("AvailableAtUtc")
+                    .HasColumnType("datetimeoffset");
+
+                b.Property<bool>("CancellationRequested")
+                    .HasColumnType("bit");
+
+                b.Property<string>("ConcurrencyKey")
+                    .IsRequired()
+                    .HasMaxLength(64)
+                    .IsUnicode(false)
+                    .HasColumnType("varchar(64)");
+
+                b.Property<string>("CorrelationId")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("nvarchar(100)");
+
+                b.Property<DateTimeOffset>("CreatedAtUtc")
+                    .HasColumnType("datetimeoffset");
+
+                b.Property<string>("ErrorCode")
+                    .HasMaxLength(100)
+                    .HasColumnType("nvarchar(100)");
+
+                b.Property<int>("Kind")
+                    .HasColumnType("int");
+
+                b.Property<DateTimeOffset?>("LeaseExpiresAtUtc")
+                    .HasColumnType("datetimeoffset");
+
+                b.Property<Guid?>("LeaseToken")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<string>("PayloadJson")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<int>("Progress")
+                    .HasColumnType("int");
+
+                b.Property<Guid>("ProjectId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<int>("State")
+                    .HasColumnType("int");
+
+                b.HasKey("WorkspaceId", "Id");
+
+                b.HasIndex("ConcurrencyKey", "State", "LeaseExpiresAtUtc");
+
+                b.HasIndex("State", "AvailableAtUtc", "LeaseExpiresAtUtc");
+
+                b.HasIndex("WorkspaceId", "ProjectId", "CreatedAtUtc");
+
+                b.ToTable("CollectionJobs");
             });
 
         modelBuilder.Entity("Clarity.Core.CollectionRequest", b =>
@@ -676,6 +750,21 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
                 b.HasOne("Clarity.Core.ClientWorkspace", null)
                     .WithMany()
                     .HasForeignKey("WorkspaceId")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+            });
+
+        modelBuilder.Entity("Clarity.Core.CollectionJob", b =>
+            {
+                b.HasOne("Clarity.Core.ClientWorkspace", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+
+                b.HasOne("Clarity.Core.Project", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId", "ProjectId")
                     .OnDelete(DeleteBehavior.NoAction)
                     .IsRequired();
             });
