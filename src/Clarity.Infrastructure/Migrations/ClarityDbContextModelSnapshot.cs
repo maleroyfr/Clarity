@@ -16,7 +16,7 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261126192117_EvidencedRelationships";
+    public override string LastMigrationId => "20261126192622_InventoryAssociations";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -654,6 +654,113 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
                 b.ToTable("InventoryRelationships");
             });
 
+        modelBuilder.Entity("Clarity.Core.MappingDecision", b =>
+            {
+                b.Property<Guid>("WorkspaceId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("Id")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("AdEnvironmentId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("AdObjectId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("EntraEnvironmentId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("EntraObjectId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<string>("EvidenceJson")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<string>("Fingerprint")
+                    .IsRequired()
+                    .HasMaxLength(64)
+                    .IsUnicode(false)
+                    .HasColumnType("varchar(64)");
+
+                b.Property<Guid>("ProjectId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<long>("Revision")
+                    .IsConcurrencyToken()
+                    .HasColumnType("bigint");
+
+                b.Property<int>("Rule")
+                    .HasColumnType("int");
+
+                b.Property<int>("State")
+                    .HasColumnType("int");
+
+                b.HasKey("WorkspaceId", "Id");
+
+                b.HasIndex("WorkspaceId", "AdEnvironmentId", "AdObjectId");
+
+                b.HasIndex("WorkspaceId", "EntraEnvironmentId", "EntraObjectId");
+
+                b.HasIndex("WorkspaceId", "ProjectId", "AdEnvironmentId");
+
+                b.HasIndex("WorkspaceId", "ProjectId", "EntraEnvironmentId");
+
+                b.HasIndex("WorkspaceId", "ProjectId", "State");
+
+                b.HasIndex("WorkspaceId", "ProjectId", "AdObjectId", "EntraObjectId")
+                    .IsUnique();
+
+                b.ToTable("MappingDecisions");
+            });
+
+        modelBuilder.Entity("Clarity.Core.MappingRevision", b =>
+            {
+                b.Property<Guid>("WorkspaceId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("Id")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid?>("ActorObjectId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid?>("ActorTenantId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("DecisionId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<string>("EvidenceJson")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<long>("Number")
+                    .HasColumnType("bigint");
+
+                b.Property<DateTimeOffset>("OccurredAtUtc")
+                    .HasColumnType("datetimeoffset");
+
+                b.Property<string>("Reason")
+                    .IsRequired()
+                    .HasMaxLength(1000)
+                    .HasColumnType("nvarchar(1000)");
+
+                b.Property<int>("Rule")
+                    .HasColumnType("int");
+
+                b.Property<int>("State")
+                    .HasColumnType("int");
+
+                b.HasKey("WorkspaceId", "Id");
+
+                b.HasIndex("WorkspaceId", "DecisionId", "Number")
+                    .IsUnique();
+
+                b.ToTable("MappingRevisions");
+            });
+
         modelBuilder.Entity("Clarity.Core.ObjectObservation", b =>
             {
                 b.Property<Guid>("WorkspaceId")
@@ -972,6 +1079,50 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
                 b.ToTable("SectionRuns");
             });
 
+        modelBuilder.Entity("Clarity.Core.SyncBinding", b =>
+            {
+                b.Property<Guid>("WorkspaceId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("Id")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("AdEnvironmentId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<int?>("Anchor")
+                    .HasColumnType("int");
+
+                b.Property<Guid>("EntraEnvironmentId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("ProjectId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<string>("Reason")
+                    .IsRequired()
+                    .HasMaxLength(1000)
+                    .HasColumnType("nvarchar(1000)");
+
+                b.Property<DateTimeOffset>("VerifiedAtUtc")
+                    .HasColumnType("datetimeoffset");
+
+                b.Property<Guid>("VerifiedByObjectId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("VerifiedByTenantId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.HasKey("WorkspaceId", "Id");
+
+                b.HasIndex("WorkspaceId", "ProjectId", "EntraEnvironmentId");
+
+                b.HasIndex("WorkspaceId", "ProjectId", "AdEnvironmentId", "EntraEnvironmentId")
+                    .IsUnique();
+
+                b.ToTable("SyncBindings");
+            });
+
         modelBuilder.Entity("Clarity.Core.WorkspaceMember", b =>
             {
                 b.Property<Guid>("WorkspaceId")
@@ -1198,6 +1349,58 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
                     .OnDelete(DeleteBehavior.NoAction);
             });
 
+        modelBuilder.Entity("Clarity.Core.MappingDecision", b =>
+            {
+                b.HasOne("Clarity.Core.ClientWorkspace", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+
+                b.HasOne("Clarity.Core.InventoryObject", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId", "AdEnvironmentId", "AdObjectId")
+                    .HasPrincipalKey("WorkspaceId", "EnvironmentId", "Id")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+
+                b.HasOne("Clarity.Core.InventoryObject", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId", "EntraEnvironmentId", "EntraObjectId")
+                    .HasPrincipalKey("WorkspaceId", "EnvironmentId", "Id")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+
+                b.HasOne("Clarity.Core.ProjectEnvironment", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId", "ProjectId", "AdEnvironmentId")
+                    .HasPrincipalKey("WorkspaceId", "ProjectId", "Id")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+
+                b.HasOne("Clarity.Core.ProjectEnvironment", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId", "ProjectId", "EntraEnvironmentId")
+                    .HasPrincipalKey("WorkspaceId", "ProjectId", "Id")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+            });
+
+        modelBuilder.Entity("Clarity.Core.MappingRevision", b =>
+            {
+                b.HasOne("Clarity.Core.ClientWorkspace", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+
+                b.HasOne("Clarity.Core.MappingDecision", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId", "DecisionId")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+            });
+
         modelBuilder.Entity("Clarity.Core.ObjectObservation", b =>
             {
                 b.HasOne("Clarity.Core.ClientWorkspace", null)
@@ -1305,6 +1508,29 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
                 b.HasOne("Clarity.Core.CollectionRun", null)
                     .WithMany()
                     .HasForeignKey("WorkspaceId", "RunId")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+            });
+
+        modelBuilder.Entity("Clarity.Core.SyncBinding", b =>
+            {
+                b.HasOne("Clarity.Core.ClientWorkspace", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+
+                b.HasOne("Clarity.Core.ProjectEnvironment", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId", "ProjectId", "AdEnvironmentId")
+                    .HasPrincipalKey("WorkspaceId", "ProjectId", "Id")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+
+                b.HasOne("Clarity.Core.ProjectEnvironment", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId", "ProjectId", "EntraEnvironmentId")
+                    .HasPrincipalKey("WorkspaceId", "ProjectId", "Id")
                     .OnDelete(DeleteBehavior.NoAction)
                     .IsRequired();
             });

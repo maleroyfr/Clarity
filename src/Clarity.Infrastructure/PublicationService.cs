@@ -16,6 +16,7 @@ public sealed class PublicationService(
         await using var db = await factory.CreateDbContextAsync(token);
         await ImportService.EnvironmentAsync(db, project, environmentId, token);
         await using var transaction = await db.Database.BeginTransactionAsync(token);
+        await InventoryMatching.LockProjectAsync(db, project, token);
         await LockEnvironmentAsync(db, project.WorkspaceId, environmentId, token);
         var ids = await db.InventoryObjects.Where(x => x.WorkspaceId == project.WorkspaceId && x.EnvironmentId == environmentId)
             .Select(x => x.Id).ToListAsync(token);
@@ -23,6 +24,8 @@ public sealed class PublicationService(
         await CurrentProjection.RefreshAsync(db, catalog, project.WorkspaceId, environmentId, null, ids, token);
         await db.SaveChangesAsync(token);
         await RelationshipProjection.RefreshAsync(db, catalog, project.WorkspaceId, environmentId, token);
+        await db.SaveChangesAsync(token);
+        await InventoryMatching.RefreshAsync(db, project, token);
         await db.SaveChangesAsync(token);
         await transaction.CommitAsync(token);
     }
@@ -34,6 +37,7 @@ public sealed class PublicationService(
         validator.Validate(package);
         await using var db = await factory.CreateDbContextAsync(cancellationToken);
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        await InventoryMatching.LockProjectAsync(db, project, cancellationToken);
         var run = await db.CollectionRuns.SingleOrDefaultAsync(x => x.WorkspaceId == project.WorkspaceId
             && x.ProjectId == project.Id && x.Id == runId, cancellationToken) ?? throw new AccessDeniedException();
         if (run.ConfirmedAtUtc is null || run.ExternalRunId != package.Manifest.RunId
@@ -120,6 +124,8 @@ public sealed class PublicationService(
         await CurrentProjection.RefreshAsync(db, catalog, run.WorkspaceId, run.EnvironmentId, section, changedObjects, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         await RelationshipProjection.RefreshAsync(db, catalog, run.WorkspaceId, run.EnvironmentId, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        await InventoryMatching.RefreshAsync(db, project, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return;

@@ -74,3 +74,28 @@ does not collect them.
 | Journey | Executable acceptance |
 | --- | --- |
 | Confirmed ZIP, pending endpoint becoming resolved, deduplicated evidence, cyclic nested groups and reverse navigation | `PublicationTests.MembershipPathsResolveLaterArrivalsPreserveProofAndTerminateOnCycles` |
+
+## Same-side associations
+
+A consultant attests the actual sync anchor for a specific AD forest and tenant
+in this dossier, recording the reason. There is no default. The two supported
+encodings are AD objectGUID bytes in GUID byte order and the original 16
+mS-DS-ConsistencyGuid bytes reported by the AD script. Compare to the decoded
+Entra `onPremisesImmutableId`. Automatic validation requires a unique pair,
+nonconflicting directly collected Graph sync-enabled and anchor evidence, and
+agreement of the two SIDs when both are present. SID alone requests review.
+Exact unique UPN/SMTP proposes; it does not validate or merge. Hybrid device
+ID can confirm an AD computer only when Graph reports the matching device ID
+and ServerAd trust type. Name/serial evidence is a review hint.
+
+All candidate comparisons stay on the same side, never source versus target.
+The matcher fingerprints critical values, trust and competing candidate IDs,
+not ingestion timestamps. An identical observation does not erase a decision.
+A changed candidate or critical value adds a dated review revision; prior author,
+justification and proof remain. Project-level transactional locking serializes
+cross-environment recomputation and human decisions. Revision checks reject stale
+reviews and competing validated associations.
+
+| Journey | Executable acceptance |
+| --- | --- |
+| Configured byte anchor through Graph, reviewed UPN preserved on identical evidence, affected decisions reopened on ambiguity/config change | `GraphTests.VerifiedConsistencyAnchorAndReviewedUpnSurviveUnrelatedRefreshButNotANewCandidate` |

@@ -264,6 +264,69 @@ public sealed class GraphTests
     }
 
     [SqlFact]
+    public async Task VerifiedConsistencyAnchorAndReviewedUpnSurviveUnrelatedRefreshButNotANewCandidate()
+    {
+        await using var fixture = await DiscoveryFixture.CreateAsync();
+        var environment = await AddTenantAsync(fixture);
+        var matching = new InventoryMatching(fixture.Factory, fixture.Access, fixture.Scope);
+        var anchor = Convert.ToBase64String(Guid.NewGuid().ToByteArray());
+        await matching.VerifyAnchorAsync(fixture.Project.Id, fixture.Environment.Id, environment.Id, SourceAnchor.ConsistencyGuid, "Synthetic sync configuration");
+        var adUser = Guid.NewGuid().ToString();
+        var weakUser = Guid.NewGuid().ToString();
+        var template = DiscoveryFixture.Package();
+        async Task Ad(params (string Id, string Upn, string? Anchor)[] users)
+        {
+            var date = DateTimeOffset.UtcNow;
+            var package = template with
+            {
+                Manifest = template.Manifest with { RunId = Guid.NewGuid(), StartedAtUtc = date, CompletedAtUtc = date },
+                Objects = users.Select(u => template.Objects[0] with
+                {
+                    ExternalId = u.Id,
+                    ObservedAtUtc = date,
+                    Attributes = new Dictionary<string, JsonElement>
+                    { ["userPrincipalName"] = JsonSerializer.SerializeToElement(u.Upn), ["msDSConsistencyGuid"] = JsonSerializer.SerializeToElement(u.Anchor) }
+                }).ToArray(),
+                Results = [template.Results[0] with { ObjectCount = users.Length, CoveredFields = ["userPrincipalName", "msDSConsistencyGuid"] }]
+            };
+            var run = await fixture.StageAsync(package);
+            await fixture.Publisher.PublishSectionAsync(fixture.Project.Id, run.Id, package, template.Objects[0].SectionId);
+        }
+        await Ad((adUser, "old@example.test", anchor), (weakUser, "shared@example.test", null));
+        using var http = new SyntheticGraph(_ => Organization(), _ => Response(JsonSerializer.Serialize(new Dictionary<string, object>
+        {
+            ["value"] = new object[] { new { id = "strong", onPremisesSyncEnabled = true, onPremisesImmutableId = anchor },
+                new { id = "weak", userPrincipalName = "SHARED@example.test" } },
+            ["@odata.deltaLink"] = "https://graph.microsoft.com/v1.0/users/delta?$deltatoken=test"
+        })));
+        var sessions = new SyntheticSessions(http.Transport);
+        var graph = new GraphDiscoveryService(fixture.Factory, fixture.Access, fixture.Scope, Catalog, sessions);
+        var connection = await graph.ConnectAsync(fixture.Project.Id, environment.Id, "Synthetic");
+        await graph.LaunchAsync(fixture.Project.Id, environment.Id, connection, Guid.NewGuid(), Scope, ["entra.users"]);
+        await new CollectionJobProcessor(new SqlJobQueue(fixture.ConnectionString, TimeProvider.System),
+            [Handler(sessions, new MemoryArtifactStore())], NullLogger<CollectionJobProcessor>.Instance).ProcessOneAsync(default);
+        await using var db = await fixture.Factory.CreateDbContextAsync();
+        var strong = await db.MappingDecisions.AsNoTracking().SingleAsync(x => x.Rule == AssociationRule.ConfiguredAnchor);
+        strong.State.ShouldBe(MappingState.Validated);
+        var weak = await db.MappingDecisions.AsNoTracking().SingleAsync(x => x.Rule == AssociationRule.ExactUpn);
+        weak.State.ShouldBe(MappingState.Proposed);
+        await matching.DecideAsync(fixture.Project.Id, weak.Id, weak.Revision, true, "Confirmed against synthetic directory");
+        await Ad((weakUser, "shared@example.test", null));
+        (await db.MappingDecisions.AsNoTracking().SingleAsync(x => x.Id == weak.Id)).State.ShouldBe(MappingState.Validated);
+        await Ad((Guid.NewGuid().ToString(), "shared@example.test", null));
+        (await db.MappingDecisions.CountAsync(x => x.State == MappingState.ToReview)).ShouldBe(2);
+        (await db.MappingRevisions.CountAsync(x => x.DecisionId == strong.Id)).ShouldBe(1);
+        (await db.MappingRevisions.SingleAsync(x => x.ActorObjectId != null)).Reason.ShouldBe("Confirmed against synthetic directory");
+        await matching.VerifyAnchorAsync(fixture.Project.Id, fixture.Environment.Id, environment.Id, SourceAnchor.ObjectGuid, "Different verified configuration");
+        (await db.MappingDecisions.AsNoTracking().SingleAsync(x => x.Id == strong.Id)).State.ShouldBe(MappingState.ToReview);
+        await Should.ThrowAsync<AccessDeniedException>(() => matching.DecideAsync(Guid.NewGuid(), weak.Id, 3, false, "Wrong dossier"));
+        await using var outside = PersistenceTests.Create(fixture.ConnectionString, []);
+        (await outside.MappingDecisions.IgnoreQueryFilters().CountAsync()).ShouldBe(0);
+        (await outside.MappingRevisions.IgnoreQueryFilters().CountAsync()).ShouldBe(0);
+        (await outside.SyncBindings.IgnoreQueryFilters().CountAsync()).ShouldBe(0);
+    }
+
+    [SqlFact]
     public async Task ObservedTenantMismatchPublishesNothingAndSectionAccessTestsExplainMissingPermission()
     {
         await using var fixture = await DiscoveryFixture.CreateAsync();
