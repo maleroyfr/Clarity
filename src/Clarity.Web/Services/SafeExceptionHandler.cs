@@ -13,7 +13,7 @@ public sealed class SafeExceptionHandler(ILogger<SafeExceptionHandler> logger) :
             ConflictException => StatusCodes.Status409Conflict,
             Microsoft.EntityFrameworkCore.DbUpdateException { InnerException: Microsoft.Data.SqlClient.SqlException { Number: 2601 or 2627 } } =>
                 StatusCodes.Status409Conflict,
-            ArgumentException or Microsoft.AspNetCore.Antiforgery.AntiforgeryValidationException => StatusCodes.Status400BadRequest,
+            ArgumentException or Clarity.Contracts.ContractException or Microsoft.AspNetCore.Antiforgery.AntiforgeryValidationException => StatusCodes.Status400BadRequest,
             _ => StatusCodes.Status500InternalServerError
         };
         logger.LogWarning("Request failed with {ErrorType}; status {StatusCode}; correlation {CorrelationId}",

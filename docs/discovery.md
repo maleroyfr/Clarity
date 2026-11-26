@@ -72,3 +72,29 @@ correlation only. Payloads contain internal IDs and collection metadata, never
 tokens or raw service responses. SQL integration tests interrupt the processor
 after publication and resume it with a new lease, rather than testing only a
 happy-path handler call.
+
+## ZIP upload and confirmation
+
+The upload boundary authorizes the project and actual environment before streaming
+to the private `raw-artifacts` Blob container. It never extracts files or executes
+scripts. Exactly four case-sensitive root names are allowed; extra files, duplicate
+names, directories and alternate paths are rejected. UTF-8 decoding is strict.
+Limits are 16 MiB compressed, 128 MiB total expanded, 64 MiB per entry, 2 MiB per
+manifest/results document, 150,000 observation lines and 65,536 characters per line.
+Both advertised ZIP lengths and bytes actually read are bounded. The compressed
+archive is buffered only after a bounded Blob upload so ZIP seeking is portable.
+
+The server verifies SHA-256 on every read for preview/processing, catalog fields,
+observed environment and optional request binding. Initial AD and Entra producers
+use one exact requested domain/OU/tenant scope; differently scoped results are not
+silently treated as equivalent. A preview includes section coverage/errors,
+object/relationship samples, and new versus already-known source identities.
+It does not predict Lot 3 matching decisions or deletions.
+
+Confirmation atomically creates a single import job with the confirmation actor
+and marks the run confirmed. No observations exist before confirmation. Parallel
+identical content deduplicates under the environment lock; a reused run ID with
+different bytes is a conflict. Rejected/duplicate uploads delete their temporary
+Blob; abrupt host death may leave an unreferenced Blob for operator retention
+cleanup before a real pilot. Raw downloads reauthorize the project; no SAS URL or
+Blob reference is handed to the browser.
