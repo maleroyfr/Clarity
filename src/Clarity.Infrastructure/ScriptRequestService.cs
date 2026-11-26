@@ -1,4 +1,3 @@
-using System.IO.Compression;
 using System.Text;
 using System.Text.Json;
 using Clarity.Contracts;
@@ -14,19 +13,28 @@ public sealed class ScriptRequestService(IDbContextFactory<ClarityDbContext> fac
         string[] sections, string? domain, CancellationToken cancellationToken = default)
     {
         var project = await access.RequireAsync(projectId, WorkspaceOperation.Collect, cancellationToken);
-        var producer = catalog.RequireProducer("clarity.ad");
         await using var db = await factory.CreateDbContextAsync(cancellationToken);
         var environment = await ImportService.EnvironmentAsync(db, project, environmentId, cancellationToken);
-        if (environment.Kind != EnvironmentKind.AdForest || operationId == Guid.Empty || sections.Length == 0
+        var producer = ScriptBundle.Registry.Select(catalog, environment.Kind.ToString(), sections);
+        // A tenant collection is always bound to the environment's tenant, never to a client-supplied identifier.
+        var boundToTenant = requestedScope.Kind == "tenant" && string.Equals(requestedScope.Value, environment.ExternalId, StringComparison.OrdinalIgnoreCase);
+        if (boundToTenant) { requestedScope = new CollectionScope("tenant", environment.ExternalId); }
+        if (operationId == Guid.Empty || sections.Length == 0
             || sections.Distinct(StringComparer.Ordinal).Count() != sections.Length
-            || sections.Any(x => !catalog.Sections.TryGetValue(x, out var section) || !section.ProducerIds.Contains(producer.Id)
-                || !section.SupportedScopes.Contains(requestedScope.Kind))
-            || requestedScope.Kind == "ou" && string.IsNullOrWhiteSpace(domain))
+            || sections.Any(x => !catalog.Sections[x].SupportedScopes.Contains(requestedScope.Kind))
+            || requestedScope.Kind == "ou" && string.IsNullOrWhiteSpace(domain)
+            || requestedScope.Kind == "tenant" && (!boundToTenant || !string.IsNullOrWhiteSpace(domain)))
         {
-            throw new ArgumentException("Invalid AD request scope or sections.");
+            throw new ArgumentException("Invalid script request scope or sections.");
         }
         var parameters = new ScriptParameters("1.0", operationId, environment.Kind.ToString(), environment.ExternalId,
-            requestedScope, sections, producer.Version, requestedScope.Kind == "domain" ? requestedScope.Value : domain);
+            requestedScope, sections, producer.Version, requestedScope.Kind switch
+            {
+                "domain" => requestedScope.Value,
+                "tenant" => null,
+                _ => domain
+            });
+
         var json = JsonSerializer.Serialize(parameters, ContractJson.Options);
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         await PublicationService.LockEnvironmentAsync(db, project.WorkspaceId, environmentId, cancellationToken);
@@ -63,12 +71,16 @@ public sealed class ScriptRequestService(IDbContextFactory<ClarityDbContext> fac
         return Encoding.UTF8.GetBytes(request.ParametersJson);
     }
 
-    public async Task<byte[]> DownloadBundleAsync(Guid projectId, Guid requestId, CancellationToken cancellationToken = default)
+    public async Task<ScriptBundleFile> DownloadBundleAsync(Guid projectId, Guid requestId, CancellationToken cancellationToken = default)
     {
         var request = await GetAsync(projectId, requestId, "ScriptBundleDownloaded", cancellationToken);
-        if (request.ProducerId != "clarity.ad" || request.ScriptVersion != "1.0.0") { throw new ConflictException(); }
-        return ScriptBundle.BuildAd();
+        // A bundle is only served for the producer version that the catalog currently publishes.
+        return catalog.Producers.TryGetValue(request.ProducerId, out var producer) && producer.Version == request.ScriptVersion
+            ? ScriptBundle.Build(producer.Id, producer.Version) ?? throw new ConflictException() : throw new ConflictException();
     }
+
+    /// <summary>The validated PowerShell producers a user can request for an environment kind.</summary>
+    public IReadOnlyList<CatalogProducer> Producers(EnvironmentKind kind) => ScriptBundle.Registry.Producers(catalog, kind.ToString());
 
     private async Task<CollectionRequest> GetAsync(Guid projectId, Guid id, string action, CancellationToken cancellationToken)
     {
@@ -90,31 +102,4 @@ public sealed class ScriptRequestService(IDbContextFactory<ClarityDbContext> fac
         ActorObjectId = scope.Identity.ObjectId,
         CorrelationId = System.Diagnostics.Activity.Current?.TraceId.ToString() ?? Guid.NewGuid().ToString("N")
     });
-}
-
-public static class ScriptBundle
-{
-    public static byte[] BuildAd()
-    {
-        using var output = new MemoryStream();
-        using (var zip = new ZipArchive(output, ZipArchiveMode.Create, leaveOpen: true))
-        {
-            foreach (var (resource, name) in new[]
-            {
-                ("Scripts.ad.Collect-AD.ps1", "ad/Collect-AD.ps1"),
-                ("Scripts.ad.Clarity.Discovery.AD.psm1", "ad/Clarity.Discovery.AD.psm1"),
-                ("Scripts.common.Clarity.Discovery.Common.psd1", "Clarity.Discovery.Common/Clarity.Discovery.Common.psd1"),
-                ("Scripts.common.Clarity.Discovery.Common.psm1", "Clarity.Discovery.Common/Clarity.Discovery.Common.psm1")
-            })
-            {
-                var entry = zip.CreateEntry(name);
-                entry.LastWriteTime = new DateTimeOffset(2000, 1, 1, 0, 0, 0, TimeSpan.Zero);
-                using var source = typeof(ScriptBundle).Assembly.GetManifestResourceStream(resource)
-                    ?? throw new InvalidOperationException("A published script component is missing.");
-                using var destination = entry.Open();
-                source.CopyTo(destination);
-            }
-        }
-        return output.ToArray();
-    }
 }

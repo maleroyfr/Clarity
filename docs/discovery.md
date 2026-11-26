@@ -122,6 +122,13 @@ producer and access checks, retaining application/service-principal identities
 and typed app-role assignments. Consultant qualifications live in independent,
 authored assessment history on the object sheet, never Graph-observed access.
 
+PowerShell collectors share one registry-driven request, bundle download, upload and
+UI path. The server infers the producer from the requested sections (sections of
+different producers cannot be mixed), serves the family's own deterministic bundle
+only while its catalog version matches the request, and the Discovery screen lists
+the producers that have a published bundle. A new family is registered by files
+alone; see [Registering a PowerShell collection family](../scripts/README.md).
+
 ## Authorized Discovery screens
 
 The Fluent UI v5 Discovery panel exposes French Connexions, Collectes and Couverture

@@ -27,10 +27,10 @@
                       OptionText="@(x => $"{Text[x.Kind.ToString()]} · {x.ExternalId}")" OptionValue="@(x => x.Id)"
                       Value="_environmentId" ValueChanged="SelectAsync" Label="@Text["CollectionEnvironment"]" Disabled="Busy" />
         <FluentButton OnClick="ReloadAsync" Disabled="Busy">@Text["Reload"]</FluentButton>
-        @if (SelectedEnvironment?.Kind == EnvironmentKind.M365Tenant)
+        @if (_producerChoices.Count > 1)
         {
-            <FluentSelect TOption="string" TValue="string" Items="@(new[] { GraphDiscoveryService.EntraProducerId, IntuneCollector.ProducerId, ApplicationsSsoCollector.ProducerId })"
-                          OptionText="@(id => Text[$"Producer_{id}"])" Value="_graphProducer" ValueChanged="SelectProducerAsync"
+            <FluentSelect TOption="string" TValue="string" Items="_producerChoices"
+                          OptionText="@(id => Text[$"Producer_{id}"])" Value="_producer" ValueChanged="SelectProducerAsync"
                           Label="@Text["Producer"]" Disabled="Busy" />
         }
     </div>
@@ -52,7 +52,7 @@
         @if (_view == "Connections")
         {
             <h2>@Text["Connections"]</h2>
-            @if (SelectedEnvironment.Kind == EnvironmentKind.M365Tenant)
+            @if (SelectedEnvironment.Kind == EnvironmentKind.M365Tenant && !ScriptProducerSelected)
             {
                 <p class="notice">@Text["ConnectionConsentHint"]</p>
                 @if (_connection is null)
@@ -77,11 +77,11 @@
                     }
                 }
                 @if (!Availability.Graph) { <p class="notice">@Text["GraphConfigurationRequired"]</p> }
-                <p>@Text[_graphProducer switch { IntuneCollector.ProducerId => "IntunePrerequisiteHint", ApplicationsSsoCollector.ProducerId => "SsoPrerequisiteHint", _ => "GraphAlternativeHint" }]</p>
+                <p>@Text[_producer switch { IntuneCollector.ProducerId => "IntunePrerequisiteHint", ApplicationsSsoCollector.ProducerId => "SsoPrerequisiteHint", _ => "GraphAlternativeHint" }]</p>
             }
             else
             {
-                <p>@Text["LocalScriptConnectionHint"]</p>
+                <p>@ScriptText("LocalScriptConnectionHint", _producer)</p>
             }
         }
         else if (_view == "Collections")
@@ -92,20 +92,27 @@
                 <div class="discovery-form">
                     <FluentSelect TOption="string" TValue="string" Items="_availableSections" Multiple="true"
                         @bind-SelectedItems="_sections" OptionText="SectionName" Label="@Text["SelectSections"]" Disabled="@(!_canCollect || Busy)" />
-                    @if (SelectedEnvironment.Kind == EnvironmentKind.M365Tenant)
+                    @if (SelectedEnvironment.Kind == EnvironmentKind.M365Tenant && !ScriptProducerSelected)
                     {
                         <p>@Text["Scope"] : @SelectedEnvironment.ExternalId</p>
                         <FluentButton Appearance="ButtonAppearance.Primary" OnClick="LaunchAsync"
                             Disabled="@(!_canCollect || !Availability.Graph || _connection is null || Busy)">@Text["LaunchCollection"]</FluentButton>
                         @if (_connection is null || !Availability.Graph) { <p class="notice">@Text["PrepareGraphHint"]</p> }
                     }
-                    else if (SelectedEnvironment.Kind == EnvironmentKind.AdForest)
+                    else if (ScriptProducerSelected)
                     {
-                        <FluentSelect TOption="string" TValue="string" Items="@(new[] { "domain", "ou" })"
-                            @bind-Value="_scopeKind" OptionText="@(kind => Text[$"ScopeKind_{kind}"])" Label="@Text["ScopeKind"]" Disabled="@(!_canCollect || Busy)" />
-                        <FluentTextInput Label="@Text["ScopeValue"]" @bind-Value="_scopeValue" Disabled="@(!_canCollect || Busy)" />
-                        @if (_scopeKind == "ou") { <FluentTextInput Label="@Text["AdDomain"]" @bind-Value="_domain" Disabled="@(!_canCollect || Busy)" /> }
-                        <FluentButton Appearance="ButtonAppearance.Primary" OnClick="RequestAsync" Disabled="@(!_canCollect || Busy)">@Text["CreateScriptRequest"]</FluentButton>
+                        @if (BoundToEnvironment)
+                        {
+                            <p>@Text["Scope"] : @SelectedEnvironment.ExternalId</p>
+                        }
+                        else
+                        {
+                            <FluentSelect TOption="string" TValue="string" Items="ScopeKinds"
+                                @bind-Value="_scopeKind" OptionText="@(kind => Text[$"ScopeKind_{kind}"])" Label="@Text["ScopeKind"]" Disabled="@(!_canCollect || Busy)" />
+                            <FluentTextInput Label="@Text["ScopeValue"]" @bind-Value="_scopeValue" Disabled="@(!_canCollect || Busy)" />
+                            @if (_scopeKind == "ou") { <FluentTextInput Label="@Text["AdDomain"]" @bind-Value="_domain" Disabled="@(!_canCollect || Busy)" /> }
+                        }
+                        <FluentButton Appearance="ButtonAppearance.Primary" OnClick="RequestAsync" Disabled="@(!_canCollect || Busy)">@ScriptText("CreateScriptRequest", _producer)</FluentButton>
                     }
                 </div>
             }
@@ -232,10 +239,10 @@
     <DetailPanel Title="@Text["ScriptDownloads"]" Close="@(() => _request = null)">
         <p>@_request.Id · @_request.ScriptVersion</p>
         <p>@Text["Scope"] : @ScopeValue(_request.ScopeJson)</p>
-        <p><a href="@RequestUrl(_request.Id, "bundle")" download>@Text["DownloadScriptBundle"]</a></p>
+        <p><a href="@RequestUrl(_request.Id, "bundle")" download>@ScriptText("DownloadScriptBundle", _request.ProducerId)</a></p>
         <p><a href="@RequestUrl(_request.Id, "parameters")" download>@Text["DownloadParameters"]</a></p>
-        <p>@Text["ScriptCommandHint"]</p>
-        <pre><code>.\ad\Collect-AD.ps1 -ParameterFile .\parameters.json -OutputPath .\result.zip</code></pre>
+        <p>@ScriptText("ScriptCommandHint", _request.ProducerId)</p>
+        <pre><code>@ScriptBundle.Command(_request.ProducerId)</code></pre>
         <p>@Text["SeparateMachineHint"]</p>
     </DetailPanel>
 }
@@ -292,7 +299,9 @@
     private bool _canCollect, _canManage;
     private int _revision;
     private string[] _availableSections = [];
-    private string _graphProducer = GraphDiscoveryService.EntraProducerId;
+    private string _producer = GraphDiscoveryService.EntraProducerId;
+    private static readonly string[] GraphProducers = [GraphDiscoveryService.EntraProducerId, IntuneCollector.ProducerId, ApplicationsSsoCollector.ProducerId];
+    private IReadOnlyList<string> _producerChoices = [], _scriptProducers = [];
     private IEnumerable<string> _sections = [];
     private IReadOnlyList<string> _uncollected = [];
     private IReadOnlyList<ReportProfile> _profiles = [];
@@ -321,10 +330,14 @@
     private async Task LoadSelectedAsync()
     {
         _connection = null; _preview = null; _request = null; _proof = null; _uncollected = [];
+        _scriptProducers = SelectedEnvironment is null ? [] : Scripts.Producers(SelectedEnvironment.Kind).Select(x => x.Id).ToArray();
+        _producerChoices = SelectedEnvironment is null ? [] : (SelectedEnvironment.Kind == EnvironmentKind.M365Tenant ? GraphProducers : []).Concat(_scriptProducers).ToArray();
+        if (!_producerChoices.Contains(_producer)) { _producer = _producerChoices.FirstOrDefault() ?? GraphDiscoveryService.EntraProducerId; }
         _availableSections = SelectedEnvironment is null ? [] : Catalog.Families.Where(x => x.EnvironmentKind == SelectedEnvironment.Kind.ToString())
             .SelectMany(x => x.Sections).Where(x => x.ProducerIds.Any(id => Catalog.Producers[id].Readiness == "SyntheticValidated"
-                && !Catalog.Producers[id].Preview && (SelectedEnvironment.Kind == EnvironmentKind.M365Tenant
-                    ? id == _graphProducer : Catalog.Producers[id].Channel != "Import"))).Select(x => x.Id).ToArray();
+                && !Catalog.Producers[id].Preview && (SelectedEnvironment.Kind == EnvironmentKind.M365Tenant || _scriptProducers.Count > 0
+                    ? id == _producer : Catalog.Producers[id].Channel != "Import"))).Select(x => x.Id).ToArray();
+        if (!ScopeKinds.Contains(_scopeKind)) { _scopeKind = ScopeKinds.FirstOrDefault() ?? "domain"; }
         _sections = _availableSections;
         _profiles = SelectedEnvironment is null ? [] : Reports.Supported.Where(x => x.EnvironmentKind == SelectedEnvironment.Kind.ToString()).ToArray();
         if (SelectedProfile is null) { _profileKey = _profiles.Count > 0 ? ProfileKey(_profiles[0]) : ""; }
@@ -332,7 +345,7 @@
         _reportAttested = false;
         if (SelectedEnvironment is not null)
         {
-            _connection = await Queries.ConnectionAsync(ProjectId, _environmentId, producerId: _graphProducer);
+            if (!ScriptProducerSelected) { _connection = await Queries.ConnectionAsync(ProjectId, _environmentId, producerId: _producer); }
             _uncollected = await Queries.UncollectedAsync(ProjectId, _environmentId);
         }
         _revision++;
@@ -341,13 +354,13 @@
     private Task ReloadAsync() => RunAsync(LoadAsync);
     private Task SelectProducerAsync(string id) => RunAsync(async () =>
     {
-        _graphProducer = id; _operationId = Guid.NewGuid(); _message = null; await LoadSelectedAsync();
+        _producer = id; _operationId = Guid.NewGuid(); _message = null; await LoadSelectedAsync();
     });
-    private Task ConnectAsync() => RunAsync(async () => { await Graph.ConnectAsync(ProjectId, _environmentId, _connectionName, producerId: _graphProducer); await LoadSelectedAsync(); });
+    private Task ConnectAsync() => RunAsync(async () => { await Graph.ConnectAsync(ProjectId, _environmentId, _connectionName, producerId: _producer); await LoadSelectedAsync(); });
     private Task TestAsync() => RunAsync(async () =>
     {
         await Graph.TestAsync(ProjectId, _environmentId, _connection!.Id);
-        _connection = await Queries.ConnectionAsync(ProjectId, _environmentId, producerId: _graphProducer);
+        _connection = await Queries.ConnectionAsync(ProjectId, _environmentId, producerId: _producer);
     });
     private Task LaunchAsync() => RunAsync(async () =>
     {
@@ -357,8 +370,11 @@
     });
     private Task RequestAsync() => RunAsync(async () =>
     {
-        var id = await Scripts.CreateAsync(ProjectId, _environmentId, _operationId, new(_scopeKind, _scopeValue), _sections.ToArray(), _domain);
-        _request = new RequestView(id, DiscoveryScope.Serialize(new(_scopeKind, _scopeValue)), "1.0.0", CollectionRequestState.AwaitingFile, DateTimeOffset.UtcNow);
+        var bound = BoundToEnvironment;
+        CollectionScope scope = bound ? new("tenant", SelectedEnvironment!.ExternalId) : new(_scopeKind, _scopeValue);
+        var id = await Scripts.CreateAsync(ProjectId, _environmentId, _operationId, scope, _sections.ToArray(), bound ? null : _domain);
+        _request = new RequestView(id, DiscoveryScope.Serialize(scope), Catalog.Producers[_producer].Version, CollectionRequestState.AwaitingFile,
+            DateTimeOffset.UtcNow, _producer);
         _operationId = Guid.NewGuid(); _revision++;
     });
     private Task UploadAsync(InputFileChangeEventArgs args) => RunAsync(async () =>
@@ -391,6 +407,13 @@
     private Task<PageResult<JobView>> LoadJobsAsync(PageRequest page, CancellationToken ct) => Queries.JobsAsync(ProjectId, page, ct);
     private Task<PageResult<CoverageView>> LoadCoverageAsync(PageRequest page, CancellationToken ct) => Queries.CoverageAsync(ProjectId, _environmentId, page, ct);
     private string RequestUrl(Guid id, string kind) => $"/api/projects/{ProjectId}/discovery/requests/{id}/{kind}";
+    private bool ScriptProducerSelected => _scriptProducers.Contains(_producer);
+    private string[] ScopeKinds => _availableSections.Length == 0 ? [] : _availableSections.Select(id => Catalog.Sections[id].SupportedScopes)
+        .Aggregate(Catalog.Sections[_availableSections[0]].SupportedScopes, (kinds, next) => kinds.Intersect(next).ToArray()).ToArray();
+    // A family whose sections only support the tenant scope is always bound to the environment's tenant.
+    private bool BoundToEnvironment => ScopeKinds is ["tenant"];
+    // A producer may override the AD-worded default text with a "<key>_<producerId>" resource.
+    private string ScriptText(string key, string producerId) => Text[$"{key}_{producerId}"] is { ResourceNotFound: false } text ? text.Value : Text[key];
     private string SectionName(string id) => Text[$"Section_{id}"];
     private string Issue(string code) => Text[$"Issue_{code}"].ResourceNotFound ? Text["CollectionRemediation"] : Text[$"Issue_{code}"];
     private static string ProfileKey(ReportProfile profile) => $"{profile.Id}@{profile.Version}";

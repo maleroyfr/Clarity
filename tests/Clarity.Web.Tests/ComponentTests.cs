@@ -1,6 +1,7 @@
 using Bunit;
 using Clarity.Contracts;
 using Clarity.Core;
+using Clarity.Infrastructure;
 using Clarity.Web.Components.Shared;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
@@ -123,6 +124,26 @@ public class ComponentTests : BunitContext
         text.ShouldContain("<code>Site URL → m365report.siteUrl</code>");
         text.ShouldContain("Lignes exploitables : 2");
         text.ShouldContain("Lignes rejetées : 0");
+    }
+
+    [Fact]
+    public void Every_validated_section_and_published_script_producer_has_french_texts()
+    {
+        var text = Services.GetRequiredService<Microsoft.Extensions.Localization.IStringLocalizer<UiStrings>>();
+        var catalog = DiscoveryCatalog.Load();
+        foreach (var section in catalog.Sections.Values.Where(x => x.ProducerIds.Any(id => catalog.Producers[id].Readiness == "SyntheticValidated")))
+        {
+            text[$"Section_{section.Id}"].ResourceNotFound.ShouldBeFalse(section.Id);
+        }
+        foreach (var producer in ScriptBundle.Registry.ProducerIds)
+        {
+            text[$"Producer_{producer}"].ResourceNotFound.ShouldBeFalse(producer);
+            // The unsuffixed script texts are the AD texts; every other family overrides them with "<key>_<producerId>".
+            foreach (var key in producer == "clarity.ad" ? [] : new[] { "LocalScriptConnectionHint", "CreateScriptRequest", "DownloadScriptBundle", "ScriptCommandHint" })
+            {
+                text[$"{key}_{producer}"].ResourceNotFound.ShouldBeFalse($"{key}_{producer}");
+            }
+        }
     }
 
     [Fact]

@@ -36,6 +36,8 @@ public sealed class ScriptRequestTests
         Encoding.UTF8.GetString(bytes).ShouldNotContain("credential", Case.Insensitive);
         Encoding.UTF8.GetString(bytes).ShouldNotContain("token", Case.Insensitive);
         await Should.ThrowAsync<AccessDeniedException>(() => service.DownloadParametersAsync(Guid.NewGuid(), id));
-        (await service.DownloadBundleAsync(fixture.Project.Id, id)).ShouldBe(ScriptBundle.BuildAd());
+        var bundle = await service.DownloadBundleAsync(fixture.Project.Id, id);
+        bundle.Content.ShouldBe(ScriptBundle.BuildAd());
+        bundle.FileName.ShouldBe("Clarity.Discovery.AD.1.0.0.zip");
     }
 }

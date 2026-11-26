@@ -8,10 +8,9 @@
     <PackageReference Include="Azure.Storage.Blobs" />
     <PackageReference Include="Azure.Identity" />
     <PackageReference Include="Azure.Security.KeyVault.Certificates" />
-    <EmbeddedResource Include="../../scripts/ad/Collect-AD.ps1" LogicalName="Scripts.ad.Collect-AD.ps1" />
-    <EmbeddedResource Include="../../scripts/ad/Clarity.Discovery.AD.psm1" LogicalName="Scripts.ad.Clarity.Discovery.AD.psm1" />
-    <EmbeddedResource Include="../../scripts/Clarity.Discovery.Common/Clarity.Discovery.Common.psd1" LogicalName="Scripts.common.Clarity.Discovery.Common.psd1" />
-    <EmbeddedResource Include="../../scripts/Clarity.Discovery.Common/Clarity.Discovery.Common.psm1" LogicalName="Scripts.common.Clarity.Discovery.Common.psm1" />
+    <!-- Every script family under scripts/<folder> is bundled by ScriptBundleRegistry; tests and sample files stay out. -->
+    <EmbeddedResource Include="../../scripts/**/*.ps1;../../scripts/**/*.psm1;../../scripts/**/*.psd1"
+                      Exclude="../../scripts/**/*.Tests.ps1" LogicalName="Scripts/%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
   <PropertyGroup>

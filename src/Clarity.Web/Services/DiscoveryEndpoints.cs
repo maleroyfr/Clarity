@@ -53,7 +53,10 @@ public static class DiscoveryEndpoints
         api.MapGet("/requests/{requestId:guid}/parameters", async (Guid projectId, Guid requestId, ScriptRequestService service, CancellationToken ct) =>
             Results.File(await service.DownloadParametersAsync(projectId, requestId, ct), "application/json", "parameters.json"));
         api.MapGet("/requests/{requestId:guid}/bundle", async (Guid projectId, Guid requestId, ScriptRequestService service, CancellationToken ct) =>
-            Results.File(await service.DownloadBundleAsync(projectId, requestId, ct), "application/zip", "Clarity.Discovery.AD.1.0.0.zip"));
+        {
+            var bundle = await service.DownloadBundleAsync(projectId, requestId, ct);
+            return Results.File(bundle.Content, "application/zip", bundle.FileName);
+        });
         api.MapGet("/jobs", (Guid projectId, DiscoveryQueries queries, CancellationToken ct) => queries.JobsAsync(projectId, new(), ct));
         api.MapPost("/jobs/{jobId:guid}/cancel", (Guid projectId, Guid jobId, JobService service, CancellationToken ct) => service.CancelAsync(projectId, jobId, ct));
         api.MapPost("/jobs/{jobId:guid}/retry", (Guid projectId, Guid jobId, JobService service, CancellationToken ct) => service.RetryAsync(projectId, jobId, ct));

@@ -8,7 +8,8 @@ namespace Clarity.Web.Services;
 
 public sealed record RunView(Guid Id, string ProducerId, string ProducerVersion, string ScopeJson, DateTimeOffset StartedAtUtc,
     DateTimeOffset CompletedAtUtc, CollectionRunState State, DateTimeOffset? ConfirmedAtUtc, string ContentHash, Guid ExternalRunId);
-public sealed record RequestView(Guid Id, string ScopeJson, string ScriptVersion, CollectionRequestState State, DateTimeOffset CreatedAtUtc);
+public sealed record RequestView(Guid Id, string ScopeJson, string ScriptVersion, CollectionRequestState State, DateTimeOffset CreatedAtUtc,
+    string ProducerId = "clarity.ad");
 public sealed record JobView(Guid Id, CollectionJobKind Kind, CollectionRunState State, int Attempt, int Progress,
     bool CancellationRequested, string? ErrorCode, string CorrelationId, DateTimeOffset CreatedAtUtc);
 public sealed record CoverageView(Guid RunId, string CapabilityId, string ScopeJson, CoverageStatus? Coverage,
@@ -43,7 +44,7 @@ public sealed class DiscoveryQueries(IDbContextFactory<ClarityDbContext> factory
         await using var db = await factory.CreateDbContextAsync(ct);
         var query = db.CollectionRequests.AsNoTracking().Where(x => x.WorkspaceId == project.WorkspaceId
             && x.ProjectId == projectId && x.EnvironmentId == environmentId && x.ScopeJson.Contains(page.Search))
-            .Select(x => new RequestView(x.Id, x.ScopeJson, x.ScriptVersion, x.State, x.CreatedAtUtc));
+            .Select(x => new RequestView(x.Id, x.ScopeJson, x.ScriptVersion, x.State, x.CreatedAtUtc, x.ProducerId));
         var count = await query.CountAsync(ct);
         var ordered = page.Descending ? query.OrderByDescending(x => x.CreatedAtUtc).ThenBy(x => x.Id) : query.OrderBy(x => x.CreatedAtUtc).ThenBy(x => x.Id);
         return new(await ordered.Skip(page.Start).Take(page.Count).ToListAsync(ct), count);
