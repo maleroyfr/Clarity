@@ -436,6 +436,10 @@ public sealed partial class GraphTests
             .TestAsync(fixture.Project.Id, environment.Id, connection);
         checks.Count.ShouldBe(6);
         checks.ShouldAllBe(x => !x.Available && x.Code == "MissingPermission" && x.Permissions.Count > 0);
+        await using var audit = await fixture.Factory.CreateDbContextAsync();
+        var actions = await audit.AuditEvents.Where(x => x.ResourceId == connection || x.Action == "GraphCollectionRequested")
+            .Select(x => x.Action).ToListAsync();
+        actions.Order().ShouldBe(["ConnectionCreated", "ConnectionTested", "GraphCollectionRequested"]);
     }
 
     private static GraphJobHandler Handler(IGraphSessionFactory sessions, IArtifactStore store) => new(sessions, new EntraCollector(Catalog),

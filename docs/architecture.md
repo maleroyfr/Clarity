@@ -26,7 +26,11 @@ Sensitive actions append an audit event in the same EF save transaction.
 Production uses SQL through a scoped `IDbContextFactory`, one context per
 operation. Every project/environment lookup is filtered by authorized workspace;
 environment-to-project foreign keys include `WorkspaceId`. External tenant
-identifiers are deliberately not globally unique.
+identifiers are deliberately not globally unique. Project identifiers are: routes
+carry only the project identifier, so a unique index rejects a client-chosen
+identifier already used in another workspace (HTTP 409, no content). The
+[isolation audit](isolation-audit.md) sweeps every route, page and circuit service
+with identifiers from another workspace.
 
 All HTTP mutations require antiforgery validation in addition to authentication.
 HTTP errors return only status and correlation ID; no exception body or payload.

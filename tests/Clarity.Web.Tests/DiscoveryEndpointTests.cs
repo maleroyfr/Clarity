@@ -311,6 +311,7 @@ public sealed class DiscoveryEndpointTests
 internal sealed class TestArtifactStore : IArtifactStore
 {
     private readonly ConcurrentDictionary<string, byte[]> blobs = new(StringComparer.Ordinal);
+    internal int Count => blobs.Count;
     public async Task<StoredArtifact> SaveAsync(Guid workspaceId, Stream source, long maxBytes, CancellationToken cancellationToken)
     {
         using var output = new MemoryStream();

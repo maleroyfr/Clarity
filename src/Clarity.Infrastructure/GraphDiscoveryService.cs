@@ -42,6 +42,7 @@ public sealed class GraphDiscoveryService(IDbContextFactory<ClarityDbContext> fa
             ConfigurationReference = "collector"
         };
         db.Connections.Add(connection);
+        Audit(db, project.WorkspaceId, connection.Id, "ConnectionCreated");
         await db.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return connection.Id;
@@ -151,9 +152,20 @@ public sealed class GraphDiscoveryService(IDbContextFactory<ClarityDbContext> fa
         connection.TestedAtUtc = DateTimeOffset.UtcNow;
         connection.AccessResultsJson = JsonSerializer.Serialize(checks, ContractJson.Options);
         await access.RequireAsync(projectId, WorkspaceOperation.Collect, cancellationToken);
+        Audit(db, project.WorkspaceId, connection.Id, "ConnectionTested");
         await db.SaveChangesAsync(cancellationToken);
         return checks;
     }
+
+    private void Audit(ClarityDbContext db, Guid workspaceId, Guid resourceId, string action) => db.AuditEvents.Add(new AuditEvent
+    {
+        WorkspaceId = workspaceId,
+        ResourceId = resourceId,
+        Action = action,
+        ActorTenantId = scope.Identity.TenantId,
+        ActorObjectId = scope.Identity.ObjectId,
+        CorrelationId = System.Diagnostics.Activity.Current?.TraceId.ToString() ?? Guid.NewGuid().ToString("N")
+    });
 
     internal static async Task<Connection> ConnectionAsync(ClarityDbContext db, Project project, ProjectEnvironment environment,
         Guid connectionId, CancellationToken cancellationToken)

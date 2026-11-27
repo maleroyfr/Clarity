@@ -60,6 +60,7 @@ Never use a production database for tests.
 - [Exports: dated Excel workbook and filtered CSV files](docs/exports.md)
 - [Scenario workflows: tenant-to-tenant, carve-out, carve-in and audit only](docs/scenarios.md)
 - [Reference acceptance (recette) on a synthetic dossier](docs/recette.md)
+- [Client isolation audit: routes, pages, circuit services, RLS and audit trail](docs/isolation-audit.md)
 - [Azure provisioning, deployment and rollback](docs/deployment.md)
 - [Contributor conventions](.github/copilot-instructions.md)
 

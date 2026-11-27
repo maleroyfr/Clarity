@@ -93,6 +93,8 @@ public sealed class JobTests
         await fixture.Jobs.CancelAsync(fixture.Project.Id, id);
         (await queue.ClaimAsync(default)).ShouldBeNull();
         await fixture.Jobs.RetryAsync(fixture.Project.Id, id);
+        await Should.ThrowAsync<ConflictException>(() => fixture.Jobs.RetryAsync(fixture.Project.Id, id));
+        await Should.ThrowAsync<AccessDeniedException>(() => fixture.Jobs.RetryAsync(fixture.Project.Id, Guid.NewGuid()));
         await using (var db = await fixture.Factory.CreateDbContextAsync())
         {
             await db.Members.ExecuteUpdateAsync(update => update.SetProperty(x => x.Role, WorkspaceRole.Reader));
@@ -100,6 +102,8 @@ public sealed class JobTests
         await processor.ProcessOneAsync(default);
         await using var check = await fixture.Factory.CreateDbContextAsync();
         (await check.CollectionJobs.SingleAsync()).ErrorCode.ShouldBe("AccessDenied");
+        (await check.AuditEvents.Where(x => x.ResourceId == id).Select(x => x.Action).ToListAsync()).Order()
+            .ShouldBe(["JobCancellationRequested", "JobRetried", "JobRetried"]);
     }
 
     [SqlFact]

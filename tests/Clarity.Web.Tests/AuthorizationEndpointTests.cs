@@ -144,6 +144,10 @@ internal sealed class FoundationApplication(string environment = "Testing", bool
     internal ClarityDbContext CreateUnscopedContext() => new TestContextFactory(_options,
         new WorkspaceScope(default, [DevelopmentAuthenticationHandler.AlphaWorkspace, DevelopmentAuthenticationHandler.BetaWorkspace], true)).CreateDbContext();
 
+    /// <summary>A non-administrator context whose SQL session is limited to the given workspaces, as a member would see it.</summary>
+    internal ClarityDbContext CreateScopedContext(params Guid[] workspaces) =>
+        new TestContextFactory(_options, new WorkspaceScope(default, workspaces)).CreateDbContext();
+
     internal async Task<(Guid Alpha, Guid Beta)> SeedAsync()
     {
         await using var db = CreateUnscopedContext();

@@ -124,6 +124,7 @@ public sealed class ExportScreenTests
 internal sealed class TestExportStore : IExportStore
 {
     private readonly ConcurrentDictionary<string, byte[]> blobs = new(StringComparer.Ordinal);
+    internal int Count => blobs.Count;
     public bool IsConfigured => true;
 
     public async Task<StoredArtifact> SaveAsync(Guid workspaceId, Guid exportId, string extension, string contentType, Stream source,

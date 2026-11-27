@@ -39,6 +39,8 @@ public sealed partial class ClarityDbContext(DbContextOptions<ClarityDbContext> 
         project.Property(x => x.Description).HasMaxLength(4000);
         project.Property(x => x.ScopingParameters).HasMaxLength(8000);
         project.HasIndex(x => new { x.WorkspaceId, x.Status, x.Name });
+        // Project identifiers are routed without a workspace; a client-chosen identifier must never collide across workspaces.
+        project.HasIndex(x => x.Id).IsUnique();
         project.HasQueryFilter(x => scope.WorkspaceIds.Contains(x.WorkspaceId));
 
         var environment = modelBuilder.Entity<ProjectEnvironment>();

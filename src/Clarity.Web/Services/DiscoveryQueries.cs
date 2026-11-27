@@ -30,11 +30,14 @@ public sealed class DiscoveryQueries(IDbContextFactory<ClarityDbContext> factory
                         && run.ProducerId.Contains(page.Search)
                     join job in db.CollectionJobs on new { run.WorkspaceId, run.Id } equals new { job.WorkspaceId, job.Id } into jobs
                     from job in jobs.DefaultIfEmpty()
-                    select new RunView(run.Id, run.ProducerId, run.ProducerVersion, run.ScopeJson, run.StartedAtUtc, run.CompletedAtUtc,
-                        job == null ? run.State : job.State, run.ConfirmedAtUtc, run.ContentHash, run.ExternalRunId);
+                    select new { Run = run, State = job == null ? run.State : job.State };
         var count = await query.CountAsync(ct);
-        var ordered = page.Descending ? query.OrderByDescending(x => x.StartedAtUtc).ThenBy(x => x.Id) : query.OrderBy(x => x.StartedAtUtc).ThenBy(x => x.Id);
-        return new(await ordered.Skip(page.Start).Take(page.Count).ToListAsync(ct), count);
+        // Sort before projecting: SQL Server cannot translate an ORDER BY on members of a constructor-projected record.
+        var ordered = page.Descending ? query.OrderByDescending(x => x.Run.StartedAtUtc).ThenBy(x => x.Run.Id)
+            : query.OrderBy(x => x.Run.StartedAtUtc).ThenBy(x => x.Run.Id);
+        return new(await ordered.Skip(page.Start).Take(page.Count).Select(x => new RunView(x.Run.Id, x.Run.ProducerId, x.Run.ProducerVersion,
+            x.Run.ScopeJson, x.Run.StartedAtUtc, x.Run.CompletedAtUtc, x.State, x.Run.ConfirmedAtUtc, x.Run.ContentHash, x.Run.ExternalRunId))
+            .ToListAsync(ct), count);
     }
 
     public async Task<PageResult<RequestView>> RequestsAsync(Guid projectId, Guid environmentId, PageRequest page, CancellationToken ct = default)
@@ -43,11 +46,11 @@ public sealed class DiscoveryQueries(IDbContextFactory<ClarityDbContext> factory
         var project = await access.RequireAsync(projectId, WorkspaceOperation.Read, ct);
         await using var db = await factory.CreateDbContextAsync(ct);
         var query = db.CollectionRequests.AsNoTracking().Where(x => x.WorkspaceId == project.WorkspaceId
-            && x.ProjectId == projectId && x.EnvironmentId == environmentId && x.ScopeJson.Contains(page.Search))
-            .Select(x => new RequestView(x.Id, x.ScopeJson, x.ScriptVersion, x.State, x.CreatedAtUtc, x.ProducerId));
+            && x.ProjectId == projectId && x.EnvironmentId == environmentId && x.ScopeJson.Contains(page.Search));
         var count = await query.CountAsync(ct);
         var ordered = page.Descending ? query.OrderByDescending(x => x.CreatedAtUtc).ThenBy(x => x.Id) : query.OrderBy(x => x.CreatedAtUtc).ThenBy(x => x.Id);
-        return new(await ordered.Skip(page.Start).Take(page.Count).ToListAsync(ct), count);
+        return new(await ordered.Skip(page.Start).Take(page.Count)
+            .Select(x => new RequestView(x.Id, x.ScopeJson, x.ScriptVersion, x.State, x.CreatedAtUtc, x.ProducerId)).ToListAsync(ct), count);
     }
 
     public async Task<PageResult<JobView>> JobsAsync(Guid projectId, PageRequest page, CancellationToken ct = default)
@@ -56,11 +59,11 @@ public sealed class DiscoveryQueries(IDbContextFactory<ClarityDbContext> factory
         var project = await access.RequireAsync(projectId, WorkspaceOperation.Read, ct);
         await using var db = await factory.CreateDbContextAsync(ct);
         var query = db.CollectionJobs.AsNoTracking().Where(x => x.WorkspaceId == project.WorkspaceId && x.ProjectId == projectId
-                && x.Kind != CollectionJobKind.Export)
-            .Select(x => new JobView(x.Id, x.Kind, x.State, x.Attempt, x.Progress, x.CancellationRequested, x.ErrorCode, x.CorrelationId, x.CreatedAtUtc));
+                && x.Kind != CollectionJobKind.Export);
         var count = await query.CountAsync(ct);
         var ordered = page.Descending ? query.OrderByDescending(x => x.CreatedAtUtc).ThenBy(x => x.Id) : query.OrderBy(x => x.CreatedAtUtc).ThenBy(x => x.Id);
-        return new(await ordered.Skip(page.Start).Take(page.Count).ToListAsync(ct), count);
+        return new(await ordered.Skip(page.Start).Take(page.Count).Select(x => new JobView(x.Id, x.Kind, x.State, x.Attempt, x.Progress,
+            x.CancellationRequested, x.ErrorCode, x.CorrelationId, x.CreatedAtUtc)).ToListAsync(ct), count);
     }
 
     public async Task<PageResult<CoverageView>> CoverageAsync(Guid projectId, Guid environmentId, PageRequest page, CancellationToken ct = default)
