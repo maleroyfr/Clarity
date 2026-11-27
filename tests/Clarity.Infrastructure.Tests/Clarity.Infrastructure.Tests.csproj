@@ -3,5 +3,7 @@
     <ProjectReference Include="../../src/Clarity.Infrastructure/Clarity.Infrastructure.csproj" />
     <None Include="../../catalog/report-profiles/examples/*.csv" Link="ReportExamples/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../fixtures/powerbi/**/*" Link="PowerBIFixture/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Compile Include="../Shared/ApplicationLogin.cs" Link="Shared/ApplicationLogin.cs" />
+    <None Include="../../infra/bootstrap-sql.sql" Link="bootstrap-sql.sql" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

@@ -1,4 +1,5 @@
 using Clarity.Core;
+using Clarity.Tests;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Shouldly;
@@ -55,25 +56,37 @@ public class PersistenceTests
     }
 }
 
-internal sealed class TestDatabase(string connectionString) : IAsyncDisposable
+internal sealed class TestDatabase(string administratorConnectionString, ApplicationLogin? application) : IAsyncDisposable
 {
-    public string ConnectionString { get; } = connectionString;
+    /// <summary>The CI administrator, which also applies migrations.</summary>
+    public string AdministratorConnectionString { get; } = administratorConnectionString;
 
-    public static async Task<TestDatabase> CreateAsync()
+    /// <summary>The application login when the database was created for the application, otherwise the administrator.</summary>
+    public string ConnectionString => application?.ConnectionString ?? AdministratorConnectionString;
+
+    /// <param name="application">Connect as a disposable login with the reviewed grants of infra/bootstrap-sql.sql.</param>
+    public static async Task<TestDatabase> CreateAsync(bool application = false)
     {
         var connection = new SqlConnectionStringBuilder(Environment.GetEnvironmentVariable("CLARITY_TEST_SQL"))
         {
             InitialCatalog = $"ClarityTest_{Guid.NewGuid():N}"
-        };
-        var database = new TestDatabase(connection.ConnectionString);
-        await using var db = PersistenceTests.Create(database.ConnectionString, []);
-        await db.Database.MigrateAsync();
-        return database;
+        }.ConnectionString;
+        var database = new TestDatabase(connection, null);
+        try
+        {
+            await using (var db = PersistenceTests.Create(connection, [])) { await db.Database.MigrateAsync(); }
+            return application ? new TestDatabase(connection, await ApplicationLogin.CreateAsync(connection)) : database;
+        }
+        catch
+        {
+            await database.DisposeAsync();
+            throw;
+        }
     }
 
     public async ValueTask DisposeAsync()
     {
-        await using var db = PersistenceTests.Create(ConnectionString, []);
-        await db.Database.EnsureDeletedAsync();
+        await using (var db = PersistenceTests.Create(AdministratorConnectionString, [])) { await db.Database.EnsureDeletedAsync(); }
+        if (application is not null) { await application.DisposeAsync(); }
     }
 }

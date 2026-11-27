@@ -8,7 +8,10 @@ namespace Clarity.Infrastructure.Tests;
 internal sealed class DiscoveryFixture(TestDatabase database) : IAsyncDisposable
 {
     private TestDatabase Database { get; } = database;
+    /// <summary>The application login with the reviewed bootstrap grants, as every service and worker of the fixture connects.</summary>
     public string ConnectionString => Database.ConnectionString;
+    /// <summary>For test-only changes outside the application's grants, such as removing a membership.</summary>
+    public string AdministratorConnectionString => Database.AdministratorConnectionString;
     public WorkspaceScope Scope => new(Identity, [Workspace.Id]);
     public JobService Jobs => new(Factory, Access, Scope);
     public ClientWorkspace Workspace { get; } = new() { Name = "Synthetic Discovery" };
@@ -21,7 +24,7 @@ internal sealed class DiscoveryFixture(TestDatabase database) : IAsyncDisposable
 
     public static async Task<DiscoveryFixture> CreateAsync()
     {
-        var fixture = new DiscoveryFixture(await TestDatabase.CreateAsync());
+        var fixture = new DiscoveryFixture(await TestDatabase.CreateAsync(application: true));
         var scope = new WorkspaceScope(fixture.Identity, [fixture.Workspace.Id]);
         fixture.Factory = new TestContextFactory(fixture.Database.ConnectionString, scope);
         fixture.Access = new StoredProjectAccess(fixture.Factory, scope);

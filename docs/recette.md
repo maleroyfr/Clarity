@@ -18,7 +18,8 @@ the following, and all of it is led by the user:
 - the decision to enable Azure deployment.
 
 No real tenant, directory, customer export, credential or deployment is used
-here.
+here. The [pilot checklist](pilot-checklist.md) lists the user-led pilot steps
+and where to record their results.
 
 ## The synthetic dossier
 
@@ -166,7 +167,8 @@ All four journeys run against SQL, so CI runs them and local runs skip them.
 - **R11 shared resources.** Shared resources use focused synthetic SharePoint
   and Teams data rather than the generated dossier.
 - **Data volume.** The default dossier is deliberately small so that each
-  journey stays fast and readable.
+  journey stays fast and readable. Volume is measured separately, with 50,000
+  users, in [resilience and performance](resilience-performance.md#volume-run).
 - **Retention and deletion.** Retention per category, archival and controlled
   deletion are operations requirements, not rows of the recette table. Their
   tests are listed in [retention and deletion](retention-deletion.md).

@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using Clarity.Core;
 using Clarity.Infrastructure;
+using Clarity.Tests;
 using Clarity.Web.Security;
 using Clarity.Web.Services;
 using Microsoft.AspNetCore.Authentication;
@@ -142,6 +143,15 @@ public class AuthorizationEndpointTests
 internal sealed class FoundationApplication(string environment = "Testing", bool sql = false, bool discoveryStorage = false) : WebApplicationFactory<Program>
 {
     private readonly DbContextOptions<ClarityDbContext> _options = CreateOptions(sql);
+    private ApplicationLogin? _login;
+    private DbContextOptions<ClarityDbContext>? _applicationOptions;
+
+    /// <summary>
+    /// What the application connects with: on SQL, the disposable login with the reviewed grants of infra/bootstrap-sql.sql,
+    /// created by <see cref="SeedAsync"/> after migration; seeding and test checks keep the administrator.
+    /// </summary>
+    private DbContextOptions<ClarityDbContext> ApplicationOptions => !sql ? _options
+        : _applicationOptions ?? throw new InvalidOperationException("SeedAsync must migrate SQL and create the application login before the application runs.");
 
     private static DbContextOptions<ClarityDbContext> CreateOptions(bool sql)
     {
@@ -163,7 +173,7 @@ internal sealed class FoundationApplication(string environment = "Testing", bool
         {
             services.RemoveAll<IDbContextFactory<ClarityDbContext>>();
             services.AddScoped<IDbContextFactory<ClarityDbContext>>(provider =>
-                new TestContextFactory(_options, provider.GetRequiredService<IWorkspaceContext>()));
+                new TestContextFactory(ApplicationOptions, provider.GetRequiredService<IWorkspaceContext>()));
             if (discoveryStorage)
             {
                 services.RemoveAll<IArtifactStore>();
@@ -186,7 +196,12 @@ internal sealed class FoundationApplication(string environment = "Testing", bool
     internal async Task<(Guid Alpha, Guid Beta)> SeedAsync()
     {
         await using var db = CreateUnscopedContext();
-        if (sql) { await db.Database.MigrateAsync(); }
+        if (sql && _login is null)
+        {
+            await db.Database.MigrateAsync();
+            _login = await ApplicationLogin.CreateAsync(db.Database.GetConnectionString()!);
+            _applicationOptions = new DbContextOptionsBuilder<ClarityDbContext>().UseSqlServer(_login.ConnectionString).Options;
+        }
         db.Workspaces.AddRange(
             new ClientWorkspace { Id = DevelopmentAuthenticationHandler.AlphaWorkspace, Name = "Synthetic Alpha" },
             new ClientWorkspace { Id = DevelopmentAuthenticationHandler.BetaWorkspace, Name = "Synthetic Beta" });
@@ -228,8 +243,8 @@ internal sealed class FoundationApplication(string environment = "Testing", bool
         await base.DisposeAsync();
         if (sql)
         {
-            await using var db = CreateUnscopedContext();
-            await db.Database.EnsureDeletedAsync();
+            await using (var db = CreateUnscopedContext()) { await db.Database.EnsureDeletedAsync(); }
+            if (_login is not null) { await _login.DisposeAsync(); }
         }
     }
 }

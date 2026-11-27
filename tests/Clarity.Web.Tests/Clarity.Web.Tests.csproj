@@ -4,5 +4,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
     <PackageReference Include="bunit" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
+    <Compile Include="../Shared/ApplicationLogin.cs" Link="Shared/ApplicationLogin.cs" />
+    <None Include="../../infra/bootstrap-sql.sql" Link="bootstrap-sql.sql" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

@@ -64,6 +64,8 @@ Never use a production database for tests.
 - [Resilience under restarts and throttling, and 50,000-user volume timings](docs/resilience-performance.md)
 - [Retention per category, project archival and controlled deletion](docs/retention-deletion.md)
 - [Azure provisioning, deployment and rollback](docs/deployment.md)
+- [Operations runbook: health, incidents, access, secrets, releases and schema changes](docs/operations.md)
+- [Pilot checklist: synthetic readiness evidence and user-led pilot steps](docs/pilot-checklist.md)
 - [Contributor conventions](.github/copilot-instructions.md)
 
 Delivery proceeds in focused, independently validated slices. Each commit records

@@ -252,7 +252,10 @@ public sealed partial class GraphTests
         await db.Members.ExecuteUpdateAsync(update => update.SetProperty(x => x.Role, WorkspaceRole.Reader));
         (await qualifications.HistoryAsync(fixture.Project.Id, subject, new())).TotalCount.ShouldBe(2);
         await Should.ThrowAsync<AccessDeniedException>(() => qualifications.RecordAsync(fixture.Project.Id, subject, second));
-        await db.Members.ExecuteDeleteAsync();
+        await using (var administrator = PersistenceTests.Create(fixture.AdministratorConnectionString, [fixture.Workspace.Id]))
+        {
+            await administrator.Members.ExecuteDeleteAsync();
+        }
         await Should.ThrowAsync<AccessDeniedException>(() => qualifications.ReadAsync(fixture.Project.Id, subject));
         var adminScope = new WorkspaceScope(fixture.Identity, [], true);
         var adminFactory = new TestContextFactory(fixture.ConnectionString, adminScope);

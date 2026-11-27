@@ -151,6 +151,9 @@ Entra authentication. Use the staged statements in `infra/bootstrap-sql.sql`:
    statements until both foundation migrations exist.
 3. Replace the app display name with the template's managed-identity name, create
    its external database user, and apply the explicit table grants/denials.
+   Every table of the EF model has one reviewed `GRANT` line, and
+   `DatabaseGrantTests` fails CI when a table has no grant or a grant has no
+   table; the SQL integration tests run as a login holding exactly these grants.
    Never grant it `db_owner`, `db_ddladmin`, schema ownership, arbitrary role
    management or permission to alter RLS. Do not grant audit update. Audit delete
    exists only for [retention](retention-deletion.md); the RLS block predicate
@@ -161,8 +164,11 @@ Entra authentication. Use the staged statements in `infra/bootstrap-sql.sql`:
    explicitly assign its members through the UI.
 
 The SQL file is a **staged template**, not an unattended one-shot script. Never
-commit the substituted file. Future workspace tables need reviewed app-role grants
-with their migration; no blanket schema-wide DML permission is given.
+commit the substituted file. A migration that adds a table adds its app-role
+`GRANT` line to `infra/bootstrap-sql.sql` in the same release, and the operator
+applies it after the bundle (see the
+[schema-change strategy](operations.md#schema-change-strategy)); no blanket
+schema-wide DML permission is given.
 
 Use Key Vault Secrets Officer temporarily, from private access, to populate the
 `clarity-oidc` secret with the web registration's credential. Do not echo it in
@@ -253,6 +259,8 @@ rollback window. Never run migrations from web startup. Review generated migrati
 SQL/RLS changes and backup/PITR policy before approving the release. A failed
 migration stops application deployment; inspect `__EFMigrationsHistory` privately
 before retrying. The bundle is repeatable; it does not automatically downgrade.
+The full schema-change rules, including grants and deletion order for new
+tables, are in the [operations runbook](operations.md#schema-change-strategy).
 
 To roll back an application:
 
