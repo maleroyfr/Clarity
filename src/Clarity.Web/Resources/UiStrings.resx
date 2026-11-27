@@ -820,4 +820,60 @@
   <data name="Relation_targetsGroup" xml:space="preserve"><value>Groupe ciblé</value></data>
   <data name="Relation_assignmentOf" xml:space="preserve"><value>Affectation de</value></data>
   <data name="Relation_referencesEntraDevice" xml:space="preserve"><value>Appareil Entra correspondant</value></data>
+  <data name="ComparisonRuns" xml:space="preserve"><value>Collectes successives</value></data>
+  <data name="ComparisonRunsHint" xml:space="preserve"><value>Compare deux collectes publiées d’un même environnement : objets ajoutés, modifiés ou supprimés, et décisions du consultant à revoir. La comparaison ne modifie aucune décision.</value></data>
+  <data name="CompareRuns" xml:space="preserve"><value>Comparer deux collectes</value></data>
+  <data name="BaselineRun" xml:space="preserve"><value>Collecte de référence</value></data>
+  <data name="LaterRun" xml:space="preserve"><value>Collecte ultérieure</value></data>
+  <data name="CompareAction" xml:space="preserve"><value>Comparer</value></data>
+  <data name="NoComparableRuns" xml:space="preserve"><value>Au moins deux collectes publiées de cet environnement sont nécessaires pour comparer.</value></data>
+  <data name="NoComparison" xml:space="preserve"><value>Aucune comparaison calculée pour ce côté.</value></data>
+  <data name="ComparisonTotals" xml:space="preserve"><value>Synthèse de la comparaison</value></data>
+  <data name="RelationsAdded" xml:space="preserve"><value>Relations ajoutées</value></data>
+  <data name="RelationsRemoved" xml:space="preserve"><value>Relations retirées</value></data>
+  <data name="RelationsUnknown" xml:space="preserve"><value>Relations non comparables</value></data>
+  <data name="ComparisonRemovalHint" xml:space="preserve"><value>Une suppression n’est affirmée que si les deux collectes ont publié une section exhaustive de même capacité, même périmètre, même producteur, même version et même connexion, ou si la source signale elle-même la suppression. Sinon l’objet est « non observé », jamais supprimé.</value></data>
+  <data name="ComparisonUnits" xml:space="preserve"><value>Sections comparées</value></data>
+  <data name="ComparisonStatus" xml:space="preserve"><value>Comparabilité</value></data>
+  <data name="ComparedObjects" xml:space="preserve"><value>Objets (référence → ultérieure)</value></data>
+  <data name="ComparedRelations" xml:space="preserve"><value>Relations (+ ajoutées · − retirées · ? non comparables)</value></data>
+  <data name="ComparisonChanges" xml:space="preserve"><value>Évolutions</value></data>
+  <data name="ComparisonChange" xml:space="preserve"><value>Évolution</value></data>
+  <data name="ReviewOnly" xml:space="preserve"><value>Seulement les objets dont une décision est à revoir</value></data>
+  <data name="ChangedFields" xml:space="preserve"><value>Champs modifiés</value></data>
+  <data name="SourceTombstone" xml:space="preserve"><value>Suppression signalée par la source</value></data>
+  <data name="ReviewDecision" xml:space="preserve"><value>Décision à revoir</value></data>
+  <data name="ReviewIfDecided" xml:space="preserve"><value>Champ critique modifié, aucune décision enregistrée</value></data>
+  <data name="ChangeDetails" xml:space="preserve"><value>Détail des changements</value></data>
+  <data name="NoComparisonItems" xml:space="preserve"><value>Aucune évolution pour ces filtres.</value></data>
+  <data name="DecisionsToReview" xml:space="preserve"><value>Décisions à revoir</value></data>
+  <data name="DecisionsToReviewHint" xml:space="preserve"><value>Décisions du consultant dont l’objet a été supprimé de façon prouvée ou dont un champ critique a changé. Elles restent inchangées jusqu’à une nouvelle décision.</value></data>
+  <data name="DecisionKind" xml:space="preserve"><value>Type de décision</value></data>
+  <data name="CurrentDecision" xml:space="preserve"><value>Décision actuelle</value></data>
+  <data name="NoDecisionToReview" xml:space="preserve"><value>Aucune décision à revoir.</value></data>
+  <data name="Field" xml:space="preserve"><value>Champ</value></data>
+  <data name="ValueBefore" xml:space="preserve"><value>Avant</value></data>
+  <data name="ValueAfter" xml:space="preserve"><value>Après</value></data>
+  <data name="FieldsTruncated" xml:space="preserve"><value>Seuls les 100 premiers champs modifiés sont détaillés.</value></data>
+  <data name="RunsCompared" xml:space="preserve"><value>Comparaison calculée.</value></data>
+  <data name="Channel_Graph" xml:space="preserve"><value>Collecte Microsoft Graph</value></data>
+  <data name="Channel_PowerShell" xml:space="preserve"><value>Paquet de script importé</value></data>
+  <data name="Channel_Report" xml:space="preserve"><value>Rapport administratif importé</value></data>
+  <data name="RunChange_Added" xml:space="preserve"><value>Ajouté</value></data>
+  <data name="RunChange_Modified" xml:space="preserve"><value>Modifié</value></data>
+  <data name="RunChange_Removed" xml:space="preserve"><value>Supprimé</value></data>
+  <data name="RunChange_NewlyObserved" xml:space="preserve"><value>Nouvellement observé (couverture non exhaustive)</value></data>
+  <data name="RunChange_NotObserved" xml:space="preserve"><value>Non observé (couverture non exhaustive)</value></data>
+  <data name="RunChange_NotCompared" xml:space="preserve"><value>Non comparé (sections différentes)</value></data>
+  <data name="RunChange_Unchanged" xml:space="preserve"><value>Inchangé</value></data>
+  <data name="UnitComparison_Comparable" xml:space="preserve"><value>Comparable</value></data>
+  <data name="UnitComparison_NotExhaustive" xml:space="preserve"><value>Couverture non exhaustive</value></data>
+  <data name="UnitComparison_DifferentStream" xml:space="preserve"><value>Producteur, version ou connexion différents</value></data>
+  <data name="UnitComparison_BaselineOnly" xml:space="preserve"><value>Uniquement dans la référence</value></data>
+  <data name="UnitComparison_LaterOnly" xml:space="preserve"><value>Uniquement dans la collecte ultérieure</value></data>
+  <data name="DecisionKind_Scope" xml:space="preserve"><value>Périmètre</value></data>
+  <data name="DecisionKind_Mapping" xml:space="preserve"><value>Correspondance source-cible</value></data>
+  <data name="DecisionKind_SsoDependency" xml:space="preserve"><value>Dépendance SSO</value></data>
+  <data name="DecisionKind_TeamsChatScope" xml:space="preserve"><value>Conversations Teams</value></data>
+  <data name="DecisionKind_TeamsTelephonyScope" xml:space="preserve"><value>Téléphonie Teams</value></data>
 </root>

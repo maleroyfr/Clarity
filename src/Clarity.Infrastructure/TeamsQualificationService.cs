@@ -9,7 +9,7 @@ public sealed record TeamsQualificationInput(Guid OperationId, long ExpectedRevi
 public sealed class TeamsQualificationService(IDbContextFactory<ClarityDbContext> factory, IProjectAccess access, IWorkspaceContext scope)
 {
     private AssessmentService Store(AssessmentKind kind) => kind is AssessmentKind.TeamsChatScope or AssessmentKind.TeamsTelephonyScope
-        ? new(factory, access, scope, new(kind, ["team"], ["visibility"], "TeamsQualification.Recorded"))
+        ? new(factory, access, scope, new(kind, DecisionReview.TeamsTypes, DecisionReview.TeamsFields, "TeamsQualification.Recorded"))
         : throw new ArgumentException("Invalid Teams qualification kind.", nameof(kind));
 
     public Task<QualificationState> ReadAsync(Guid projectId, Guid objectId, AssessmentKind kind, CancellationToken token = default) =>

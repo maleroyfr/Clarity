@@ -9,6 +9,8 @@ entities) remains authoritative; this page records the implemented choices.
 The screen is at `/projects/{projectId}/scope` (with `?side=Target` for the target
 side). Its views are populations (default), `view=import` (import assistant),
 `view=decisions` (decision list) and `view=dependencies` (dependency analysis). Business text is French, from `UiStrings.resx`.
+Comparing successive collections and listing the decisions to review is described in
+[Comparisons](comparison.md).
 
 ## Populations
 

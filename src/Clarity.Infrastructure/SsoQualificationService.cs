@@ -9,8 +9,7 @@ public sealed record SsoQualificationInput(Guid OperationId, long ExpectedRevisi
 public sealed class SsoQualificationService(IDbContextFactory<ClarityDbContext> factory, IProjectAccess access, IWorkspaceContext scope)
 {
     private readonly AssessmentService assessments = new(factory, access, scope, new(AssessmentKind.SsoDependency,
-        ["application", "servicePrincipal"],
-        ["appId", "signInAudience", "servicePrincipalType", "accountEnabled", "appRoleAssignmentRequired", "preferredSingleSignOnMode"],
+        DecisionReview.SsoTypes, DecisionReview.SsoFields,
         "SsoQualification.Recorded"));
 
     public Task<QualificationState> ReadAsync(Guid projectId, Guid objectId, CancellationToken token = default) =>

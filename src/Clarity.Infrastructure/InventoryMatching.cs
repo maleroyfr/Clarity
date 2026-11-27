@@ -75,8 +75,7 @@ public sealed class InventoryMatching(IDbContextFactory<ClarityDbContext> factor
         var envIds = environments.Keys.ToArray();
         var items = db.InventoryObjects.Where(x => x.WorkspaceId == workspace && envIds.Contains(x.EnvironmentId)
             && x.Presence == InventoryPresence.Observed && (x.Type == "user" || x.Type == "device" || x.Type == "computer"));
-        var fieldNames = new[] { "userPrincipalName", "mail", "proxyAddresses", "objectSid", "msDSConsistencyGuid", "onPremisesImmutableId",
-            "onPremisesSecurityIdentifier", "onPremisesSyncEnabled", "deviceId", "trustType", "serialNumber", "displayName", "enabled", "accountEnabled" };
+        var fieldNames = DecisionReview.MappingFields;
         var facts = (await (from i in items
                             join v in db.CurrentValues on new { i.WorkspaceId, ObjectId = i.Id } equals new { v.WorkspaceId, v.ObjectId }
                             join o in db.ObjectObservations on new { v.WorkspaceId, Id = v.ObservationId } equals new { o.WorkspaceId, o.Id }

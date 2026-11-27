@@ -63,6 +63,10 @@
     {
         <ScopePanel @key="(ProjectId, _side, DiscoveryView)" ProjectId="ProjectId" Side="_side" View="@DiscoveryView" />
     }
+    else if (Section == "comparison")
+    {
+        <ComparisonPanel @key="(ProjectId, _side, DiscoveryView)" ProjectId="ProjectId" Side="_side" View="@DiscoveryView" />
+    }
     else
     {
         <EmptyState Title="@Text[Sections.GetValueOrDefault(Section, "NotFound")]" Description="@Text["LaterLot"]">

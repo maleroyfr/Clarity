@@ -1,0 +1,190 @@
+@using Clarity.Contracts
+@using Clarity.Infrastructure
+@inherits FoundationPage
+@inject RunComparisonService Comparisons
+@inject FoundationService Foundation
+@inject WorkspaceAuthorization Authorization
+
+<section aria-label="@Text["Comparison"]">
+    <h2>@Text["Comparison"] · @Text[Side.ToString()]</h2>
+    <nav class="toolbar" aria-label="@Text["Comparison"]">
+        <a href="@Link(null)">@Text["ComparisonRuns"]</a>
+    </nav>
+    @if (Error is not null) { <p class="error" role="alert">@Error</p> }
+    @if (_message is not null) { <p role="status">@_message</p> }
+    <h3>@Text["ComparisonRuns"]</h3>
+    <p>@Text["ComparisonRunsHint"]</p>
+    @if (_canQualify && _environments.Count != 0)
+    {
+        <fieldset><legend>@Text["CompareRuns"]</legend>
+            <label>@Text["Environments"] <select @bind="_environment" @bind:after="LoadRunsAsync">
+                @foreach (var e in _environments) { <option value="@e.Id">@e.ExternalId</option> }</select></label>
+            @if (_runs.Count < 2) { <p>@Text["NoComparableRuns"]</p> }
+            else
+            {
+                <label>@Text["BaselineRun"] <select @bind="_baseline">@foreach (var r in _runs) { <option value="@r.Id">@RunLabel(r)</option> }</select></label>
+                <label>@Text["LaterRun"] <select @bind="_later">@foreach (var r in _runs) { <option value="@r.Id">@RunLabel(r)</option> }</select></label>
+                <FluentButton OnClick="CompareAsync" Disabled="@Busy">@Text["CompareAction"]</FluentButton>
+            }
+        </fieldset>
+    }
+    else if (!_canQualify) { <p>@Text["ScopeReadOnly"]</p> }
+    @if (_comparisons.Count == 0) { <p>@Text["NoComparison"]</p> }
+    else
+    {
+        <label>@Text["Comparison"] <select value="@_selected?.Id" @onchange="Choose">
+            @foreach (var c in _comparisons)
+            { <option value="@c.Id">@c.Environment · @c.BaselineStartedAtUtc.ToString("u") → @c.LaterStartedAtUtc.ToString("u")</option> }
+        </select></label>
+    }
+    @if (_selected is { } comparison)
+    {
+        <article aria-label="@Text["ComparisonTotals"]">
+            <p>@comparison.Environment · @Text["BaselineRun"] : @comparison.BaselineStartedAtUtc.ToString("u") · @Text["LaterRun"] : @comparison.LaterStartedAtUtc.ToString("u")
+                · @comparison.ComputedAtUtc.ToString("u") · @Text["SsoAuthor"] : @comparison.ActorObjectId</p>
+            <ul aria-label="@Text["ComparisonTotals"]">
+                @foreach (var change in Enum.GetValues<RunChange>()) { <li>@Text[$"RunChange_{change}"] : @Count(comparison, change).ToString("N0")</li> }
+                <li>@Text["RelationsAdded"] : @comparison.RelationsAdded.ToString("N0") · @Text["RelationsRemoved"] : @comparison.RelationsRemoved.ToString("N0")
+                    · @Text["RelationsUnknown"] : @comparison.RelationsUnknown.ToString("N0")</li>
+            </ul>
+            <p>@Text["ComparisonRemovalHint"]</p>
+            <table aria-label="@Text["ComparisonUnits"]">
+                <thead><tr><th>@Text["Sections"]</th><th>@Text["Scope"]</th><th>@Text["ComparisonStatus"]</th><th>@Text["Coverage"]</th>
+                    <th>@Text["ComparedObjects"]</th><th>@Text["ComparedRelations"]</th></tr></thead>
+                <tbody>
+                    @foreach (var unit in comparison.Units)
+                    {
+                        <tr>
+                            <td>@unit.CapabilityId</td>
+                            <td>@unit.ScopeKind · @unit.ScopeValue</td>
+                            <td>@Text[$"UnitComparison_{unit.Comparison}"]</td>
+                            <td>@Coverage(unit.BaselineCoverage) → @Coverage(unit.LaterCoverage)</td>
+                            <td>@unit.BaselineObjects.ToString("N0") → @unit.LaterObjects.ToString("N0")</td>
+                            <td>+@unit.RelationsAdded · −@unit.RelationsRemoved · ?@unit.RelationsUnknown</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <h3>@Text["ComparisonChanges"]</h3>
+            <label>@Text["ComparisonChange"] <select @bind="_change" @bind:after="Reload"><option value="">@Text["All"]</option>
+                @foreach (var change in Enum.GetValues<RunChange>().Where(c => c != RunChange.Unchanged))
+                { <option value="@change">@Text[$"RunChange_{change}"]</option> }
+            </select></label>
+            <label><input type="checkbox" @bind="_reviewOnly" @bind:after="Reload" /> @Text["ReviewOnly"]</label>
+            <FluentTextInput Label="@Text["Search"]" @bind-Value="_search" />
+            <ClarityGrid @key="(comparison.Id, _change, _reviewOnly, _search, _revision)" TGridItem="ComparisonItemRow" Search="@_search"
+                         Load="@((p, ct) => Comparisons.ItemsAsync(ProjectId, comparison.Id, Change, _reviewOnly, p, ct))">
+                <Columns>
+                    <TemplateColumn Title="@Text["Name"]" Context="r"><a href="@Sheet(r.ObjectId)">@(r.DisplayName ?? r.ObjectId.ToString())</a>
+                        <small>@Text[$"ObjectType_{r.Type}"]</small></TemplateColumn>
+                    <TemplateColumn Title="@Text["ComparisonChange"]" Context="r">@Text[$"RunChange_{r.Change}"]
+                        @if (r.Tombstone) { <small>@Text["SourceTombstone"]</small> }</TemplateColumn>
+                    <TemplateColumn Title="@Text["ChangedFields"]" Context="r">@r.ChangedFields</TemplateColumn>
+                    <TemplateColumn Title="@Text["DecisionsToReview"]" Context="r">
+                        @if (r.HasAffectedDecision) { <span>@Text["ReviewDecision"]</span> }
+                        else if (r.ScopeReview || r.MappingReview || r.AssessmentReview) { <small>@Text["ReviewIfDecided"]</small> }
+                        else { <span>—</span> }</TemplateColumn>
+                    <TemplateColumn Title="@Text["Actions"]" Context="r">
+                        @if (r.Changes.Count != 0) { <FluentButton OnClick="@(() => _detail = r)">@Text["ChangeDetails"]</FluentButton> }</TemplateColumn>
+                </Columns>
+                <EmptyContent><p>@Text["NoComparisonItems"]</p></EmptyContent>
+            </ClarityGrid>
+            <h3>@Text["DecisionsToReview"]</h3>
+            <p>@Text["DecisionsToReviewHint"]</p>
+            <ClarityGrid @key="(comparison.Id, _revision)" TGridItem="ComparisonDecisionRow"
+                         Load="@((p, ct) => Comparisons.DecisionsAsync(ProjectId, comparison.Id, p, ct))">
+                <Columns>
+                    <TemplateColumn Title="@Text["DecisionKind"]" Context="r">@Text[$"DecisionKind_{r.Kind}"]</TemplateColumn>
+                    <TemplateColumn Title="@Text["Name"]" Context="r"><a href="@Sheet(r.ObjectId)">@(r.DisplayName ?? r.ObjectId.ToString())</a>
+                        <small>@Text[$"ObjectType_{r.Type}"]</small></TemplateColumn>
+                    <TemplateColumn Title="@Text["CurrentDecision"]" Context="r">@Text[r.Label]
+                        @if (r.Detail is { } detail) { <small>@(r.Kind == DecisionKind.Mapping ? Text[detail].Value : detail)</small> }</TemplateColumn>
+                    <TemplateColumn Title="@Text["ComparisonChange"]" Context="r">@Text[$"RunChange_{r.Change}"] <small>@r.ChangedFields</small></TemplateColumn>
+                </Columns>
+                <EmptyContent><p>@Text["NoDecisionToReview"]</p></EmptyContent>
+            </ClarityGrid>
+        </article>
+    }
+</section>
+@if (_detail is { } item)
+{
+    <DetailPanel Title="@($"{Text["ChangeDetails"]} · {item.DisplayName ?? item.ObjectId.ToString()}")" Error="@Error" Close="@(() => _detail = null)">
+        <table aria-label="@Text["ChangeDetails"]">
+            <thead><tr><th>@Text["Field"]</th><th>@Text["ValueBefore"]</th><th>@Text["ValueAfter"]</th></tr></thead>
+            <tbody>
+                @foreach (var change in item.Changes)
+                { <tr><td>@change.Field</td><td>@(change.Before ?? Text["NotCollected"].Value)</td><td>@(change.After ?? Text["NotCollected"].Value)</td></tr> }
+            </tbody>
+        </table>
+        @if (item.Changes.Count < item.ChangedFields.Split(", ").Length) { <p>@Text["FieldsTruncated"]</p> }
+    </DetailPanel>
+}
+
+@code {
+    [Parameter] public Guid ProjectId { get; set; }
+    [Parameter] public EnvironmentRole Side { get; set; }
+    [Parameter] public string? View { get; set; }
+    private IReadOnlyList<ProjectEnvironment> _environments = [];
+    private IReadOnlyList<ComparableRun> _runs = [];
+    private IReadOnlyList<ComparisonSummary> _comparisons = [];
+    private ComparisonSummary? _selected;
+    private ComparisonItemRow? _detail;
+    private Guid _environment, _baseline, _later, _operation = Guid.NewGuid();
+    private string _change = "", _search = "";
+    private string? _message;
+    private bool _canQualify, _reviewOnly;
+    private int _revision;
+
+    private RunChange? Change => Enum.TryParse<RunChange>(_change, out var change) ? change : null;
+
+    protected override Task OnParametersSetAsync() => RunAsync(async () =>
+    {
+        var project = await Foundation.GetProjectAsync(ProjectId);
+        _canQualify = project.Status == ProjectStatus.Active && Authorization.Allows(project.WorkspaceId, WorkspaceOperation.Qualify);
+        _environments = (await Foundation.ListEnvironmentsAsync(ProjectId)).Where(x => x.Role == Side && x.TargetState == TargetState.Existing).ToList();
+        _environment = _environments.FirstOrDefault()?.Id ?? Guid.Empty;
+        if (_canQualify && _environment != Guid.Empty) { await LoadRunsCoreAsync(); }
+        _comparisons = await Comparisons.ComparisonsAsync(ProjectId, Side);
+        _selected = _comparisons.FirstOrDefault();
+    });
+
+    private string Link(string? view) => $"/projects/{ProjectId}/comparison?side={Side}" + (view is null ? "" : $"&view={view}");
+    private string Sheet(Guid id) => $"/projects/{ProjectId}/inventory?side={Side}&object={id}";
+    private string RunLabel(ComparableRun run) => $"{run.StartedAtUtc:u} · {run.Producer} {run.Version} · {Text[$"Channel_{run.Channel}"]} · {run.Sections} {Text["Sections"]}";
+    private string Coverage(CoverageStatus? coverage) => coverage is { } c ? Text[c.ToString()].Value : Text["NotCollected"].Value;
+    private static int Count(ComparisonSummary c, RunChange change) => change switch
+    {
+        RunChange.Added => c.Added,
+        RunChange.Modified => c.Modified,
+        RunChange.Removed => c.Removed,
+        RunChange.NewlyObserved => c.NewlyObserved,
+        RunChange.NotObserved => c.NotObserved,
+        RunChange.NotCompared => c.NotCompared,
+        _ => c.Unchanged
+    };
+    private void Reload() => _revision++;
+    private void Choose(ChangeEventArgs e)
+    {
+        _selected = _comparisons.FirstOrDefault(c => c.Id.ToString() == e.Value?.ToString()) ?? _selected;
+        _detail = null; _revision++;
+    }
+
+    private Task LoadRunsAsync() => RunAsync(LoadRunsCoreAsync);
+
+    private async Task LoadRunsCoreAsync()
+    {
+        _runs = await Comparisons.RunsAsync(ProjectId, _environment);
+        _later = _runs.FirstOrDefault()?.Id ?? Guid.Empty;
+        _baseline = _runs.Skip(1).FirstOrDefault()?.Id ?? Guid.Empty;
+    }
+
+    private Task CompareAsync() => RunAsync(async () =>
+    {
+        var id = await Comparisons.CompareAsync(ProjectId, _environment, _baseline, _later, _operation);
+        _operation = Guid.NewGuid();
+        _comparisons = await Comparisons.ComparisonsAsync(ProjectId, Side);
+        _selected = _comparisons.FirstOrDefault(c => c.Id == id);
+        _detail = null; _revision++;
+        _message = Messages["RunsCompared"];
+    });
+}
