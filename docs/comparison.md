@@ -83,7 +83,9 @@ An unproven absence therefore cannot trigger a review.
 The "Décisions à revoir" list joins the flagged objects to their live decisions: scope
 decisions first (value and wave), then mapping decisions (state and rule), then the
 current revision of each assessment. The item list can be filtered to objects with an
-affected decision.
+affected decision. The current re-review state of every decision against the current
+inventory, independent of any comparison, is in the decision register; see
+[Decision history](decisions.md).
 
 ## Comparing source and target
 

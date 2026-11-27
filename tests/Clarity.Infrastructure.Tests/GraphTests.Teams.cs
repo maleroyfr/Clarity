@@ -219,11 +219,17 @@ public sealed partial class GraphTests
         changed.NeedsReview.ShouldBeTrue();
         (await qualification.ReadAsync(fixture.Project.Id, subject, phones)).NeedsReview.ShouldBeTrue();
         changed.Current!.Id.ShouldBe(recorded.Id);
+        var register = new DecisionRegisterService(fixture.Factory, fixture.Access, fixture.Scope);
+        var flagged = (await register.PageAsync(fixture.Project.Id, environment.Role, DecisionKind.TeamsChatScope, true, new())).Items.ShouldHaveSingleItem();
+        (flagged.ObjectId, flagged.Revision, flagged.NeedsReview).ShouldBe((subject, 1L, true));
+        flagged.Changes.ShouldBe([new BasisChange("visibility", "\"private\"", "\"public\"")]);
         var revision = input with { OperationId = Guid.NewGuid(), ExpectedRevision = 1, MetadataFingerprint = changed.MetadataFingerprint, Value = QualificationScopeValue.Unknown };
         var unrelatedObservation = await db.ObjectObservations.FirstAsync(x => x.ObjectId != subject);
         await Should.ThrowAsync<AccessDeniedException>(() => qualification.RecordAsync(fixture.Project.Id, subject, chats,
             revision with { EvidenceObservationId = unrelatedObservation.Id }));
         await qualification.RecordAsync(fixture.Project.Id, subject, chats, revision);
+        (await db.ReviewFlags.AsNoTracking().Where(x => x.ObjectId == subject).Select(x => x.Kind).ToListAsync())
+            .ShouldBe([DecisionKind.TeamsTelephonyScope]);
         (await qualification.HistoryAsync(fixture.Project.Id, subject, chats, new(1, 1))).Items.ShouldHaveSingleItem().Id.ShouldBe(recorded.Id);
         (await qualification.HistoryAsync(fixture.Project.Id, subject, phones, new())).TotalCount.ShouldBe(1);
         (await db.AuditEvents.CountAsync(x => x.Action == "TeamsQualification.Recorded")).ShouldBe(3);

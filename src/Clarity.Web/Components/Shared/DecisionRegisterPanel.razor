@@ -1,0 +1,148 @@
+@using Clarity.Infrastructure
+@inherits FoundationPage
+@inject DecisionRegisterService Register
+@inject ScopeService Scope
+
+<h3>@Text["DecisionRegister"]</h3>
+<p>@Text["DecisionRegisterHint"]</p>
+@if (Error is not null) { <p class="error" role="alert">@Error</p> }
+@if (_message is not null) { <p role="status">@_message</p> }
+<ul aria-label="@Text["DecisionRegisterSummary"]">
+    @foreach (var count in _summary)
+    { <li>@Text[$"DecisionKind_{count.Kind}"] : @count.Total.ToString("N0") · @Text["ToReview"] : @count.ToReview.ToString("N0")</li> }
+</ul>
+@if (CanQualify)
+{ <FluentButton OnClick="RecomputeAsync" Disabled="@Busy">@Text["RecomputeReview"]</FluentButton> }
+<label>@Text["DecisionKind"] <select value="@_kind" @onchange="ChangeKind">
+    @foreach (var kind in Enum.GetValues<DecisionKind>()) { <option value="@kind">@Text[$"DecisionKind_{kind}"]</option> }
+</select></label>
+<label><input type="checkbox" checked="@_toReviewOnly" @onchange="ChangeToReview" /> @Text["ToReviewOnly"]</label>
+<FluentTextInput Label="@Text["Search"]" @bind-Value="_search" />
+<ClarityGrid @key="(ProjectId, Side, _kind, _toReviewOnly, _search, _revision)" TGridItem="DecisionRegisterRow" Search="@_search"
+             Load="@((p, ct) => Register.PageAsync(ProjectId, Side, _kind, _toReviewOnly, p, ct))">
+    <Columns>
+        <TemplateColumn Title="@Text["Name"]" Context="r"><a href="@Sheet(r.ObjectId)">@r.Label</a>
+            <small>@Text[$"ObjectType_{r.Type}"] · @Text[r.Presence.ToString()]</small></TemplateColumn>
+        <TemplateColumn Title="@Text["DecisionKind"]" Context="r">@Text[r.ValueKey]
+            @if (r.Kind == DecisionKind.Scope) { <span> · @(r.Wave ?? Text["NoWave"].Value)</span> }
+            else if (r.Detail is { } detail) { <span> → @detail</span> }
+            <small>@Text["SsoRevision"] @r.Revision</small></TemplateColumn>
+        <TemplateColumn Title="@Text["Justification"]" Context="r">@r.Reason
+            <small>@(r.DecidedAtUtc?.ToString("u")) · @r.AuthorObjectId</small></TemplateColumn>
+        <TemplateColumn Title="@Text["Status"]" Context="r">
+            @if (!r.NeedsReview) { <span>@Text["DecisionUpToDate"]</span> }
+            else
+            {
+                <strong>@Text["ToReview"]</strong>
+                @if (r.FlaggedAtUtc is { } flagged) { <small>@Text["FlaggedSince"] @flagged.ToString("u")</small> }
+                @if (r.Kind == DecisionKind.Mapping) { <p>@Text["MappingChangesHint"]</p> }
+                else if (r.Changes is { } changes)
+                {
+                    <ul aria-label="@Text["ChangedFields"]">
+                        @foreach (var change in changes)
+                        { <li>@change.Field : @Value(change, change.Before) → @Value(change, change.After)</li> }
+                    </ul>
+                }
+                else { <p>@Text["DecisionChangesUnknown"]</p> }
+            }
+        </TemplateColumn>
+        <TemplateColumn Title="@Text["Actions"]" Context="r">
+            @if (r.Kind == DecisionKind.Scope)
+            {
+                <FluentButton OnClick="@(() => _history = r)">@Text["ScopeHistory"]</FluentButton>
+                @if (CanQualify && r.NeedsReview) { <FluentButton OnClick="@(() => OpenReconfirm(r))" Disabled="@Busy">@Text["Reconfirm"]</FluentButton> }
+            }
+            else if (r.Kind == DecisionKind.Mapping) { <a href="@($"/projects/{ProjectId}/inventory?side={Side}&view=Mappings")">@Text["MappingReview"]</a> }
+            else { <a href="@Sheet(r.ObjectId)">@Text[CanQualify ? "QualifyFromSheet" : "ObjectSheet"]</a> }
+        </TemplateColumn>
+    </Columns>
+    <EmptyContent><p>@Text["NoDecisions"]</p></EmptyContent>
+</ClarityGrid>
+@if (_reconfirm is { } target)
+{
+    <DetailPanel Title="@($"{Text["Reconfirm"]} · {target.Label}")" Error="@Error" Close="@(() => _reconfirm = null)">
+        <p>@Text["ReconfirmHint"]</p>
+        <p>@Text[target.ValueKey] · @(target.Wave ?? Text["NoWave"].Value)</p>
+        <FluentTextInput Label="@Text["Justification"]" @bind-Value="_reason" />
+        <FluentButton OnClick="PreviewAsync" Disabled="@Busy">@Text["PreviewSelectionDecision"]</FluentButton>
+        @if (_preview is { } preview)
+        {
+            <p role="status">@Text["AffectedObjects"] : @preview.Result.Affected · @Text["ReconfirmedObjects"] : @preview.Result.Reconfirmed</p>
+            <FluentButton Appearance="ButtonAppearance.Primary" OnClick="ReconfirmAsync"
+                          Disabled="@(Busy || preview.Result.Affected == 0 || string.IsNullOrWhiteSpace(_reason))">@Text["ConfirmDecisions"]</FluentButton>
+        }
+    </DetailPanel>
+}
+@if (_history is { } history)
+{
+    <DetailPanel Title="@($"{Text["ScopeHistory"]} · {history.Label}")" Close="@(() => _history = null)">
+        <ClarityGrid @key="history.ObjectId" TGridItem="ScopeHistoryRow" Load="@((p, ct) => Scope.HistoryAsync(ProjectId, history.ObjectId, p, ct))">
+            <Columns>
+                <PropertyColumn Property="@(h => h.Number)" Title="@Text["SsoRevision"]" />
+                <TemplateColumn Title="@Text["Date"]" Context="h">@h.OccurredAtUtc.ToString("u")</TemplateColumn>
+                <TemplateColumn Title="@Text["SsoAuthor"]" Context="h">@h.ActorObjectId</TemplateColumn>
+                <TemplateColumn Title="@Text["ScopeDecisionValue"]" Context="h">@Text[$"ScopeDecision_{h.Value}"] · @(h.Wave ?? Text["NoWave"].Value)
+                    <small>@h.Population</small><p>@h.Reason</p></TemplateColumn>
+            </Columns>
+            <EmptyContent><p>@Text["NoScopeDecisions"]</p></EmptyContent>
+        </ClarityGrid>
+    </DetailPanel>
+}
+
+@code {
+    [Parameter] public Guid ProjectId { get; set; }
+    [Parameter] public EnvironmentRole Side { get; set; }
+    [Parameter] public bool CanQualify { get; set; }
+    private IReadOnlyList<DecisionKindCount> _summary = [];
+    private DecisionKind _kind = DecisionKind.Scope;
+    private bool _toReviewOnly = true;
+    private string _search = "", _reason = "";
+    private string? _message;
+    private int _revision;
+    private DecisionRegisterRow? _reconfirm, _history;
+    private (ScopeBatch Batch, ScopePreview Result)? _preview;
+    private Guid _operation = Guid.NewGuid();
+
+    protected override Task OnParametersSetAsync() => RunAsync(LoadAsync);
+
+    private async Task LoadAsync() => _summary = await Register.SummaryAsync(ProjectId, Side);
+
+    private string Sheet(Guid id) => $"/projects/{ProjectId}/inventory?side={Side}&object={id}";
+
+    private string? Value(BasisChange change, string? value) => value is null ? "∅"
+        : change.Field == DecisionBasis.PresenceField ? Text[value].Value : value;
+
+    private void ChangeKind(ChangeEventArgs e)
+    {
+        if (Enum.TryParse<DecisionKind>(e.Value?.ToString(), out var kind)) { _kind = kind; _revision++; }
+    }
+
+    private void ChangeToReview(ChangeEventArgs e) { _toReviewOnly = e.Value is true; _revision++; }
+
+    private void OpenReconfirm(DecisionRegisterRow row) { _reconfirm = row; _preview = null; _reason = ""; _operation = Guid.NewGuid(); }
+
+    private Task RecomputeAsync() => RunAsync(async () =>
+    {
+        var flagged = await Register.RecomputeAsync(ProjectId);
+        await LoadAsync();
+        _revision++;
+        _message = string.Format(System.Globalization.CultureInfo.CurrentCulture, Text["ReviewRecomputed"].Value, flagged);
+    });
+
+    private Task PreviewAsync() => RunAsync(async () =>
+    {
+        var target = _reconfirm!;
+        var batch = new ScopeBatch(_operation, target.ScopeValue!.Value, target.Wave, _reason, ObjectIds: [target.ObjectId]);
+        _preview = (batch, await Scope.PreviewAsync(ProjectId, batch));
+    });
+
+    private Task ReconfirmAsync() => RunAsync(async () =>
+    {
+        var (batch, result) = _preview!.Value;
+        await Scope.ApplyAsync(ProjectId, batch with { Reason = _reason }, result.Affected);
+        _reconfirm = null; _preview = null; _reason = "";
+        await LoadAsync();
+        _revision++;
+        _message = Messages["ChangesSaved"];
+    });
+}

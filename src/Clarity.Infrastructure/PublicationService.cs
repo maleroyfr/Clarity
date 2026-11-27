@@ -21,8 +21,9 @@ public sealed class PublicationService(
         var ids = await db.InventoryObjects.Where(x => x.WorkspaceId == project.WorkspaceId && x.EnvironmentId == environmentId)
             .Select(x => x.Id).ToListAsync(token);
         await AlternateKeyProjection.RebuildAsync(db, project.WorkspaceId, environmentId, ids, token);
-        await CurrentProjection.RefreshAsync(db, catalog, project.WorkspaceId, environmentId, null, ids, token);
+        var affected = await CurrentProjection.RefreshAsync(db, catalog, project.WorkspaceId, environmentId, null, ids, token);
         await db.SaveChangesAsync(token);
+        await DecisionReviewProjection.RefreshAsync(db, project.WorkspaceId, project.Id, affected, token);
         await RelationshipProjection.RefreshAsync(db, catalog, project.WorkspaceId, environmentId, token);
         await db.SaveChangesAsync(token);
         await InventoryMatching.RefreshAsync(db, project, token);
@@ -121,8 +122,9 @@ public sealed class PublicationService(
         section.PublishedAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync(cancellationToken);
         await AlternateKeyProjection.RebuildAsync(db, project.WorkspaceId, run.EnvironmentId, changedObjects, cancellationToken);
-        await CurrentProjection.RefreshAsync(db, catalog, run.WorkspaceId, run.EnvironmentId, section, changedObjects, cancellationToken);
+        var affected = await CurrentProjection.RefreshAsync(db, catalog, run.WorkspaceId, run.EnvironmentId, section, changedObjects, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
+        await DecisionReviewProjection.RefreshAsync(db, run.WorkspaceId, project.Id, affected, cancellationToken);
         await RelationshipProjection.RefreshAsync(db, catalog, run.WorkspaceId, run.EnvironmentId, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         await InventoryMatching.RefreshAsync(db, project, cancellationToken);

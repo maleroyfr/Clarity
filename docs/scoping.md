@@ -8,9 +8,11 @@ entities) remains authoritative; this page records the implemented choices.
 
 The screen is at `/projects/{projectId}/scope` (with `?side=Target` for the target
 side). Its views are populations (default), `view=import` (import assistant),
-`view=decisions` (decision list) and `view=dependencies` (dependency analysis). Business text is French, from `UiStrings.resx`.
+`view=decisions` (decision list), `view=dependencies` (dependency analysis) and
+`view=review` (decision register). Business text is French, from `UiStrings.resx`.
 Comparing successive collections and listing the decisions to review is described in
-[Comparisons](comparison.md).
+[Comparisons](comparison.md); decision histories and re-review conditions in
+[Decision history](decisions.md).
 
 ## Populations
 
@@ -67,7 +69,9 @@ A `ScopeDecision` records the consultant's current decision for one object:
 or to up to 100 selected objects:
 
 1. **Preview** shows the number of targeted objects, the number that would change
-   and the number already holding the same value and wave.
+   and the number already holding the same value and wave against unchanged key
+   fields. A decision with the same value and wave whose key fields changed is
+   counted as changed and reconfirmed (**Décisions à reconfirmer**).
 2. **Confirm** applies the batch with a mandatory justification. The service
    re-computes the affected count under the project lock and rejects the batch
    with a conflict if it differs from the previewed count.
@@ -84,7 +88,9 @@ A decision whose object's key fields (`userPrincipalName`, `mail`,
 `proxyAddresses`, `sAMAccountName`, `distinguishedName`, `enabled`,
 `accountEnabled`, `onPremisesImmutableId`) or presence changed since the
 decision is flagged **à revoir**. The decision itself is kept until the
-consultant confirms or changes it; unrelated objects are not flagged.
+consultant confirms or changes it; unrelated objects are not flagged. Publication
+materializes these flags with the changed fields, and the **Registre des décisions**
+view reconfirms them; see [Decision history](decisions.md).
 
 ## Dependencies and shared resources
 

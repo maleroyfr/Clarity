@@ -1,6 +1,3 @@
-using System.Security.Cryptography;
-using System.Text;
-using System.Text.Json;
 using Clarity.Core;
 using Microsoft.EntityFrameworkCore;
 
@@ -58,7 +55,8 @@ internal sealed class AssessmentService(IDbContextFactory<ClarityDbContext> fact
             return;
         }
         var revision = await Rows(db, project, objectId).Select(x => (long?)x.Revision).MaxAsync(token) ?? 0;
-        if (revision != input.ExpectedRevision || input.MetadataFingerprint != await FingerprintAsync(db, item, token))
+        var basis = await BasisAsync(db, item, token);
+        if (revision != input.ExpectedRevision || input.MetadataFingerprint != DecisionBasis.Fingerprint(basis))
         { throw new ConflictException(); }
         if (input.EvidenceObservationId.HasValue && !await (from o in db.ObjectObservations
                                                             join s in db.SectionRuns on new { o.WorkspaceId, Id = o.SectionRunId } equals new { s.WorkspaceId, s.Id }
@@ -83,6 +81,7 @@ internal sealed class AssessmentService(IDbContextFactory<ClarityDbContext> fact
             EvidenceReference = input.EvidenceReference.Trim(),
             EvidenceObservationId = input.EvidenceObservationId,
             MetadataFingerprint = input.MetadataFingerprint,
+            BasisJson = basis,
             AuthorTenantId = scope.Identity.TenantId,
             AuthorObjectId = scope.Identity.ObjectId
         });
@@ -95,6 +94,8 @@ internal sealed class AssessmentService(IDbContextFactory<ClarityDbContext> fact
             ResourceId = input.OperationId,
             CorrelationId = System.Diagnostics.Activity.Current?.TraceId.ToString() ?? Guid.NewGuid().ToString("N")
         });
+        await db.SaveChangesAsync(token);
+        await DecisionReviewProjection.RefreshAsync(db, project.WorkspaceId, projectId, [objectId], token);
         await db.SaveChangesAsync(token);
         await transaction.CommitAsync(token);
     }
@@ -111,10 +112,14 @@ internal sealed class AssessmentService(IDbContextFactory<ClarityDbContext> fact
                    && db.ExternalKeys.Any(k => k.WorkspaceId == i.WorkspaceId && k.ObjectId == i.Id && k.IsPrimary && k.Namespace == "microsoft.graph")
                select i).SingleOrDefaultAsync(token) ?? throw new AccessDeniedException();
 
-    private async Task<string> FingerprintAsync(ClarityDbContext db, InventoryObject item, CancellationToken token)
+    private async Task<string> BasisAsync(ClarityDbContext db, InventoryObject item, CancellationToken token)
     {
-        var fields = await db.CurrentValues.Where(x => x.WorkspaceId == item.WorkspaceId && x.ObjectId == item.Id && definition.CriticalFields.Contains(x.Field))
-            .OrderBy(x => x.Field).Select(x => new { x.Field, x.ValueJson, x.Conflicting }).ToListAsync(token);
-        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new { item.Presence, fields }))));
+        var values = await db.CurrentValues.AsNoTracking()
+            .Where(x => x.WorkspaceId == item.WorkspaceId && x.ObjectId == item.Id && definition.CriticalFields.Contains(x.Field))
+            .Select(x => new { x.Field, x.ValueJson, x.Conflicting }).ToListAsync(token);
+        return DecisionBasis.Serialize(item.Presence, values.Select(x => new BasisValue(x.Field, x.ValueJson, x.Conflicting)));
     }
+
+    private async Task<string> FingerprintAsync(ClarityDbContext db, InventoryObject item, CancellationToken token) =>
+        DecisionBasis.Fingerprint(await BasisAsync(db, item, token));
 }

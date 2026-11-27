@@ -49,6 +49,7 @@ public static class DiscoveryRegistration
         services.AddScoped<DependencyService>();
         services.AddScoped<RunComparisonService>();
         services.AddScoped<TargetComparisonService>();
+        services.AddScoped<DecisionRegisterService>();
         services.AddScoped<ScriptRequestService>();
         services.AddScoped<GraphDiscoveryService>();
         services.AddScoped<JobService>();

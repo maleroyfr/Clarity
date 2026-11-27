@@ -1,6 +1,3 @@
-using System.Security.Cryptography;
-using System.Text;
-using System.Text.Json;
 using Clarity.Core;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,7 +13,7 @@ public sealed record ScopeObjectRow(Guid ObjectId, Guid EnvironmentId, string? D
 public sealed record ImportEntryRow(Guid Id, int Line, string Value, ImportResolution Resolution, Guid? ObjectId, string? Label, int CandidateCount);
 public sealed record ScopeCandidate(Guid ObjectId, string Label, string Type);
 public sealed record ScopeBatch(Guid OperationId, ScopeValue Value, string? Wave, string Reason, Guid? PopulationId = null, IReadOnlyList<Guid>? ObjectIds = null);
-public sealed record ScopePreview(int Members, int Affected, int Unchanged);
+public sealed record ScopePreview(int Members, int Affected, int Unchanged, int Reconfirmed = 0);
 public sealed record ScopeCount(ScopeValue Value, string? Wave, int Count);
 public sealed record ScopeSummary(IReadOnlyList<ScopeCount> Counts, int Populations);
 public sealed record ScopeHistoryRow(long Number, ScopeValue Value, string? Wave, string? Population, string Reason, Guid ActorObjectId,
@@ -331,8 +328,8 @@ public sealed class ScopeService(IDbContextFactory<ClarityDbContext> factory, IP
         var project = await access.RequireAsync(projectId, WorkspaceOperation.Qualify, token);
         var wave = Validate(batch);
         await using var db = await factory.CreateDbContextAsync(token);
-        var (targets, changed, _) = await AffectedAsync(db, project, batch, wave, token);
-        return new(targets.Count, changed.Count, targets.Count - changed.Count);
+        var (targets, changed, _, reconfirmed) = await AffectedAsync(db, project, batch, wave, token);
+        return new(targets.Count, changed.Count, targets.Count - changed.Count, reconfirmed);
     }
 
     public async Task ApplyAsync(Guid projectId, ScopeBatch batch, int expectedAffected, CancellationToken token = default)
@@ -356,14 +353,15 @@ public sealed class ScopeService(IDbContextFactory<ClarityDbContext> factory, IP
             { throw new ConflictException(); }
             return;
         }
-        var (_, changed, existing) = await AffectedAsync(db, project, batch, wave, token);
+        var (_, changed, existing, _) = await AffectedAsync(db, project, batch, wave, token);
         if (changed.Count != expectedAffected) { throw new ConflictException(); }
         var ids = changed.Select(x => x.ObjectId).ToList();
-        var fingerprints = await FingerprintsAsync(db, project.WorkspaceId, ids, token);
+        var bases = await BasesAsync(db, project.WorkspaceId, ids, token);
         var evidence = await EvidenceAsync(db, project.WorkspaceId, ids, token);
         var now = DateTimeOffset.UtcNow;
         foreach (var target in changed)
         {
+            var basis = bases[target.ObjectId];
             if (!existing.TryGetValue(target.ObjectId, out var decision))
             {
                 decision = new ScopeDecision
@@ -372,14 +370,15 @@ public sealed class ScopeService(IDbContextFactory<ClarityDbContext> factory, IP
                     ProjectId = project.Id,
                     EnvironmentId = target.EnvironmentId,
                     ObjectId = target.ObjectId,
-                    Fingerprint = fingerprints[target.ObjectId]
+                    Fingerprint = DecisionBasis.Fingerprint(basis)
                 };
                 db.ScopeDecisions.Add(decision);
             }
             decision.Value = batch.Value;
             decision.Wave = wave;
             decision.PopulationId = batch.PopulationId;
-            decision.Fingerprint = fingerprints[target.ObjectId];
+            decision.Fingerprint = DecisionBasis.Fingerprint(basis);
+            decision.BasisJson = basis;
             decision.Revision++;
             decision.UpdatedAtUtc = now;
             db.ScopeDecisionRevisions.Add(new ScopeDecisionRevision
@@ -392,6 +391,7 @@ public sealed class ScopeService(IDbContextFactory<ClarityDbContext> factory, IP
                 Wave = wave,
                 PopulationId = batch.PopulationId,
                 Fingerprint = decision.Fingerprint,
+                BasisJson = basis,
                 EvidenceObservationId = evidence.GetValueOrDefault(target.ObjectId),
                 Reason = reason,
                 ActorTenantId = scope.Identity.TenantId,
@@ -401,29 +401,18 @@ public sealed class ScopeService(IDbContextFactory<ClarityDbContext> factory, IP
         }
         if (changed.Count != 0) { Audit(db, project, "Scope.DecisionsApplied", batch.OperationId); }
         await db.SaveChangesAsync(token);
+        await DecisionReviewProjection.RefreshAsync(db, project.WorkspaceId, project.Id, ids, token);
+        await db.SaveChangesAsync(token);
         await transaction.CommitAsync(token);
     }
 
     internal static async Task<Dictionary<Guid, string>> FingerprintsAsync(ClarityDbContext db, Guid workspace, IReadOnlyCollection<Guid> ids,
-        CancellationToken token)
-    {
-        var result = new Dictionary<Guid, string>();
-        foreach (var chunk in ids.Distinct().Chunk(500))
-        {
-            var items = await db.InventoryObjects.AsNoTracking().Where(i => i.WorkspaceId == workspace && chunk.Contains(i.Id))
-                .Select(i => new { i.Id, i.Presence }).ToListAsync(token);
-            var values = (await db.CurrentValues.AsNoTracking().Where(v => v.WorkspaceId == workspace && chunk.Contains(v.ObjectId)
-                    && ScopeRules.CriticalFields.Contains(v.Field))
-                .Select(v => new { v.ObjectId, v.Field, v.ValueJson, v.Conflicting }).ToListAsync(token)).ToLookup(v => v.ObjectId);
-            foreach (var item in items)
-            {
-                var fields = values[item.Id].OrderBy(v => v.Field, StringComparer.Ordinal).ThenBy(v => v.ValueJson, StringComparer.Ordinal)
-                    .Select(v => new { v.Field, v.ValueJson, v.Conflicting }).ToList();
-                result[item.Id] = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new { item.Presence, fields }))));
-            }
-        }
-        return result;
-    }
+        CancellationToken token) =>
+        (await BasesAsync(db, workspace, ids, token)).ToDictionary(x => x.Key, x => DecisionBasis.Fingerprint(x.Value));
+
+    internal static async Task<Dictionary<Guid, string>> BasesAsync(ClarityDbContext db, Guid workspace, IReadOnlyCollection<Guid> ids,
+        CancellationToken token) =>
+        (await DecisionReviewProjection.FactsAsync(db, workspace, ids, token)).ToDictionary(x => x.Key, x => x.Value.Basis(ScopeRules.CriticalFields));
 
     private static async Task<Dictionary<Guid, Guid>> EvidenceAsync(ClarityDbContext db, Guid workspace, IReadOnlyCollection<Guid> ids, CancellationToken token)
     {
@@ -492,8 +481,13 @@ public sealed class ScopeService(IDbContextFactory<ClarityDbContext> factory, IP
         return ScopeRules.Wave(batch.Wave);
     }
 
+    /// <summary>
+    /// Targets of a batch and those it changes: objects without a decision, with another value or wave, or whose same decision is due for
+    /// review because its critical facts changed (a reconfirmation, counted separately).
+    /// </summary>
     private static async Task<(List<(Guid ObjectId, Guid EnvironmentId)> Targets, List<(Guid ObjectId, Guid EnvironmentId)> Changed,
-        Dictionary<Guid, ScopeDecision> Existing)> AffectedAsync(ClarityDbContext db, Project project, ScopeBatch batch, string? wave, CancellationToken token)
+        Dictionary<Guid, ScopeDecision> Existing, int Reconfirmed)> AffectedAsync(ClarityDbContext db, Project project, ScopeBatch batch, string? wave,
+        CancellationToken token)
     {
         var workspace = project.WorkspaceId;
         List<(Guid ObjectId, Guid EnvironmentId)> targets;
@@ -521,8 +515,12 @@ public sealed class ScopeService(IDbContextFactory<ClarityDbContext> factory, IP
                 .ToListAsync(token))
             { existing[decision.ObjectId] = decision; }
         }
-        var changed = targets.Where(t => !existing.TryGetValue(t.ObjectId, out var d) || d.Value != batch.Value || d.Wave != wave).ToList();
-        return (targets, changed, existing);
+        var same = existing.Values.Where(d => d.Value == batch.Value && d.Wave == wave).ToList();
+        var current = await FingerprintsAsync(db, workspace, same.Select(d => d.ObjectId).ToList(), token);
+        var stale = same.Where(d => current.GetValueOrDefault(d.ObjectId) != d.Fingerprint).Select(d => d.ObjectId).ToHashSet();
+        var changed = targets.Where(t => !existing.TryGetValue(t.ObjectId, out var d) || d.Value != batch.Value || d.Wave != wave
+            || stale.Contains(t.ObjectId)).ToList();
+        return (targets, changed, existing, stale.Count);
     }
 
     private static async Task<List<Guid>> EvaluateAsync(ClarityDbContext db, Project project, ProjectEnvironment environment, Population population,

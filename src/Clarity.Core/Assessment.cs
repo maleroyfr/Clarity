@@ -19,6 +19,8 @@ public sealed class Assessment : WorkspaceEntity
     public string EvidenceReference { get; init; } = "";
     public Guid? EvidenceObservationId { get; init; }
     public required string MetadataFingerprint { get; init; }
+    /// <summary>Critical facts behind <see cref="MetadataFingerprint"/>; null for assessments recorded before bases were kept.</summary>
+    public string? BasisJson { get; init; }
     public Guid AuthorTenantId { get; init; }
     public Guid AuthorObjectId { get; init; }
     public DateTimeOffset RecordedAtUtc { get; init; } = DateTimeOffset.UtcNow;

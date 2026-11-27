@@ -53,6 +53,8 @@ public sealed class ScopeDecision : WorkspaceEntity
     public string? Wave { get; set; }
     public Guid? PopulationId { get; set; }
     public required string Fingerprint { get; set; }
+    /// <summary>Critical facts behind <see cref="Fingerprint"/>; null for decisions recorded before bases were kept.</summary>
+    public string? BasisJson { get; set; }
     public long Revision { get; set; }
     public DateTimeOffset UpdatedAtUtc { get; set; }
 }
@@ -66,6 +68,7 @@ public sealed class ScopeDecisionRevision : WorkspaceEntity
     public string? Wave { get; init; }
     public Guid? PopulationId { get; init; }
     public required string Fingerprint { get; init; }
+    public string? BasisJson { get; init; }
     public Guid? EvidenceObservationId { get; init; }
     public required string Reason { get; init; }
     public Guid ActorTenantId { get; init; }

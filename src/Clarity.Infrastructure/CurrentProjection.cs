@@ -34,7 +34,8 @@ internal static class CurrentProjection
     private sealed record Evidence(ObjectObservation Observation, ProjectedSection Source, JsonElement Attributes);
     private sealed record Candidate(Evidence Evidence, JsonElement Value, bool Reference);
 
-    internal static async Task RefreshAsync(ClarityDbContext db, DiscoveryCatalog catalog, Guid workspace, Guid environment,
+    /// <summary>Reprojects current values and presence; returns every object whose projection was recomputed.</summary>
+    internal static async Task<IReadOnlyCollection<Guid>> RefreshAsync(ClarityDbContext db, DiscoveryCatalog catalog, Guid workspace, Guid environment,
         SectionRun? published, IReadOnlyList<Guid> changed, CancellationToken token)
     {
         var sections = (await ProjectedSection.LoadAsync(db, workspace, environment, token)).ToDictionary(s => s.Section.Id);
@@ -145,6 +146,7 @@ internal static class CurrentProjection
                 { item.Domain = item.UserPrincipalName[(separator + 1)..]; }
             }
         }
+        return affected;
         bool Reference(ProjectedSection s, string field) => catalog.Sections.TryGetValue(s.Section.CapabilityId, out var capability)
             && capability.Attributes.TryGetValue(field, out var definition) && definition.ReferenceProducer == s.Producer;
     }

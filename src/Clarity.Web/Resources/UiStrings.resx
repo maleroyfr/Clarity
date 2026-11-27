@@ -950,4 +950,19 @@
   <data name="TargetReason_AliasTaken" xml:space="preserve"><value>Alias déjà utilisé par un autre objet cible</value></data>
   <data name="TargetReason_SharedDomain" xml:space="preserve"><value>Domaine présent dans la source et dans la cible</value></data>
   <data name="TargetReason_TargetDomainNotVerified" xml:space="preserve"><value>Domaine cible de la règle absent ou non vérifié dans la cible</value></data>
+  <data name="DecisionRegister" xml:space="preserve"><value>Registre des décisions</value></data>
+  <data name="DecisionRegisterHint" xml:space="preserve"><value>Registre des décisions du consultant (périmètre, dépendances SSO, Teams, rapprochements), conservées indépendamment des collectes. Une actualisation ne modifie jamais une décision : elle signale seulement celles dont les attributs clés ont changé.</value></data>
+  <data name="DecisionRegisterSummary" xml:space="preserve"><value>Synthèse des décisions</value></data>
+  <data name="ToReviewOnly" xml:space="preserve"><value>À revoir uniquement</value></data>
+  <data name="DecisionUpToDate" xml:space="preserve"><value>À jour</value></data>
+  <data name="FlaggedSince" xml:space="preserve"><value>Signalée le</value></data>
+  <data name="DecisionChangesUnknown" xml:space="preserve"><value>Champs modifiés inconnus : décision enregistrée avant la conservation des attributs de référence.</value></data>
+  <data name="MappingChangesHint" xml:space="preserve"><value>Détail des preuves dans la revue des rapprochements.</value></data>
+  <data name="RecomputeReview" xml:space="preserve"><value>Recalculer les conditions de revue</value></data>
+  <data name="ReviewRecomputed" xml:space="preserve"><value>Conditions de revue recalculées : {0} décision(s) à revoir.</value></data>
+  <data name="Reconfirm" xml:space="preserve"><value>Reconfirmer</value></data>
+  <data name="ReconfirmHint" xml:space="preserve"><value>Reconfirmer enregistre une nouvelle révision avec la même décision, fondée sur les attributs actuels. Une justification est obligatoire.</value></data>
+  <data name="ReconfirmedObjects" xml:space="preserve"><value>Décisions à reconfirmer</value></data>
+  <data name="NoDecisions" xml:space="preserve"><value>Aucune décision pour ce filtre.</value></data>
+  <data name="QualifyFromSheet" xml:space="preserve"><value>Qualifier depuis la fiche</value></data>
 </root>

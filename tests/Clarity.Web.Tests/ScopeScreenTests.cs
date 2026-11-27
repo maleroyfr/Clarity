@@ -170,4 +170,55 @@ public sealed class ScopeScreenTests
         var foreign = WebUtility.HtmlDecode(await consultant.GetStringAsync($"/projects/{beta}/scope?view=dependencies", token));
         foreign.ShouldNotContain("Vague synthétique 1");
     }
+
+    [Fact]
+    public async Task DecisionRegisterShowsFlaggedDecisionsInFrenchAndReviewActionsOnlyToConsultants()
+    {
+        await using var app = new FoundationApplication();
+        var (alpha, beta) = await app.SeedAsync();
+        var workspace = DevelopmentAuthenticationHandler.AlphaWorkspace;
+        var environment = new ProjectEnvironment { WorkspaceId = workspace, ProjectId = alpha, Kind = EnvironmentKind.AdForest, ExternalId = "forest.example.test" };
+        var user = new InventoryObject { WorkspaceId = workspace, EnvironmentId = environment.Id, Type = "user", DisplayName = "Synthetic Alice" };
+        var decision = new ScopeDecision
+        {
+            WorkspaceId = workspace,
+            ProjectId = alpha,
+            EnvironmentId = environment.Id,
+            ObjectId = user.Id,
+            Value = ScopeValue.Include,
+            Fingerprint = new string('a', 64),
+            Revision = 1,
+            UpdatedAtUtc = DateTimeOffset.UtcNow
+        };
+        await using (var db = app.CreateUnscopedContext())
+        {
+            db.AddRange(environment, user, decision, new ReviewFlag
+            {
+                WorkspaceId = workspace,
+                ProjectId = alpha,
+                EnvironmentId = environment.Id,
+                ObjectId = user.Id,
+                Kind = DecisionKind.Scope,
+                DecisionRevision = 1,
+                Fingerprint = new string('b', 64),
+                ChangesJson = "[]",
+                FlaggedAtUtc = DateTimeOffset.UtcNow
+            });
+            await db.SaveChangesAsync(TestContext.Current.CancellationToken);
+        }
+        var token = TestContext.Current.CancellationToken;
+        using var consultant = await app.CreatePersonaClientAsync("consultant");
+        var html = WebUtility.HtmlDecode(await consultant.GetStringAsync($"/projects/{alpha}/scope?view=review", token));
+        html.ShouldContain(">Registre des décisions</");
+        html.ShouldContain("Périmètre : 1 · À revoir : 1");
+        html.ShouldContain("Recalculer les conditions de revue");
+        html.ShouldContain("À revoir uniquement");
+
+        using var reader = await app.CreatePersonaClientAsync("reader");
+        var readOnly = WebUtility.HtmlDecode(await reader.GetStringAsync($"/projects/{alpha}/scope?view=review", token));
+        readOnly.ShouldContain("Périmètre : 1 · À revoir : 1");
+        readOnly.ShouldNotContain("Recalculer les conditions de revue");
+        var foreign = WebUtility.HtmlDecode(await consultant.GetStringAsync($"/projects/{beta}/scope?view=review", token));
+        foreign.ShouldNotContain("Périmètre : 1");
+    }
 }

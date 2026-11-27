@@ -12,6 +12,7 @@
         <a href="@Link("import")">@Text["ImportAssistant"]</a>
         <a href="@Link("decisions")">@Text["ScopeDecisions"]</a>
         <a href="@Link("dependencies")">@Text["Dependencies"]</a>
+        <a href="@Link("review")">@Text["DecisionRegister"]</a>
     </nav>
     @if (Error is not null) { <p class="error" role="alert">@Error</p> }
     @if (_message is not null) { <p role="status">@_message</p> }
@@ -40,6 +41,10 @@
     else if (View == "dependencies")
     {
         <DependencyPanel ProjectId="ProjectId" Side="Side" Environments="_environments" CanQualify="_canQualify" />
+    }
+    else if (View == "review")
+    {
+        <DecisionRegisterPanel ProjectId="ProjectId" Side="Side" CanQualify="_canQualify" />
     }
     else
     {
@@ -170,7 +175,8 @@
                         @if (_preview is { } preview)
                         {
                             <p role="status">@Text["AffectedObjects"] : @preview.Result.Affected · @Text["UnchangedObjects"] : @preview.Result.Unchanged · @Text[$"ScopeDecision_{preview.Batch.Value}"]
-                                @if (preview.Batch.Wave is { Length: > 0 } wave) { <span> · @Text["MigrationWave"] : @wave</span> }</p>
+                                @if (preview.Batch.Wave is { Length: > 0 } wave) { <span> · @Text["MigrationWave"] : @wave</span> }
+                                @if (preview.Result.Reconfirmed != 0) { <span> · @Text["ReconfirmedObjects"] : @preview.Result.Reconfirmed</span> }</p>
                             <FluentButton OnClick="ApplyAsync" Disabled="@(Busy || preview.Result.Affected == 0 || string.IsNullOrWhiteSpace(_reason))">@Text["ConfirmDecisions"]</FluentButton>
                         }
                     </fieldset>
