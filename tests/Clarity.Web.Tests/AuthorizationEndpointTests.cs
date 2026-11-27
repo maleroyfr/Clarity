@@ -41,6 +41,43 @@ public class AuthorizationEndpointTests
     }
 
     [Fact]
+    public async Task Directory_shows_the_authorized_workspace_and_only_actions_the_reader_can_use()
+    {
+        await using var app = new FoundationApplication();
+        var (project, _) = await app.SeedAsync();
+        var workspace = DevelopmentAuthenticationHandler.AlphaWorkspace;
+        var ct = TestContext.Current.CancellationToken;
+        await using (var db = app.CreateUnscopedContext())
+        {
+            db.Environments.Add(new ProjectEnvironment
+            {
+                WorkspaceId = workspace,
+                ProjectId = project,
+                Role = EnvironmentRole.Target,
+                Kind = EnvironmentKind.M365Tenant,
+                TargetState = TargetState.Planned,
+                ExternalId = ""
+            });
+            await db.SaveChangesAsync(ct);
+        }
+        using var reader = await app.CreatePersonaClientAsync("reader");
+        var parser = new AngleSharp.Html.Parser.HtmlParser();
+        var home = parser.ParseDocument(await reader.GetStringAsync("/", ct));
+        home.QuerySelector("main")!.TextContent.ShouldContain("Synthetic Alpha");
+        home.QuerySelector("main")!.TextContent.ShouldNotContain("Synthetic Beta");
+        home.QuerySelector("main")!.TextContent.ShouldNotContain("Attribuer un accès");
+        var projects = parser.ParseDocument(await reader.GetStringAsync($"/clients/{workspace}/projects", ct));
+        projects.Title.ShouldNotBeNull().ShouldContain("Synthetic Alpha");
+        var row = projects.QuerySelectorAll("tbody tr").Single(x => x.TextContent.Contains("Alpha audit", StringComparison.Ordinal));
+        row.TextContent.ShouldContain("Aucun inventaire publié");
+        row.TextContent.ShouldContain("Déclarée");
+        row.QuerySelector($"fluent-link[href='/projects/{project}']").ShouldNotBeNull();
+        projects.QuerySelector("main")!.TextContent.ShouldNotContain("Créer un dossier");
+        row.TextContent.ShouldNotContain("Archiver");
+        row.TextContent.ShouldNotContain("Supprimer");
+    }
+
+    [Fact]
     public async Task Guessed_project_id_in_another_workspace_cannot_be_read_or_archived()
     {
         await using var app = new FoundationApplication();
@@ -79,6 +116,11 @@ public class AuthorizationEndpointTests
         using var manager = await app.CreatePersonaClientAsync("manager");
         (await manager.PostAsJsonAsync($"/api/projects/{alpha}/delete", confirm, ct)).StatusCode.ShouldBe(HttpStatusCode.Forbidden);
         (await manager.PostAsync($"/api/projects/{alpha}/archive", null, ct)).StatusCode.ShouldBe(HttpStatusCode.OK);
+        var directory = new AngleSharp.Html.Parser.HtmlParser().ParseDocument(await manager.GetStringAsync(
+            $"/clients/{DevelopmentAuthenticationHandler.AlphaWorkspace}/projects", ct));
+        var archived = directory.QuerySelectorAll("tbody tr").Single(row => row.TextContent.Contains("Alpha audit", StringComparison.Ordinal));
+        archived.TextContent.ShouldContain("Supprimer");
+        archived.TextContent.ShouldNotContain("Archiver");
         foreach (var persona in new[] { "consultant", "reader", "platform-admin" })
         {
             using var client = await app.CreatePersonaClientAsync(persona);
@@ -110,6 +152,10 @@ public class AuthorizationEndpointTests
         await using var app = new FoundationApplication();
         var (alpha, _) = await app.SeedAsync();
         using var admin = await app.CreatePersonaClientAsync("platform-admin");
+        var home = new AngleSharp.Html.Parser.HtmlParser().ParseDocument(await admin.GetStringAsync("/", TestContext.Current.CancellationToken));
+        var workspaceRow = home.QuerySelectorAll("tbody tr").Single(row => row.TextContent.Contains("Synthetic Alpha", StringComparison.Ordinal));
+        workspaceRow.TextContent.ShouldContain("Attribuer un accès");
+        workspaceRow.QuerySelector("fluent-link").ShouldBeNull();
         (await admin.GetAsync($"/api/projects/{alpha}", TestContext.Current.CancellationToken)).StatusCode.ShouldBe(HttpStatusCode.Forbidden);
         var input = new WorkspaceInput(Guid.NewGuid(), "Synthetic new client");
         (await admin.PostAsJsonAsync("/api/workspaces", input, cancellationToken: TestContext.Current.CancellationToken)).StatusCode.ShouldBe(HttpStatusCode.OK);

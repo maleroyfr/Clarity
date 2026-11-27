@@ -129,7 +129,7 @@
                             <TemplateColumn Title="@Text["ImportValues"]" Context="e">@e.Value</TemplateColumn>
                             <TemplateColumn Title="@Text["Status"]" Context="e">@Text[$"ImportResolution_{e.Resolution}"]
                                 @if (e.CandidateCount > 1) { <small>@Text["Candidates"] : @e.CandidateCount</small> }</TemplateColumn>
-                            <TemplateColumn Title="@Text["ObjectId"]" Context="e">
+                            <TemplateColumn Title="@Text["RelatedObject"]" Context="e">
                                 @if (e.ObjectId is { } id) { <FluentLink Href="@Sheet(id)">@(e.Label ?? id.ToString())</FluentLink> }
                             </TemplateColumn>
                             <TemplateColumn Title="@Text["Actions"]" Context="e">

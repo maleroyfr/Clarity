@@ -139,11 +139,13 @@ public sealed class DiscoveryEndpointTests
         coverage = await otherMachine.GetFromJsonAsync<PageResult<CoverageView>>($"{root}/{environment}/coverage", TestContext.Current.CancellationToken);
         coverage!.Items[0].Coverage.ShouldBeNull();
         coverage.Items[0].LastValidAtUtc.ShouldBe(lastValid);
+        await AssertDirectoryInventoryAsync(package.Manifest.CompletedAtUtc, "0");
         (await otherMachine.PostAsync($"{root}/runs/{failedId}/confirm", null, TestContext.Current.CancellationToken)).StatusCode.ShouldBe(HttpStatusCode.OK);
         await processor.ProcessOneAsync(TestContext.Current.CancellationToken);
         coverage = await otherMachine.GetFromJsonAsync<PageResult<CoverageView>>($"{root}/{environment}/coverage", TestContext.Current.CancellationToken);
         coverage!.Items[0].Coverage.ShouldBe(CoverageStatus.Failed);
         coverage.Items[0].LastValidAtUtc.ShouldBe(lastValid);
+        await AssertDirectoryInventoryAsync(failed.Manifest.CompletedAtUtc, "1");
         (await otherMachine.GetByteArrayAsync($"{root}/runs/{runId}/download", TestContext.Current.CancellationToken)).ShouldBe(zip.ToArray());
         await using var check = app.CreateUnscopedContext();
         (await check.ObjectObservations.CountAsync(TestContext.Current.CancellationToken)).ShouldBe(1);
@@ -159,6 +161,16 @@ public sealed class DiscoveryEndpointTests
         inventory.ShouldContain("Historique des observations");
         var queue = WebUtility.HtmlDecode(await otherMachine.GetStringAsync($"/projects/{alpha}/inventory?view=Mappings", TestContext.Current.CancellationToken));
         queue.ShouldContain("Prévisualiser la validation");
+
+        async Task AssertDirectoryInventoryAsync(DateTimeOffset observedAt, string sectionsToVerify)
+        {
+            var directory = new AngleSharp.Html.Parser.HtmlParser().ParseDocument(await otherMachine.GetStringAsync(
+                $"/clients/{DevelopmentAuthenticationHandler.AlphaWorkspace}/projects", TestContext.Current.CancellationToken));
+            var projectRow = directory.QuerySelectorAll("tbody tr").Single(row => row.TextContent.Contains("Alpha audit", StringComparison.Ordinal));
+            var cells = projectRow.QuerySelectorAll("td");
+            cells[3].TextContent.Trim().ShouldBe(observedAt.ToString("u"));
+            cells[4].TextContent.Trim().ShouldBe(sectionsToVerify);
+        }
     }
 
     [Fact]

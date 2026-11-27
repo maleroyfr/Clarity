@@ -35,8 +35,8 @@
     </FluentTabs>
     @if (Section is not null && !Sections.ContainsKey(Section))
     {
-        <EmptyState Title="@Text["NotFound"]" Description="@Text["LaterLot"]">
-            <FluentLink Href="@($"/projects/{ProjectId}/discovery")">@Text["Discovery"]</FluentLink>
+        <EmptyState Title="@Text["NotFound"]" Description="@Text["UnknownProjectSection"]">
+            <FluentLink Href="@($"/projects/{ProjectId}/overview?side={_side}")">@Text["Overview"]</FluentLink>
         </EmptyState>
     }
 }

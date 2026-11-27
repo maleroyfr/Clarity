@@ -87,7 +87,7 @@ jobs:
           done
           curl --silent --fail http://127.0.0.1:5189/health/live
           test "$(curl --silent -o /dev/null -w '%{http_code}' http://127.0.0.1:5189/health/ready)" = 503
-          curl --silent --fail http://127.0.0.1:5189/ | grep -q 'Aucun espace client'
+          curl --silent --fail http://127.0.0.1:5189/ | grep -q 'La liste des clients est indisponible'
       - name: Package verified release
         run: |
           (cd artifacts/web && zip -q -r ../web.zip .)

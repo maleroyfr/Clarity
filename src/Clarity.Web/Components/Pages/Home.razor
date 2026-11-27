@@ -4,35 +4,43 @@
 @inject FoundationService Service
 @inject IConfiguration Configuration
 @inject IWebHostEnvironment Environment
+@inject WorkspaceAuthorization Authorization
 
 <PageTitle>@Text["Clients"] · Clarity</PageTitle>
 <FluentStack Wrap="true" VerticalAlignment="VerticalAlignment.Center" HorizontalGap="var(--spacingHorizontalM)">
     <FluentText As="TextTag.H1" Size="TextSize.Size700" Weight="TextWeight.Semibold">@Text["Clients"]</FluentText>
     <FluentSpacer />
-    <FluentButton Appearance="ButtonAppearance.Primary" Disabled="@(!Configured)" OnClick="@(() => _create = true)">@Text["NewClient"]</FluentButton>
+    @if (IsPlatformAdmin)
+    { <FluentButton Appearance="ButtonAppearance.Primary" OnClick="@(() => _create = true)">@Text["NewClient"]</FluentButton> }
 </FluentStack>
 <p>@Text["ClientIntro"]</p>
 @if (Error is not null) { <FluentMessageBar Intent="MessageBarIntent.Error" AllowDismiss="false">@Error</FluentMessageBar> }
 @if (!Configured)
 {
     <FluentMessageBar Intent="MessageBarIntent.Info" AllowDismiss="false">@Text["SqlRequired"]</FluentMessageBar>
-    <EmptyState Title="@Text["NoClients"]" Description="@Text["NoClientsHint"]" />
 }
 else
 {
-    <FluentStack Wrap="true" VerticalAlignment="VerticalAlignment.Bottom" HorizontalGap="var(--spacingHorizontalM)">
-        <FluentTextInput TextInputType="TextInputType.Search" Label="@Text["Search"]" @bind-Value="_search" />
-        <FluentButton OnClick="SearchAsync">@Text["SearchAction"]</FluentButton>
-    </FluentStack>
-    <ClarityGrid TGridItem="ClientWorkspace" Load="LoadAsync" Search="@_search" @ref="_grid">
+    <DirectorySearch @bind-Value="_search" />
+    <ClarityGrid TGridItem="ClientWorkspace" @key="_search" Load="LoadAsync" Search="@_search" @ref="_grid">
         <Columns>
             <PropertyColumn Property="@(x => x.Name)" Title="@Text["Name"]" Sortable="true" />
             <TemplateColumn Title="@Text["Status"]"><FluentBadge Content="@Text[context.Status.ToString()]" /></TemplateColumn>
-            <TemplateColumn Title="@Text["Projects"]"><FluentLink Href="@($"/clients/{context.Id}/projects")">@Text["Projects"]</FluentLink></TemplateColumn>
-            <TemplateColumn Title="@Text["ManageMembers"]"><FluentButton OnClick="@(() => _memberWorkspace = context.Id)">@Text["ManageMembers"]</FluentButton></TemplateColumn>
-            <TemplateColumn Title="@Text["Archive"]"><FluentButton Disabled="@(context.Status == WorkspaceStatus.Archived)" OnClick="@(() => _archive = context.Id)">@Text["Archive"]</FluentButton></TemplateColumn>
+            <TemplateColumn Title="@Text["Actions"]">
+                <FluentStack Wrap="true" VerticalAlignment="VerticalAlignment.Center" HorizontalGap="var(--spacingHorizontalS)">
+                    @if (Authorization.Allows(context.Id, WorkspaceOperation.Read))
+                    { <FluentLink Href="@($"/clients/{context.Id}/projects")">@Text["Projects"]</FluentLink> }
+                    @if (context.Status == WorkspaceStatus.Active && (IsPlatformAdmin || Authorization.Allows(context.Id, WorkspaceOperation.ManageMembers)))
+                    { <FluentButton OnClick="@(() => _memberWorkspace = context)">@Text["ManageMembers"]</FluentButton> }
+                    @if (context.Status == WorkspaceStatus.Active && IsPlatformAdmin)
+                    { <FluentButton OnClick="@(() => _archive = context)">@Text["Archive"]</FluentButton> }
+                </FluentStack>
+            </TemplateColumn>
         </Columns>
-        <EmptyContent><EmptyState Title="@Text["NoClients"]" Description="@Text["NoClientsHint"]" /></EmptyContent>
+        <EmptyContent>
+            @if (_search.Length == 0) { <EmptyState Title="@Text["NoClients"]" Description="@Text["NoClientsHint"]" /> }
+            else { <p>@Text["NoResults"]</p> }
+        </EmptyContent>
     </ClarityGrid>
 }
 @if (_create)
@@ -46,13 +54,13 @@ else
 }
 @if (_archive is not null)
 {
-    <DetailPanel Title="@Text["Archive"]" Error="@Error" Close="@(() => _archive = null)">
-        <p>@Text["ArchiveConfirm"]</p><FluentButton Disabled="Busy" OnClick="ArchiveAsync">@Text["Archive"]</FluentButton>
+    <DetailPanel Title="@Text["ArchiveNamed", _archive.Name]" Error="@Error" Close="@(() => _archive = null)">
+        <p>@Text["ArchiveWorkspaceHint"]</p><FluentButton Disabled="Busy" OnClick="ArchiveAsync">@Text["Archive"]</FluentButton>
     </DetailPanel>
 }
 @if (_memberWorkspace is not null)
 {
-    <DetailPanel Title="@Text["ManageMembers"]" Error="@Error" Close="@(() => _memberWorkspace = null)">
+    <DetailPanel Title="@($"{Text["ManageMembers"]} · {_memberWorkspace.Name}")" Error="@Error" Close="@(() => _memberWorkspace = null)">
         <form @onsubmit="SetMemberAsync" @onsubmit:preventDefault>
             <FluentTextInput Label="@Text["TenantId"]" Required="true" @bind-Value="_tenantId" />
             <FluentTextInput Label="@Text["ObjectId"]" Required="true" @bind-Value="_objectId" />
@@ -67,24 +75,26 @@ else
     private string _search = "", _name = "", _tenantId = "", _objectId = "";
     private bool _create;
     private Guid _operationId = Guid.NewGuid();
-    private Guid? _archive, _memberWorkspace;
+    private ClientWorkspace? _archive, _memberWorkspace;
+    private bool IsPlatformAdmin => Authorization.Allows(Guid.Empty, WorkspaceOperation.AdministerPlatform);
+    protected override Task OnInitializedAsync() => Configured ? RunAsync(() => Authorization.RefreshAsync()) : Task.CompletedTask;
     private WorkspaceRole _role = WorkspaceRole.WorkspaceManager;
     private ClarityGrid<ClientWorkspace>? _grid;
     private Task<PageResult<ClientWorkspace>> LoadAsync(PageRequest request, CancellationToken ct) => Service.ListWorkspacesAsync(request, ct);
-    private Task SearchAsync() => _grid?.RefreshAsync() ?? Task.CompletedTask;
+    private Task RefreshAsync() => _grid?.RefreshAsync() ?? Task.CompletedTask;
     private Task CreateAsync() => RunAsync(async () =>
     {
         await Service.CreateWorkspaceAsync(_operationId, _name);
-        _create = false; _name = ""; _operationId = Guid.NewGuid(); await SearchAsync();
+        _create = false; _name = ""; _operationId = Guid.NewGuid(); await RefreshAsync();
     });
     private Task ArchiveAsync() => RunAsync(async () =>
     {
-        await Service.ArchiveWorkspaceAsync(_archive!.Value); _archive = null; await SearchAsync();
+        await Service.ArchiveWorkspaceAsync(_archive!.Id); _archive = null; await RefreshAsync();
     });
     private Task SetMemberAsync() => RunAsync(async () =>
     {
         if (!Guid.TryParse(_tenantId, out var tenant) || !Guid.TryParse(_objectId, out var subject)) { throw new ArgumentException("Invalid identity."); }
-        await Service.SetMemberAsync(_memberWorkspace!.Value, new(tenant, subject), _role);
-        _memberWorkspace = null; await SearchAsync();
+        await Service.SetMemberAsync(_memberWorkspace!.Id, new(tenant, subject), _role);
+        _memberWorkspace = null; await RefreshAsync();
     });
 }

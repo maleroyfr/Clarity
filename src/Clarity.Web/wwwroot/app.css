@@ -8,6 +8,7 @@
 #main-content > *, .grid-container { min-width: 0; }
 #main-content h1[tabindex="-1"]:focus { outline: none; }
 .grid-container, .section-content .fluent-datagrid { overflow-x: auto; }
+.grid-container small { display: block; margin-block-start: var(--spacingVerticalXXS); color: var(--colorNeutralForeground2); }
 .section-content { display: grid; gap: var(--spacingVerticalL); min-width: 0; padding-block: var(--spacingVerticalL); }
 .section-content > *, .section-content section { min-width: 0; }
 .section-content section > * + * { margin-block-start: var(--spacingVerticalM); }

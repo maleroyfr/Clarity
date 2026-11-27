@@ -54,7 +54,10 @@ requests and their separate downloads require SQL. Result uploads and background
 processing also require private Blob Storage. Graph additionally requires the
 managed-identity certificate configuration in
 [the connector guide](connectors/microsoft-graph.md). Nothing deploys automatically.
-Inventory projection, matching and other later-lot sections remain unavailable.
+Published collections feed the inventory, matching and project overview. The
+project list shows the most recent collection with a published section, the number
+of its published sections marked partial or failed, and whether a target is declared.
+Search results and available actions reflect the current workspace membership.
 
 Use **Collectes** to select AD sections and a domain/OU, create a request and
 download the immutable script ZIP plus separate `parameters.json`. Run the displayed

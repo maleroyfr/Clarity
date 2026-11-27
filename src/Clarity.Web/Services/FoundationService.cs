@@ -1,10 +1,14 @@
 using System.Diagnostics;
+using Clarity.Contracts;
 using Clarity.Core;
 using Clarity.Infrastructure;
 using Clarity.Web.Security;
 using Microsoft.EntityFrameworkCore;
 
 namespace Clarity.Web.Services;
+
+public sealed record ProjectListRow(Project Project, PublishedInventory? LastInventory, bool HasTarget);
+public sealed record PublishedInventory(DateTimeOffset ObservedAtUtc, int SectionsToVerify);
 
 public sealed class FoundationService(
     IDbContextFactory<ClarityDbContext> factory, WorkspaceAuthorization authorization, IWorkspaceContext scope)
@@ -62,7 +66,26 @@ public sealed class FoundationService(
         await db.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<PageResult<Project>> ListProjectsAsync(Guid workspaceId, PageRequest request, CancellationToken cancellationToken = default)
+    public Task<PageResult<Project>> ListProjectsAsync(Guid workspaceId, PageRequest request, CancellationToken cancellationToken = default) =>
+        ReadProjectPageAsync(workspaceId, request, (_, page) => page, cancellationToken);
+
+    public Task<PageResult<ProjectListRow>> ListProjectSummariesAsync(Guid workspaceId, PageRequest request, CancellationToken cancellationToken) =>
+        ReadProjectPageAsync(workspaceId, request, (db, page) =>
+        {
+            var published = db.SectionRuns.Where(s => s.WorkspaceId == workspaceId && s.PublishedAtUtc != null);
+            return from project in page
+                   let latest = (from run in db.CollectionRuns
+                                 where project.Status != ProjectStatus.Deleting && run.WorkspaceId == workspaceId && run.ProjectId == project.Id
+                                     && published.Any(s => s.RunId == run.Id)
+                                 orderby run.CompletedAtUtc descending, run.ExternalRunId descending
+                                 select new PublishedInventory(run.CompletedAtUtc, published.Count(s => s.RunId == run.Id
+                                     && (s.Coverage == CoverageStatus.Partial || s.Coverage == CoverageStatus.Failed)))).FirstOrDefault()
+                   select new ProjectListRow(project, latest, project.Status != ProjectStatus.Deleting && db.Environments.Any(e =>
+                       e.WorkspaceId == workspaceId && e.ProjectId == project.Id && e.Role == EnvironmentRole.Target));
+        }, cancellationToken);
+
+    private async Task<PageResult<T>> ReadProjectPageAsync<T>(Guid workspaceId, PageRequest request,
+        Func<ClarityDbContext, IQueryable<Project>, IQueryable<T>> select, CancellationToken cancellationToken)
     {
         request.Validate();
         await authorization.RefreshAsync(cancellationToken);
@@ -71,7 +94,7 @@ public sealed class FoundationService(
         var query = db.Projects.AsNoTracking().Where(x => x.WorkspaceId == workspaceId && x.Name.Contains(request.Search));
         var count = await query.CountAsync(cancellationToken);
         var sorted = request.Descending ? query.OrderByDescending(x => x.Name).ThenBy(x => x.Id) : query.OrderBy(x => x.Name).ThenBy(x => x.Id);
-        return new(await sorted.Skip(request.Start).Take(request.Count).ToListAsync(cancellationToken), count);
+        return new(await select(db, sorted.Skip(request.Start).Take(request.Count)).ToListAsync(cancellationToken), count);
     }
 
     public async Task<Project> GetProjectAsync(Guid projectId, CancellationToken cancellationToken = default)

@@ -1,0 +1,122 @@
+@inherits FoundationPage
+@using Clarity.Infrastructure
+@inject FoundationService Service
+@inject INotificationService Notifications
+@inject ProjectDeletionService Deletion
+@inject RetentionOptions Retention
+@inject WorkspaceAuthorization Authorization
+
+<PageTitle>@Text["Projects"] @(_workspace is null ? "" : $"· {_workspace.Name}") · Clarity</PageTitle>
+<nav aria-label="@Text["Breadcrumb"]">
+    <FluentStack Wrap="true" VerticalAlignment="VerticalAlignment.Center" HorizontalGap="var(--spacingHorizontalS)">
+        <FluentLink Href="/">@Text["Clients"]</FluentLink>
+        @if (_workspace is not null)
+        {
+            <FluentIcon Value="@(new Icons.Regular.Size12.ChevronRight())" aria-hidden="true" />
+            <FluentText>@_workspace.Name</FluentText>
+        }
+    </FluentStack>
+</nav>
+<FluentStack Wrap="true" VerticalAlignment="VerticalAlignment.Center" HorizontalGap="var(--spacingHorizontalM)">
+    <FluentText As="TextTag.H1" Size="TextSize.Size700" Weight="TextWeight.Semibold">@Text["Projects"]</FluentText>
+    <FluentSpacer />
+    @if (CanCreate)
+    { <FluentButton Appearance="ButtonAppearance.Primary" OnClick="@(() => _create = true)">@Text["NewProject"]</FluentButton> }
+</FluentStack>
+@if (Error is not null) { <FluentMessageBar Intent="MessageBarIntent.Error" AllowDismiss="false">@Error</FluentMessageBar> }
+@if (_workspace is null)
+{
+    return;
+}
+<DirectorySearch @bind-Value="_search" />
+<ClarityGrid TGridItem="ProjectListRow" @key="_search" Load="LoadAsync" Search="@_search" @ref="_grid"
+             GridTemplateColumns="minmax(10rem,2fr) minmax(8rem,1fr) minmax(7rem,1fr) minmax(10rem,1fr) minmax(9rem,1fr) minmax(8rem,1fr) minmax(12rem,2fr)">
+    <Columns>
+        <PropertyColumn Property="@(x => x.Project.Name)" Title="@Text["Name"]" Sortable="true" />
+        <TemplateColumn Title="@Text["Scenario"]">@Text[context.Project.Scenario.ToString()]</TemplateColumn>
+        <TemplateColumn Title="@Text["Status"]">
+            <FluentStack Wrap="true" HorizontalGap="var(--spacingHorizontalXS)">
+                <FluentBadge Content="@Text[context.Project.Status.ToString()]" />
+                @if (Retention.DeletionDue(context.Project, DateTimeOffset.UtcNow)) { <FluentBadge Content="@Text["DeletionDue"]" /> }
+            </FluentStack>
+        </TemplateColumn>
+        <TemplateColumn Title="@Text["LastInventory"]">
+            @(context.Project.Status == ProjectStatus.Deleting ? "—" : context.LastInventory?.ObservedAtUtc.ToString("u") ?? Text["NoInventory"].Value)
+        </TemplateColumn>
+        <TemplateColumn Title="@Text["SectionsToVerify"]">@(context.LastInventory?.SectionsToVerify.ToString("N0") ?? "—")</TemplateColumn>
+        <TemplateColumn Title="@Text["TargetPresence"]">@(context.Project.Status == ProjectStatus.Deleting ? "—" : Text[context.HasTarget ? "Present" : "Absent"].Value)</TemplateColumn>
+        <TemplateColumn Title="@Text["Actions"]">
+            <FluentStack Wrap="true" VerticalAlignment="VerticalAlignment.Center" HorizontalGap="var(--spacingHorizontalS)">
+                @if (context.Project.Status != ProjectStatus.Deleting)
+                { <FluentLink Href="@($"/projects/{context.Project.Id}")">@Text["Overview"]</FluentLink> }
+                @if (CanQualify && context.Project.Status == ProjectStatus.Active)
+                { <FluentButton OnClick="@(() => _archive = context.Project)">@Text["Archive"]</FluentButton> }
+                @if (Authorization.Allows(WorkspaceId, WorkspaceOperation.DeleteProject) && context.Project.Status != ProjectStatus.Active)
+                { <FluentButton OnClick="@(() => { _delete = context.Project; _confirmation = ""; })">@Text["DeleteProject"]</FluentButton> }
+            </FluentStack>
+        </TemplateColumn>
+    </Columns>
+    <EmptyContent>
+        @if (_search.Length == 0) { <EmptyState Title="@Text["NoProjects"]" Description="@Text[CanCreate ? "NoProjectsHint" : "NoProjectsReadOnlyHint"]" /> }
+        else { <p>@Text["NoResults"]</p> }
+    </EmptyContent>
+</ClarityGrid>
+@if (_create)
+{
+    <DetailPanel Title="@Text["NewProject"]" Error="@Error" Close="@(() => _create = false)">
+        <form @onsubmit="CreateAsync" @onsubmit:preventDefault>
+            <FluentTextInput Label="@Text["Name"]" Required="true" @bind-Value="_name" />
+            <FluentSelect TOption="ProjectScenario" TValue="ProjectScenario" Items="Enum.GetValues<ProjectScenario>()" OptionText="@(scenario => Text[scenario.ToString()])" @bind-Value="_scenario" Label="@Text["Scenario"]" />
+            <FluentTextInput Label="@Text["Description"]" @bind-Value="_description" />
+            <FluentButton Type="ButtonType.Submit" Appearance="ButtonAppearance.Primary" Disabled="Busy">@Text["Save"]</FluentButton>
+        </form>
+    </DetailPanel>
+}
+@if (_archive is not null)
+{
+    <DetailPanel Title="@Text["ArchiveNamed", _archive.Name]" Error="@Error" Close="@(() => _archive = null)">
+        <p>@Text["ArchiveConfirm"]</p><FluentButton Disabled="Busy" OnClick="ArchiveAsync">@Text["Archive"]</FluentButton>
+    </DetailPanel>
+}
+@if (_delete is not null)
+{
+    <DetailPanel Title="@Text["DeleteNamed", _delete.Name]" Error="@Error" Close="@(() => _delete = null)">
+        <FluentMessageBar Intent="MessageBarIntent.Warning" AllowDismiss="false">@Text["DeleteConfirm"]</FluentMessageBar>
+        <form @onsubmit="DeleteAsync" @onsubmit:preventDefault>
+            <FluentTextInput Label="@Text["DeleteConfirmName"]" Required="true" @bind-Value="_confirmation" />
+            <FluentButton Type="ButtonType.Submit" Appearance="ButtonAppearance.Primary" Disabled="@(Busy || _confirmation != _delete.Name)">@Text["DeleteProject"]</FluentButton>
+        </form>
+    </DetailPanel>
+}
+
+@code {
+    [Parameter, EditorRequired] public Guid WorkspaceId { get; set; }
+    private string _search = "", _name = "", _description = "";
+    private ProjectScenario _scenario = ProjectScenario.AuditOnly;
+    private bool _create;
+    private Guid _operationId = Guid.NewGuid();
+    private ClientWorkspace? _workspace;
+    private bool CanQualify => Authorization.Allows(WorkspaceId, WorkspaceOperation.Qualify);
+    private bool CanCreate => _workspace?.Status == WorkspaceStatus.Active && CanQualify;
+    private Project? _archive;
+    private Project? _delete;
+    private string _confirmation = "";
+    private ClarityGrid<ProjectListRow>? _grid;
+    protected override Task OnInitializedAsync() => RunAsync(async () => _workspace = await Service.GetWorkspaceAsync(WorkspaceId));
+    private Task<PageResult<ProjectListRow>> LoadAsync(PageRequest request, CancellationToken ct) => Service.ListProjectSummariesAsync(WorkspaceId, request, ct);
+    private Task RefreshAsync() => _grid?.RefreshAsync() ?? Task.CompletedTask;
+    private Task CreateAsync() => RunAsync(async () =>
+    {
+        await Service.CreateProjectAsync(WorkspaceId, _operationId, _name, _scenario, _description);
+        _create = false; _name = ""; _description = ""; _operationId = Guid.NewGuid(); await RefreshAsync();
+        await Notifications.ShowSuccessToastAsync(Text["ChangesSaved"]);
+    });
+    private Task ArchiveAsync() => RunAsync(async () =>
+    {
+        await Service.ArchiveProjectAsync(_archive!.Id); _archive = null; await RefreshAsync();
+    });
+    private Task DeleteAsync() => RunAsync(async () =>
+    {
+        await Deletion.RequestAsync(_delete!.Id, _confirmation); _delete = null; await RefreshAsync();
+    });
+}

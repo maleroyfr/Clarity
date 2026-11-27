@@ -22,7 +22,8 @@ dotnet run --project src\Clarity.Web -- --environment Development
 ```
 
 Local startup and authentication configuration are documented in
-[local development](docs/local-development.md). The first screen starts empty;
+[local development](docs/local-development.md). A new database starts with no
+clients. Without a SQL connection, the local client directory shows setup guidance;
 synthetic workspaces belong only in tests.
 
 ## Validation

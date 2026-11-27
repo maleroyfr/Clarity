@@ -1,0 +1,20 @@
+<form role="search" @onsubmit="SubmitAsync" @onsubmit:preventDefault>
+    <FluentStack Wrap="true" VerticalAlignment="VerticalAlignment.Center" HorizontalGap="var(--spacingHorizontalS)">
+        <FluentTextInput TextInputType="TextInputType.Search" Label="@Text["Search"]" MaxLength="200" @bind-Value="_draft" />
+        <FluentButton Type="ButtonType.Submit">@Text["SearchAction"]</FluentButton>
+        @if (Value.Length != 0)
+        {
+            <FluentButton Appearance="ButtonAppearance.Subtle" OnClick="ClearAsync">@Text["ClearFilters"]</FluentButton>
+        }
+    </FluentStack>
+</form>
+
+@code {
+    [Parameter] public string Value { get; set; } = "";
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+    private string _draft = "";
+
+    protected override void OnInitialized() => _draft = Value;
+    private Task SubmitAsync() => ValueChanged.InvokeAsync(_draft.Trim());
+    private Task ClearAsync() { _draft = ""; return SubmitAsync(); }
+}

@@ -19,8 +19,9 @@ public class StartupTests
         var document = new AngleSharp.Html.Parser.HtmlParser().ParseDocument(html);
         document.QuerySelector("main h1").ShouldNotBeNull().TextContent.ShouldBe("Clients");
         document.QuerySelector("body[use-reboot]").ShouldNotBeNull();
-        html.ShouldContain("Aucun espace client");
-        html.ShouldContain("SQL n");
+        html.ShouldContain("La liste des clients est indisponible");
+        html.ShouldContain("ConnectionStrings:Clarity");
+        html.ShouldNotContain("Aucun espace client");
         html.ShouldNotContain("Hello, world!");
     }
 }
