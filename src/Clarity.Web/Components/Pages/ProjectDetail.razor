@@ -11,13 +11,13 @@
 @if (_project is not null)
 {
     <nav aria-label="@Text["Breadcrumb"]">
-        <FluentStack Wrap="true" VerticalAlignment="VerticalAlignment.Center">
+        <FluentStack Wrap="true" VerticalAlignment="VerticalAlignment.Center" HorizontalGap="var(--spacingHorizontalM)">
             <FluentLink Href="/">@Text["Clients"]</FluentLink>
             <FluentIcon Value="@(new Icons.Regular.Size12.ChevronRight())" aria-hidden="true" />
             <FluentLink Href="@($"/clients/{_project.WorkspaceId}/projects")">@_clientName · @Text["Projects"]</FluentLink>
         </FluentStack>
     </nav>
-    <FluentStack Wrap="true" VerticalAlignment="VerticalAlignment.Center">
+    <FluentStack Wrap="true" VerticalAlignment="VerticalAlignment.Center" HorizontalGap="var(--spacingHorizontalM)">
         <FluentText As="TextTag.H1" Size="TextSize.Size700" Weight="TextWeight.Semibold">@_project.Name</FluentText>
         <FluentBadge Content="@Text[_project.Scenario.ToString()]" />
         <FluentBadge Content="@Text[_project.Status.ToString()]" />
@@ -25,25 +25,35 @@
         <FluentSelect TOption="EnvironmentRole" TValue="EnvironmentRole" Items="Enum.GetValues<EnvironmentRole>()" OptionText="@(role => Text[role.ToString()])" Value="_side" ValueChanged="ChangeSide" Label="@Text["ActiveSide"]" />
     </FluentStack>
     @if (!string.IsNullOrEmpty(_project.Description)) { <p>@_project.Description</p> }
-    <div class="section-tabs">
-    <FluentTabs ActiveTabId="@(Section ?? "overview")" ActiveTabIdChanged="ChangeSection" aria-label="@Text["Projects"]">
+    <FluentTabs Overflow="true" ActiveTabId="@(Section ?? "overview")" ActiveTabIdChanged="ChangeSection" aria-label="@Text["Projects"]">
         @foreach (var section in Sections)
         {
-            <FluentTab Id="@section.Key" Header="@Text[section.Value]" />
+            <FluentTab Id="@section.Key" Header="@Text[section.Value]">
+                @if (section.Key == (Section ?? "overview")) { @SectionContent }
+            </FluentTab>
         }
     </FluentTabs>
-    </div>
+    @if (Section is not null && !Sections.ContainsKey(Section))
+    {
+        <EmptyState Title="@Text["NotFound"]" Description="@Text["LaterLot"]">
+            <FluentLink Href="@($"/projects/{ProjectId}/discovery")">@Text["Discovery"]</FluentLink>
+        </EmptyState>
+    }
+}
+
+@code {
+    private RenderFragment SectionContent => @<div class="section-content">
     @if (Section == "discovery")
     {
         <DiscoveryPanel ProjectId="ProjectId" Side="_side" InitialView="@DiscoveryView" />
     }
     else if (Section == "inventory")
     {
-        <nav class="toolbar" aria-label="@Text["Inventory"]">
-            <a href="@($"/projects/{ProjectId}/inventory?side={_side}")">@Text["Inventory"]</a>
-            <a href="@($"/projects/{ProjectId}/inventory?side={_side}&view=Mappings")">@Text["MappingReview"]</a>
-            <a href="@($"/projects/{ProjectId}/inventory?side={_side}&view=PendingLinks")">@Text["PendingLinks"]</a>
-        </nav>
+        <nav aria-label="@Text["Inventory"]"><FluentStack Wrap="true" HorizontalGap="var(--spacingHorizontalL)">
+            <SectionLink Href="@($"/projects/{ProjectId}/inventory?side={_side}")" Active="@(DiscoveryView is not ("Mappings" or "PendingLinks"))">@Text["Inventory"]</SectionLink>
+            <SectionLink Href="@($"/projects/{ProjectId}/inventory?side={_side}&view=Mappings")" Active="@(DiscoveryView == "Mappings")">@Text["MappingReview"]</SectionLink>
+            <SectionLink Href="@($"/projects/{ProjectId}/inventory?side={_side}&view=PendingLinks")" Active="@(DiscoveryView == "PendingLinks")">@Text["PendingLinks"]</SectionLink>
+        </FluentStack></nav>
         @if (DiscoveryView == "Mappings")
         { <MappingPanel @key="(ProjectId, _side)" ProjectId="ProjectId" Side="_side" /> }
         else if (DiscoveryView == "PendingLinks")
@@ -53,11 +63,11 @@
     }
     else if (Section is null or "overview")
     {
-        <p>@Text["TargetPresence"] : <a href="@($"/projects/{ProjectId}/overview?side=Target")">@Text[_environments.Any(x => x.Role == EnvironmentRole.Target) ? "Present" : "Absent"]</a></p>
+        <p>@Text["TargetPresence"] : <FluentLink Href="@($"/projects/{ProjectId}/overview?side=Target")">@Text[_environments.Any(x => x.Role == EnvironmentRole.Target) ? "Present" : "Absent"]</FluentLink></p>
         <ScenarioPanel @key="ProjectId" ProjectId="ProjectId" Revision="_environments.Count" />
         <OverviewPanel @key="(ProjectId, _side)" ProjectId="ProjectId" Side="_side" />
-        <div class="section-heading"><h2>@Text["Environments"] · @Text[_side.ToString()]</h2>
-            <FluentButton OnClick="OpenEnvironment">@Text[_side == EnvironmentRole.Source ? "AddSource" : "AddTarget"]</FluentButton></div>
+        <FluentStack Wrap="true" VerticalAlignment="VerticalAlignment.Center" HorizontalGap="var(--spacingHorizontalM)"><FluentText As="TextTag.H2" Size="TextSize.Size600" Weight="TextWeight.Semibold" Block="true">@Text["Environments"] · @Text[_side.ToString()]</FluentText>
+            <FluentButton OnClick="OpenEnvironment">@Text[_side == EnvironmentRole.Source ? "AddSource" : "AddTarget"]</FluentButton></FluentStack>
         @if (!_environments.Any(x => x.Role == _side))
         {
             <EmptyState Title="@Text[_side == EnvironmentRole.Source ? "NoSource" : "AddTarget"]" Description="@Text["NoSourceHint"]">
@@ -67,12 +77,12 @@
         @foreach (var environment in _environments.Where(x => x.Role == _side))
         {
             <FluentCard>
-                <h3>@Text[environment.Kind.ToString()] · @Text[environment.Role.ToString()]</h3>
+                <FluentText As="TextTag.H3" Size="TextSize.Size500" Weight="TextWeight.Semibold" Block="true">@Text[environment.Kind.ToString()] · @Text[environment.Role.ToString()]</FluentText>
                 <p>@environment.ExternalId</p><p>@Text["DeclaredScope"] : @environment.DeclaredScope</p>
                 <p>@Text[environment.TargetState.ToString()] · @environment.Hypotheses</p>
             </FluentCard>
         }
-        <p><a href="@($"/projects/{ProjectId}/discovery?side={_side}")">@Text["ViewCollections"]</a></p>
+        <p><FluentLink Href="@($"/projects/{ProjectId}/discovery?side={_side}")">@Text["ViewCollections"]</FluentLink></p>
     }
     else if (Section == "scope")
     {
@@ -86,12 +96,7 @@
     {
         <ExportPanel @key="(ProjectId, _side)" ProjectId="ProjectId" Side="_side" />
     }
-    else
-    {
-        <EmptyState Title="@Text[Sections.GetValueOrDefault(Section, "NotFound")]" Description="@Text["LaterLot"]">
-            <a href="@($"/projects/{ProjectId}/discovery")">@Text["Discovery"]</a>
-        </EmptyState>
-    }
+    </div>;
 }
 @if (_addEnvironment)
 {

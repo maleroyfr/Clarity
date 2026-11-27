@@ -6,8 +6,12 @@
 .workspace { min-width: 0; background: var(--colorNeutralBackground2); }
 #main-content { display: grid; align-content: start; gap: var(--spacingVerticalL); min-width: 0; max-width: 100rem; margin-inline: auto; padding: clamp(var(--spacingHorizontalM), 3vw, var(--spacingHorizontalXXXXL)); }
 #main-content > *, .grid-container { min-width: 0; }
-.persona-picker { padding-block-end: var(--spacingVerticalL); border-block-end: var(--strokeWidthThin) solid var(--colorNeutralStroke2); }
-.section-tabs, .grid-container { overflow-x: auto; }
+#main-content h1[tabindex="-1"]:focus { outline: none; }
+.grid-container, .section-content .fluent-datagrid { overflow-x: auto; }
+.section-content { display: grid; gap: var(--spacingVerticalL); min-width: 0; padding-block: var(--spacingVerticalL); }
+.section-content > *, .section-content section { min-width: 0; }
+.section-content section > * + * { margin-block-start: var(--spacingVerticalM); }
+.filter-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(14rem, 100%), 1fr)); align-items: end; gap: var(--spacingHorizontalM); }
 .summary-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr)); gap: var(--spacingHorizontalM); }
 .detail-drawer::part(dialog) { max-width: min(36rem, 100vw); }
 .detail-drawer form, .discovery-form { display: grid; gap: var(--spacingVerticalM); }

@@ -7,23 +7,22 @@
 @inject NavigationManager Navigation
 
 <section aria-label="@Text["MappingReview"]">
-    @if (Kind == MappingKind.Hybrid) { <h2>@Text["MappingReview"] · @Text[Side.ToString()]</h2> }
-    else { <h3>@Text["SourceTargetMappings"]</h3> }
-    @if (Error is not null) { <p class="error" role="alert">@Error</p> }
-    @if (_message is not null) { <p role="status">@_message</p> }
-    <label>@Text["Status"] <select value="@_state" @onchange="ChangeState">
-        @foreach (var s in States) { <option value="@s">@Text[s]</option> }
-    </select></label>
+    @if (Kind == MappingKind.Hybrid) { <FluentText As="TextTag.H2" Size="TextSize.Size600" Weight="TextWeight.Semibold" Block="true">@Text["MappingReview"] · @Text[Side.ToString()]</FluentText> }
+    else { <FluentText As="TextTag.H3" Size="TextSize.Size500" Weight="TextWeight.Semibold" Block="true">@Text["SourceTargetMappings"]</FluentText> }
+    @if (Error is not null) { <FluentMessageBar Intent="MessageBarIntent.Error" AllowDismiss="false">@Error</FluentMessageBar> }
+    @if (_message is not null) { <FluentMessageBar Intent="MessageBarIntent.Success" AllowDismiss="false">@_message</FluentMessageBar> }
+    <FluentSelect TOption="string" TValue="string" Label="@Text["Status"]" Items="States"
+                  OptionText="@(s => Text[s])" Value="@_state" ValueChanged="ChangeState" />
     <ClarityGrid @key="(ProjectId, Kind, Side, _state, _revision)" TGridItem="MappingRow" Load="@((p, ct) => Review.PageAsync(ProjectId, Kind, Side, _state, p, ct))">
         <Columns>
             <TemplateColumn Title="@Text["SelectAssociation"]" Context="r">
-                <input type="checkbox" aria-label="@($"{Text["SelectAssociation"]} : {r.AdLabel} / {r.EntraLabel}")" disabled="@(!_canQualify || Busy)"
-                       checked="@_selected.ContainsKey(r.Id)" @onchange="e => Select(r, e.Value is true)" />
+                <FluentCheckbox AriaLabel="@($"{Text["SelectAssociation"]} : {r.AdLabel} / {r.EntraLabel}")" Disabled="@(!_canQualify || Busy)"
+                        Value="@_selected.ContainsKey(r.Id)" ValueChanged="@(selected => Select(r, selected))" />
             </TemplateColumn>
             <TemplateColumn Title="@(Kind == MappingKind.Hybrid ? "AD" : Text["Source"].Value)" Context="r">
-                <a href="@Sheet(r.AdId, Kind == MappingKind.Hybrid ? Side : EnvironmentRole.Source)">@r.AdLabel</a><small>@r.Forest</small></TemplateColumn>
+                <FluentLink Href="@Sheet(r.AdId, Kind == MappingKind.Hybrid ? Side : EnvironmentRole.Source)">@r.AdLabel</FluentLink><small>@r.Forest</small></TemplateColumn>
             <TemplateColumn Title="@(Kind == MappingKind.Hybrid ? "Entra" : Text["Target"].Value)" Context="r">
-                <a href="@Sheet(r.EntraId, Kind == MappingKind.Hybrid ? Side : EnvironmentRole.Target)">@r.EntraLabel</a><small>@r.Tenant</small></TemplateColumn>
+                <FluentLink Href="@Sheet(r.EntraId, Kind == MappingKind.Hybrid ? Side : EnvironmentRole.Target)">@r.EntraLabel</FluentLink><small>@r.Tenant</small></TemplateColumn>
             <TemplateColumn Title="@Text["Status"]" Context="r">@Text[r.State.ToString()] · @Text[r.Rule.ToString()]</TemplateColumn>
             <TemplateColumn Title="@Text["Actions"]" Context="r">
                 <FluentButton OnClick="@(() => _proof = new(ProofKind.Mapping, r.Id))">@Text["Provenance"]</FluentButton>
@@ -31,7 +30,7 @@
             </TemplateColumn>
         </Columns>
         <EmptyContent>
-            @if (Kind == MappingKind.Hybrid) { <p>@Text["NoMappings"] <a href="@($"/projects/{ProjectId}/discovery?side={Side}")">Discovery</a></p> }
+            @if (Kind == MappingKind.Hybrid) { <p>@Text["NoMappings"] <FluentLink Href="@($"/projects/{ProjectId}/discovery?side={Side}")">Discovery</FluentLink></p> }
             else { <p>@Text["NoSourceTargetMappings"]</p> }
         </EmptyContent>
     </ClarityGrid>
@@ -42,12 +41,12 @@
         <FluentButton OnClick="@(() => PreviewAsync(false))" Disabled="@(_selected.Count == 0 || Busy)">@Text["PreviewReject"]</FluentButton>
         @if (_batch is { } batch)
         {
-            <p role="status">@Text["AffectedAssociations"] : @batch.Count · @Text[batch.Validate ? "Validated" : "Rejected"]</p>
+            <FluentMessageBar Intent="MessageBarIntent.Info" AllowDismiss="false">@Text["AffectedAssociations"] : @batch.Count · @Text[batch.Validate ? "Validated" : "Rejected"]</FluentMessageBar>
             <FluentButton OnClick="ApplyAsync" Disabled="@(Busy || batch.Count == 0 || string.IsNullOrWhiteSpace(_reason))">@Text["ConfirmDecisions"]</FluentButton>
         }
         @if (_original is { } original)
         {
-            <article><h3>@Text["CorrectAssociation"]</h3><p>@original.AdLabel → @original.EntraLabel</p>
+            <FluentCard><FluentText As="TextTag.H3" Size="TextSize.Size500" Weight="TextWeight.Semibold" Block="true">@Text["CorrectAssociation"]</FluentText><p>@original.AdLabel → @original.EntraLabel</p>
                 <FluentTextInput Label="@Text["ReplacementEntra"]" @bind-Value="_replacement" />
                 <FluentButton OnClick="PreviewCorrectionAsync">@Text["Preview"]</FluentButton>
                 @if (_correction is { } correction && _replacement == correction.ReplacementId.ToString())
@@ -55,21 +54,25 @@
                     <p>@Text["ReplacementPreview"] : @original.AdLabel → @correction.ReplacementLabel</p>
                     <FluentButton OnClick="CorrectAsync" Disabled="@(Busy || string.IsNullOrWhiteSpace(_reason))">@Text["ConfirmCorrection"]</FluentButton>
                 }
-            </article>
+            </FluentCard>
         }
         @if (Kind == MappingKind.Hybrid && _forests.Count != 0 && _tenants.Count != 0)
         {
-            <details><summary>@Text["VerifySourceAnchor"]</summary>
+            <FluentAccordion><FluentAccordionItem Header="@Text["VerifySourceAnchor"]">
                 <p>@Text["AnchorHint"]</p>
-                <label>AD <select @bind="_forest" @bind:after="LoadBindingAsync">@foreach (var e in _forests) { <option value="@e.Id">@e.ExternalId</option> }</select></label>
-                <label>Entra <select @bind="_tenant" @bind:after="LoadBindingAsync">@foreach (var e in _tenants) { <option value="@e.Id">@e.ExternalId</option> }</select></label>
+                <FluentSelect TOption="ProjectEnvironment" TValue="Guid" Label="@Text["AD"]" Items="_forests"
+                              OptionText="@(e => e.ExternalId)" OptionValue="@(e => e.Id)" @bind-Value="_forest" @bind-Value:after="LoadBindingAsync" />
+                <FluentSelect TOption="ProjectEnvironment" TValue="Guid" Label="@Text["Entra"]" Items="_tenants"
+                              OptionText="@(e => e.ExternalId)" OptionValue="@(e => e.Id)" @bind-Value="_tenant" @bind-Value:after="LoadBindingAsync" />
                 @if (_binding != null) { <p>@_binding.VerifiedAtUtc.ToString("u") · @_binding.VerifiedByObjectId · @_binding.Reason</p> }
-                <label>sourceAnchor <select @bind="_anchor"><option value="">@Text["Unverified"]</option>
-                    <option value="ObjectGuid">objectGUID</option><option value="ConsistencyGuid">mS-DS-ConsistencyGuid</option>
-                </select></label>
+                <FluentSelect TOption="string" TValue="string" Label="@Text["sourceAnchor"]" @bind-Value="_anchor">
+                    <FluentOption TValue="string" Value="@string.Empty">@Text["Unverified"]</FluentOption>
+                    <FluentOption TValue="string" Value="@("ObjectGuid")">objectGUID</FluentOption>
+                    <FluentOption TValue="string" Value="@("ConsistencyGuid")">mS-DS-ConsistencyGuid</FluentOption>
+                </FluentSelect>
                 <FluentTextInput Label="@Text["AnchorEvidence"]" @bind-Value="_anchorReason" />
                 <FluentButton OnClick="VerifyAsync" Disabled="@(Busy || string.IsNullOrWhiteSpace(_anchorReason))">@Text["Save"]</FluentButton>
-            </details>
+            </FluentAccordionItem></FluentAccordion>
         }
     }
 </section>
@@ -118,7 +121,7 @@
         await ReadBindingAsync(); Updated();
     });
     private string Sheet(Guid id, EnvironmentRole side) => $"/projects/{ProjectId}/inventory?side={side}&object={id}";
-    private void ChangeState(ChangeEventArgs e) => Navigation.NavigateTo(Navigation.GetUriWithQueryParameter("state", e.Value?.ToString()));
+    private void ChangeState(string state) => Navigation.NavigateTo(Navigation.GetUriWithQueryParameter("state", state));
     private void Select(MappingRow row, bool select)
     {
         if (select) { _selected[row.Id] = new(row.Id, row.Revision); } else { _selected.Remove(row.Id); }

@@ -6,16 +6,16 @@
 @inject NavigationManager Navigation
 
 <section aria-label="@Text["Scope"]">
-    <h2>@Text["Scope"] · @Text[Side.ToString()]</h2>
-    <nav class="toolbar" aria-label="@Text["Scope"]">
-        <a href="@Link(null)">@Text["Populations"]</a>
-        <a href="@Link("import")">@Text["ImportAssistant"]</a>
-        <a href="@Link("decisions")">@Text["ScopeDecisions"]</a>
-        <a href="@Link("dependencies")">@Text["Dependencies"]</a>
-        <a href="@Link("review")">@Text["DecisionRegister"]</a>
-    </nav>
-    @if (Error is not null) { <p class="error" role="alert">@Error</p> }
-    @if (_message is not null) { <p role="status">@_message</p> }
+    <FluentText As="TextTag.H2" Size="TextSize.Size600" Weight="TextWeight.Semibold" Block="true">@Text["Scope"] · @Text[Side.ToString()]</FluentText>
+    <nav aria-label="@Text["Scope"]"><FluentStack Wrap="true" HorizontalGap="var(--spacingHorizontalL)">
+        <SectionLink Href="@Link(null)" Active="@(View is not ("import" or "decisions" or "dependencies" or "review"))">@Text["Populations"]</SectionLink>
+        <SectionLink Href="@Link("import")" Active="@(View == "import")">@Text["ImportAssistant"]</SectionLink>
+        <SectionLink Href="@Link("decisions")" Active="@(View == "decisions")">@Text["ScopeDecisions"]</SectionLink>
+        <SectionLink Href="@Link("dependencies")" Active="@(View == "dependencies")">@Text["Dependencies"]</SectionLink>
+        <SectionLink Href="@Link("review")" Active="@(View == "review")">@Text["DecisionRegister"]</SectionLink>
+    </FluentStack></nav>
+    @if (Error is not null) { <FluentMessageBar Intent="MessageBarIntent.Error" AllowDismiss="false">@Error</FluentMessageBar> }
+    @if (_message is not null) { <FluentMessageBar Intent="MessageBarIntent.Success" AllowDismiss="false">@_message</FluentMessageBar> }
     @if (_summary is { } summary)
     {
         <p>@Text["Populations"] : @summary.Populations</p>
@@ -27,11 +27,11 @@
     }
     @if (View == "decisions")
     {
-        <label>@Text["ScopeDecisionFilter"] <select value="@_filter" @onchange="ChangeFilter">
-            <option value="All">@Text["All"]</option>
-            @foreach (var value in Enum.GetValues<ScopeValue>()) { <option value="@value">@Text[$"ScopeDecision_{value}"]</option> }
-        </select></label>
-        <FluentTextInput Label="@Text["Search"]" @bind-Value="_search" />
+        <FluentSelect TOption="string" TValue="string" Label="@Text["ScopeDecisionFilter"]" Value="@_filter" ValueChanged="ChangeFilter">
+            <FluentOption TValue="string" Value="@("All")">@Text["All"]</FluentOption>
+            @foreach (var value in Enum.GetValues<ScopeValue>()) { <FluentOption TValue="string" Value="@(value.ToString())">@Text[$"ScopeDecision_{value}"]</FluentOption> }
+        </FluentSelect>
+        <FluentTextInput TextInputType="TextInputType.Search" Label="@Text["Search"]" @bind-Value="_search" />
         <ClarityGrid @key="(ProjectId, Side, _filter, _search, _revision)" TGridItem="ScopeObjectRow" Search="@_search"
                      Load="@((p, ct) => Scope.DecisionsAsync(ProjectId, Side, _filter, p, ct))">
             <Columns>@ObjectColumns</Columns>
@@ -50,17 +50,17 @@
     {
         @if (View == "import")
         {
-            <h3>@Text["ImportAssistant"]</h3>
+            <FluentText As="TextTag.H3" Size="TextSize.Size500" Weight="TextWeight.Semibold" Block="true">@Text["ImportAssistant"]</FluentText>
             <p>@Text["ImportAssistantHint"]</p>
             @if (_canQualify && _environments.Count != 0)
             {
-                <label>@Text["Environments"] <select @bind="_environment">@foreach (var e in _environments) { <option value="@e.Id">@e.ExternalId</option> }</select></label>
+                <FluentSelect TOption="ProjectEnvironment" TValue="Guid" Label="@Text["Environments"]" Items="_environments"
+                              OptionText="@(e => e.ExternalId)" OptionValue="@(e => e.Id)" @bind-Value="_environment" />
                 <FluentTextInput Label="@Text["Name"]" @bind-Value="_name" />
-                <label>@Text["ImportIdentifierLabel"] <select @bind="_identifier">
-                    @foreach (var value in Enum.GetValues<ImportIdentifier>()) { <option value="@value">@Text[$"ImportIdentifier_{value}"]</option> }
-                </select></label>
+                <FluentSelect TOption="ImportIdentifier" TValue="ImportIdentifier" Label="@Text["ImportIdentifierLabel"]" Items="@(Enum.GetValues<ImportIdentifier>())"
+                              OptionText="@(value => Text[$"ImportIdentifier_{value}"])" @bind-Value="_identifier" />
                 @TypeSelect
-                <label>@Text["ImportValues"] <textarea rows="8" @bind="_values" aria-describedby="import-hint"></textarea></label>
+                <FluentTextArea Label="@Text["ImportValues"]" Height="10em" @bind-Value="_values" aria-describedby="import-hint" />
                 <p id="import-hint">@Text["ImportValuesHint"]</p>
                 <FluentButton OnClick="ImportAsync" Disabled="@(Busy || string.IsNullOrWhiteSpace(_name) || string.IsNullOrWhiteSpace(_values))">@Text["ResolveList"]</FluentButton>
             }
@@ -69,31 +69,32 @@
         }
         else if (_canQualify && _environments.Count != 0)
         {
-            <details><summary>@Text["CreatePopulation"]</summary>
-                <label>@Text["Environments"] <select @bind="_environment">@foreach (var e in _environments) { <option value="@e.Id">@e.ExternalId</option> }</select></label>
+            <FluentAccordion><FluentAccordionItem Header="@Text["CreatePopulation"]">
+                <FluentSelect TOption="ProjectEnvironment" TValue="Guid" Label="@Text["Environments"]" Items="_environments"
+                              OptionText="@(e => e.ExternalId)" OptionValue="@(e => e.Id)" @bind-Value="_environment" />
                 <FluentTextInput Label="@Text["Name"]" @bind-Value="_name" />
-                <label>@Text["Kind"] <select @bind="_kind">
-                    @foreach (var kind in Enum.GetValues<PopulationKind>().Where(x => x != PopulationKind.ImportedList))
-                    { <option value="@kind">@Text[$"PopulationKind_{kind}"]</option> }
-                </select></label>
+                <FluentSelect TOption="PopulationKind" TValue="PopulationKind" Label="@Text["Kind"]" Items="@(Enum.GetValues<PopulationKind>().Where(x => x != PopulationKind.ImportedList))"
+                              OptionText="@(kind => Text[$"PopulationKind_{kind}"])" @bind-Value="_kind" />
                 @if (_kind == PopulationKind.Group)
                 {
                     <FluentTextInput Label="@Text["GroupSearch"]" @bind-Value="_groupSearch" />
                     <FluentButton OnClick="SearchGroupsAsync" Disabled="@Busy">@Text["SearchAction"]</FluentButton>
                     @if (_groups.Count != 0)
                     {
-                        <label>@Text["PopulationGroup"] <select @bind="_root"><option value="">—</option>
-                            @foreach (var g in _groups) { <option value="@g.ObjectId">@g.Label</option> }
-                        </select></label>
+                        <FluentSelect TOption="string" TValue="string" Label="@Text["PopulationGroup"]" @bind-Value="_root">
+                            <FluentOption TValue="string" Value="@string.Empty">—</FluentOption>
+                            @foreach (var g in _groups) { <FluentOption TValue="string" Value="@(g.ObjectId.ToString())">@g.Label</FluentOption> }
+                        </FluentSelect>
                     }
                 }
                 else { <FluentTextInput Label="@Text[$"PopulationCriterion_{_kind}"]" @bind-Value="_criterion" /> }
                 @TypeSelect
-                <label>@Text["Status"] <select @bind="_status"><option value="">@Text["All"]</option>
-                    @foreach (var status in Statuses) { <option value="@status">@Text[status]</option> }
-                </select></label>
+                <FluentSelect TOption="string" TValue="string" Label="@Text["Status"]" @bind-Value="_status">
+                    <FluentOption TValue="string" Value="@string.Empty">@Text["All"]</FluentOption>
+                    @foreach (var status in Statuses) { <FluentOption TValue="string" Value="@status">@Text[status]</FluentOption> }
+                </FluentSelect>
                 <FluentButton OnClick="CreateAsync" Disabled="@(Busy || string.IsNullOrWhiteSpace(_name))">@Text["CreatePopulation"]</FluentButton>
-            </details>
+            </FluentAccordionItem></FluentAccordion>
         }
         <ClarityGrid @key="(ProjectId, Side, _revision)" TGridItem="PopulationRow" Load="@((p, ct) => Scope.PopulationsAsync(ProjectId, Side, p, ct))">
             <Columns>
@@ -110,16 +111,17 @@
         </ClarityGrid>
         @if (_population is { } population)
         {
-            <article aria-label="@population.Name">
-                <h3>@population.Name · @Text[$"PopulationKind_{population.Kind}"]</h3>
+            <FluentCard aria-label="@population.Name">
+                <FluentText As="TextTag.H3" Size="TextSize.Size500" Weight="TextWeight.Semibold" Block="true">@population.Name · @Text[$"PopulationKind_{population.Kind}"]</FluentText>
                 <p>@Criterion(population) · @Text["PopulationMembers"] : @population.MemberCount · @population.EvaluatedAtUtc.ToString("u")</p>
                 @if (population.Kind == PopulationKind.ImportedList)
                 {
-                    <h4>@Text["ImportEntries"]</h4>
-                    <label>@Text["ImportResolutionFilter"] <select @bind="_resolution" @bind:after="Reload">
-                        <option value="All">@Text["All"]</option><option value="Unresolved">@Text["UnresolvedEntries"]</option>
-                        @foreach (var value in Enum.GetValues<ImportResolution>()) { <option value="@value">@Text[$"ImportResolution_{value}"]</option> }
-                    </select></label>
+                    <FluentText As="TextTag.H4" Size="TextSize.Size400" Weight="TextWeight.Semibold" Block="true">@Text["ImportEntries"]</FluentText>
+                    <FluentSelect TOption="string" TValue="string" Label="@Text["ImportResolutionFilter"]" @bind-Value="_resolution" @bind-Value:after="Reload">
+                        <FluentOption TValue="string" Value="@("All")">@Text["All"]</FluentOption>
+                        <FluentOption TValue="string" Value="@("Unresolved")">@Text["UnresolvedEntries"]</FluentOption>
+                        @foreach (var value in Enum.GetValues<ImportResolution>()) { <FluentOption TValue="string" Value="@(value.ToString())">@Text[$"ImportResolution_{value}"]</FluentOption> }
+                    </FluentSelect>
                     <ClarityGrid @key="(population.Id, _resolution, _revision)" TGridItem="ImportEntryRow"
                                  Load="@((p, ct) => Scope.EntriesAsync(ProjectId, population.Id, _resolution, p, ct))">
                         <Columns>
@@ -128,7 +130,7 @@
                             <TemplateColumn Title="@Text["Status"]" Context="e">@Text[$"ImportResolution_{e.Resolution}"]
                                 @if (e.CandidateCount > 1) { <small>@Text["Candidates"] : @e.CandidateCount</small> }</TemplateColumn>
                             <TemplateColumn Title="@Text["ObjectId"]" Context="e">
-                                @if (e.ObjectId is { } id) { <a href="@Sheet(id)">@(e.Label ?? id.ToString())</a> }
+                                @if (e.ObjectId is { } id) { <FluentLink Href="@Sheet(id)">@(e.Label ?? id.ToString())</FluentLink> }
                             </TemplateColumn>
                             <TemplateColumn Title="@Text["Actions"]" Context="e">
                                 @if (_canQualify && e.Resolution is ImportResolution.Ambiguous or ImportResolution.Chosen)
@@ -146,16 +148,16 @@
                         </DetailPanel>
                     }
                 }
-                <h4>@Text["PopulationMembers"]</h4>
-                <FluentTextInput Label="@Text["Search"]" @bind-Value="_search" />
+                <FluentText As="TextTag.H4" Size="TextSize.Size400" Weight="TextWeight.Semibold" Block="true">@Text["PopulationMembers"]</FluentText>
+                <FluentTextInput TextInputType="TextInputType.Search" Label="@Text["Search"]" @bind-Value="_search" />
                 <ClarityGrid @key="(population.Id, _search, _revision)" TGridItem="ScopeObjectRow" Search="@_search"
                              Load="@((p, ct) => Scope.MembersAsync(ProjectId, population.Id, p, ct))">
                     <Columns>
                         @if (_canQualify)
                         {
                             <TemplateColumn Title="@Text["SelectObject"]" Context="r">
-                                <input type="checkbox" aria-label="@($"{Text["SelectObject"]} : {r.DisplayName ?? r.ObjectId.ToString()}")" disabled="@Busy"
-                                       checked="@_selected.Contains(r.ObjectId)" @onchange="e => Select(r.ObjectId, e.Value is true)" />
+                                <FluentCheckbox AriaLabel="@($"{Text["SelectObject"]} : {r.DisplayName ?? r.ObjectId.ToString()}")" Disabled="@Busy"
+                        Value="@_selected.Contains(r.ObjectId)" ValueChanged="@(selected => Select(r.ObjectId, selected))" />
                             </TemplateColumn>
                         }
                         @ObjectColumns
@@ -164,24 +166,24 @@
                 </ClarityGrid>
                 @if (_canQualify)
                 {
-                    <fieldset><legend>@Text["BatchDecision"]</legend>
-                        <label>@Text["ScopeDecisionValue"] <select @bind="_value" @bind:after="ResetBatch">
-                            @foreach (var value in Enum.GetValues<ScopeValue>()) { <option value="@value">@Text[$"ScopeDecision_{value}"]</option> }
-                        </select></label>
+                    <FluentCard role="group" aria-label="@Text["BatchDecision"]">
+                        <FluentText As="TextTag.H4" Size="TextSize.Size400" Weight="TextWeight.Semibold">@Text["BatchDecision"]</FluentText>
+                        <FluentSelect TOption="ScopeValue" TValue="ScopeValue" Label="@Text["ScopeDecisionValue"]" Items="@(Enum.GetValues<ScopeValue>())"
+                                      OptionText="@(value => Text[$"ScopeDecision_{value}"])" @bind-Value="_value" @bind-Value:after="ResetBatch" />
                         <FluentTextInput Label="@Text["MigrationWave"]" @bind-Value="_wave" @bind-Value:after="ResetBatch" />
                         <FluentTextInput Label="@Text["Justification"]" @bind-Value="_reason" />
                         <FluentButton OnClick="@(() => PreviewAsync(true))" Disabled="@(Busy || population.MemberCount == 0)">@Text["PreviewPopulationDecision"]</FluentButton>
                         <FluentButton OnClick="@(() => PreviewAsync(false))" Disabled="@(Busy || _selected.Count == 0)">@Text["PreviewSelectionDecision"] (@_selected.Count)</FluentButton>
                         @if (_preview is { } preview)
                         {
-                            <p role="status">@Text["AffectedObjects"] : @preview.Result.Affected · @Text["UnchangedObjects"] : @preview.Result.Unchanged · @Text[$"ScopeDecision_{preview.Batch.Value}"]
+                            <FluentMessageBar Intent="MessageBarIntent.Info" AllowDismiss="false">@Text["AffectedObjects"] : @preview.Result.Affected · @Text["UnchangedObjects"] : @preview.Result.Unchanged · @Text[$"ScopeDecision_{preview.Batch.Value}"]
                                 @if (preview.Batch.Wave is { Length: > 0 } wave) { <span> · @Text["MigrationWave"] : @wave</span> }
-                                @if (preview.Result.Reconfirmed != 0) { <span> · @Text["ReconfirmedObjects"] : @preview.Result.Reconfirmed</span> }</p>
+                                @if (preview.Result.Reconfirmed != 0) { <span> · @Text["ReconfirmedObjects"] : @preview.Result.Reconfirmed</span> }</FluentMessageBar>
                             <FluentButton OnClick="ApplyAsync" Disabled="@(Busy || preview.Result.Affected == 0 || string.IsNullOrWhiteSpace(_reason))">@Text["ConfirmDecisions"]</FluentButton>
                         }
-                    </fieldset>
+                    </FluentCard>
                 }
-            </article>
+            </FluentCard>
         }
     }
 </section>
@@ -225,12 +227,12 @@
     private bool _canQualify;
     private int _revision;
 
-    private RenderFragment TypeSelect => @<label>@Text["ObjectType"] <select @bind="_type"><option value="">@Text["All"]</option>
-        @foreach (var type in Types) { <option value="@type">@Text[$"ObjectType_{type}"]</option> }
-    </select></label>;
+    private RenderFragment TypeSelect => @<FluentSelect TOption="string" TValue="string" Label="@Text["ObjectType"]" @bind-Value="_type"><FluentOption TValue="string" Value="@string.Empty">@Text["All"]</FluentOption>
+        @foreach (var type in Types) { <FluentOption TValue="string" Value="@type">@Text[$"ObjectType_{type}"]</FluentOption> }
+    </FluentSelect>;
 
     private RenderFragment ObjectColumns => @<text>
-        <TemplateColumn Title="@Text["Name"]" TGridItem="ScopeObjectRow" Context="r"><a href="@Sheet(r.ObjectId)">@(r.DisplayName ?? r.ObjectId.ToString())</a>
+        <TemplateColumn Title="@Text["Name"]" TGridItem="ScopeObjectRow" Context="r"><FluentLink Href="@Sheet(r.ObjectId)">@(r.DisplayName ?? r.ObjectId.ToString())</FluentLink>
             <small>@r.Upn · @Text[$"ObjectType_{r.Type}"] · @Text[r.Presence.ToString()]</small></TemplateColumn>
         <TemplateColumn Title="@Text["ScopeDecisionValue"]" TGridItem="ScopeObjectRow" Context="r">
             @if (r.Value is { } value)
@@ -261,7 +263,7 @@
         ? Text[$"ImportIdentifier_{row.Identifier}"].Value
         : string.Join(" · ", new[] { row.Criterion, row.ObjectType is null ? null : Text[$"ObjectType_{row.ObjectType}"].Value,
             row.Status is null ? null : Text[row.Status].Value }.Where(x => !string.IsNullOrEmpty(x)));
-    private void ChangeFilter(ChangeEventArgs e) { _filter = e.Value?.ToString() ?? "All"; _revision++; }
+    private void ChangeFilter(string value) { _filter = value; _revision++; }
     private void Reload() => _revision++;
     private void Open(PopulationRow row) { _population = row; _entry = null; _selected.Clear(); ResetBatch(); _resolution = "All"; }
     private void Select(Guid id, bool select)

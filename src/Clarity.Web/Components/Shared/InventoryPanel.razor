@@ -7,37 +7,35 @@
 @inject NavigationManager Navigation
 
 <section aria-label="@Text["Inventory"]">
-    <h2>@Text["Inventory"] · @Text[Side.ToString()]</h2>
-    @if (Error is not null) { <p role="alert" class="error">@Error</p> }
-    <form class="toolbar" @onsubmit="Apply" @onsubmit:preventDefault>
-        <FluentTextInput Label="@Text["InventorySearch"]" @bind-Value="_search" />
-        <label>@Text["CollectionEnvironment"]
-            <select @bind="_environment"><option value="">@Text["All"]</option>
-                @foreach (var e in _environments) { <option value="@e.Id">@e.ExternalId</option> }
-            </select>
-        </label>
-        <label>@Text["ObjectType"]
-            <select @bind="_type"><option value="">@Text["All"]</option>
-                @foreach (var t in _options.Types) { <option value="@t">@TypeName(t)</option> }
-            </select>
-        </label>
+    <FluentText As="TextTag.H2" Size="TextSize.Size600" Weight="TextWeight.Semibold" Block="true">@Text["Inventory"] · @Text[Side.ToString()]</FluentText>
+    @if (Error is not null) { <FluentMessageBar Intent="MessageBarIntent.Error" AllowDismiss="false">@Error</FluentMessageBar> }
+    <form class="filter-form" @onsubmit="Apply" @onsubmit:preventDefault>
+        <FluentTextInput TextInputType="TextInputType.Search" Label="@Text["InventorySearch"]" @bind-Value="_search" />
+        <FluentSelect TOption="string" TValue="string" Label="@Text["CollectionEnvironment"]" @bind-Value="_environment">
+            <FluentOption TValue="string" Value="@string.Empty">@Text["All"]</FluentOption>
+            @foreach (var e in _environments) { <FluentOption TValue="string" Value="@(e.Id.ToString())">@e.ExternalId</FluentOption> }
+        </FluentSelect>
+        <FluentSelect TOption="string" TValue="string" Label="@Text["ObjectType"]" @bind-Value="_type">
+            <FluentOption TValue="string" Value="@string.Empty">@Text["All"]</FluentOption>
+            @foreach (var t in _options.Types) { <FluentOption TValue="string" Value="@t">@TypeName(t)</FluentOption> }
+        </FluentSelect>
         <FluentTextInput Label="@Text["Domain"]" @bind-Value="_domain" />
         <FluentTextInput Label="@Text["Site"]" @bind-Value="_site" />
-        <label>@Text["Status"]<select @bind="_status"><option value="">@Text["All"]</option>
-            @foreach (var s in Statuses) { <option value="@s">@Text[s]</option> }
-        </select></label>
-        <label>@Text["CollectionFilter"]<input list="inventory-runs" @bind="_run" />
-            <datalist id="inventory-runs">@foreach (var r in _options.RecentRuns) { <option value="@r.Id">@r.Date.ToString("g") · @r.Producer</option> }</datalist>
-        </label>
+        <FluentSelect TOption="string" TValue="string" Label="@Text["Status"]" @bind-Value="_status">
+            <FluentOption TValue="string" Value="@string.Empty">@Text["All"]</FluentOption>
+            @foreach (var s in Statuses) { <FluentOption TValue="string" Value="@s">@Text[s]</FluentOption> }
+        </FluentSelect>
+        <FluentTextInput Label="@Text["CollectionFilter"]" DataList="inventory-runs" @bind-Value="_run" />
+        <datalist id="inventory-runs">@foreach (var r in _options.RecentRuns) { <option value="@r.Id">@r.Date.ToString("g") · @r.Producer</option> }</datalist>
         <FluentButton Type="ButtonType.Submit" Appearance="ButtonAppearance.Primary">@Text["SearchAction"]</FluentButton>
     </form>
     @if (_filter is not null)
     {
         @if (Population == true || Unresolved == true || Conflicts == true || Volume != null || SectionId.HasValue)
         {
-            <p class="notice">@Text[Population == true ? "ObservedPopulation" : Unresolved == true ? "ObjectsWithPendingLinks" :
+            <FluentMessageBar Intent="MessageBarIntent.Info" AllowDismiss="false">@Text[Population == true ? "ObservedPopulation" : Unresolved == true ? "ObjectsWithPendingLinks" :
                 Conflicts == true ? "ConflictingObjects" : Volume ?? "SectionObjects"] ·
-                <a href="@($"/projects/{ProjectId}/inventory?side={Side}")">@Text["ClearFilters"]</a></p>
+                <FluentLink Href="@($"/projects/{ProjectId}/inventory?side={Side}")">@Text["ClearFilters"]</FluentLink></FluentMessageBar>
         }
         <ClarityGrid TGridItem="InventoryRow" @key="(_filter, _appliedSearch, _revision)" Load="LoadAsync" Search="@_appliedSearch">
             <Columns>
@@ -68,11 +66,11 @@
                 }
                 <PropertyColumn Property="@(r => r.LastObservedAtUtc)" Title="@Text["LastValidObservation"]" Sortable="true" />
                 <TemplateColumn Title="@Text["Actions"]" Context="r">
-                    <a href="@Navigation.GetUriWithQueryParameter("object", r.Id)">@Text["ObjectSheet"]</a>
+                    <FluentLink Href="@Navigation.GetUriWithQueryParameter("object", r.Id)">@Text["ObjectSheet"]</FluentLink>
                     @if (r.PresenceSectionId.HasValue) { <FluentButton OnClick="@(() => _proof = new(ProofKind.Section, r.PresenceSectionId.Value))">@Text["Provenance"]</FluentButton> }
                 </TemplateColumn>
             </Columns>
-            <EmptyContent><p>@Text["NoResults"] <a href="@($"/projects/{ProjectId}/discovery?side={Side}")">@Text["ViewCollections"]</a></p></EmptyContent>
+            <EmptyContent><p>@Text["NoResults"] <FluentLink Href="@($"/projects/{ProjectId}/discovery?side={Side}")">@Text["ViewCollections"]</FluentLink></p></EmptyContent>
         </ClarityGrid>
         @if (_canRebuild && _filter.Environment.HasValue)
         {

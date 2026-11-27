@@ -7,33 +7,41 @@
 @inject WorkspaceAuthorization Authorization
 @inject DiscoveryAvailability Availability
 
-<h2>@Text["Exports"] · @Text[Side.ToString()]</h2>
+<FluentText As="TextTag.H2" Size="TextSize.Size600" Weight="TextWeight.Semibold" Block="true">@Text["Exports"] · @Text[Side.ToString()]</FluentText>
 <p>@Text["ExportHint"]</p>
-@if (Error is not null) { <p class="error" role="alert">@Error</p> }
-@if (_message is not null) { <p role="status">@_message</p> }
-@if (!Availability.Storage) { <p class="notice">@Text["StorageRequired"]</p> }
-else if (!_canExport) { <p class="notice">@Text["ExportReadOnlyHint"]</p> }
+@if (Error is not null) { <FluentMessageBar Intent="MessageBarIntent.Error" AllowDismiss="false">@Error</FluentMessageBar> }
+@if (_message is not null) { <FluentMessageBar Intent="MessageBarIntent.Success" AllowDismiss="false">@_message</FluentMessageBar> }
+@if (!Availability.Storage) { <FluentMessageBar Intent="MessageBarIntent.Info" AllowDismiss="false">@Text["StorageRequired"]</FluentMessageBar> }
+else if (!_canExport) { <FluentMessageBar Intent="MessageBarIntent.Info" AllowDismiss="false">@Text["ExportReadOnlyHint"]</FluentMessageBar> }
 else
 {
     <section aria-label="@Text["NewExport"]">
-        <h3>@Text["NewExport"]</h3>
-        <label>@Text["Environments"] <select @bind="_environment"><option value="">@Text["All"]</option>
-            @foreach (var e in _environments) { <option value="@e.Id">@e.ExternalId</option> }</select></label>
-        <label>@Text["ObjectType"] <select @bind="_type"><option value="">@Text["All"]</option>
-            @foreach (var t in _types) { <option value="@t">@TypeName(t)</option> }</select></label>
-        <label>@Text["Status"] <select @bind="_status"><option value="">@Text["All"]</option>
-            @foreach (var s in Statuses) { <option value="@s">@Text[s]</option> }</select></label>
-        <label>@Text["ScopeDecisionValue"] <select @bind="_decision">
-            @foreach (var d in Enum.GetValues<ExportDecisionFilter>()) { <option value="@d">@DecisionName(d)</option> }</select></label>
+        <FluentText As="TextTag.H3" Size="TextSize.Size500" Weight="TextWeight.Semibold" Block="true">@Text["NewExport"]</FluentText>
+        <FluentSelect TOption="string" TValue="string" Label="@Text["Environments"]" @bind-Value="_environment">
+            <FluentOption TValue="string" Value="@string.Empty">@Text["All"]</FluentOption>
+            @foreach (var e in _environments) { <FluentOption TValue="string" Value="@(e.Id.ToString())">@e.ExternalId</FluentOption> }
+        </FluentSelect>
+        <FluentSelect TOption="string" TValue="string" Label="@Text["ObjectType"]" @bind-Value="_type">
+            <FluentOption TValue="string" Value="@string.Empty">@Text["All"]</FluentOption>
+            @foreach (var t in _types) { <FluentOption TValue="string" Value="@t">@TypeName(t)</FluentOption> }
+        </FluentSelect>
+        <FluentSelect TOption="string" TValue="string" Label="@Text["Status"]" @bind-Value="_status">
+            <FluentOption TValue="string" Value="@string.Empty">@Text["All"]</FluentOption>
+            @foreach (var s in Statuses) { <FluentOption TValue="string" Value="@s">@Text[s]</FluentOption> }
+        </FluentSelect>
+        <FluentSelect TOption="ExportDecisionFilter" TValue="ExportDecisionFilter" Label="@Text["ScopeDecisionValue"]" Items="@(Enum.GetValues<ExportDecisionFilter>())"
+                      OptionText="@(d => DecisionName(d))" @bind-Value="_decision" />
         <FluentTextInput Label="@Text["ExportWave"]" @bind-Value="_wave" />
-        <label>@Text["ExportPopulation"] <select @bind="_population"><option value="">@Text["All"]</option>
-            @foreach (var p in _populations) { <option value="@p.Id">@p.Name · @p.Environment</option> }</select></label>
+        <FluentSelect TOption="string" TValue="string" Label="@Text["ExportPopulation"]" @bind-Value="_population">
+            <FluentOption TValue="string" Value="@string.Empty">@Text["All"]</FluentOption>
+            @foreach (var p in _populations) { <FluentOption TValue="string" Value="@(p.Id.ToString())">@p.Name · @p.Environment</FluentOption> }
+        </FluentSelect>
         <p>@Text["ExportSelectionHint"]</p>
         <FluentButton Appearance="ButtonAppearance.Primary" OnClick="LaunchAsync" Disabled="@Busy">@Text["LaunchExport"]</FluentButton>
     </section>
 }
-<div class="section-heading"><h3>@Text["ExportHistory"]</h3>
-    <FluentButton OnClick="@(() => _revision++)">@Text["ExportRefresh"]</FluentButton></div>
+<FluentStack Wrap="true" VerticalAlignment="VerticalAlignment.Center" HorizontalGap="var(--spacingHorizontalM)"><FluentText As="TextTag.H3" Size="TextSize.Size500" Weight="TextWeight.Semibold" Block="true">@Text["ExportHistory"]</FluentText>
+    <FluentButton OnClick="@(() => _revision++)">@Text["ExportRefresh"]</FluentButton></FluentStack>
 <ClarityGrid @key="(ProjectId, Side, _revision)" TGridItem="ExportRow" Load="@((p, ct) => Exports.PageAsync(ProjectId, Side, p, ct))">
     <Columns>
         <TemplateColumn Title="@Text["ExportAsOf"]" Context="r">@r.AsOfUtc.ToString("u")
@@ -47,7 +55,7 @@ else
             {
                 <span>@Text["ExportObjects"] : @objects.ToString("N0") · @Text["ExportExceptions"] : @(r.ExceptionCount?.ToString("N0"))
                     · @Text["ExportMappings"] : @(r.MappingCount?.ToString("N0"))</span>
-                @if (r.CoverageGaps is > 0) { <p class="notice">@Text["ExportCoverageGaps"] : @r.CoverageGaps</p> }
+                @if (r.CoverageGaps is > 0) { <FluentMessageBar Intent="MessageBarIntent.Info" AllowDismiss="false">@Text["ExportCoverageGaps"] : @r.CoverageGaps</FluentMessageBar> }
             }
             <small>@Text["ExportSelectionHash"] <code>@r.SelectionHash[..12]</code></small></TemplateColumn>
         <TemplateColumn Title="@Text["ExportFiles"]" Context="r">
@@ -55,7 +63,7 @@ else
             <ul aria-label="@Text["ExportFiles"]">
                 @foreach (var a in r.Artifacts)
                 {
-                    <li><a href="@($"/api/projects/{ProjectId}/exports/{r.Id}/artifacts/{a.Id}")" download>@Text[$"ExportArtifact_{a.Kind}"]</a>
+                    <li><FluentLink Href="@($"/api/projects/{ProjectId}/exports/{r.Id}/artifacts/{a.Id}")" download ForceLoad="true">@Text[$"ExportArtifact_{a.Kind}"]</FluentLink>
                         <small>@a.FileName · @a.RowCount.ToString("N0") @Text["ExportRows"] · @Size(a.Bytes) · SHA-256 @a.ContentHash[..12]</small></li>
                 }
             </ul></TemplateColumn>

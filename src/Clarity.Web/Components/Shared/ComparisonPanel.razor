@@ -6,47 +6,50 @@
 @inject WorkspaceAuthorization Authorization
 
 <section aria-label="@Text["Comparison"]">
-    <h2>@Text["Comparison"] · @Text[Side.ToString()]</h2>
-    <nav class="toolbar" aria-label="@Text["Comparison"]">
-        <a href="@Link(null)">@Text["ComparisonRuns"]</a>
-        <a href="@Link("target")">@Text["SourceTargetComparison"]</a>
-    </nav>
+    <FluentText As="TextTag.H2" Size="TextSize.Size600" Weight="TextWeight.Semibold" Block="true">@Text["Comparison"] · @Text[Side.ToString()]</FluentText>
+    <nav aria-label="@Text["Comparison"]"><FluentStack Wrap="true" HorizontalGap="var(--spacingHorizontalL)">
+        <SectionLink Href="@Link(null)" Active="@(View != "target")">@Text["ComparisonRuns"]</SectionLink>
+        <SectionLink Href="@Link("target")" Active="@(View == "target")">@Text["SourceTargetComparison"]</SectionLink>
+    </FluentStack></nav>
     @if (View == "target")
     {
         <TargetComparisonPanel ProjectId="ProjectId" />
     }
     else
     {
-    @if (Error is not null) { <p class="error" role="alert">@Error</p> }
-    @if (_message is not null) { <p role="status">@_message</p> }
-    <h3>@Text["ComparisonRuns"]</h3>
+    @if (Error is not null) { <FluentMessageBar Intent="MessageBarIntent.Error" AllowDismiss="false">@Error</FluentMessageBar> }
+    @if (_message is not null) { <FluentMessageBar Intent="MessageBarIntent.Success" AllowDismiss="false">@_message</FluentMessageBar> }
+    <FluentText As="TextTag.H3" Size="TextSize.Size500" Weight="TextWeight.Semibold" Block="true">@Text["ComparisonRuns"]</FluentText>
     <p>@Text["ComparisonRunsHint"]</p>
     @if (_canQualify && _environments.Count != 0)
     {
-        <fieldset><legend>@Text["CompareRuns"]</legend>
-            <label>@Text["Environments"] <select @bind="_environment" @bind:after="LoadRunsAsync">
-                @foreach (var e in _environments) { <option value="@e.Id">@e.ExternalId</option> }</select></label>
+        <FluentCard role="group" aria-label="@Text["CompareRuns"]">
+            <FluentText As="TextTag.H4" Size="TextSize.Size400" Weight="TextWeight.Semibold">@Text["CompareRuns"]</FluentText>
+            <FluentSelect TOption="ProjectEnvironment" TValue="Guid" Label="@Text["Environments"]" Items="_environments"
+                          OptionText="@(e => e.ExternalId)" OptionValue="@(e => e.Id)" @bind-Value="_environment" @bind-Value:after="LoadRunsAsync" />
             @if (_runs.Count < 2) { <p>@Text["NoComparableRuns"]</p> }
             else
             {
-                <label>@Text["BaselineRun"] <select @bind="_baseline">@foreach (var r in _runs) { <option value="@r.Id">@RunLabel(r)</option> }</select></label>
-                <label>@Text["LaterRun"] <select @bind="_later">@foreach (var r in _runs) { <option value="@r.Id">@RunLabel(r)</option> }</select></label>
+                <FluentSelect TOption="ComparableRun" TValue="Guid" Label="@Text["BaselineRun"]" Items="_runs"
+                              OptionText="@(r => RunLabel(r))" OptionValue="@(r => r.Id)" @bind-Value="_baseline" />
+                <FluentSelect TOption="ComparableRun" TValue="Guid" Label="@Text["LaterRun"]" Items="_runs"
+                              OptionText="@(r => RunLabel(r))" OptionValue="@(r => r.Id)" @bind-Value="_later" />
                 <FluentButton OnClick="CompareAsync" Disabled="@Busy">@Text["CompareAction"]</FluentButton>
             }
-        </fieldset>
+        </FluentCard>
     }
     else if (!_canQualify) { <p>@Text["ScopeReadOnly"]</p> }
     @if (_comparisons.Count == 0) { <p>@Text["NoComparison"]</p> }
     else
     {
-        <label>@Text["Comparison"] <select value="@_selected?.Id" @onchange="Choose">
+        <FluentSelect TOption="Guid?" TValue="Guid?" Label="@Text["Comparison"]" Value="@_selected?.Id" ValueChanged="Choose">
             @foreach (var c in _comparisons)
-            { <option value="@c.Id">@c.Environment · @c.BaselineStartedAtUtc.ToString("u") → @c.LaterStartedAtUtc.ToString("u")</option> }
-        </select></label>
+            { <FluentOption TValue="Guid?" Value="@c.Id">@c.Environment · @c.BaselineStartedAtUtc.ToString("u") → @c.LaterStartedAtUtc.ToString("u")</FluentOption> }
+        </FluentSelect>
     }
     @if (_selected is { } comparison)
     {
-        <article aria-label="@Text["ComparisonTotals"]">
+        <FluentCard aria-label="@Text["ComparisonTotals"]">
             <p>@comparison.Environment · @Text["BaselineRun"] : @comparison.BaselineStartedAtUtc.ToString("u") · @Text["LaterRun"] : @comparison.LaterStartedAtUtc.ToString("u")
                 · @comparison.ComputedAtUtc.ToString("u") · @Text["SsoAuthor"] : @comparison.ActorObjectId</p>
             <ul aria-label="@Text["ComparisonTotals"]">
@@ -55,34 +58,26 @@
                     · @Text["RelationsUnknown"] : @comparison.RelationsUnknown.ToString("N0")</li>
             </ul>
             <p>@Text["ComparisonRemovalHint"]</p>
-            <table aria-label="@Text["ComparisonUnits"]">
-                <thead><tr><th>@Text["Sections"]</th><th>@Text["Scope"]</th><th>@Text["ComparisonStatus"]</th><th>@Text["Coverage"]</th>
-                    <th>@Text["ComparedObjects"]</th><th>@Text["ComparedRelations"]</th></tr></thead>
-                <tbody>
-                    @foreach (var unit in comparison.Units)
-                    {
-                        <tr>
-                            <td>@unit.CapabilityId</td>
-                            <td>@unit.ScopeKind · @unit.ScopeValue</td>
-                            <td>@Text[$"UnitComparison_{unit.Comparison}"]</td>
-                            <td>@Coverage(unit.BaselineCoverage) → @Coverage(unit.LaterCoverage)</td>
-                            <td>@unit.BaselineObjects.ToString("N0") → @unit.LaterObjects.ToString("N0")</td>
-                            <td>+@unit.RelationsAdded · −@unit.RelationsRemoved · ?@unit.RelationsUnknown</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-            <h3>@Text["ComparisonChanges"]</h3>
-            <label>@Text["ComparisonChange"] <select @bind="_change" @bind:after="Reload"><option value="">@Text["All"]</option>
+            <FluentDataGrid TGridItem="ComparisonUnit" Items="@(comparison.Units.AsQueryable())" aria-label="@Text["ComparisonUnits"]">
+                <TemplateColumn Title="@Text["Sections"]" Context="unit">@unit.CapabilityId</TemplateColumn>
+                <TemplateColumn Title="@Text["Scope"]" Context="unit">@unit.ScopeKind · @unit.ScopeValue</TemplateColumn>
+                <TemplateColumn Title="@Text["ComparisonStatus"]" Context="unit">@Text[$"UnitComparison_{unit.Comparison}"]</TemplateColumn>
+                <TemplateColumn Title="@Text["Coverage"]" Context="unit">@Coverage(unit.BaselineCoverage) → @Coverage(unit.LaterCoverage)</TemplateColumn>
+                <TemplateColumn Title="@Text["ComparedObjects"]" Context="unit">@unit.BaselineObjects.ToString("N0") → @unit.LaterObjects.ToString("N0")</TemplateColumn>
+                <TemplateColumn Title="@Text["ComparedRelations"]" Context="unit">+@unit.RelationsAdded · −@unit.RelationsRemoved · ?@unit.RelationsUnknown</TemplateColumn>
+            </FluentDataGrid>
+            <FluentText As="TextTag.H3" Size="TextSize.Size500" Weight="TextWeight.Semibold" Block="true">@Text["ComparisonChanges"]</FluentText>
+            <FluentSelect TOption="string" TValue="string" Label="@Text["ComparisonChange"]" @bind-Value="_change" @bind-Value:after="Reload">
+                <FluentOption TValue="string" Value="@string.Empty">@Text["All"]</FluentOption>
                 @foreach (var change in Enum.GetValues<RunChange>().Where(c => c != RunChange.Unchanged))
-                { <option value="@change">@Text[$"RunChange_{change}"]</option> }
-            </select></label>
-            <label><input type="checkbox" @bind="_reviewOnly" @bind:after="Reload" /> @Text["ReviewOnly"]</label>
-            <FluentTextInput Label="@Text["Search"]" @bind-Value="_search" />
+                { <FluentOption TValue="string" Value="@(change.ToString())">@Text[$"RunChange_{change}"]</FluentOption> }
+            </FluentSelect>
+            <FluentCheckbox @bind-Value="_reviewOnly" @bind-Value:after="Reload" Label="@Text["ReviewOnly"]" />
+            <FluentTextInput TextInputType="TextInputType.Search" Label="@Text["Search"]" @bind-Value="_search" />
             <ClarityGrid @key="(comparison.Id, _change, _reviewOnly, _search, _revision)" TGridItem="ComparisonItemRow" Search="@_search"
                          Load="@((p, ct) => Comparisons.ItemsAsync(ProjectId, comparison.Id, Change, _reviewOnly, p, ct))">
                 <Columns>
-                    <TemplateColumn Title="@Text["Name"]" Context="r"><a href="@Sheet(r.ObjectId)">@(r.DisplayName ?? r.ObjectId.ToString())</a>
+                    <TemplateColumn Title="@Text["Name"]" Context="r"><FluentLink Href="@Sheet(r.ObjectId)">@(r.DisplayName ?? r.ObjectId.ToString())</FluentLink>
                         <small>@Text[$"ObjectType_{r.Type}"]</small></TemplateColumn>
                     <TemplateColumn Title="@Text["ComparisonChange"]" Context="r">@Text[$"RunChange_{r.Change}"]
                         @if (r.Tombstone) { <small>@Text["SourceTombstone"]</small> }</TemplateColumn>
@@ -96,13 +91,13 @@
                 </Columns>
                 <EmptyContent><p>@Text["NoComparisonItems"]</p></EmptyContent>
             </ClarityGrid>
-            <h3>@Text["DecisionsToReview"]</h3>
+            <FluentText As="TextTag.H3" Size="TextSize.Size500" Weight="TextWeight.Semibold" Block="true">@Text["DecisionsToReview"]</FluentText>
             <p>@Text["DecisionsToReviewHint"]</p>
             <ClarityGrid @key="(comparison.Id, _revision)" TGridItem="ComparisonDecisionRow"
                          Load="@((p, ct) => Comparisons.DecisionsAsync(ProjectId, comparison.Id, p, ct))">
                 <Columns>
                     <TemplateColumn Title="@Text["DecisionKind"]" Context="r">@Text[$"DecisionKind_{r.Kind}"]</TemplateColumn>
-                    <TemplateColumn Title="@Text["Name"]" Context="r"><a href="@Sheet(r.ObjectId)">@(r.DisplayName ?? r.ObjectId.ToString())</a>
+                    <TemplateColumn Title="@Text["Name"]" Context="r"><FluentLink Href="@Sheet(r.ObjectId)">@(r.DisplayName ?? r.ObjectId.ToString())</FluentLink>
                         <small>@Text[$"ObjectType_{r.Type}"]</small></TemplateColumn>
                     <TemplateColumn Title="@Text["CurrentDecision"]" Context="r">@Text[r.Label]
                         @if (r.Detail is { } detail) { <small>@(r.Kind == DecisionKind.Mapping ? Text[detail].Value : detail)</small> }</TemplateColumn>
@@ -110,20 +105,18 @@
                 </Columns>
                 <EmptyContent><p>@Text["NoDecisionToReview"]</p></EmptyContent>
             </ClarityGrid>
-        </article>
+        </FluentCard>
     }
     }
 </section>
 @if (_detail is { } item)
 {
     <DetailPanel Title="@($"{Text["ChangeDetails"]} · {item.DisplayName ?? item.ObjectId.ToString()}")" Error="@Error" Close="@(() => _detail = null)">
-        <table aria-label="@Text["ChangeDetails"]">
-            <thead><tr><th>@Text["Field"]</th><th>@Text["ValueBefore"]</th><th>@Text["ValueAfter"]</th></tr></thead>
-            <tbody>
-                @foreach (var change in item.Changes)
-                { <tr><td>@change.Field</td><td>@(change.Before ?? Text["NotCollected"].Value)</td><td>@(change.After ?? Text["NotCollected"].Value)</td></tr> }
-            </tbody>
-        </table>
+        <FluentDataGrid TGridItem="FieldChange" Items="@(item.Changes.AsQueryable())" aria-label="@Text["ChangeDetails"]">
+            <TemplateColumn Title="@Text["Field"]" Context="change">@change.Field</TemplateColumn>
+            <TemplateColumn Title="@Text["ValueBefore"]" Context="change">@(change.Before ?? Text["NotCollected"].Value)</TemplateColumn>
+            <TemplateColumn Title="@Text["ValueAfter"]" Context="change">@(change.After ?? Text["NotCollected"].Value)</TemplateColumn>
+        </FluentDataGrid>
         @if (item.Changes.Count < item.ChangedFields.Split(", ").Length) { <p>@Text["FieldsTruncated"]</p> }
     </DetailPanel>
 }
@@ -171,9 +164,9 @@
         _ => c.Unchanged
     };
     private void Reload() => _revision++;
-    private void Choose(ChangeEventArgs e)
+    private void Choose(Guid? id)
     {
-        _selected = _comparisons.FirstOrDefault(c => c.Id.ToString() == e.Value?.ToString()) ?? _selected;
+        _selected = _comparisons.FirstOrDefault(c => c.Id == id) ?? _selected;
         _detail = null; _revision++;
     }
 

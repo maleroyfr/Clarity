@@ -60,5 +60,5 @@ Fluent UI v5 owns inputs, buttons, providers and data grids. `ClarityGrid` forwa
 paging, search and the exposed name sort to SQL-backed services, with a localized
 paginator and explicit empty/error/loading states. Later lots can extend the
 sort contract when adding new sortable fields. Detail panels receive focus and
-support Escape. The selected project tab uses a conventional bottom underline
-(not an accent border on a rounded card); notices use thin neutral outlines.
+support Escape. Project tabs and message bars use the library's active theme;
+see [local development](local-development.md) for the Fluent component conventions.

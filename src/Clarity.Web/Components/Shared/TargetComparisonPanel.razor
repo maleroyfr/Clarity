@@ -6,69 +6,65 @@
 @inject WorkspaceAuthorization Authorization
 
 <section aria-label="@Text["SourceTargetComparison"]">
-    <h3>@Text["SourceTargetComparison"]</h3>
+    <FluentText As="TextTag.H3" Size="TextSize.Size500" Weight="TextWeight.Semibold" Block="true">@Text["SourceTargetComparison"]</FluentText>
     <p>@Text["SourceTargetHint"]</p>
-    @if (Error is not null) { <p class="error" role="alert">@Error</p> }
-    @if (_message is not null) { <p role="status">@_message</p> }
-    <h4>@Text["TargetMappingRules"]</h4>
+    @if (Error is not null) { <FluentMessageBar Intent="MessageBarIntent.Error" AllowDismiss="false">@Error</FluentMessageBar> }
+    @if (_message is not null) { <FluentMessageBar Intent="MessageBarIntent.Success" AllowDismiss="false">@_message</FluentMessageBar> }
+    <FluentText As="TextTag.H4" Size="TextSize.Size400" Weight="TextWeight.Semibold" Block="true">@Text["TargetMappingRules"]</FluentText>
     <p>@Text["TargetMappingRulesHint"]</p>
-    <label><input type="checkbox" @bind="_includeRetired" @bind:after="LoadRulesAsync" /> @Text["ShowRetiredRules"]</label>
+    <FluentCheckbox @bind-Value="_includeRetired" @bind-Value:after="LoadRulesAsync" Label="@Text["ShowRetiredRules"]" />
     @if (_rules.Count == 0) { <p>@Text["NoTargetMappingRule"]</p> }
     else
     {
-        <table aria-label="@Text["TargetMappingRules"]">
-            <thead><tr><th>@Text["ObjectType"]</th><th>@Text["TargetRuleKindLabel"]</th><th>@Text["SourceField"]</th><th>@Text["TargetField"]</th>
-                <th>@Text["RulePriority"]</th><th>@Text["Justification"]</th><th>@Text["Status"]</th><th>@Text["Actions"]</th></tr></thead>
-            <tbody>
-                @foreach (var rule in _rules)
-                {
-                    <tr>
-                        <td>@Text[$"ObjectType_{rule.ObjectType}"]</td>
-                        <td>@Text[$"TargetRuleKind_{rule.Kind}"]</td>
-                        <td>@rule.SourceField</td>
-                        <td>@rule.TargetField @if (rule.TargetDomain is { } domain) { <small>@($"@{domain}")</small> }</td>
-                        <td>@rule.Priority</td>
-                        <td>@rule.Justification</td>
-                        <td>@if (rule.RetiredAtUtc is { } retired) { <span>@Text["RuleRetired"] · @retired.ToString("u") · @rule.RetirementReason</span> }
-                            else { <span>@Text["RuleActive"] · @rule.CreatedAtUtc.ToString("u")</span> }</td>
-                        <td>@if (_canQualify && rule.RetiredAtUtc is null) { <FluentButton OnClick="@(() => BeginRetire(rule))">@Text["RetireRule"]</FluentButton> }</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+        <FluentDataGrid TGridItem="TargetMappingRule" Items="@(_rules.AsQueryable())" aria-label="@Text["TargetMappingRules"]">
+            <TemplateColumn Title="@Text["ObjectType"]" Context="rule">@Text[$"ObjectType_{rule.ObjectType}"]</TemplateColumn>
+            <TemplateColumn Title="@Text["TargetRuleKindLabel"]" Context="rule">@Text[$"TargetRuleKind_{rule.Kind}"]</TemplateColumn>
+            <TemplateColumn Title="@Text["SourceField"]" Context="rule">@rule.SourceField</TemplateColumn>
+            <TemplateColumn Title="@Text["TargetField"]" Context="rule">@rule.TargetField @if (rule.TargetDomain is { } domain) { <small>@($"@{domain}")</small> }</TemplateColumn>
+            <TemplateColumn Title="@Text["RulePriority"]" Context="rule">@rule.Priority</TemplateColumn>
+            <TemplateColumn Title="@Text["Justification"]" Context="rule">@rule.Justification</TemplateColumn>
+            <TemplateColumn Title="@Text["Status"]" Context="rule">@if (rule.RetiredAtUtc is { } retired) { <span>@Text["RuleRetired"] · @retired.ToString("u") · @rule.RetirementReason</span> }
+                            else { <span>@Text["RuleActive"] · @rule.CreatedAtUtc.ToString("u")</span> }</TemplateColumn>
+            <TemplateColumn Title="@Text["Actions"]" Context="rule">@if (_canQualify && rule.RetiredAtUtc is null) { <FluentButton OnClick="@(() => BeginRetire(rule))">@Text["RetireRule"]</FluentButton> }</TemplateColumn>
+        </FluentDataGrid>
     }
     @if (_retiring is { } retiring)
     {
-        <fieldset><legend>@Text["RetireRule"] · @retiring.SourceField → @retiring.TargetField</legend>
+        <FluentCard role="group" aria-label="@Text["RetireRule"]">
+            <FluentText As="TextTag.H4" Size="TextSize.Size400" Weight="TextWeight.Semibold">@Text["RetireRule"] · @retiring.SourceField → @retiring.TargetField</FluentText>
             <FluentTextInput Label="@Text["Justification"]" @bind-Value="_retireReason" />
             <FluentButton OnClick="RetireAsync" Disabled="@(Busy || string.IsNullOrWhiteSpace(_retireReason))">@Text["RetireRule"]</FluentButton>
             <FluentButton OnClick="@(() => _retiring = null)">@Text["Cancel"]</FluentButton>
-        </fieldset>
+        </FluentCard>
     }
     @if (_canQualify)
     {
-        <fieldset><legend>@Text["AddTargetRule"]</legend>
-            <label>@Text["ObjectType"] <select @bind="_type">
-                @foreach (var type in TargetComparisonRules.ObjectTypes) { <option value="@type">@Text[$"ObjectType_{type}"]</option> }</select></label>
-            <label>@Text["TargetRuleKindLabel"] <select @bind="_kind">
-                @foreach (var kind in Enum.GetValues<TargetRuleKind>()) { <option value="@kind">@Text[$"TargetRuleKind_{kind}"]</option> }</select></label>
+        <FluentCard role="group" aria-label="@Text["AddTargetRule"]">
+            <FluentText As="TextTag.H4" Size="TextSize.Size400" Weight="TextWeight.Semibold">@Text["AddTargetRule"]</FluentText>
+            <FluentSelect TOption="string" TValue="string" Label="@Text["ObjectType"]" Items="TargetComparisonRules.ObjectTypes"
+                          OptionText="@(type => Text[$"ObjectType_{type}"])" @bind-Value="_type" />
+            <FluentSelect TOption="TargetRuleKind" TValue="TargetRuleKind" Label="@Text["TargetRuleKindLabel"]" Items="@(Enum.GetValues<TargetRuleKind>())"
+                          OptionText="@(kind => Text[$"TargetRuleKind_{kind}"])" @bind-Value="_kind" />
             <FluentTextInput Label="@Text["SourceField"]" @bind-Value="_sourceField" />
             @if (_kind == TargetRuleKind.SharedAttribute) { <FluentTextInput Label="@Text["TargetField"]" @bind-Value="_targetField" /> }
             else { <FluentTextInput Label="@Text["TargetDomainLabel"]" @bind-Value="_domain" /> }
-            <label>@Text["RulePriority"] <input type="number" min="1" max="100" @bind="_priority" /></label>
+            <FluentNumberInput Label="@Text["RulePriority"]" Min="1" Max="100" @bind-Value="_priority" />
             <FluentTextInput Label="@Text["Justification"]" @bind-Value="_justification" />
             <FluentButton OnClick="AddRuleAsync" Disabled="@(Busy || string.IsNullOrWhiteSpace(_sourceField) || string.IsNullOrWhiteSpace(_justification))">
                 @Text["AddTargetRule"]</FluentButton>
-        </fieldset>
+        </FluentCard>
         @if (_sources.Count == 0 || _targets.Count == 0) { <p>@Text["SourceTargetEnvironmentsMissing"]</p> }
         else
         {
-            <fieldset><legend>@Text["CompareSourceTarget"]</legend>
-                <label>@Text["Source"] <select @bind="_source">@foreach (var e in _sources) { <option value="@e.Id">@e.ExternalId</option> }</select></label>
-                <label>@Text["Target"] <select @bind="_target">
-                    @foreach (var e in _targets) { <option value="@e.Id">@e.ExternalId · @Text[e.TargetState.ToString()]</option> }</select></label>
+            <FluentCard role="group" aria-label="@Text["CompareSourceTarget"]">
+                <FluentText As="TextTag.H4" Size="TextSize.Size400" Weight="TextWeight.Semibold">@Text["CompareSourceTarget"]</FluentText>
+                <FluentSelect TOption="ProjectEnvironment" TValue="Guid" Label="@Text["Source"]" Items="_sources"
+                              OptionText="@(e => e.ExternalId)" OptionValue="@(e => e.Id)" @bind-Value="_source" />
+                <FluentSelect TOption="Guid" TValue="Guid" Label="@Text["Target"]" @bind-Value="_target">
+                    @foreach (var e in _targets) { <FluentOption TValue="Guid" Value="@e.Id">@e.ExternalId · @Text[e.TargetState.ToString()]</FluentOption> }
+                </FluentSelect>
                 <FluentButton OnClick="CompareAsync" Disabled="@Busy">@Text["CompareAction"]</FluentButton>
-            </fieldset>
+            </FluentCard>
         }
     }
     else { <p>@Text["ScopeReadOnly"]</p> }
@@ -76,13 +72,13 @@
     @if (_comparisons.Count == 0) { <p>@Text["NoTargetComparison"]</p> }
     else
     {
-        <label>@Text["Comparison"] <select value="@_selected?.Id" @onchange="Choose">
-            @foreach (var c in _comparisons) { <option value="@c.Id">@c.Source → @c.Target · @c.ComputedAtUtc.ToString("u")</option> }
-        </select></label>
+        <FluentSelect TOption="Guid?" TValue="Guid?" Label="@Text["Comparison"]" Value="@_selected?.Id" ValueChanged="Choose">
+            @foreach (var c in _comparisons) { <FluentOption TValue="Guid?" Value="@c.Id">@c.Source → @c.Target · @c.ComputedAtUtc.ToString("u")</FluentOption> }
+        </FluentSelect>
     }
     @if (_selected is { } comparison)
     {
-        <article aria-label="@Text["TargetComparisonTotals"]">
+        <FluentCard aria-label="@Text["TargetComparisonTotals"]">
             <p>@comparison.Source → @comparison.Target · @Text[comparison.TargetState.ToString()] · @Text[$"TargetDataState_{comparison.Data}"]
                 · @comparison.ComputedAtUtc.ToString("u") · @Text["SsoAuthor"] : @comparison.ActorObjectId</p>
             @if (!string.IsNullOrWhiteSpace(comparison.Hypotheses)) { <p>@Text["TargetHypotheses"] : @comparison.Hypotheses</p> }
@@ -92,49 +88,42 @@
                 <li>@Text["TargetCollisions"] : @comparison.Collisions.ToString("N0")</li>
             </ul>
             <p>@Text["TargetAbsenceHint"]</p>
-            <table aria-label="@Text["Coverage"]">
-                <thead><tr><th>@Text["Environments"]</th><th>@Text["ObjectType"]</th><th>@Text["ComparedObjects"]</th><th>@Text["Coverage"]</th>
-                    <th>@Text["MissingFields"]</th></tr></thead>
-                <tbody>
-                    @foreach (var row in comparison.Coverage)
-                    {
-                        <tr>
-                            <td>@Text[row.Side.ToString()]</td>
-                            <td>@Text[$"ObjectType_{row.Type}"]</td>
-                            <td>@row.Objects.ToString("N0")</td>
-                            <td>@Text[row.Exhaustive ? "TargetExhaustive" : "TargetNotExhaustiveCoverage"]</td>
-                            <td>@(row.MissingFields.Count == 0 ? "—" : string.Join(", ", row.MissingFields))</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-            <h4>@Text["TargetOutcomes"]</h4>
-            <label>@Text["TargetOutcomeLabel"] <select @bind="_outcome" @bind:after="Reload"><option value="">@Text["All"]</option>
-                @foreach (var outcome in Enum.GetValues<TargetOutcome>()) { <option value="@outcome">@Text[$"TargetOutcome_{outcome}"]</option> }
-            </select></label>
-            <FluentTextInput Label="@Text["Search"]" @bind-Value="_search" />
+            <FluentDataGrid TGridItem="TargetCoverageRow" Items="@(comparison.Coverage.AsQueryable())" aria-label="@Text["Coverage"]">
+                <TemplateColumn Title="@Text["Environments"]" Context="row">@Text[row.Side.ToString()]</TemplateColumn>
+                <TemplateColumn Title="@Text["ObjectType"]" Context="row">@Text[$"ObjectType_{row.Type}"]</TemplateColumn>
+                <TemplateColumn Title="@Text["ComparedObjects"]" Context="row">@row.Objects.ToString("N0")</TemplateColumn>
+                <TemplateColumn Title="@Text["Coverage"]" Context="row">@Text[row.Exhaustive ? "TargetExhaustive" : "TargetNotExhaustiveCoverage"]</TemplateColumn>
+                <TemplateColumn Title="@Text["MissingFields"]" Context="row">@(row.MissingFields.Count == 0 ? "—" : string.Join(", ", row.MissingFields))</TemplateColumn>
+            </FluentDataGrid>
+            <FluentText As="TextTag.H4" Size="TextSize.Size400" Weight="TextWeight.Semibold" Block="true">@Text["TargetOutcomes"]</FluentText>
+            <FluentSelect TOption="string" TValue="string" Label="@Text["TargetOutcomeLabel"]" @bind-Value="_outcome" @bind-Value:after="Reload">
+                <FluentOption TValue="string" Value="@string.Empty">@Text["All"]</FluentOption>
+                @foreach (var outcome in Enum.GetValues<TargetOutcome>()) { <FluentOption TValue="string" Value="@(outcome.ToString())">@Text[$"TargetOutcome_{outcome}"]</FluentOption> }
+            </FluentSelect>
+            <FluentTextInput TextInputType="TextInputType.Search" Label="@Text["Search"]" @bind-Value="_search" />
             <ClarityGrid @key="(comparison.Id, _outcome, _search, _revision)" TGridItem="TargetItemRow" Search="@_search"
                          Load="@((p, ct) => Targets.ItemsAsync(ProjectId, comparison.Id, false, Outcome, null, p, ct))">
                 <Columns>
-                    <TemplateColumn Title="@Text["Source"]" Context="r"><a href="@Sheet(r.SourceId, EnvironmentRole.Source)">@(r.Label ?? r.SourceId.ToString())</a>
+                    <TemplateColumn Title="@Text["Source"]" Context="r"><FluentLink Href="@Sheet(r.SourceId, EnvironmentRole.Source)">@(r.Label ?? r.SourceId.ToString())</FluentLink>
                         <small>@Text[$"ObjectType_{r.ObjectType}"]</small></TemplateColumn>
                     <TemplateColumn Title="@Text["TargetOutcomeLabel"]" Context="r">@Text[$"TargetOutcome_{r.Outcome}"]
                         <small>@Text[$"TargetReason_{r.Reason}"]</small></TemplateColumn>
                     <TemplateColumn Title="@Text["TargetKey"]" Context="r">@r.Key <small>@RuleLabel(comparison, r.RuleId)</small></TemplateColumn>
                     <TemplateColumn Title="@Text["Target"]" Context="r">
-                        @if (r.TargetId is { } target) { <a href="@Sheet(target, EnvironmentRole.Target)">@(r.TargetLabel ?? target.ToString())</a> }
+                        @if (r.TargetId is { } target) { <FluentLink Href="@Sheet(target, EnvironmentRole.Target)">@(r.TargetLabel ?? target.ToString())</FluentLink> }
                         else if (r.CandidateCount > 1) { <span>@r.CandidateCount @Text["Candidates"]</span> }
                         else { <span>—</span> }
-                        @if (r.OtherId is { } other) { <small>@Text["SharedWith"] <a href="@Sheet(other, EnvironmentRole.Source)">@(r.OtherLabel ?? other.ToString())</a></small> }
+                        @if (r.OtherId is { } other) { <small>@Text["SharedWith"] <FluentLink Href="@Sheet(other, EnvironmentRole.Source)">@(r.OtherLabel ?? other.ToString())</FluentLink></small> }
                     </TemplateColumn>
                 </Columns>
                 <EmptyContent><p>@Text["NoTargetItems"]</p></EmptyContent>
             </ClarityGrid>
-            <h4>@Text["TargetCollisions"]</h4>
+            <FluentText As="TextTag.H4" Size="TextSize.Size400" Weight="TextWeight.Semibold" Block="true">@Text["TargetCollisions"]</FluentText>
             <p>@Text["TargetCollisionsHint"]</p>
-            <label>@Text["CollisionKindLabel"] <select @bind="_collision" @bind:after="Reload"><option value="">@Text["All"]</option>
-                @foreach (var kind in Enum.GetValues<CollisionKind>()) { <option value="@kind">@Text[$"CollisionKind_{kind}"]</option> }
-            </select></label>
+            <FluentSelect TOption="string" TValue="string" Label="@Text["CollisionKindLabel"]" @bind-Value="_collision" @bind-Value:after="Reload">
+                <FluentOption TValue="string" Value="@string.Empty">@Text["All"]</FluentOption>
+                @foreach (var kind in Enum.GetValues<CollisionKind>()) { <FluentOption TValue="string" Value="@(kind.ToString())">@Text[$"CollisionKind_{kind}"]</FluentOption> }
+            </FluentSelect>
             <ClarityGrid @key="(comparison.Id, _collision, _revision)" TGridItem="TargetItemRow"
                          Load="@((p, ct) => Targets.ItemsAsync(ProjectId, comparison.Id, true, null, Collision, p, ct))">
                 <Columns>
@@ -142,16 +131,16 @@
                         <small>@Text[$"TargetReason_{r.Reason}"]</small></TemplateColumn>
                     <TemplateColumn Title="@Text["TargetKey"]" Context="r">@r.Key <small>@RuleLabel(comparison, r.RuleId)</small></TemplateColumn>
                     <TemplateColumn Title="@Text["Source"]" Context="r">
-                        @if (r.SourceId is { } source) { <a href="@Sheet(source, EnvironmentRole.Source)">@(r.Label ?? source.ToString())</a> } else { <span>—</span> }
-                        @if (r.OtherId is { } other) { <small>@Text["SharedWith"] <a href="@Sheet(other, EnvironmentRole.Source)">@(r.OtherLabel ?? other.ToString())</a></small> }
+                        @if (r.SourceId is { } source) { <FluentLink Href="@Sheet(source, EnvironmentRole.Source)">@(r.Label ?? source.ToString())</FluentLink> } else { <span>—</span> }
+                        @if (r.OtherId is { } other) { <small>@Text["SharedWith"] <FluentLink Href="@Sheet(other, EnvironmentRole.Source)">@(r.OtherLabel ?? other.ToString())</FluentLink></small> }
                     </TemplateColumn>
                     <TemplateColumn Title="@Text["Target"]" Context="r">
-                        @if (r.TargetId is { } target) { <a href="@Sheet(target, EnvironmentRole.Target)">@(r.TargetLabel ?? target.ToString())</a> } else { <span>—</span> }
+                        @if (r.TargetId is { } target) { <FluentLink Href="@Sheet(target, EnvironmentRole.Target)">@(r.TargetLabel ?? target.ToString())</FluentLink> } else { <span>—</span> }
                     </TemplateColumn>
                 </Columns>
                 <EmptyContent><p>@Text["NoTargetCollisions"]</p></EmptyContent>
             </ClarityGrid>
-        </article>
+        </FluentCard>
     }
     <MappingPanel @key="(ProjectId, _revision)" ProjectId="ProjectId" Side="EnvironmentRole.Source" Kind="MappingKind.SourceTarget" />
 </section>
@@ -202,9 +191,9 @@
         _ => c.NotCompared
     };
     private void Reload() => _revision++;
-    private void Choose(ChangeEventArgs e)
+    private void Choose(Guid? id)
     {
-        _selected = _comparisons.FirstOrDefault(c => c.Id.ToString() == e.Value?.ToString()) ?? _selected;
+        _selected = _comparisons.FirstOrDefault(c => c.Id == id) ?? _selected;
         _revision++;
     }
     private void BeginRetire(TargetMappingRule rule) { _retiring = rule; _retireReason = ""; _message = null; }

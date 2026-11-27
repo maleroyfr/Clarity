@@ -2,31 +2,33 @@
 @inherits FoundationPage
 @inject DependencyService Dependencies
 
-<h3>@Text["Dependencies"]</h3>
+<FluentText As="TextTag.H3" Size="TextSize.Size500" Weight="TextWeight.Semibold" Block="true">@Text["Dependencies"]</FluentText>
 <p>@Text["DependenciesHint"]</p>
-@if (Error is not null) { <p class="error" role="alert">@Error</p> }
-@if (_message is not null) { <p role="status">@_message</p> }
+@if (Error is not null) { <FluentMessageBar Intent="MessageBarIntent.Error" AllowDismiss="false">@Error</FluentMessageBar> }
+@if (_message is not null) { <FluentMessageBar Intent="MessageBarIntent.Success" AllowDismiss="false">@_message</FluentMessageBar> }
 @if (CanQualify && Environments.Count != 0)
 {
-    <fieldset><legend>@Text["AnalyzeDependencies"]</legend>
-        <label>@Text["Environments"] <select @bind="_environment">@foreach (var e in Environments) { <option value="@e.Id">@e.ExternalId</option> }</select></label>
+    <FluentCard role="group" aria-label="@Text["AnalyzeDependencies"]">
+        <FluentText As="TextTag.H4" Size="TextSize.Size400" Weight="TextWeight.Semibold">@Text["AnalyzeDependencies"]</FluentText>
+        <FluentSelect TOption="ProjectEnvironment" TValue="Guid" Label="@Text["Environments"]" Items="Environments"
+                      OptionText="@(e => e.ExternalId)" OptionValue="@(e => e.Id)" @bind-Value="_environment" />
         <FluentTextInput Label="@Text["MigrationWave"]" @bind-Value="_wave" />
         <p>@Text["DependencyWaveHint"]</p>
         <FluentButton OnClick="AnalyzeAsync" Disabled="@Busy">@Text["AnalyzeDependencies"]</FluentButton>
-    </fieldset>
+    </FluentCard>
 }
 else if (!CanQualify) { <p>@Text["ScopeReadOnly"]</p> }
 @if (_analyses.Count == 0) { <p>@Text["NoDependencyAnalysis"]</p> }
 else
 {
-    <label>@Text["DependencyAnalysis"] <select value="@_selected?.Id" @onchange="Choose">
+    <FluentSelect TOption="Guid?" TValue="Guid?" Label="@Text["DependencyAnalysis"]" Value="@_selected?.Id" ValueChanged="Choose">
         @foreach (var a in _analyses)
-        { <option value="@a.Id">@a.Environment · @(a.Wave ?? Text["AllWaves"].Value) · @a.ComputedAtUtc.ToString("u")</option> }
-    </select></label>
+        { <FluentOption TValue="Guid?" Value="@a.Id">@a.Environment · @(a.Wave ?? Text["AllWaves"].Value) · @a.ComputedAtUtc.ToString("u")</FluentOption> }
+    </FluentSelect>
 }
 @if (_selected is { } analysis)
 {
-    <article aria-label="@Text["DependencyAnalysis"]">
+    <FluentCard aria-label="@Text["DependencyAnalysis"]">
         <p>@analysis.Environment · @(analysis.Wave ?? Text["AllWaves"].Value) · @analysis.ComputedAtUtc.ToString("u") · @Text["SsoAuthor"] : @analysis.ActorObjectId</p>
         <ul aria-label="@Text["DependencyPrincipals"]">
             @foreach (var side in Enum.GetValues<DependencySide>())
@@ -39,39 +41,33 @@ else
             <li>@Text["UnresolvedLinks"] : @analysis.UnresolvedLinks.ToString("N0")</li>
         </ul>
         <p>@Text["DependencyVolumeHint"]</p>
-        <table aria-label="@Text["AnalysisCoverage"]">
-            <thead><tr><th>@Text["DependencyFamily"]</th><th>@Text["DependencyResources"]</th><th>@Text["AnalysisCoverage"]</th><th>@Text["Sections"]</th></tr></thead>
-            <tbody>
-                @foreach (var coverage in analysis.Coverage)
-                {
-                    var count = analysis.Families.FirstOrDefault(f => f.Family == coverage.Family);
-                    <tr>
-                        <td>@Text[$"DependencyFamily_{coverage.Family}"]</td>
-                        <td>@(count?.Resources ?? 0) · @Text["DependencyClassification_Shared"] : @(count?.Shared ?? 0)</td>
-                        <td>@Text[$"DependencyCoverage_{coverage.Status}"]
+        <FluentDataGrid TGridItem="DependencyFamilyCoverage" Items="@(analysis.Coverage.AsQueryable())" aria-label="@Text["AnalysisCoverage"]">
+            <TemplateColumn Title="@Text["DependencyFamily"]" Context="coverage">@Text[$"DependencyFamily_{coverage.Family}"]</TemplateColumn>
+            <TemplateColumn Title="@Text["DependencyResources"]" Context="coverage">@{ var count = analysis.Families.FirstOrDefault(f => f.Family == coverage.Family); }
+                @(count?.Resources ?? 0) · @Text["DependencyClassification_Shared"] : @(count?.Shared ?? 0)</TemplateColumn>
+            <TemplateColumn Title="@Text["AnalysisCoverage"]" Context="coverage">@Text[$"DependencyCoverage_{coverage.Status}"]
                             @if (coverage.UnresolvedLinks != 0) { <small>@Text["UnresolvedLinks"] : @coverage.UnresolvedLinks</small> }
-                            @if (coverage.MembersNotCollected != 0) { <small>@Text["MembersNotCollected"] : @coverage.MembersNotCollected</small> }</td>
-                        <td>@foreach (var section in coverage.Sections)
+                            @if (coverage.MembersNotCollected != 0) { <small>@Text["MembersNotCollected"] : @coverage.MembersNotCollected</small> }</TemplateColumn>
+            <TemplateColumn Title="@Text["Sections"]" Context="coverage">@foreach (var section in coverage.Sections)
                             {
                                 <small>@section.CapabilityId : @(section.Coverage is { } c ? Text[c.ToString()].Value : Text["NotCollected"].Value)
                                     @if (section.ResourceScoped && section.Coverage is not null) { <span> · @Text["ResourceScoped"]</span> }</small>
                             }
-                            @if (coverage.Sections.Count == 0) { <small>@Text["NotApplicable"]</small> }</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-        <label>@Text["DependencyFamily"] <select @bind="_family" @bind:after="Reload"><option value="">@Text["All"]</option>
-            @foreach (var family in Enum.GetValues<DependencyFamily>()) { <option value="@family">@Text[$"DependencyFamily_{family}"]</option> }
-        </select></label>
-        <label>@Text["DependencyClassification"] <select @bind="_classification" @bind:after="Reload"><option value="">@Text["All"]</option>
-            @foreach (var value in Enum.GetValues<DependencyClassification>()) { <option value="@value">@Text[$"DependencyClassification_{value}"]</option> }
-        </select></label>
-        <FluentTextInput Label="@Text["Search"]" @bind-Value="_search" />
+                            @if (coverage.Sections.Count == 0) { <small>@Text["NotApplicable"]</small> }</TemplateColumn>
+        </FluentDataGrid>
+        <FluentSelect TOption="string" TValue="string" Label="@Text["DependencyFamily"]" @bind-Value="_family" @bind-Value:after="Reload">
+            <FluentOption TValue="string" Value="@string.Empty">@Text["All"]</FluentOption>
+            @foreach (var family in Enum.GetValues<DependencyFamily>()) { <FluentOption TValue="string" Value="@(family.ToString())">@Text[$"DependencyFamily_{family}"]</FluentOption> }
+        </FluentSelect>
+        <FluentSelect TOption="string" TValue="string" Label="@Text["DependencyClassification"]" @bind-Value="_classification" @bind-Value:after="Reload">
+            <FluentOption TValue="string" Value="@string.Empty">@Text["All"]</FluentOption>
+            @foreach (var value in Enum.GetValues<DependencyClassification>()) { <FluentOption TValue="string" Value="@(value.ToString())">@Text[$"DependencyClassification_{value}"]</FluentOption> }
+        </FluentSelect>
+        <FluentTextInput TextInputType="TextInputType.Search" Label="@Text["Search"]" @bind-Value="_search" />
         <ClarityGrid @key="(analysis.Id, _family, _classification, _search, _revision)" TGridItem="DependencyResourceRow" Search="@_search"
                      Load="@((p, ct) => Dependencies.ResourcesAsync(ProjectId, analysis.Id, Filter, p, ct))">
             <Columns>
-                <TemplateColumn Title="@Text["Name"]" Context="r"><a href="@Sheet(r.ObjectId)">@(r.DisplayName ?? r.ObjectId.ToString())</a>
+                <TemplateColumn Title="@Text["Name"]" Context="r"><FluentLink Href="@Sheet(r.ObjectId)">@(r.DisplayName ?? r.ObjectId.ToString())</FluentLink>
                     <small>@Text[$"DependencyFamily_{r.Family}"] · @Text[$"ObjectType_{r.Type}"]</small></TemplateColumn>
                 <TemplateColumn Title="@Text["DependencyClassification"]" Context="r">@Text[$"DependencyClassification_{r.Classification}"]
                     @if (r.AllUsers) { <small>@Text["AllUsersAssignment"]</small> }
@@ -92,23 +88,23 @@ else
             </Columns>
             <EmptyContent><p>@Text["NoDependencyResources"]</p></EmptyContent>
         </ClarityGrid>
-    </article>
+    </FluentCard>
 }
 @if (_explained is { } resource)
 {
     <DetailPanel Title="@($"{Text["ExplainDependency"]} · {resource.DisplayName ?? resource.ObjectId.ToString()}")" Error="@Error" Close="@(() => _explained = null)">
-        <h3>@Text["DependencyRoutes"]</h3>
+        <FluentText As="TextTag.H3" Size="TextSize.Size500" Weight="TextWeight.Semibold" Block="true">@Text["DependencyRoutes"]</FluentText>
         <ul>
             @foreach (var link in _links.Where(l => l.Kind == DependencyLinkKind.Route))
-            { <li><a href="@Sheet(link.ObjectId)">@(link.Label ?? link.ObjectId.ToString())</a> · @Text[$"ObjectType_{link.Type}"] · @Text[$"Relation_{link.Route}"]</li> }
+            { <li><FluentLink Href="@Sheet(link.ObjectId)">@(link.Label ?? link.ObjectId.ToString())</FluentLink> · @Text[$"ObjectType_{link.Type}"] · @Text[$"Relation_{link.Route}"]</li> }
             @if (resource.Routes == 0) { <li>@Text["DirectDependencyOnly"]</li> }
             else if (resource.Routes > _links.Count(l => l.Kind == DependencyLinkKind.Route)) { <li>@Text["MoreRoutes"] : @resource.Routes</li> }
         </ul>
-        <h3>@Text["DependencySamples"]</h3>
+        <FluentText As="TextTag.H3" Size="TextSize.Size500" Weight="TextWeight.Semibold" Block="true">@Text["DependencySamples"]</FluentText>
         <ul>
             @foreach (var link in _links.Where(l => l.Kind == DependencyLinkKind.Principal))
             {
-                <li><a href="@Sheet(link.ObjectId)">@(link.Label ?? link.ObjectId.ToString())</a> · @Text[$"DependencySide_{link.Side}"] · @Route(link.Route)
+                <li><FluentLink Href="@Sheet(link.ObjectId)">@(link.Label ?? link.ObjectId.ToString())</FluentLink> · @Text[$"DependencySide_{link.Side}"] · @Route(link.Route)
                     @if (link.Via is { } via) { <small>@Text["Via"] : @via</small> }</li>
             }
         </ul>
@@ -152,9 +148,9 @@ else
     private string Size(long bytes) => bytes >= 1L << 30 ? Text["SizeGiB", bytes / (double)(1L << 30)]
         : bytes >= 1L << 20 ? Text["SizeMiB", bytes / (double)(1L << 20)] : Text["SizeBytes", bytes];
     private void Reload() => _revision++;
-    private void Choose(ChangeEventArgs e)
+    private void Choose(Guid? id)
     {
-        _selected = _analyses.FirstOrDefault(a => a.Id.ToString() == e.Value?.ToString()) ?? _selected;
+        _selected = _analyses.FirstOrDefault(a => a.Id == id) ?? _selected;
         _explained = null; _revision++;
     }
 

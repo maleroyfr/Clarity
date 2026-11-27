@@ -6,6 +6,11 @@
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
   <data name="Clients" xml:space="preserve"><value>Clients</value></data>
   <data name="Navigation" xml:space="preserve"><value>Navigation principale</value></data>
+  <data name="AD" xml:space="preserve"><value>Active Directory</value></data>
+  <data name="Entra" xml:space="preserve"><value>Microsoft Entra</value></data>
+  <data name="sourceAnchor" xml:space="preserve"><value>sourceAnchor</value></data>
+  <data name="Tabs_MoreItems" xml:space="preserve"><value>Autres sections</value></data>
+  <data name="Toast_Dismiss" xml:space="preserve"><value>Fermer la notification</value></data>
   <data name="LayoutHamburger_Close" xml:space="preserve"><value>Fermer le menu</value></data>
   <data name="FluentInputBase_Required" xml:space="preserve"><value>Obligatoire</value></data>
   <data name="FluentInputBase_RequiredMessage" xml:space="preserve"><value>Ce champ est obligatoire.</value></data>

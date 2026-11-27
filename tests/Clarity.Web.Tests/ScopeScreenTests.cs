@@ -71,7 +71,8 @@ public sealed class ScopeScreenTests
         html.ShouldContain("Créer une population");
         var import = WebUtility.HtmlDecode(await consultant.GetStringAsync($"/projects/{alpha}/scope?view=import", token));
         import.ShouldContain("Résoudre la liste");
-        import.ShouldContain(">UPN</option>");
+        var importForm = new AngleSharp.Html.Parser.HtmlParser().ParseDocument(import);
+        importForm.QuerySelectorAll("fluent-dropdown fluent-option").Select(option => option.TextContent.Trim()).ShouldContain("UPN");
         var decisions = WebUtility.HtmlDecode(await consultant.GetStringAsync($"/projects/{alpha}/scope?view=decisions", token));
         decisions.ShouldContain("Filtrer par décision");
         decisions.ShouldContain("À arbitrer");

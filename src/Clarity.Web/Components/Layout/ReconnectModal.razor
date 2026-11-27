@@ -2,10 +2,7 @@
 
 <dialog id="components-reconnect-modal" data-nosnippet>
     <div class="components-reconnect-container">
-        <div class="components-rejoining-animation" aria-hidden="true">
-            <div></div>
-            <div></div>
-        </div>
+        <div class="components-rejoining-animation" aria-hidden="true"><FluentSpinner /></div>
         <p class="components-reconnect-first-attempt-visible">
             @Text["Rejoining"]
         </p>
@@ -15,17 +12,17 @@
         <p class="components-reconnect-failed-visible">
             @Text["ReconnectFailed"]
         </p>
-        <button id="components-reconnect-button" class="components-reconnect-failed-visible">
-            @Text["Retry"]
-        </button>
+        <div class="components-reconnect-failed-visible">
+            <FluentButton Id="components-reconnect-button" Appearance="ButtonAppearance.Primary">@Text["Retry"]</FluentButton>
+        </div>
         <p class="components-pause-visible">
             @Text["Paused"]
         </p>
         <p class="components-resume-failed-visible">
             @Text["ReconnectFailed"]
         </p>
-        <button id="components-resume-button" class="components-pause-visible components-resume-failed-visible">
-            @Text["Resume"]
-        </button>
+        <div class="components-pause-visible components-resume-failed-visible">
+            <FluentButton Id="components-resume-button" Appearance="ButtonAppearance.Primary">@Text["Resume"]</FluentButton>
+        </div>
     </div>
 </dialog>

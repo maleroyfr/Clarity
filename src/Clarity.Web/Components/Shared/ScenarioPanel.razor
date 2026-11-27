@@ -3,36 +3,44 @@
 @inject ScenarioOverviewService Scenarios
 
 <section class="scenario-panel" aria-labelledby="scenario-heading">
-    @if (Error is not null) { <p role="alert" class="error">@Error</p> }
+    @if (Error is not null) { <FluentMessageBar Intent="MessageBarIntent.Error" AllowDismiss="false">@Error</FluentMessageBar> }
     @if (_data is { } data)
     {
         var keySteps = data.Steps.Where(s => s.Key).ToList();
-        <h2 id="scenario-heading">@Text["ScenarioWorkflow"] · @Text[data.Scenario.ToString()]</h2>
+        <FluentText As="TextTag.H2" Size="TextSize.Size600" Weight="TextWeight.Semibold" Id="scenario-heading" Block="true">@Text["ScenarioWorkflow"] · @Text[data.Scenario.ToString()]</FluentText>
         <p>@Text[$"ScenarioGuide_{data.Scenario}"]</p>
-        <p>@Text["ScenarioProgress", keySteps.Count(s => s.State == ScenarioStepState.Done), keySteps.Count]</p>
+        var completed = keySteps.Count(s => s.State == ScenarioStepState.Done);
+        <p id="scenario-progress">@Text["ScenarioProgress", completed, keySteps.Count]</p>
+        @if (keySteps.Count > 0)
+        {
+            <FluentProgressBar Min="0" Max="@keySteps.Count" Value="@completed" aria-labelledby="scenario-progress" />
+        }
         @if (data.Next is { } next)
         {
-            <p class="scenario-next"><strong>@Text["ScenarioNextStep"] :</strong> <a href="@StepLink(next)">@Text[$"Step_{next.Step}"]</a> · @Text[next.HintKey]</p>
+            <p class="scenario-next"><strong>@Text["ScenarioNextStep"] :</strong> <FluentLink Href="@StepLink(next)">@Text[$"Step_{next.Step}"]</FluentLink> · @Text[next.HintKey]</p>
         }
         else { <p class="scenario-next">@Text["ScenarioNoNextStep"]</p> }
-        <h3>@Text["ScenarioSteps"]</h3>
-        <ol class="scenario-steps">
+        <FluentText As="TextTag.H3" Size="TextSize.Size500" Weight="TextWeight.Semibold" Block="true">@Text["ScenarioSteps"]</FluentText>
+        <FluentStack Orientation="Orientation.Vertical" VerticalGap="var(--spacingVerticalM)" role="list" aria-label="@Text["ScenarioSteps"]">
             @foreach (var step in data.Steps)
             {
-                <li>
-                    <div><a href="@StepLink(step)">@Text[$"Step_{step.Step}"]</a>
-                        <span class="step-state">@Text[$"StepState_{step.State}"]</span>
-                        <small>@Text[step.Key ? "StepKey" : "StepSupporting"]</small></div>
+                <FluentCard role="listitem">
+                    <FluentStack Wrap="true" VerticalAlignment="VerticalAlignment.Center" HorizontalGap="var(--spacingHorizontalM)">
+                        <FluentLink Href="@StepLink(step)">@Text[$"Step_{step.Step}"]</FluentLink>
+                        <FluentBadge Content="@Text[$"StepState_{step.State}"]" />
+                        <FluentText Size="TextSize.Size200">@Text[step.Key ? "StepKey" : "StepSupporting"]</FluentText>
+                    </FluentStack>
                     <p>@Text[step.HintKey]</p>
                     @if (step.State != ScenarioStepState.Waiting && step.Counts.Count > 0)
                     {
-                        <ul class="step-counts" aria-label="@Text["StepCounts"]">
-                            @foreach (var count in step.Counts) { <li>@Text[$"StepCount_{count.Label}"] : @count.Value.ToString("N0")</li> }
-                        </ul>
+                        <FluentStack Wrap="true" HorizontalGap="var(--spacingHorizontalM)" role="list" aria-label="@Text["StepCounts"]">
+                            @foreach (var count in step.Counts)
+                            { <FluentText role="listitem">@Text[$"StepCount_{count.Label}"] : @count.Value.ToString("N0")</FluentText> }
+                        </FluentStack>
                     }
-                </li>
+                </FluentCard>
             }
-        </ol>
+        </FluentStack>
         <p><small>@Text["ScenarioReadOnlyHint"]</small></p>
     }
 </section>

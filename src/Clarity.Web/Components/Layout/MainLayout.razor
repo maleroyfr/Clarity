@@ -10,7 +10,8 @@
             <FluentLink Href="/" Class="wordmark"><FluentText Size="TextSize.Size500" Weight="TextWeight.Semibold">Clarity</FluentText></FluentLink>
             <FluentSpacer />
             <AuthorizeView><Authorized>
-                <FluentText Truncate="true">@(IsLocal ? Text[$"Persona_{context.User.Identity?.Name}"] : context.User.Identity?.Name)</FluentText>
+                @if (IsLocal) { <PersonaPicker Current="@context.User.Identity?.Name" /> }
+                else { <FluentText Truncate="true">@context.User.Identity?.Name</FluentText> }
             </Authorized></AuthorizeView>
         </FluentStack>
     </FluentLayoutItem>
@@ -23,10 +24,6 @@
     </FluentLayoutItem>
     <FluentLayoutItem Area="LayoutArea.Content" Class="workspace">
         <main id="main-content" tabindex="-1">
-            @if (IsLocal)
-            {
-                <AuthorizeView><Authorized><PersonaPicker Current="@context.User.Identity?.Name" /></Authorized></AuthorizeView>
-            }
             @Body
         </main>
     </FluentLayoutItem>

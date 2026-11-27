@@ -1,0 +1,8 @@
+<FluentAnchorButton Href="@Href" Appearance="@(Active ? ButtonAppearance.Primary : ButtonAppearance.Subtle)"
+                    aria-current="@(Active ? "page" : null)">@ChildContent</FluentAnchorButton>
+
+@code {
+    [Parameter, EditorRequired] public string Href { get; set; } = "";
+    [Parameter] public bool Active { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

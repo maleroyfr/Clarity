@@ -1,8 +1,8 @@
 @using Clarity.Contracts
 
-<article class="environment-card report-diagnostics">
-    <h3>@Text["ReportDiagnostics"]</h3>
-    <p class="notice">@Text["ReportNotGraphEvidence"]</p>
+<FluentCard>
+    <FluentText As="TextTag.H3" Size="TextSize.Size500" Weight="TextWeight.Semibold" Block="true">@Text["ReportDiagnostics"]</FluentText>
+    <FluentMessageBar Intent="MessageBarIntent.Info" AllowDismiss="false">@Text["ReportNotGraphEvidence"]</FluentMessageBar>
     <p>@Text["ReportProfile"] : @ProfileName(Text, Report.ProfileId) <code>@Report.ProfileId @Report.ProfileVersion</code></p>
     <p>@Text["ReportSource"] : @Text["ReportSourceUpload"]</p>
     <p>@Text["ReportRefreshDate"] : @Report.RefreshDate.ToString("dd/MM/yyyy", System.Globalization.CultureInfo.GetCultureInfo("fr-FR"))
@@ -19,15 +19,14 @@
     @if (Report.SiteRoots.Count > 0) { <p>@Text["ReportSiteRoots"] : @string.Join(", ", Report.SiteRoots)</p> }
     @if (Report.Issues.Count > 0)
     {
-        <h4>@Text["RejectedRowDetails"]</h4>
+        <FluentText As="TextTag.H4" Size="TextSize.Size400" Weight="TextWeight.Semibold" Block="true">@Text["RejectedRowDetails"]</FluentText>
         <ul>@foreach (var issue in Report.Issues) { <li>@RowIssue(Text, issue.Line, issue.Column, issue.Code)</li> }</ul>
         @if (Report.IssuesTruncated) { <p>@Text["IssuesTruncated"]</p> }
     }
-    <details>
-        <summary>@Text["DeclaredCoverage"]</summary>
+    <FluentAccordion><FluentAccordionItem Header="@Text["DeclaredCoverage"]">
         <ul>@foreach (var limit in Report.CoverageLimits) { <li>@Text[$"ReportLimit_{limit}"]</li> }</ul>
-    </details>
-</article>
+    </FluentAccordionItem></FluentAccordion>
+</FluentCard>
 
 @code {
     [Parameter, EditorRequired] public ReportDiagnostics Report { get; set; } = default!;

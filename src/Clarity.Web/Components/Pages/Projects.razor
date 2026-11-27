@@ -2,16 +2,17 @@
 @attribute [Authorize]
 @inherits FoundationPage
 @inject FoundationService Service
+@inject INotificationService Notifications
 
 <PageTitle>@Text["Projects"] · Clarity</PageTitle>
 <nav aria-label="@Text["Breadcrumb"]"><FluentLink Href="/">@Text["Clients"]</FluentLink></nav>
-<FluentStack Wrap="true" VerticalAlignment="VerticalAlignment.Center">
+<FluentStack Wrap="true" VerticalAlignment="VerticalAlignment.Center" HorizontalGap="var(--spacingHorizontalM)">
     <FluentText As="TextTag.H1" Size="TextSize.Size700" Weight="TextWeight.Semibold">@Text["Projects"]</FluentText>
     <FluentSpacer />
     <FluentButton Appearance="ButtonAppearance.Primary" OnClick="@(() => _create = true)">@Text["NewProject"]</FluentButton>
 </FluentStack>
 @if (Error is not null) { <FluentMessageBar Intent="MessageBarIntent.Error" AllowDismiss="false">@Error</FluentMessageBar> }
-<FluentStack Wrap="true" VerticalAlignment="VerticalAlignment.Bottom">
+<FluentStack Wrap="true" VerticalAlignment="VerticalAlignment.Bottom" HorizontalGap="var(--spacingHorizontalM)">
     <FluentTextInput TextInputType="TextInputType.Search" Label="@Text["Search"]" @bind-Value="_search" />
     <FluentButton OnClick="SearchAsync">@Text["SearchAction"]</FluentButton>
 </FluentStack>
@@ -60,6 +61,7 @@
     {
         await Service.CreateProjectAsync(WorkspaceId, _operationId, _name, _scenario, _description);
         _create = false; _name = ""; _description = ""; _operationId = Guid.NewGuid(); await SearchAsync();
+        await Notifications.ShowSuccessToastAsync(Text["ChangesSaved"]);
     });
     private Task ArchiveAsync() => RunAsync(async () =>
     {

@@ -14,15 +14,15 @@
 @inject WorkspaceAuthorization Authorization
 
 <section aria-label="@Text["Discovery"]">
-    @if (Error is not null) { <p class="error" role="alert">@Error</p> }
+    @if (Error is not null) { <FluentMessageBar Intent="MessageBarIntent.Error" AllowDismiss="false">@Error</FluentMessageBar> }
     @if (Error is not null && ErrorDetails.Count > 0)
     {
         <ul class="error-details" aria-label="@Text["ErrorDetails"]">
             @foreach (var detail in ErrorDetails) { <li>@Detail(detail)</li> }
         </ul>
     }
-    @if (_message is not null) { <p class="notice" role="status">@_message</p> }
-    <div class="toolbar discovery-toolbar">
+    @if (_message is not null) { <FluentMessageBar Intent="MessageBarIntent.Success" AllowDismiss="false">@_message</FluentMessageBar> }
+    <FluentStack Wrap="true" VerticalAlignment="VerticalAlignment.Bottom" HorizontalGap="var(--spacingHorizontalM)">
         <FluentSelect TOption="ProjectEnvironment" TValue="Guid" Items="_environments"
                       OptionText="@(x => $"{Text[x.Kind.ToString()]} · {x.ExternalId}")" OptionValue="@(x => x.Id)"
                       Value="_environmentId" ValueChanged="SelectAsync" Label="@Text["CollectionEnvironment"]" Disabled="Busy" />
@@ -33,28 +33,28 @@
                           OptionText="@(id => Text[$"Producer_{id}"])" Value="_producer" ValueChanged="SelectProducerAsync"
                           Label="@Text["Producer"]" Disabled="Busy" />
         }
-    </div>
+    </FluentStack>
     @if (SelectedEnvironment is null)
     {
         <EmptyState Title="@Text["NoCollectionEnvironment"]" Description="@Text["NoSourceHint"]">
-            <a href="@($"/projects/{ProjectId}/overview")">@Text["AddEnvironment"]</a>
+            <FluentLink Href="@($"/projects/{ProjectId}/overview")">@Text["AddEnvironment"]</FluentLink>
         </EmptyState>
     }
     else
     {
-        <nav class="toolbar" aria-label="@Text["Discovery"]">
+        <nav aria-label="@Text["Discovery"]"><FluentStack Wrap="true" HorizontalGap="var(--spacingHorizontalL)">
             @foreach (var tab in new[] { "Connections", "Collections", "Coverage" })
             {
                 <FluentButton Appearance="@(_view == tab ? ButtonAppearance.Primary : ButtonAppearance.Default)" OnClick="@(() => _view = tab)">@Text[tab]</FluentButton>
             }
-        </nav>
+        </FluentStack></nav>
         <section @key="(_environmentId, _revision)">
         @if (_view == "Connections")
         {
-            <h2>@Text["Connections"]</h2>
+            <FluentText As="TextTag.H2" Size="TextSize.Size600" Weight="TextWeight.Semibold" Block="true">@Text["Connections"]</FluentText>
             @if (SelectedEnvironment.Kind == EnvironmentKind.M365Tenant && !ScriptProducerSelected)
             {
-                <p class="notice">@Text["ConnectionConsentHint"]</p>
+                <FluentMessageBar Intent="MessageBarIntent.Info" AllowDismiss="false">@Text["ConnectionConsentHint"]</FluentMessageBar>
                 @if (_connection is null)
                 {
                     <FluentTextInput Label="@Text["Name"]" @bind-Value="_connectionName" Disabled="@(!_canManage || Busy)" />
@@ -62,21 +62,21 @@
                 }
                 else
                 {
-                    <article class="environment-card">
-                        <h3>@_connection.Name</h3><p>@_connection.TenantId</p>
+                    <FluentCard>
+                        <FluentText As="TextTag.H3" Size="TextSize.Size500" Weight="TextWeight.Semibold" Block="true">@_connection.Name</FluentText><p>@_connection.TenantId</p>
                         <p>@Text["LastAccessTest"] : @Date(_connection.TestedAtUtc)</p>
                         <FluentButton OnClick="TestAsync" Disabled="@(!_canCollect || !Availability.Graph || Busy)">@Text["TestSections"]</FluentButton>
-                    </article>
+                    </FluentCard>
                     @foreach (var check in _connection.Checks)
                     {
-                        <article class="environment-card">
-                            <h3>@SectionName(check.CapabilityId) · @Text[check.Available ? "AccessAvailable" : "AccessUnavailable"]</h3>
+                        <FluentCard>
+                            <FluentText As="TextTag.H3" Size="TextSize.Size500" Weight="TextWeight.Semibold" Block="true">@SectionName(check.CapabilityId) · @Text[check.Available ? "AccessAvailable" : "AccessUnavailable"]</FluentText>
                             <p>@Text["Permissions"] : @string.Join(", ", check.Permissions)</p>
                             @if (check.Code != "Available") { <p>@Issue(check.Code) <code>@check.Code</code></p> }
-                        </article>
+                        </FluentCard>
                     }
                 }
-                @if (!Availability.Graph) { <p class="notice">@Text["GraphConfigurationRequired"]</p> }
+                @if (!Availability.Graph) { <FluentMessageBar Intent="MessageBarIntent.Info" AllowDismiss="false">@Text["GraphConfigurationRequired"]</FluentMessageBar> }
                 <p>@Text[_producer switch
                 {
                     IntuneCollector.ProducerId => "IntunePrerequisiteHint",
@@ -94,10 +94,10 @@
         }
         else if (_view == "Collections")
         {
-            <h2>@Text["Collections"]</h2>
+            <FluentText As="TextTag.H2" Size="TextSize.Size600" Weight="TextWeight.Semibold" Block="true">@Text["Collections"]</FluentText>
             @if (_availableSections.Length > 0)
             {
-                <div class="discovery-form">
+                <FluentCard Class="discovery-form">
                     <FluentSelect TOption="string" TValue="string" Items="_availableSections" Multiple="true"
                         @bind-SelectedItems="_sections" OptionText="SectionName" Label="@Text["SelectSections"]" Disabled="@(!_canCollect || Busy)" />
                     @if (SelectedEnvironment.Kind == EnvironmentKind.M365Tenant && !ScriptProducerSelected)
@@ -105,7 +105,7 @@
                         <p>@Text["Scope"] : @SelectedEnvironment.ExternalId</p>
                         <FluentButton Appearance="ButtonAppearance.Primary" OnClick="LaunchAsync"
                             Disabled="@(!_canCollect || !Availability.Graph || _connection is null || Busy)">@Text["LaunchCollection"]</FluentButton>
-                        @if (_connection is null || !Availability.Graph) { <p class="notice">@Text["PrepareGraphHint"]</p> }
+                        @if (_connection is null || !Availability.Graph) { <FluentMessageBar Intent="MessageBarIntent.Info" AllowDismiss="false">@Text["PrepareGraphHint"]</FluentMessageBar> }
                     }
                     else if (ScriptProducerSelected)
                     {
@@ -122,24 +122,25 @@
                         }
                         <FluentButton Appearance="ButtonAppearance.Primary" OnClick="RequestAsync" Disabled="@(!_canCollect || Busy)">@ScriptText("CreateScriptRequest", _producer)</FluentButton>
                     }
-                </div>
+                </FluentCard>
             }
-            else { <p class="notice">@Text["ProducerUnavailable"]</p> }
-            <article class="environment-card">
-                <h3>@Text["UploadResult"]</h3>
+            else { <FluentMessageBar Intent="MessageBarIntent.Info" AllowDismiss="false">@Text["ProducerUnavailable"]</FluentMessageBar> }
+            <FluentCard>
+                <FluentText As="TextTag.H3" Size="TextSize.Size500" Weight="TextWeight.Semibold" Block="true">@Text["UploadResult"]</FluentText>
                 <p>@Text["UploadResultHint"]</p>
                 @if (Availability.Storage && _canCollect)
                 {
-                    <label for="discovery-zip">@Text["ResultFile"]</label>
-                    <InputFile id="discovery-zip" OnChange="UploadAsync" accept=".zip" disabled="@Busy" />
+                    <FluentButton Id="choose-zip" Disabled="@Busy" IconStart="@(new Icons.Regular.Size20.ArrowUpload())">@Text["ResultFile"]</FluentButton>
+                    <FluentInputFile Id="discovery-zip" AnchorId="choose-zip" DragDropZoneVisible="false"
+                                     OnInputFileChange="UploadAsync" Accept=".zip" Disabled="@Busy" />
                 }
-                else if (!Availability.Storage) { <p class="notice">@Text["StorageRequired"]</p> }
+                else if (!Availability.Storage) { <FluentMessageBar Intent="MessageBarIntent.Info" AllowDismiss="false">@Text["StorageRequired"]</FluentMessageBar> }
                 else { <p>@Text["ReadOnlyDiscovery"]</p> }
-            </article>
+            </FluentCard>
             @if (_profiles.Count > 0)
             {
-                <article class="environment-card report-import">
-                    <h3>@Text["ImportReportTitle"]</h3>
+                <FluentCard>
+                    <FluentText As="TextTag.H3" Size="TextSize.Size500" Weight="TextWeight.Semibold" Block="true">@Text["ImportReportTitle"]</FluentText>
                     <p>@Text["ImportReportHint"]</p>
                     <FluentSelect TOption="ReportProfile" TValue="string" Items="_profiles" OptionText="ProfileLabel" OptionValue="ProfileKey"
                         @bind-Value="_profileKey" Label="@Text["ReportProfile"]" Disabled="@(!_canCollect || Busy)" />
@@ -151,26 +152,24 @@
                             @foreach (var column in profile.Columns.Where(x => x.Required)) { <code>@column.Header</code> @(" ") }</p>
                         <p>@Text["ReportIdentity"] :
                             @foreach (var identity in profile.Object.Identities) { <code>@identity.Column → @identity.Namespace</code> @(" ") }</p>
-                        <details>
-                            <summary>@Text["DeclaredCoverage"]</summary>
+                        <FluentAccordion><FluentAccordionItem Header="@Text["DeclaredCoverage"]">
                             <ul>@foreach (var limit in profile.Coverage.Limits) { <li>@Text[$"ReportLimit_{limit.Code}"]</li> }</ul>
-                        </details>
+                        </FluentAccordionItem></FluentAccordion>
                     }
                     @if (Availability.Storage && _canCollect)
                     {
                         <FluentTextInput Label="@Text["ReportTenantScope"]" @bind-Value="_reportScope" Disabled="Busy" />
-                        <p>
-                            <input type="checkbox" id="report-scope-attested" @bind="_reportAttested" disabled="@Busy" />
-                            <label for="report-scope-attested">@Text["ReportScopeAttestation"]</label>
-                        </p>
-                        <label for="discovery-report">@Text["ReportFile"]</label>
-                        <InputFile id="discovery-report" OnChange="UploadReportAsync" accept=".csv" disabled="@(Busy || !_reportAttested || SelectedProfile is null)" />
+                        <FluentCheckbox Id="report-scope-attested" Label="@Text["ReportScopeAttestation"]" @bind-Value="_reportAttested" Disabled="@Busy" />
+                        <FluentButton Id="choose-report" Disabled="@(Busy || !_reportAttested || SelectedProfile is null)"
+                                      IconStart="@(new Icons.Regular.Size20.ArrowUpload())">@Text["ReportFile"]</FluentButton>
+                        <FluentInputFile Id="discovery-report" AnchorId="choose-report" DragDropZoneVisible="false"
+                                         OnInputFileChange="UploadReportAsync" Accept=".csv" Disabled="@(Busy || !_reportAttested || SelectedProfile is null)" />
                     }
-                    else if (!Availability.Storage) { <p class="notice">@Text["StorageRequired"]</p> }
+                    else if (!Availability.Storage) { <FluentMessageBar Intent="MessageBarIntent.Info" AllowDismiss="false">@Text["StorageRequired"]</FluentMessageBar> }
                     else { <p>@Text["ReadOnlyDiscovery"]</p> }
-                </article>
+                </FluentCard>
             }
-            <h3>@Text["RequestHistory"]</h3>
+            <FluentText As="TextTag.H3" Size="TextSize.Size500" Weight="TextWeight.Semibold" Block="true">@Text["RequestHistory"]</FluentText>
             <ClarityGrid TGridItem="RequestView" Load="LoadRequestsAsync">
                 <Columns>
                     <PropertyColumn Property="@(x => x.CreatedAtUtc)" Title="@Text["Date"]" Sortable="true" />
@@ -180,7 +179,7 @@
                 </Columns>
                 <EmptyContent><p>@Text["NoRequests"]</p></EmptyContent>
             </ClarityGrid>
-            <h3>@Text["RunHistory"]</h3>
+            <FluentText As="TextTag.H3" Size="TextSize.Size500" Weight="TextWeight.Semibold" Block="true">@Text["RunHistory"]</FluentText>
             <ClarityGrid TGridItem="RunView" Load="LoadRunsAsync">
                 <Columns>
                     <PropertyColumn Property="@(x => x.StartedAtUtc)" Title="@Text["Date"]" Sortable="true" />
@@ -190,7 +189,7 @@
                 </Columns>
                 <EmptyContent><p>@Text["NoRuns"]</p></EmptyContent>
             </ClarityGrid>
-            <h3>@Text["ProjectJobs"]</h3>
+            <FluentText As="TextTag.H3" Size="TextSize.Size500" Weight="TextWeight.Semibold" Block="true">@Text["ProjectJobs"]</FluentText>
             <ClarityGrid TGridItem="JobView" Load="LoadJobsAsync">
                 <Columns>
                     <PropertyColumn Property="@(x => x.CreatedAtUtc)" Title="@Text["Date"]" Sortable="true" />
@@ -213,8 +212,8 @@
         }
         else
         {
-            <h2>@Text["Coverage"]</h2>
-            <p class="notice">@Text["CoverageLegend"]</p>
+            <FluentText As="TextTag.H2" Size="TextSize.Size600" Weight="TextWeight.Semibold" Block="true">@Text["Coverage"]</FluentText>
+            <FluentMessageBar Intent="MessageBarIntent.Info" AllowDismiss="false">@Text["CoverageLegend"]</FluentMessageBar>
             @foreach (var capability in _uncollected)
             { <p>@SectionName(capability) : @Text["NotCollected"]</p> }
             <ClarityGrid TGridItem="CoverageView" Load="LoadCoverageAsync">
@@ -247,8 +246,8 @@
     <DetailPanel Title="@Text["ScriptDownloads"]" Close="@(() => _request = null)">
         <p>@_request.Id · @_request.ScriptVersion</p>
         <p>@Text["Scope"] : @ScopeValue(_request.ScopeJson)</p>
-        <p><a href="@RequestUrl(_request.Id, "bundle")" download>@ScriptText("DownloadScriptBundle", _request.ProducerId)</a></p>
-        <p><a href="@RequestUrl(_request.Id, "parameters")" download>@Text["DownloadParameters"]</a></p>
+        <p><FluentLink Href="@RequestUrl(_request.Id, "bundle")" download ForceLoad="true">@ScriptText("DownloadScriptBundle", _request.ProducerId)</FluentLink></p>
+        <p><FluentLink Href="@RequestUrl(_request.Id, "parameters")" download ForceLoad="true">@Text["DownloadParameters"]</FluentLink></p>
         <p>@ScriptText("ScriptCommandHint", _request.ProducerId)</p>
         <pre><code>@ScriptBundle.Command(_request.ProducerId)</code></pre>
         <p>@Text["SeparateMachineHint"]</p>
@@ -266,29 +265,29 @@
         @if (_preview.Report is { } report) { <ReportPreview Report="report" /> }
         @foreach (var result in _preview.Sections)
         {
-            <article class="environment-card">
-                <h3>@SectionName(result.CapabilityId) · @Text[result.Status.ToString()]</h3>
+            <FluentCard>
+                <FluentText As="TextTag.H3" Size="TextSize.Size500" Weight="TextWeight.Semibold" Block="true">@SectionName(result.CapabilityId) · @Text[result.Status.ToString()]</FluentText>
                 <p>@Text["ObjectsRelations"] : @Count(result.ObjectCount, result.Status) / @Count(result.RelationshipCount, result.Status)</p>
                 <p>@Text["CoveredFields"] : @string.Join(", ", result.CoveredFields)</p>
                 <p>@Text["CoveredRelations"] : @string.Join(", ", result.CoveredRelations)</p>
                 @foreach (var issue in result.Warnings.Concat(result.Errors)) { <p>@Issue(issue.Code) <code>@issue.Code</code></p> }
-            </article>
+            </FluentCard>
         }
         <p>@Text["PreviewSampleHint"]</p>
-        <details><summary>@Text["ObjectSample"]</summary><pre>@JsonSerializer.Serialize(_preview.Objects, ContractJson.Options)</pre></details>
-        <details><summary>@Text["RelationSample"]</summary><pre>@JsonSerializer.Serialize(_preview.Relationships, ContractJson.Options)</pre></details>
-        <p><a href="@($"/api/projects/{ProjectId}/discovery/runs/{_preview.Run.Id}/download")" download>@Text["DownloadRawResult"]</a></p>
+        <FluentAccordion><FluentAccordionItem Header="@Text["ObjectSample"]"><pre>@JsonSerializer.Serialize(_preview.Objects, ContractJson.Options)</pre></FluentAccordionItem></FluentAccordion>
+        <FluentAccordion><FluentAccordionItem Header="@Text["RelationSample"]"><pre>@JsonSerializer.Serialize(_preview.Relationships, ContractJson.Options)</pre></FluentAccordionItem></FluentAccordion>
+        <p><FluentLink Href="@($"/api/projects/{ProjectId}/discovery/runs/{_preview.Run.Id}/download")" download ForceLoad="true">@Text["DownloadRawResult"]</FluentLink></p>
         @if (_preview.Run.ConfirmedAtUtc is null)
         {
             @if (_preview.Report is { } diagnostics && (diagnostics.UsableRows == 0 || _preview.Sections.Any(x => x.Status == CoverageStatus.Failed)))
             {
-                <p class="notice" role="status">@Text["NothingToPublish"]</p>
+                <FluentMessageBar Intent="MessageBarIntent.Info" AllowDismiss="false">@Text["NothingToPublish"]</FluentMessageBar>
             }
             else
             {
-                <p class="notice">@Text["ConfirmationHint"]</p>
+                <FluentMessageBar Intent="MessageBarIntent.Info" AllowDismiss="false">@Text["ConfirmationHint"]</FluentMessageBar>
                 @if (_preview.Report is not null && _preview.Sections.Any(x => x.Status == CoverageStatus.Partial))
-                { <p class="notice">@Text["ReportPartialHint"]</p> }
+                { <FluentMessageBar Intent="MessageBarIntent.Info" AllowDismiss="false">@Text["ReportPartialHint"]</FluentMessageBar> }
                 <FluentButton Appearance="ButtonAppearance.Primary" OnClick="ConfirmAsync" Disabled="@(!_canCollect || Busy)">@Text["ConfirmPublication"]</FluentButton>
             }
         }

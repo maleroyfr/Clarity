@@ -6,7 +6,7 @@
 @inject IWebHostEnvironment Environment
 
 <PageTitle>@Text["Clients"] · Clarity</PageTitle>
-<FluentStack Wrap="true" VerticalAlignment="VerticalAlignment.Center">
+<FluentStack Wrap="true" VerticalAlignment="VerticalAlignment.Center" HorizontalGap="var(--spacingHorizontalM)">
     <FluentText As="TextTag.H1" Size="TextSize.Size700" Weight="TextWeight.Semibold">@Text["Clients"]</FluentText>
     <FluentSpacer />
     <FluentButton Appearance="ButtonAppearance.Primary" Disabled="@(!Configured)" OnClick="@(() => _create = true)">@Text["NewClient"]</FluentButton>
@@ -20,7 +20,7 @@
 }
 else
 {
-    <FluentStack Wrap="true" VerticalAlignment="VerticalAlignment.Bottom">
+    <FluentStack Wrap="true" VerticalAlignment="VerticalAlignment.Bottom" HorizontalGap="var(--spacingHorizontalM)">
         <FluentTextInput TextInputType="TextInputType.Search" Label="@Text["Search"]" @bind-Value="_search" />
         <FluentButton OnClick="SearchAsync">@Text["SearchAction"]</FluentButton>
     </FluentStack>

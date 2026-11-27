@@ -1,6 +1,10 @@
-<form action="/development/persona" method="post" class="persona-picker">
+<FluentButton Id="persona-trigger" IconStart="@(new Icons.Regular.Size16.Person())"
+              Title="@Text["LocalPersona"]" aria-expanded="@(_opened ? "true" : "false")"
+              OnClick="@(() => _opened = !_opened)">@Text[$"Persona_{Current}"]</FluentButton>
+<FluentPopover AnchorId="persona-trigger" @bind-Opened="_opened" Padding="@Padding.All3">
+<form action="/development/persona" method="post">
     <AntiforgeryToken />
-    <FluentStack VerticalAlignment="VerticalAlignment.Bottom" Wrap="true">
+    <FluentStack Orientation="Orientation.Vertical" VerticalGap="var(--spacingVerticalS)">
         <FluentSelect TOption="string" TValue="string" Items="DevelopmentAuthenticationHandler.Personas.Keys"
                       Label="@Text["LocalPersona"]" OptionText="@(p => Text[$"Persona_{p}"])"
                       @bind-Value="_selection" />
@@ -8,9 +12,11 @@
         <FluentButton Type="ButtonType.Submit">@Text["SwitchPersona"]</FluentButton>
     </FluentStack>
 </form>
+</FluentPopover>
 
 @code {
     [Parameter, EditorRequired] public string? Current { get; set; }
     private string? _selection;
+    private bool _opened;
     protected override void OnInitialized() => _selection = Current;
 }

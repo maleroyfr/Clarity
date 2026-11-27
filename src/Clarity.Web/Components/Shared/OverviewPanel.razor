@@ -4,50 +4,50 @@
 @inherits FoundationPage
 @inject InventoryOverview Overview
 
-@if (Error is not null) { <p role="alert" class="error">@Error</p> }
+@if (Error is not null) { <FluentMessageBar Intent="MessageBarIntent.Error" AllowDismiss="false">@Error</FluentMessageBar> }
 @if (_data is { } data)
 {
     @if (!data.HasObservations)
     {
         <EmptyState Title="@Text["NoInventory"]" Description="@Text["OverviewEmptyHint"]">
-            <a href="@DiscoveryLink">@Text["ViewCollections"]</a>
+            <FluentLink Href="@DiscoveryLink">@Text["ViewCollections"]</FluentLink>
         </EmptyState>
     }
     <div class="summary-cards">
         @foreach (var metric in data.Metrics)
         {
-            <article><h3>@Text[metric.Label]</h3>
+            <FluentCard><FluentText As="TextTag.H3" Size="TextSize.Size500" Weight="TextWeight.Semibold" Block="true">@Text[metric.Label]</FluentText>
                 @if (metric.Amount.HasValue)
                 {
-                    <a href="@InventoryLink(metric.Filter)">@metric.Amount.Value.ToString("N0")</a>
+                    <FluentLink Href="@InventoryLink(metric.Filter)">@metric.Amount.Value.ToString("N0")</FluentLink>
                     @if (metric.KnownResources.HasValue) { <small>@Text["KnownSubscriptions"] : @metric.KnownResources / @metric.ObservedResources</small> }
                 }
-                else { <p>@Text["Unknown"] · <a href="@DiscoveryLink">@Text["Coverage"]</a></p> }
-            </article>
+                else { <p>@Text["Unknown"] · <FluentLink Href="@DiscoveryLink">@Text["Coverage"]</FluentLink></p> }
+            </FluentCard>
         }
-        <article><h3>@Text["MappingReview"]</h3><a href="@($"/projects/{ProjectId}/inventory?view=Mappings&side={Side}&state=Queue")">@data.ReviewCount</a></article>
-        <article><h3>@Text["PendingLinks"]</h3><a href="@($"/projects/{ProjectId}/inventory?view=PendingLinks&side={Side}")">@data.PendingLinks</a></article>
+        <FluentCard><FluentText As="TextTag.H3" Size="TextSize.Size500" Weight="TextWeight.Semibold" Block="true">@Text["MappingReview"]</FluentText><FluentLink Href="@($"/projects/{ProjectId}/inventory?view=Mappings&side={Side}&state=Queue")">@data.ReviewCount</FluentLink></FluentCard>
+        <FluentCard><FluentText As="TextTag.H3" Size="TextSize.Size500" Weight="TextWeight.Semibold" Block="true">@Text["PendingLinks"]</FluentText><FluentLink Href="@($"/projects/{ProjectId}/inventory?view=PendingLinks&side={Side}")">@data.PendingLinks</FluentLink></FluentCard>
     </div>
     @if (data.Units.Count > 0)
     {
-        <h3>@Text["InventoryDatesCoverage"]</h3>
+        <FluentText As="TextTag.H3" Size="TextSize.Size500" Weight="TextWeight.Semibold" Block="true">@Text["InventoryDatesCoverage"]</FluentText>
         @foreach (var unit in data.Units)
         {
             var scope = System.Text.Json.JsonSerializer.Deserialize<CollectionScope>(unit.ScopeJson, ContractJson.Options)!;
-            <article class="environment-card"><strong>@unit.Environment · @Text[$"Section_{unit.Capability}"]</strong>
+            <FluentCard><strong>@unit.Environment · @Text[$"Section_{unit.Capability}"]</strong>
                 <p>@Text[$"ScopeKind_{scope.Kind}"] : @scope.Value · @Text[unit.Status.ToString()]</p>
-                <a href="@InventoryLink(new(Side, unit.EnvironmentId, Run: unit.RunId, Section: unit.SectionId))">@unit.Date.ToString("u") · @Text["SectionObjects"]</a>
+                <FluentLink Href="@InventoryLink(new(Side, unit.EnvironmentId, Run: unit.RunId, Section: unit.SectionId))">@unit.Date.ToString("u") · @Text["SectionObjects"]</FluentLink>
                 <FluentButton OnClick="@(() => _proof = new(ProofKind.Section, unit.SectionId))">@Text["Provenance"]</FluentButton>
-            </article>
+            </FluentCard>
         }
-        <a href="@DiscoveryLink">@Text["Coverage"]</a>
+        <FluentLink Href="@DiscoveryLink">@Text["Coverage"]</FluentLink>
     }
     @if (data.Changes.Count > 0)
     {
-        <h3>@Text["RecentChanges"]</h3>
+        <FluentText As="TextTag.H3" Size="TextSize.Size500" Weight="TextWeight.Semibold" Block="true">@Text["RecentChanges"]</FluentText>
         <ul>@foreach (var change in data.Changes)
             {
-                <li><a href="@($"/projects/{ProjectId}/inventory?side={Side}&object={change.Id}")">@change.Label</a> · @change.Changed?.ToString("u")</li>
+                <li><FluentLink Href="@($"/projects/{ProjectId}/inventory?side={Side}&object={change.Id}")">@change.Label</FluentLink> · @change.Changed?.ToString("u")</li>
             }</ul>
     }
 }

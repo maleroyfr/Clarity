@@ -18,7 +18,7 @@ else
             <p>@Text["InternalObjectId"] : <code>@sheet.Id</code></p>
             @foreach (var k in sheet.Keys) { <p>@k.Namespace : <code>@k.ExternalId</code></p> }
             @if (sheet.PresenceSection.HasValue) { <FluentButton OnClick="@(() => Show(ProofKind.Section, sheet.PresenceSection.Value))">@Text["PresenceProof"]</FluentButton> }
-            <h3>@Text["CurrentProperties"]</h3>
+            <FluentText As="TextTag.H3" Size="TextSize.Size500" Weight="TextWeight.Semibold" Block="true">@Text["CurrentProperties"]</FluentText>
             <dl>@foreach (var f in sheet.Fields)
                 {
                     <dt>@f.Name</dt><dd>@Value(f.Json)
@@ -28,10 +28,10 @@ else
                 }</dl>
             @if (sheet.Associations.Count > 0)
             {
-                <h3>@Text["DirectoryAssociations"]</h3>
+                <FluentText As="TextTag.H3" Size="TextSize.Size500" Weight="TextWeight.Semibold" Block="true">@Text["DirectoryAssociations"]</FluentText>
                 @foreach (var a in sheet.Associations)
                 {
-                    <p><a href="@Link(a.OtherId)">@(a.OtherName ?? a.OtherId.ToString())</a> · @Text[a.State.ToString()] · @Text[a.Rule.ToString()]
+                    <p><FluentLink Href="@Link(a.OtherId)">@(a.OtherName ?? a.OtherId.ToString())</FluentLink> · @Text[a.State.ToString()] · @Text[a.Rule.ToString()]
                         <FluentButton OnClick="@(() => Show(ProofKind.Mapping, a.DecisionId))">@Text["Provenance"]</FluentButton></p>
                 }
             }
@@ -48,11 +48,11 @@ else
                                              Fields="sheet.Fields" ShowEvidence="@(id => Show(ProofKind.Observation, id))" />
                 }
             }
-            <h3>@Text["DirectRelationships"]</h3>
+            <FluentText As="TextTag.H3" Size="TextSize.Size500" Weight="TextWeight.Semibold" Block="true">@Text["DirectRelationships"]</FluentText>
             <ClarityGrid TGridItem="SheetEdge" Load="@((p, ct) => Sheets.EdgesAsync(ProjectId, ObjectId, p, ct))">
                 <Columns><TemplateColumn Title="@Text["Relation"]" Context="e">@(e.Outgoing ? "→" : "←") @(Text[$"Relation_{e.Type}"].ResourceNotFound ? e.Type : Text[$"Relation_{e.Type}"].Value) · @Text[e.Origin.ToString()]</TemplateColumn>
                     <TemplateColumn Title="@Text["RelatedObject"]" Context="e">
-                        @if (e.OtherId.HasValue) { <a href="@Link(e.OtherId.Value)">@e.OtherLabel</a> } else { @e.OtherLabel }
+                        @if (e.OtherId.HasValue) { <FluentLink Href="@Link(e.OtherId.Value)">@e.OtherLabel</FluentLink> } else { @e.OtherLabel }
                         <small>@Text[$"Endpoint{e.Resolution}"] · @Text[e.Current ? "Observed" : "Historical"]</small>
                     </TemplateColumn>
                     <TemplateColumn Title="@Text["Actions"]" Context="e"><FluentButton OnClick="@(() => Show(ProofKind.Relationship, e.Id))">@Text["Provenance"]</FluentButton></TemplateColumn>
@@ -66,7 +66,7 @@ else
                 @if (_paths.Count == 0) { <p>@Text["NoObservedLinks"]</p> }
                 @foreach (var p in _paths)
                 {
-                    <p><a href="@Link(p.ObjectId)">@(p.Name ?? p.ObjectId.ToString())</a> :
+                    <p><FluentLink Href="@Link(p.ObjectId)">@(p.Name ?? p.ObjectId.ToString())</FluentLink> :
                         @for (int index = 0; index < p.RelationshipIds.Count; index++)
                         {
                             var edge = p.RelationshipIds[index];
@@ -74,17 +74,17 @@ else
                         }</p>
                 }
             }
-            <h3>@Text["ObservationHistory"]</h3>
+            <FluentText As="TextTag.H3" Size="TextSize.Size500" Weight="TextWeight.Semibold" Block="true">@Text["ObservationHistory"]</FluentText>
             <ClarityGrid TGridItem="SheetObservation" Load="@((p, ct) => Sheets.HistoryAsync(ProjectId, ObjectId, p, ct))">
                 <Columns><PropertyColumn Property="@(o => o.ObservedAtUtc)" Title="@Text["Date"]" Sortable="true" />
                     <TemplateColumn Title="@Text["Section"]" Context="o">@o.Capability · @Text[o.Coverage.ToString()]</TemplateColumn>
                     <TemplateColumn Title="@Text["CurrentProperties"]" Context="o">
-                        <details><summary>@o.Producer</summary>@foreach (var f in o.Attributes) { <p>@f.Key : @Value(f.Value.GetRawText())</p> }</details>
+                        <FluentAccordion><FluentAccordionItem Header="@o.Producer">@foreach (var f in o.Attributes) { <p>@f.Key : @Value(f.Value.GetRawText())</p> }</FluentAccordionItem></FluentAccordion>
                     </TemplateColumn>
                     <TemplateColumn Title="@Text["Actions"]" Context="o"><FluentButton OnClick="@(() => Show(ProofKind.Observation, o.Id))">@Text["Provenance"]</FluentButton></TemplateColumn>
                 </Columns><EmptyContent><p>@Text["NoInventory"]</p></EmptyContent>
             </ClarityGrid>
-            <h3>@Text["AlternateKeys"]</h3>
+            <FluentText As="TextTag.H3" Size="TextSize.Size500" Weight="TextWeight.Semibold" Block="true">@Text["AlternateKeys"]</FluentText>
             <ClarityGrid TGridItem="SheetAlias" Load="@((p, ct) => Sheets.AliasesAsync(ProjectId, ObjectId, p, ct))">
                 <Columns><PropertyColumn Property="@(a => a.Namespace)" Title="@Text["ObjectType"]" />
                     <PropertyColumn Property="@(a => a.Value)" Title="@Text["TechnicalId"]" />

@@ -3,25 +3,24 @@
 @inject DecisionRegisterService Register
 @inject ScopeService Scope
 
-<h3>@Text["DecisionRegister"]</h3>
+<FluentText As="TextTag.H3" Size="TextSize.Size500" Weight="TextWeight.Semibold" Block="true">@Text["DecisionRegister"]</FluentText>
 <p>@Text["DecisionRegisterHint"]</p>
-@if (Error is not null) { <p class="error" role="alert">@Error</p> }
-@if (_message is not null) { <p role="status">@_message</p> }
+@if (Error is not null) { <FluentMessageBar Intent="MessageBarIntent.Error" AllowDismiss="false">@Error</FluentMessageBar> }
+@if (_message is not null) { <FluentMessageBar Intent="MessageBarIntent.Success" AllowDismiss="false">@_message</FluentMessageBar> }
 <ul aria-label="@Text["DecisionRegisterSummary"]">
     @foreach (var count in _summary)
     { <li>@Text[$"DecisionKind_{count.Kind}"] : @count.Total.ToString("N0") · @Text["ToReview"] : @count.ToReview.ToString("N0")</li> }
 </ul>
 @if (CanQualify)
 { <FluentButton OnClick="RecomputeAsync" Disabled="@Busy">@Text["RecomputeReview"]</FluentButton> }
-<label>@Text["DecisionKind"] <select value="@_kind" @onchange="ChangeKind">
-    @foreach (var kind in Enum.GetValues<DecisionKind>()) { <option value="@kind">@Text[$"DecisionKind_{kind}"]</option> }
-</select></label>
-<label><input type="checkbox" checked="@_toReviewOnly" @onchange="ChangeToReview" /> @Text["ToReviewOnly"]</label>
-<FluentTextInput Label="@Text["Search"]" @bind-Value="_search" />
+<FluentSelect TOption="DecisionKind" TValue="DecisionKind" Label="@Text["DecisionKind"]" Items="@(Enum.GetValues<DecisionKind>())"
+              OptionText="@(kind => Text[$"DecisionKind_{kind}"])" Value="@_kind" ValueChanged="ChangeKind" />
+<FluentCheckbox @bind-Value="_toReviewOnly" @bind-Value:after="@(() => _revision++)" Label="@Text["ToReviewOnly"]" />
+<FluentTextInput TextInputType="TextInputType.Search" Label="@Text["Search"]" @bind-Value="_search" />
 <ClarityGrid @key="(ProjectId, Side, _kind, _toReviewOnly, _search, _revision)" TGridItem="DecisionRegisterRow" Search="@_search"
              Load="@((p, ct) => Register.PageAsync(ProjectId, Side, _kind, _toReviewOnly, p, ct))">
     <Columns>
-        <TemplateColumn Title="@Text["Name"]" Context="r"><a href="@Sheet(r.ObjectId)">@r.Label</a>
+        <TemplateColumn Title="@Text["Name"]" Context="r"><FluentLink Href="@Sheet(r.ObjectId)">@r.Label</FluentLink>
             <small>@Text[$"ObjectType_{r.Type}"] · @Text[r.Presence.ToString()]</small></TemplateColumn>
         <TemplateColumn Title="@Text["DecisionKind"]" Context="r">@Text[r.ValueKey]
             @if (r.Kind == DecisionKind.Scope) { <span> · @(r.Wave ?? Text["NoWave"].Value)</span> }
@@ -52,8 +51,8 @@
                 <FluentButton OnClick="@(() => _history = r)">@Text["ScopeHistory"]</FluentButton>
                 @if (CanQualify && r.NeedsReview) { <FluentButton OnClick="@(() => OpenReconfirm(r))" Disabled="@Busy">@Text["Reconfirm"]</FluentButton> }
             }
-            else if (r.Kind == DecisionKind.Mapping) { <a href="@($"/projects/{ProjectId}/inventory?side={Side}&view=Mappings")">@Text["MappingReview"]</a> }
-            else { <a href="@Sheet(r.ObjectId)">@Text[CanQualify ? "QualifyFromSheet" : "ObjectSheet"]</a> }
+            else if (r.Kind == DecisionKind.Mapping) { <FluentLink Href="@($"/projects/{ProjectId}/inventory?side={Side}&view=Mappings")">@Text["MappingReview"]</FluentLink> }
+            else { <FluentLink Href="@Sheet(r.ObjectId)">@Text[CanQualify ? "QualifyFromSheet" : "ObjectSheet"]</FluentLink> }
         </TemplateColumn>
     </Columns>
     <EmptyContent><p>@Text["NoDecisions"]</p></EmptyContent>
@@ -67,7 +66,7 @@
         <FluentButton OnClick="PreviewAsync" Disabled="@Busy">@Text["PreviewSelectionDecision"]</FluentButton>
         @if (_preview is { } preview)
         {
-            <p role="status">@Text["AffectedObjects"] : @preview.Result.Affected · @Text["ReconfirmedObjects"] : @preview.Result.Reconfirmed</p>
+            <FluentMessageBar Intent="MessageBarIntent.Info" AllowDismiss="false">@Text["AffectedObjects"] : @preview.Result.Affected · @Text["ReconfirmedObjects"] : @preview.Result.Reconfirmed</FluentMessageBar>
             <FluentButton Appearance="ButtonAppearance.Primary" OnClick="ReconfirmAsync"
                           Disabled="@(Busy || preview.Result.Affected == 0 || string.IsNullOrWhiteSpace(_reason))">@Text["ConfirmDecisions"]</FluentButton>
         }
@@ -112,12 +111,11 @@
     private string? Value(BasisChange change, string? value) => value is null ? "∅"
         : change.Field == DecisionBasis.PresenceField ? Text[value].Value : value;
 
-    private void ChangeKind(ChangeEventArgs e)
+    private void ChangeKind(DecisionKind kind)
     {
-        if (Enum.TryParse<DecisionKind>(e.Value?.ToString(), out var kind)) { _kind = kind; _revision++; }
+        _kind = kind; _revision++;
     }
 
-    private void ChangeToReview(ChangeEventArgs e) { _toReviewOnly = e.Value is true; _revision++; }
 
     private void OpenReconfirm(DecisionRegisterRow row) { _reconfirm = row; _preview = null; _reason = ""; _operation = Guid.NewGuid(); }
 

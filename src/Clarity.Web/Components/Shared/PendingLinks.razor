@@ -1,14 +1,14 @@
 @using Clarity.Infrastructure
 @inject InventoryGraph Graph
-<h2>@Text["PendingLinks"] · @Text[Side.ToString()]</h2>
+<FluentText As="TextTag.H2" Size="TextSize.Size600" Weight="TextWeight.Semibold" Block="true">@Text["PendingLinks"] · @Text[Side.ToString()]</FluentText>
 <ClarityGrid TGridItem="PendingEdge" Load="@((p, ct) => Graph.PendingAsync(ProjectId, Side, p, ct))">
     <Columns>
         <PropertyColumn Property="@(r => r.Environment)" Title="@Text["CollectionEnvironment"]" />
         <PropertyColumn Property="@(r => r.Relation)" Title="@Text["Relation"]" />
         <TemplateColumn Title="@Text["Endpoints"]" Context="r">
-            @if (r.FromId.HasValue) { <a href="@Sheet(r.FromId.Value)">@r.From.ExternalId</a> } else { @r.From.ExternalId }
+            @if (r.FromId.HasValue) { <FluentLink Href="@Sheet(r.FromId.Value)">@r.From.ExternalId</FluentLink> } else { @r.From.ExternalId }
             · @Text[$"Endpoint{r.FromMethod}"] →
-            @if (r.ToId.HasValue) { <a href="@Sheet(r.ToId.Value)">@r.To.ExternalId</a> } else { @r.To.ExternalId }
+            @if (r.ToId.HasValue) { <FluentLink Href="@Sheet(r.ToId.Value)">@r.To.ExternalId</FluentLink> } else { @r.To.ExternalId }
             · @Text[$"Endpoint{r.ToMethod}"]
         </TemplateColumn>
         <TemplateColumn Title="@Text["Actions"]" Context="r"><FluentButton OnClick="@(() => _proof = new(ProofKind.Relationship, r.Id))">@Text["Provenance"]</FluentButton></TemplateColumn>

@@ -5,13 +5,13 @@
 @inject WorkspaceAuthorization Authorization
 
 <section aria-label="@Text[$"Qualification_{Kind}"]">
-    <h3>@Text[$"Qualification_{Kind}"]</h3>
+    <FluentText As="TextTag.H3" Size="TextSize.Size500" Weight="TextWeight.Semibold" Block="true">@Text[$"Qualification_{Kind}"]</FluentText>
     <p>@Text["TeamsManualOnly"]</p>
-    @if (Error is not null) { <p class="error" role="alert">@Error</p> }
-    @if (_saved) { <p role="status">@Text["ChangesSaved"]</p> }
+    @if (Error is not null) { <FluentMessageBar Intent="MessageBarIntent.Error" AllowDismiss="false">@Error</FluentMessageBar> }
+    @if (_saved) { <FluentMessageBar Intent="MessageBarIntent.Success" AllowDismiss="false">@Text["ChangesSaved"]</FluentMessageBar> }
     @if (_state is { } state)
     {
-        @if (state.NeedsReview) { <p role="alert">@Text["TeamsMetadataChanged"]</p> }
+        @if (state.NeedsReview) { <FluentMessageBar Intent="MessageBarIntent.Error" AllowDismiss="false">@Text["TeamsMetadataChanged"]</FluentMessageBar> }
         @if (state.Current is { } current)
         {
             <p>@Text[$"QualificationScope_{current.ScopeValue}"] · @current.RecordedAtUtc.ToString("u")</p>
@@ -21,23 +21,21 @@
         else { <p>@Text["TeamsNotQualified"]</p> }
         @if (_canQualify)
         {
-            <label>@Text["TeamsScopeValue"] <select @bind="_value">
-                @foreach (var value in Enum.GetValues<QualificationScopeValue>())
-                { <option value="@value">@Text[$"QualificationScope_{value}"]</option> }
-            </select></label>
+            <FluentSelect TOption="QualificationScopeValue" TValue="QualificationScopeValue" Label="@Text["TeamsScopeValue"]" Items="@(Enum.GetValues<QualificationScopeValue>())"
+                          OptionText="@(value => Text[$"QualificationScope_{value}"])" @bind-Value="_value" />
             <FluentTextInput Label="@Text["TeamsReason"]" @bind-Value="_reason" />
             <FluentTextInput Label="@Text["SsoEvidenceReference"]" @bind-Value="_reference" />
-            <label>@Text["SsoObservationEvidence"] <select @bind="_observation">
-                <option value="">@Text["SsoNoObservation"]</option>
+            <FluentSelect TOption="string" TValue="string" Label="@Text["SsoObservationEvidence"]" @bind-Value="_observation">
+                <FluentOption TValue="string" Value="@string.Empty">@Text["SsoNoObservation"]</FluentOption>
                 @if (state.Current?.EvidenceObservationId is { } prior && !Fields.Any(x => x.ObservationId == prior))
-                { <option value="@prior">@Text["SsoPriorEvidence"]</option> }
+                { <FluentOption TValue="string" Value="@(prior.ToString())">@Text["SsoPriorEvidence"]</FluentOption> }
                 @foreach (var evidence in Fields.GroupBy(x => x.ObservationId))
-                { <option value="@evidence.Key">@string.Join(", ", evidence.Select(x => x.Name))</option> }
-            </select></label>
+                { <FluentOption TValue="string" Value="@(evidence.Key.ToString())">@string.Join(", ", evidence.Select(x => x.Name))</FluentOption> }
+            </FluentSelect>
             <FluentButton OnClick="SaveAsync" Disabled="@(Busy || string.IsNullOrWhiteSpace(_reason))">@Text["Save"]</FluentButton>
             <FluentButton OnClick="ReloadAsync" Disabled="@Busy">@Text["SsoReload"]</FluentButton>
         }
-        <h4>@Text["SsoHistory"]</h4>
+        <FluentText As="TextTag.H4" Size="TextSize.Size400" Weight="TextWeight.Semibold" Block="true">@Text["SsoHistory"]</FluentText>
         <ClarityGrid @key="(ProjectId, ObjectId, Kind, _generation)" TGridItem="Assessment"
                      Load="@((p, ct) => Qualifications.HistoryAsync(ProjectId, ObjectId, Kind, p, ct))">
             <Columns>

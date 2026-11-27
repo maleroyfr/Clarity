@@ -9,15 +9,15 @@
     }
     @foreach (var decision in _detail?.Decisions ?? [])
     {
-        <article><h3>@Text[decision.State.ToString()] · @Text[decision.Rule.ToString()]</h3>
+        <FluentCard><FluentText As="TextTag.H3" Size="TextSize.Size500" Weight="TextWeight.Semibold" Block="true">@Text[decision.State.ToString()] · @Text[decision.Rule.ToString()]</FluentText>
             <p>@decision.Date.ToString("g") · @(decision.Author?.ObjectId.ToString() ?? Text["Automatic"].Value)</p>
             <p>@(decision.Author.HasValue ? decision.Reason : Text[decision.Reason].Value)</p>
-        </article>
+        </FluentCard>
     }
     @foreach (var source in _detail?.Sources ?? [])
     {
-        <article class="environment-card">
-            <h3>@source.Source · @Text[source.Result.ToString()]</h3>
+        <FluentCard>
+            <FluentText As="TextTag.H3" Size="TextSize.Size500" Weight="TextWeight.Semibold" Block="true">@source.Source · @Text[source.Result.ToString()]</FluentText>
             <p>@Text["CollectionChannel"] : @Text[source.Channel] · @source.Producer @source.Version</p>
             <p>@Text[source.Side.ToString()] : @source.Environment · @source.Observed.ToString("u")</p>
             <p>@Text["Section"] : @source.Capability · @Text["Scope"] : @source.Scope.Kind · @source.Scope.Value</p>
@@ -28,7 +28,7 @@
             {
                 <p>@Text["ResultFile"] : @source.FileName · @source.Uploaded?.ToString("u") · @Text["Uploader"] : @source.Uploader?.ObjectId</p>
             }
-        </article>
+        </FluentCard>
     }
 </DetailPanel>
 
