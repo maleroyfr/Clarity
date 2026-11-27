@@ -749,4 +749,75 @@
   <data name="UnchangedObjects" xml:space="preserve"><value>Objets inchangés</value></data>
   <data name="ScopeHistory" xml:space="preserve"><value>Historique de la décision</value></data>
   <data name="ScopeNeedsReview" xml:space="preserve"><value>Les attributs clés ont changé depuis la décision : à revoir. La décision est conservée.</value></data>
+  <data name="Dependencies" xml:space="preserve"><value>Dépendances et ressources partagées</value></data>
+  <data name="DependenciesHint" xml:space="preserve"><value>Ressources collectives (groupes, équipes, sites, boîtes, applications, appareils) dont dépend la population qui migre, calculées à partir des décisions de périmètre courantes. Une ressource est partagée quand ses dépendances connues touchent aussi des comptes qui restent. Le calcul ne modifie aucune décision.</value></data>
+  <data name="AnalyzeDependencies" xml:space="preserve"><value>Calculer les dépendances</value></data>
+  <data name="DependencyWaveHint" xml:space="preserve"><value>Sans vague, tous les comptes inclus migrent. Avec une vague, seuls les comptes inclus dans cette vague migrent ; les autres inclus sont comptés dans d’autres vagues.</value></data>
+  <data name="DependenciesAnalyzed" xml:space="preserve"><value>Analyse des dépendances enregistrée.</value></data>
+  <data name="NoDependencyAnalysis" xml:space="preserve"><value>Aucune analyse des dépendances pour ce côté.</value></data>
+  <data name="DependencyAnalysis" xml:space="preserve"><value>Analyse des dépendances</value></data>
+  <data name="AllWaves" xml:space="preserve"><value>Toutes vagues</value></data>
+  <data name="DependencyPrincipals" xml:space="preserve"><value>Comptes concernés</value></data>
+  <data name="DependencyTotals" xml:space="preserve"><value>Totaux de l’analyse</value></data>
+  <data name="DependencyResources" xml:space="preserve"><value>Ressources</value></data>
+  <data name="KnownVolume" xml:space="preserve"><value>Volume connu</value></data>
+  <data name="SharedVolume" xml:space="preserve"><value>Volume partagé</value></data>
+  <data name="UnknownVolumeResources" xml:space="preserve"><value>Ressources sans volume connu</value></data>
+  <data name="UnknownVolume" xml:space="preserve"><value>Inconnu</value></data>
+  <data name="Volume" xml:space="preserve"><value>Volume</value></data>
+  <data name="SizeGiB" xml:space="preserve"><value>{0:N1} Gio</value></data>
+  <data name="SizeMiB" xml:space="preserve"><value>{0:N1} Mio</value></data>
+  <data name="SizeBytes" xml:space="preserve"><value>{0:N0} o</value></data>
+  <data name="DependencyVolumeHint" xml:space="preserve"><value>Les volumes sont dédoublonnés par identifiant de ressource : un site atteint à la fois par Teams et par SharePoint n’est compté qu’une fois. Les volumes inconnus ne sont jamais estimés.</value></data>
+  <data name="UnresolvedLinks" xml:space="preserve"><value>Liens non résolus</value></data>
+  <data name="MembersNotCollected" xml:space="preserve"><value>Membres non collectés (canal privé ou partagé)</value></data>
+  <data name="AnalysisCoverage" xml:space="preserve"><value>Couverture de l’analyse</value></data>
+  <data name="Sections" xml:space="preserve"><value>Sections</value></data>
+  <data name="ResourceScoped" xml:space="preserve"><value>collecte par ressource</value></data>
+  <data name="DependencyFamily" xml:space="preserve"><value>Famille</value></data>
+  <data name="DependencyClassification" xml:space="preserve"><value>Classement</value></data>
+  <data name="AllUsersAssignment" xml:space="preserve"><value>Affectation à tous les utilisateurs ou appareils</value></data>
+  <data name="ExplainDependency" xml:space="preserve"><value>Expliquer</value></data>
+  <data name="NoDependencyResources" xml:space="preserve"><value>Aucune ressource dépendante pour ces filtres.</value></data>
+  <data name="DependencyRoutes" xml:space="preserve"><value>Chemins d’accès directs</value></data>
+  <data name="DirectDependencyOnly" xml:space="preserve"><value>Atteinte uniquement par des comptes directs.</value></data>
+  <data name="MoreRoutes" xml:space="preserve"><value>Chemins au total</value></data>
+  <data name="DependencySamples" xml:space="preserve"><value>Comptes exemples</value></data>
+  <data name="DependencySamplesHint" xml:space="preserve"><value>Au plus 25 exemples par côté sont conservés ; les compteurs portent sur tous les comptes.</value></data>
+  <data name="Via" xml:space="preserve"><value>via</value></data>
+  <data name="DependencyFamily_Groups" xml:space="preserve"><value>Groupes</value></data>
+  <data name="DependencyFamily_Teams" xml:space="preserve"><value>Équipes</value></data>
+  <data name="DependencyFamily_Sites" xml:space="preserve"><value>Sites et OneDrive</value></data>
+  <data name="DependencyFamily_Mailboxes" xml:space="preserve"><value>Boîtes aux lettres</value></data>
+  <data name="DependencyFamily_Applications" xml:space="preserve"><value>Applications et stratégies</value></data>
+  <data name="DependencyFamily_Devices" xml:space="preserve"><value>Appareils</value></data>
+  <data name="DependencyClassification_MigratingOnly" xml:space="preserve"><value>Population qui migre uniquement</value></data>
+  <data name="DependencyClassification_Shared" xml:space="preserve"><value>Partagée</value></data>
+  <data name="DependencyClassification_ToArbitrate" xml:space="preserve"><value>À arbitrer</value></data>
+  <data name="DependencyClassification_CrossWave" xml:space="preserve"><value>Plusieurs vagues</value></data>
+  <data name="DependencySide_Migrating" xml:space="preserve"><value>Migrent</value></data>
+  <data name="DependencySide_OtherWave" xml:space="preserve"><value>Autre vague</value></data>
+  <data name="DependencySide_ToArbitrate" xml:space="preserve"><value>À arbitrer</value></data>
+  <data name="DependencySide_Remaining" xml:space="preserve"><value>Restent</value></data>
+  <data name="DependencyCoverage_NotCollected" xml:space="preserve"><value>Non collectée</value></data>
+  <data name="DependencyCoverage_Partial" xml:space="preserve"><value>Partielle</value></data>
+  <data name="DependencyCoverage_Complete" xml:space="preserve"><value>Complète</value></data>
+  <data name="ObjectType_managedDevice" xml:space="preserve"><value>Appareil géré Intune</value></data>
+  <data name="ObjectType_mobileApp" xml:space="preserve"><value>Application Intune</value></data>
+  <data name="ObjectType_deviceConfiguration" xml:space="preserve"><value>Profil de configuration</value></data>
+  <data name="ObjectType_deviceCompliancePolicy" xml:space="preserve"><value>Stratégie de conformité</value></data>
+  <data name="ObjectType_mobileAppAssignment" xml:space="preserve"><value>Affectation d’application</value></data>
+  <data name="ObjectType_deviceConfigurationAssignment" xml:space="preserve"><value>Affectation de profil</value></data>
+  <data name="ObjectType_deviceCompliancePolicyAssignment" xml:space="preserve"><value>Affectation de stratégie</value></data>
+  <data name="ObjectType_appRoleAssignment" xml:space="preserve"><value>Attribution de rôle d’application</value></data>
+  <data name="Relation_primaryMemberOf" xml:space="preserve"><value>Groupe principal</value></data>
+  <data name="Relation_intunePrimaryUserOf" xml:space="preserve"><value>Utilisateur principal Intune</value></data>
+  <data name="Relation_entraRegisteredOwnerOf" xml:space="preserve"><value>Propriétaire enregistré</value></data>
+  <data name="Relation_mailboxOf" xml:space="preserve"><value>Boîte du compte</value></data>
+  <data name="Relation_fullAccessTo" xml:space="preserve"><value>Accès complet</value></data>
+  <data name="Relation_sendAsOn" xml:space="preserve"><value>Envoyer en tant que</value></data>
+  <data name="Relation_sendOnBehalfOf" xml:space="preserve"><value>Envoyer de la part de</value></data>
+  <data name="Relation_targetsGroup" xml:space="preserve"><value>Groupe ciblé</value></data>
+  <data name="Relation_assignmentOf" xml:space="preserve"><value>Affectation de</value></data>
+  <data name="Relation_referencesEntraDevice" xml:space="preserve"><value>Appareil Entra correspondant</value></data>
 </root>

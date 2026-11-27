@@ -1,13 +1,14 @@
 # Migration scoping
 
 This guide covers Lot 5 migration scoping: populations, the list import assistant,
-historized scope decisions and migration waves. The French product specification
+historized scope decisions and migration waves, and the population dependency and
+shared-resource analysis. The French product specification
 (`docs/specification.md`, "Périmètre" screens and the `Population` / `ScopeDecision`
 entities) remains authoritative; this page records the implemented choices.
 
 The screen is at `/projects/{projectId}/scope` (with `?side=Target` for the target
-side). Its views are populations (default), `view=import` (import assistant) and
-`view=decisions` (decision list). Business text is French, from `UiStrings.resx`.
+side). Its views are populations (default), `view=import` (import assistant),
+`view=decisions` (decision list) and `view=dependencies` (dependency analysis). Business text is French, from `UiStrings.resx`.
 
 ## Populations
 
@@ -83,6 +84,125 @@ A decision whose object's key fields (`userPrincipalName`, `mail`,
 decision is flagged **à revoir**. The decision itself is kept until the
 consultant confirms or changes it; unrelated objects are not flagged.
 
+## Dependencies and shared resources
+
+**Calculer les dépendances** computes, for one environment and an optional wave,
+which collective resources the migrating population depends on and which of
+them are **shared** with principals that stay behind (specification: "une
+ressource est partagée lorsque ses dépendances connues couvrent à la fois des
+populations migrantes et restantes"). The result is a dated snapshot that never
+changes a consultant decision; a new computation for the same environment and
+wave replaces the previous snapshot. Each computation carries an operation ID
+(replay returns the same analysis, reuse with different content is a conflict)
+and writes a `Scope.DependenciesAnalyzed` audit event.
+
+### Sides
+
+Only `user` objects are principals. Each principal's side comes from its current
+`ScopeDecision`:
+
+| Decision | Side |
+| --- | --- |
+| Include, in the selected wave (or any wave when no wave is selected) | Migrating |
+| Include, in another wave | Other wave |
+| To arbitrate | To arbitrate |
+| Exclude, or no decision | Remaining |
+
+A principal without its own decision inherits the side of the objects bound to
+it by a **validated** hybrid mapping decision (AD ↔ Entra); conflicting mapped
+sides become *to arbitrate*.
+
+### Traversal
+
+The analysis reads current relations only (`DependencyEngine.Relations`). Each
+relation is read as "dependent → resource":
+
+| Category | Relations | Followed backward as |
+| --- | --- | --- |
+| Structural | `teamGroup`, `groupSite`, `teamSite`, `channelSite`, `assignmentOf`, `appRoleAssignmentResource`, `referencesEntraDevice` | Structure: the dependents of the linked object also depend on the resource |
+| Membership | `memberOf`, `primaryMemberOf` (nested groups are followed, cycles terminate) | Members |
+| Ownership | `ownerOf`, `intunePrimaryUserOf`, `entraRegisteredOwnerOf`, `mailboxOf` | Members |
+| Grant | `sitePermission`, `fullAccessTo`, `sendAsOn`, `sendOnBehalfOf`, `appRoleAssignmentPrincipal`, `targetsGroup` | Members |
+| Discovery | `channelInTeam` for private and shared channels | Never (outgoing only) |
+
+Candidate resources are the collective objects reachable forward from the
+migrating principals. For each one the walk goes backward and counts the
+principals on each side. Delegations and ownership are **not transitive**: a
+delegate of a mailbox does not become a dependent of the resources the mailbox
+reaches. Intune "all users / all devices" assignments are flagged and exclusion
+targets are not counted as dependents.
+
+Resource families and classification:
+
+| Family | Types |
+| --- | --- |
+| Groups | `group`, `mailGroup` |
+| Teams | `team` |
+| Sites and OneDrive | `site`, `oneDrive` |
+| Mailboxes | `mailbox`, `sharedMailbox`, `resourceMailbox` |
+| Applications | `servicePrincipal`, `mobileApp`, `deviceConfiguration`, `deviceCompliancePolicy` |
+| Devices | `managedDevice`, `device` |
+
+A resource is **Partagée** when at least one remaining principal depends on it;
+otherwise **À arbitrer** when a principal to arbitrate depends on it; otherwise
+**Plusieurs vagues** when a principal of another wave depends on it; otherwise it
+is **Population qui migre uniquement**.
+
+### Volume deduplication and explanations
+
+Volumes are counted **once per resource object ID**. A Teams-connected site
+reached through the team (`teamSite`), its backing Microsoft 365 group
+(`groupSite`) and a standard channel (`channelSite`) is one site object
+(`site/sharepoint.siteId/<site-collection GUID>`), listed once with one volume
+and three routes. Team and backing group keep distinct object types even though
+they share a GUID; distinct private or shared channel sites stay distinct.
+
+| Type | Volume source (latest non-conflicting published value) |
+| --- | --- |
+| `site` | `storageUsedBytes` (SharePoint site usage report) |
+| `oneDrive` | `quotaUsedBytes`, else `storageUsedBytes`, else `storageUsedMegabytes` |
+| Mailboxes | `sizeBytes` plus `archiveSizeBytes` |
+
+Volumes apply to sites and mailboxes only. A resource without a usable value is
+counted under **Ressources sans volume connu**, never as zero. **Expliquer** lists the routes
+(relation and related object, up to 50) and up to 25 sampled principals per side
+with their relation chain and the immediate object they reach the resource
+through.
+
+### Analysis coverage
+
+Each family shows the latest published coverage of its sections and an overall
+status:
+
+| Family | Sections |
+| --- | --- |
+| Groups | `ad.groups`, `entra.groups`, `exchange.mailEnabledGroups` |
+| Teams | `teams.teams`, `teams.members`, `teams.channels` |
+| Sites and OneDrive | `teams.sites`, `sharepoint.groupSites`, `sharepoint.sitePermissions`, `onedrive.accounts` |
+| Mailboxes | `exchange.mailboxes`, `exchange.mailboxPermissions` |
+| Applications | `applicationsSso.appRoleAssignments`, `intune.appAssignments`, `intune.profileAssignments`, `intune.policyAssignments` |
+| Devices | `intune.primaryUsers`, `intune.registeredOwners`, `intune.managedDevices` |
+
+Only sections applicable to the environment kind are listed. The status is
+**Non collectée** when no section was published, **Complète** only when every
+applicable section was published complete at tenant or domain scope with no
+unresolved principal and no uncollected roster, and **Partielle** otherwise.
+In particular:
+
+- `sharepoint.sitePermissions` is collected one site at a time (*collecte par
+  ressource*) and never proves tenant-wide completeness.
+- Foreign-tenant or missing member references stay unresolved and are counted,
+  never merged into a local user.
+- Private and shared channel rosters are not collected: a private or shared
+  channel (and its site) reached from the migrating population is reported as
+  *membres non collectés*; its team's members are not credited as its
+  dependents.
+
+### Authorization and isolation
+
+Reading requires project read access; computing requires the qualify
+permission. `DependencyAnalyses`, `DependencyResources` and `DependencyLinks`
+carry `WorkspaceId`, composite foreign keys and row-level security predicates.
 ## Authorization, isolation and audit
 
 - Reading requires project read access; creating, refreshing, importing,
@@ -104,3 +224,10 @@ consultant confirms or changes it; unrelated objects are not flagged.
   sections; consult the coverage screen before relying on a population.
 - Imported lists match one identifier per list; mixed identifier lists must be
   split.
+- A dependency analysis covers one environment. Cross-environment dependencies
+  (for example an AD group synchronized to Entra) are only joined through
+  validated hybrid mappings of principals, not of resources.
+- One analysis reads at most 500,000 relations and lists at most 50,000
+  resources; larger environments must be scoped by wave.
+- Incoming shared channels and channel-member expansion are not collected, so
+  shared-channel dependencies from other tenants are not visible.

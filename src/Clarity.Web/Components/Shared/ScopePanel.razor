@@ -11,6 +11,7 @@
         <a href="@Link(null)">@Text["Populations"]</a>
         <a href="@Link("import")">@Text["ImportAssistant"]</a>
         <a href="@Link("decisions")">@Text["ScopeDecisions"]</a>
+        <a href="@Link("dependencies")">@Text["Dependencies"]</a>
     </nav>
     @if (Error is not null) { <p class="error" role="alert">@Error</p> }
     @if (_message is not null) { <p role="status">@_message</p> }
@@ -35,6 +36,10 @@
             <Columns>@ObjectColumns</Columns>
             <EmptyContent><p>@Text["NoScopeDecisions"]</p></EmptyContent>
         </ClarityGrid>
+    }
+    else if (View == "dependencies")
+    {
+        <DependencyPanel ProjectId="ProjectId" Side="Side" Environments="_environments" CanQualify="_canQualify" />
     }
     else
     {

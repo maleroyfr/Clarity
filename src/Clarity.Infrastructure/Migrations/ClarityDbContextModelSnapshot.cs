@@ -16,7 +16,7 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261127001220_ScopePopulations";
+    public override string LastMigrationId => "20261127004718_ScopeDependencies";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -536,6 +536,206 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
                 b.HasIndex("WorkspaceId", "ObjectId", "ObservationId");
 
                 b.ToTable("CurrentValues");
+            });
+
+        modelBuilder.Entity("Clarity.Core.DependencyAnalysis", b =>
+            {
+                b.Property<Guid>("WorkspaceId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("Id")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("ActorObjectId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("ActorTenantId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<int>("ArbitratePrincipals")
+                    .HasColumnType("int");
+
+                b.Property<DateTimeOffset>("ComputedAtUtc")
+                    .HasColumnType("datetimeoffset");
+
+                b.Property<string>("CoverageJson")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<Guid>("EnvironmentId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<long>("KnownVolumeBytes")
+                    .HasColumnType("bigint");
+
+                b.Property<int>("MigratingPrincipals")
+                    .HasColumnType("int");
+
+                b.Property<Guid>("OperationId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<int>("OtherWavePrincipals")
+                    .HasColumnType("int");
+
+                b.Property<Guid>("ProjectId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<int>("RemainingPrincipals")
+                    .HasColumnType("int");
+
+                b.Property<int>("Resources")
+                    .HasColumnType("int");
+
+                b.Property<int>("SharedResources")
+                    .HasColumnType("int");
+
+                b.Property<long>("SharedVolumeBytes")
+                    .HasColumnType("bigint");
+
+                b.Property<int>("UnknownVolumeResources")
+                    .HasColumnType("int");
+
+                b.Property<int>("UnresolvedLinks")
+                    .HasColumnType("int");
+
+                b.Property<string>("Wave")
+                    .HasMaxLength(100)
+                    .HasColumnType("nvarchar(100)");
+
+                b.HasKey("WorkspaceId", "Id");
+
+                b.HasIndex("WorkspaceId", "OperationId")
+                    .IsUnique();
+
+                b.HasIndex("WorkspaceId", "ProjectId", "EnvironmentId", "Wave");
+
+                b.ToTable("DependencyAnalyses");
+            });
+
+        modelBuilder.Entity("Clarity.Core.DependencyLink", b =>
+            {
+                b.Property<Guid>("WorkspaceId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("Id")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("AnalysisId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<int>("Kind")
+                    .HasColumnType("int");
+
+                b.Property<Guid>("RelatedObjectId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid?>("RelationshipId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("ResourceObjectId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<string>("Route")
+                    .IsRequired()
+                    .HasMaxLength(1000)
+                    .HasColumnType("nvarchar(1000)");
+
+                b.Property<int?>("Side")
+                    .HasColumnType("int");
+
+                b.Property<Guid?>("ViaObjectId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.HasKey("WorkspaceId", "Id");
+
+                b.HasIndex("WorkspaceId", "RelatedObjectId");
+
+                b.HasIndex("WorkspaceId", "AnalysisId", "ResourceObjectId", "Kind");
+
+                b.ToTable("DependencyLinks");
+            });
+
+        modelBuilder.Entity("Clarity.Core.DependencyResource", b =>
+            {
+                b.Property<Guid>("WorkspaceId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("Id")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<bool>("AllUsers")
+                    .HasColumnType("bit");
+
+                b.Property<Guid>("AnalysisId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<int>("ArbitrateCount")
+                    .HasColumnType("int");
+
+                b.Property<int>("Classification")
+                    .HasColumnType("int");
+
+                b.Property<int?>("Decision")
+                    .HasColumnType("int");
+
+                b.Property<string>("DecisionWave")
+                    .HasMaxLength(100)
+                    .HasColumnType("nvarchar(100)");
+
+                b.Property<string>("DisplayName")
+                    .HasMaxLength(400)
+                    .HasColumnType("nvarchar(400)");
+
+                b.Property<Guid>("EnvironmentId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<int>("Family")
+                    .HasColumnType("int");
+
+                b.Property<bool>("MembersNotCollected")
+                    .HasColumnType("bit");
+
+                b.Property<int>("MigratingCount")
+                    .HasColumnType("int");
+
+                b.Property<Guid>("ObjectId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<int>("OtherWaveCount")
+                    .HasColumnType("int");
+
+                b.Property<int>("RemainingCount")
+                    .HasColumnType("int");
+
+                b.Property<int>("RouteCount")
+                    .HasColumnType("int");
+
+                b.Property<string>("Type")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("nvarchar(100)");
+
+                b.Property<int>("UnresolvedLinks")
+                    .HasColumnType("int");
+
+                b.Property<bool>("VolumeApplies")
+                    .HasColumnType("bit");
+
+                b.Property<long?>("VolumeBytes")
+                    .HasColumnType("bigint");
+
+                b.HasKey("WorkspaceId", "Id");
+
+                b.HasIndex("WorkspaceId", "AnalysisId", "ObjectId")
+                    .IsUnique();
+
+                b.HasIndex("WorkspaceId", "EnvironmentId", "AnalysisId");
+
+                b.HasIndex("WorkspaceId", "EnvironmentId", "ObjectId");
+
+                b.HasIndex("WorkspaceId", "AnalysisId", "Classification", "Family");
+
+                b.ToTable("DependencyResources");
             });
 
         modelBuilder.Entity("Clarity.Core.ExternalKey", b =>
@@ -1661,6 +1861,66 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
                     .WithMany()
                     .HasForeignKey("WorkspaceId", "ObjectId", "ObservationId")
                     .HasPrincipalKey("WorkspaceId", "ObjectId", "Id")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+            });
+
+        modelBuilder.Entity("Clarity.Core.DependencyAnalysis", b =>
+            {
+                b.HasOne("Clarity.Core.ClientWorkspace", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+
+                b.HasOne("Clarity.Core.ProjectEnvironment", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId", "ProjectId", "EnvironmentId")
+                    .HasPrincipalKey("WorkspaceId", "ProjectId", "Id")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+            });
+
+        modelBuilder.Entity("Clarity.Core.DependencyLink", b =>
+            {
+                b.HasOne("Clarity.Core.ClientWorkspace", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+
+                b.HasOne("Clarity.Core.DependencyAnalysis", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId", "AnalysisId")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+
+                b.HasOne("Clarity.Core.InventoryObject", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId", "RelatedObjectId")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+            });
+
+        modelBuilder.Entity("Clarity.Core.DependencyResource", b =>
+            {
+                b.HasOne("Clarity.Core.ClientWorkspace", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+
+                b.HasOne("Clarity.Core.DependencyAnalysis", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId", "EnvironmentId", "AnalysisId")
+                    .HasPrincipalKey("WorkspaceId", "EnvironmentId", "Id")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+
+                b.HasOne("Clarity.Core.InventoryObject", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId", "EnvironmentId", "ObjectId")
+                    .HasPrincipalKey("WorkspaceId", "EnvironmentId", "Id")
                     .OnDelete(DeleteBehavior.NoAction)
                     .IsRequired();
             });

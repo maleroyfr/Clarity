@@ -146,6 +146,20 @@ public static class ModelRules
                     throw new ArgumentException("Invalid scope decision.");
                 }
                 break;
+            case DependencyResource resource:
+                if (!Enum.IsDefined(resource.Family) || !Enum.IsDefined(resource.Classification) || resource.Type.Length is < 1 or > 100
+                    || resource.MigratingCount < 1 || resource.OtherWaveCount < 0 || resource.ArbitrateCount < 0 || resource.RemainingCount < 0
+                    || resource.VolumeBytes < 0 || !resource.VolumeApplies && resource.VolumeBytes is not null)
+                {
+                    throw new ArgumentException("Invalid dependency resource.");
+                }
+                break;
+            case DependencyLink link:
+                if (!Enum.IsDefined(link.Kind) || link.Route.Length is < 1 or > 1000 || (link.Kind == DependencyLinkKind.Principal) != link.Side.HasValue)
+                {
+                    throw new ArgumentException("Invalid dependency link.");
+                }
+                break;
             case Project project:
                 Name(project.Name);
                 if (!Enum.IsDefined(project.Scenario))

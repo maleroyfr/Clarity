@@ -10,6 +10,9 @@ public sealed partial class ClarityDbContext
     public DbSet<PopulationEntry> PopulationEntries => Set<PopulationEntry>();
     public DbSet<ScopeDecision> ScopeDecisions => Set<ScopeDecision>();
     public DbSet<ScopeDecisionRevision> ScopeDecisionRevisions => Set<ScopeDecisionRevision>();
+    public DbSet<DependencyAnalysis> DependencyAnalyses => Set<DependencyAnalysis>();
+    public DbSet<DependencyResource> DependencyResources => Set<DependencyResource>();
+    public DbSet<DependencyLink> DependencyLinks => Set<DependencyLink>();
 
     private void ConfigureScope(ModelBuilder model)
     {
@@ -61,5 +64,30 @@ public sealed partial class ClarityDbContext
         revision.HasOne<Population>().WithMany().HasForeignKey(x => new { x.WorkspaceId, x.PopulationId }).OnDelete(DeleteBehavior.NoAction);
         revision.HasOne<ObjectObservation>().WithMany().HasForeignKey(x => new { x.WorkspaceId, x.EvidenceObservationId })
             .OnDelete(DeleteBehavior.NoAction);
+
+        var analysis = DiscoveryOwned<DependencyAnalysis>(model);
+        analysis.Property(x => x.Wave).HasMaxLength(100);
+        analysis.HasIndex(x => new { x.WorkspaceId, x.ProjectId, x.EnvironmentId, x.Wave });
+        analysis.HasIndex(x => new { x.WorkspaceId, x.OperationId }).IsUnique();
+        analysis.HasAlternateKey(x => new { x.WorkspaceId, x.EnvironmentId, x.Id });
+        analysis.HasOne<ProjectEnvironment>().WithMany().HasForeignKey(x => new { x.WorkspaceId, x.ProjectId, x.EnvironmentId })
+            .HasPrincipalKey(x => new { x.WorkspaceId, x.ProjectId, x.Id }).OnDelete(DeleteBehavior.NoAction);
+
+        var resource = DiscoveryOwned<DependencyResource>(model);
+        resource.Property(x => x.Type).HasMaxLength(100);
+        resource.Property(x => x.DisplayName).HasMaxLength(400);
+        resource.Property(x => x.DecisionWave).HasMaxLength(100);
+        resource.HasIndex(x => new { x.WorkspaceId, x.AnalysisId, x.ObjectId }).IsUnique();
+        resource.HasIndex(x => new { x.WorkspaceId, x.AnalysisId, x.Classification, x.Family });
+        resource.HasOne<DependencyAnalysis>().WithMany().HasForeignKey(x => new { x.WorkspaceId, x.EnvironmentId, x.AnalysisId })
+            .HasPrincipalKey(x => new { x.WorkspaceId, x.EnvironmentId, x.Id }).OnDelete(DeleteBehavior.NoAction);
+        resource.HasOne<InventoryObject>().WithMany().HasForeignKey(x => new { x.WorkspaceId, x.EnvironmentId, x.ObjectId })
+            .HasPrincipalKey(x => new { x.WorkspaceId, x.EnvironmentId, x.Id }).OnDelete(DeleteBehavior.NoAction);
+
+        var link = DiscoveryOwned<DependencyLink>(model);
+        link.Property(x => x.Route).HasMaxLength(1000);
+        link.HasIndex(x => new { x.WorkspaceId, x.AnalysisId, x.ResourceObjectId, x.Kind });
+        link.HasOne<DependencyAnalysis>().WithMany().HasForeignKey(x => new { x.WorkspaceId, x.AnalysisId }).OnDelete(DeleteBehavior.NoAction);
+        link.HasOne<InventoryObject>().WithMany().HasForeignKey(x => new { x.WorkspaceId, x.RelatedObjectId }).OnDelete(DeleteBehavior.NoAction);
     }
 }

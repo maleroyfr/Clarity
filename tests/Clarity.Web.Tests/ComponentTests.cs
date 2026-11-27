@@ -164,7 +164,14 @@ public class ComponentTests : BunitContext
             .Concat(Enum.GetNames<PopulationKind>().Select(x => $"PopulationKind_{x}"))
             .Concat(Enum.GetNames<PopulationKind>().Where(x => x != nameof(PopulationKind.ImportedList)).Select(x => $"PopulationCriterion_{x}"))
             .Concat(Enum.GetNames<ImportIdentifier>().Select(x => $"ImportIdentifier_{x}"))
-            .Concat(Enum.GetNames<ImportResolution>().Select(x => $"ImportResolution_{x}"));
+            .Concat(Enum.GetNames<ImportResolution>().Select(x => $"ImportResolution_{x}"))
+            .Concat(Enum.GetNames<DependencyFamily>().Select(x => $"DependencyFamily_{x}"))
+            .Concat(Enum.GetNames<DependencySide>().Select(x => $"DependencySide_{x}"))
+            .Concat(Enum.GetNames<DependencyClassification>().Select(x => $"DependencyClassification_{x}"))
+            .Concat(Enum.GetNames<DependencyCoverage>().Select(x => $"DependencyCoverage_{x}"))
+            .Concat(DependencyEngine.Relations.Select(x => $"Relation_{x}"))
+            .Concat(new[] { "group", "mailGroup", "team", "teamChannel", "site", "oneDrive", "mailbox", "sharedMailbox", "resourceMailbox", "servicePrincipal",
+                "mobileApp", "deviceConfiguration", "deviceCompliancePolicy", "managedDevice", "device", "user" }.Select(x => $"ObjectType_{x}"));
         foreach (var key in keys)
         {
             text[key].ResourceNotFound.ShouldBeFalse(key);

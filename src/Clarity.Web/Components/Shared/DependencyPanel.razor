@@ -1,0 +1,176 @@
+@using Clarity.Infrastructure
+@inherits FoundationPage
+@inject DependencyService Dependencies
+
+<h3>@Text["Dependencies"]</h3>
+<p>@Text["DependenciesHint"]</p>
+@if (Error is not null) { <p class="error" role="alert">@Error</p> }
+@if (_message is not null) { <p role="status">@_message</p> }
+@if (CanQualify && Environments.Count != 0)
+{
+    <fieldset><legend>@Text["AnalyzeDependencies"]</legend>
+        <label>@Text["Environments"] <select @bind="_environment">@foreach (var e in Environments) { <option value="@e.Id">@e.ExternalId</option> }</select></label>
+        <FluentTextInput Label="@Text["MigrationWave"]" @bind-Value="_wave" />
+        <p>@Text["DependencyWaveHint"]</p>
+        <FluentButton OnClick="AnalyzeAsync" Disabled="@Busy">@Text["AnalyzeDependencies"]</FluentButton>
+    </fieldset>
+}
+else if (!CanQualify) { <p>@Text["ScopeReadOnly"]</p> }
+@if (_analyses.Count == 0) { <p>@Text["NoDependencyAnalysis"]</p> }
+else
+{
+    <label>@Text["DependencyAnalysis"] <select value="@_selected?.Id" @onchange="Choose">
+        @foreach (var a in _analyses)
+        { <option value="@a.Id">@a.Environment · @(a.Wave ?? Text["AllWaves"].Value) · @a.ComputedAtUtc.ToString("u")</option> }
+    </select></label>
+}
+@if (_selected is { } analysis)
+{
+    <article aria-label="@Text["DependencyAnalysis"]">
+        <p>@analysis.Environment · @(analysis.Wave ?? Text["AllWaves"].Value) · @analysis.ComputedAtUtc.ToString("u") · @Text["SsoAuthor"] : @analysis.ActorObjectId</p>
+        <ul aria-label="@Text["DependencyPrincipals"]">
+            @foreach (var side in Enum.GetValues<DependencySide>())
+            { <li>@Text[$"DependencySide_{side}"] : @Principals(analysis, side).ToString("N0")</li> }
+        </ul>
+        <ul aria-label="@Text["DependencyTotals"]">
+            <li>@Text["DependencyResources"] : @analysis.Resources.ToString("N0") · @Text["DependencyClassification_Shared"] : @analysis.SharedResources.ToString("N0")</li>
+            <li>@Text["KnownVolume"] : @Size(analysis.KnownVolumeBytes) · @Text["SharedVolume"] : @Size(analysis.SharedVolumeBytes)
+                · @Text["UnknownVolumeResources"] : @analysis.UnknownVolumeResources.ToString("N0")</li>
+            <li>@Text["UnresolvedLinks"] : @analysis.UnresolvedLinks.ToString("N0")</li>
+        </ul>
+        <p>@Text["DependencyVolumeHint"]</p>
+        <table aria-label="@Text["AnalysisCoverage"]">
+            <thead><tr><th>@Text["DependencyFamily"]</th><th>@Text["DependencyResources"]</th><th>@Text["AnalysisCoverage"]</th><th>@Text["Sections"]</th></tr></thead>
+            <tbody>
+                @foreach (var coverage in analysis.Coverage)
+                {
+                    var count = analysis.Families.FirstOrDefault(f => f.Family == coverage.Family);
+                    <tr>
+                        <td>@Text[$"DependencyFamily_{coverage.Family}"]</td>
+                        <td>@(count?.Resources ?? 0) · @Text["DependencyClassification_Shared"] : @(count?.Shared ?? 0)</td>
+                        <td>@Text[$"DependencyCoverage_{coverage.Status}"]
+                            @if (coverage.UnresolvedLinks != 0) { <small>@Text["UnresolvedLinks"] : @coverage.UnresolvedLinks</small> }
+                            @if (coverage.MembersNotCollected != 0) { <small>@Text["MembersNotCollected"] : @coverage.MembersNotCollected</small> }</td>
+                        <td>@foreach (var section in coverage.Sections)
+                            {
+                                <small>@section.CapabilityId : @(section.Coverage is { } c ? Text[c.ToString()].Value : Text["NotCollected"].Value)
+                                    @if (section.ResourceScoped && section.Coverage is not null) { <span> · @Text["ResourceScoped"]</span> }</small>
+                            }
+                            @if (coverage.Sections.Count == 0) { <small>@Text["NotApplicable"]</small> }</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <label>@Text["DependencyFamily"] <select @bind="_family" @bind:after="Reload"><option value="">@Text["All"]</option>
+            @foreach (var family in Enum.GetValues<DependencyFamily>()) { <option value="@family">@Text[$"DependencyFamily_{family}"]</option> }
+        </select></label>
+        <label>@Text["DependencyClassification"] <select @bind="_classification" @bind:after="Reload"><option value="">@Text["All"]</option>
+            @foreach (var value in Enum.GetValues<DependencyClassification>()) { <option value="@value">@Text[$"DependencyClassification_{value}"]</option> }
+        </select></label>
+        <FluentTextInput Label="@Text["Search"]" @bind-Value="_search" />
+        <ClarityGrid @key="(analysis.Id, _family, _classification, _search, _revision)" TGridItem="DependencyResourceRow" Search="@_search"
+                     Load="@((p, ct) => Dependencies.ResourcesAsync(ProjectId, analysis.Id, Filter, p, ct))">
+            <Columns>
+                <TemplateColumn Title="@Text["Name"]" Context="r"><a href="@Sheet(r.ObjectId)">@(r.DisplayName ?? r.ObjectId.ToString())</a>
+                    <small>@Text[$"DependencyFamily_{r.Family}"] · @Text[$"ObjectType_{r.Type}"]</small></TemplateColumn>
+                <TemplateColumn Title="@Text["DependencyClassification"]" Context="r">@Text[$"DependencyClassification_{r.Classification}"]
+                    @if (r.AllUsers) { <small>@Text["AllUsersAssignment"]</small> }
+                    @if (r.MembersNotCollected) { <small>@Text["MembersNotCollected"]</small> }
+                    @if (r.UnresolvedLinks != 0) { <small>@Text["UnresolvedLinks"] : @r.UnresolvedLinks</small> }</TemplateColumn>
+                <TemplateColumn Title="@Text["DependencyPrincipals"]" Context="r">
+                    <small>@Text["DependencySide_Migrating"] : @r.Migrating</small>
+                    @if (r.OtherWave != 0) { <small>@Text["DependencySide_OtherWave"] : @r.OtherWave</small> }
+                    @if (r.Arbitrate != 0) { <small>@Text["DependencySide_ToArbitrate"] : @r.Arbitrate</small> }
+                    @if (r.Remaining != 0) { <small>@Text["DependencySide_Remaining"] : @r.Remaining</small> }</TemplateColumn>
+                <TemplateColumn Title="@Text["Volume"]" Context="r">@(r.VolumeApplies ? r.VolumeBytes is { } bytes ? Size(bytes) : Text["UnknownVolume"].Value : "—")</TemplateColumn>
+                <TemplateColumn Title="@Text["ScopeDecisionValue"]" Context="r">
+                    @if (r.Decision is { } value) { <span>@Text[$"ScopeDecision_{value}"] · @(r.DecisionWave ?? Text["NoWave"].Value)</span> }
+                    else { <span>@Text["NoScopeDecision"]</span> }</TemplateColumn>
+                <TemplateColumn Title="@Text["Actions"]" Context="r">
+                    <FluentButton OnClick="@(() => ExplainAsync(analysis.Id, r))" Disabled="@Busy">@Text["ExplainDependency"] (@r.Routes)</FluentButton>
+                </TemplateColumn>
+            </Columns>
+            <EmptyContent><p>@Text["NoDependencyResources"]</p></EmptyContent>
+        </ClarityGrid>
+    </article>
+}
+@if (_explained is { } resource)
+{
+    <DetailPanel Title="@($"{Text["ExplainDependency"]} · {resource.DisplayName ?? resource.ObjectId.ToString()}")" Error="@Error" Close="@(() => _explained = null)">
+        <h3>@Text["DependencyRoutes"]</h3>
+        <ul>
+            @foreach (var link in _links.Where(l => l.Kind == DependencyLinkKind.Route))
+            { <li><a href="@Sheet(link.ObjectId)">@(link.Label ?? link.ObjectId.ToString())</a> · @Text[$"ObjectType_{link.Type}"] · @Text[$"Relation_{link.Route}"]</li> }
+            @if (resource.Routes == 0) { <li>@Text["DirectDependencyOnly"]</li> }
+            else if (resource.Routes > _links.Count(l => l.Kind == DependencyLinkKind.Route)) { <li>@Text["MoreRoutes"] : @resource.Routes</li> }
+        </ul>
+        <h3>@Text["DependencySamples"]</h3>
+        <ul>
+            @foreach (var link in _links.Where(l => l.Kind == DependencyLinkKind.Principal))
+            {
+                <li><a href="@Sheet(link.ObjectId)">@(link.Label ?? link.ObjectId.ToString())</a> · @Text[$"DependencySide_{link.Side}"] · @Route(link.Route)
+                    @if (link.Via is { } via) { <small>@Text["Via"] : @via</small> }</li>
+            }
+        </ul>
+        <p>@Text["DependencySamplesHint"]</p>
+    </DetailPanel>
+}
+
+@code {
+    [Parameter] public Guid ProjectId { get; set; }
+    [Parameter] public EnvironmentRole Side { get; set; }
+    [Parameter] public IReadOnlyList<ProjectEnvironment> Environments { get; set; } = [];
+    [Parameter] public bool CanQualify { get; set; }
+    private IReadOnlyList<DependencySummary> _analyses = [];
+    private IReadOnlyList<DependencyLinkRow> _links = [];
+    private DependencySummary? _selected;
+    private DependencyResourceRow? _explained;
+    private Guid _environment, _operation = Guid.NewGuid();
+    private string _wave = "", _family = "", _classification = "", _search = "";
+    private string? _message;
+    private int _revision;
+
+    private DependencyFilter Filter => new(Enum.TryParse<DependencyFamily>(_family, out var family) ? family : null,
+        Enum.TryParse<DependencyClassification>(_classification, out var value) ? value : null);
+
+    protected override Task OnParametersSetAsync() => RunAsync(async () =>
+    {
+        _environment = Environments.FirstOrDefault()?.Id ?? Guid.Empty;
+        _analyses = await Dependencies.AnalysesAsync(ProjectId, Side);
+        _selected = _analyses.FirstOrDefault();
+    });
+
+    private string Sheet(Guid id) => $"/projects/{ProjectId}/inventory?side={Side}&object={id}";
+    private string Route(string route) => string.Join(" › ", route.Split(" › ").Select(r => Text[$"Relation_{r}"] is { ResourceNotFound: false } t ? t.Value : r));
+    private static int Principals(DependencySummary a, DependencySide side) => side switch
+    {
+        DependencySide.Migrating => a.MigratingPrincipals,
+        DependencySide.OtherWave => a.OtherWavePrincipals,
+        DependencySide.ToArbitrate => a.ArbitratePrincipals,
+        _ => a.RemainingPrincipals
+    };
+    private string Size(long bytes) => bytes >= 1L << 30 ? Text["SizeGiB", bytes / (double)(1L << 30)]
+        : bytes >= 1L << 20 ? Text["SizeMiB", bytes / (double)(1L << 20)] : Text["SizeBytes", bytes];
+    private void Reload() => _revision++;
+    private void Choose(ChangeEventArgs e)
+    {
+        _selected = _analyses.FirstOrDefault(a => a.Id.ToString() == e.Value?.ToString()) ?? _selected;
+        _explained = null; _revision++;
+    }
+
+    private Task AnalyzeAsync() => RunAsync(async () =>
+    {
+        var id = await Dependencies.AnalyzeAsync(ProjectId, _environment, _wave, _operation);
+        _operation = Guid.NewGuid();
+        _analyses = await Dependencies.AnalysesAsync(ProjectId, Side);
+        _selected = _analyses.FirstOrDefault(a => a.Id == id);
+        _explained = null; _revision++;
+        _message = Messages["DependenciesAnalyzed"];
+    });
+
+    private Task ExplainAsync(Guid analysisId, DependencyResourceRow row) => RunAsync(async () =>
+    {
+        _links = await Dependencies.LinksAsync(ProjectId, analysisId, row.ObjectId);
+        _explained = row;
+    });
+}

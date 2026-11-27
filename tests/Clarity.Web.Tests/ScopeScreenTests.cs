@@ -91,4 +91,83 @@ public sealed class ScopeScreenTests
         administrative.ShouldNotContain("Vague synthétique 1");
         administrative.ShouldNotContain("Créer une population");
     }
+
+    [Fact]
+    public async Task DependencyViewShowsSharedVolumeAndCoverageInFrenchWithoutAnalyzeControlsForReaders()
+    {
+        await using var app = new FoundationApplication();
+        var (alpha, beta) = await app.SeedAsync();
+        var workspace = DevelopmentAuthenticationHandler.AlphaWorkspace;
+        var environment = new ProjectEnvironment
+        {
+            WorkspaceId = workspace,
+            ProjectId = alpha,
+            Kind = EnvironmentKind.M365Tenant,
+            ExternalId = "00000000-0000-0000-0000-000000000123"
+        };
+        var site = new InventoryObject { WorkspaceId = workspace, EnvironmentId = environment.Id, Type = "site", DisplayName = "Synthetic Project site" };
+        DependencyFamilyCoverage[] coverage =
+        [
+            new(DependencyFamily.Sites, DependencyCoverage.Partial,
+                [new("sharepoint.sitePermissions", Clarity.Contracts.CoverageStatus.Complete, DateTimeOffset.UtcNow, true)], 0, 1),
+            new(DependencyFamily.Applications, DependencyCoverage.NotCollected, [new("apps.ssoApplications", null, null, false)], 0, 0)
+        ];
+        var analysis = new DependencyAnalysis
+        {
+            WorkspaceId = workspace,
+            ProjectId = alpha,
+            EnvironmentId = environment.Id,
+            Wave = "Vague synthétique 1",
+            OperationId = Guid.NewGuid(),
+            ActorTenantId = DevelopmentAuthenticationHandler.SyntheticTenant,
+            ActorObjectId = DevelopmentAuthenticationHandler.Personas["consultant"],
+            ComputedAtUtc = DateTimeOffset.UtcNow,
+            MigratingPrincipals = 1,
+            RemainingPrincipals = 1,
+            Resources = 1,
+            SharedResources = 1,
+            KnownVolumeBytes = 1L << 30,
+            SharedVolumeBytes = 1L << 30,
+            CoverageJson = System.Text.Json.JsonSerializer.Serialize(coverage, Clarity.Contracts.ContractJson.Options)
+        };
+        await using (var db = app.CreateUnscopedContext())
+        {
+            db.AddRange(environment, site, analysis, new DependencyResource
+            {
+                WorkspaceId = workspace,
+                AnalysisId = analysis.Id,
+                EnvironmentId = environment.Id,
+                ObjectId = site.Id,
+                Family = DependencyFamily.Sites,
+                Type = "site",
+                DisplayName = site.DisplayName,
+                Classification = DependencyClassification.Shared,
+                MigratingCount = 1,
+                RemainingCount = 1,
+                RouteCount = 3,
+                VolumeApplies = true,
+                VolumeBytes = 1L << 30
+            });
+            await db.SaveChangesAsync(TestContext.Current.CancellationToken);
+        }
+        var token = TestContext.Current.CancellationToken;
+        using var consultant = await app.CreatePersonaClientAsync("consultant");
+        var html = WebUtility.HtmlDecode(await consultant.GetStringAsync($"/projects/{alpha}/scope?view=dependencies", token));
+        html.ShouldContain("Dépendances et ressources partagées");
+        html.ShouldContain("Calculer les dépendances");
+        html.ShouldContain("Vague synthétique 1");
+        html.ShouldContain("Partagée : 1");
+        html.ShouldContain("Volume connu : 1,0 Gio");
+        html.ShouldContain("Sites et OneDrive");
+        html.ShouldContain("Partielle");
+        html.ShouldContain("collecte par ressource");
+        html.ShouldContain("Non collectée");
+
+        using var reader = await app.CreatePersonaClientAsync("reader");
+        var readOnly = WebUtility.HtmlDecode(await reader.GetStringAsync($"/projects/{alpha}/scope?view=dependencies", token));
+        readOnly.ShouldContain("Volume connu : 1,0 Gio");
+        readOnly.ShouldNotContain("Calculer les dépendances");
+        var foreign = WebUtility.HtmlDecode(await consultant.GetStringAsync($"/projects/{beta}/scope?view=dependencies", token));
+        foreign.ShouldNotContain("Vague synthétique 1");
+    }
 }
