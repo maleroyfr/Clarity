@@ -61,7 +61,7 @@ public sealed class InventoryQueries(IDbContextFactory<ClarityDbContext> factory
         if (filter.Population)
         {
             query = query.Where(i => i.Type == "user" && i.Presence == InventoryPresence.Observed
-                && !db.MappingDecisions.Any(m => m.WorkspaceId == workspace && m.ProjectId == project.Id && m.AdObjectId == i.Id
+                && !db.MappingDecisions.Any(m => m.WorkspaceId == workspace && m.ProjectId == project.Id && m.Kind == MappingKind.Hybrid && m.AdObjectId == i.Id
                     && m.State == MappingState.Validated && db.InventoryObjects.Any(c => c.WorkspaceId == workspace && c.Id == m.EntraObjectId
                         && c.Presence == InventoryPresence.Observed)));
         }

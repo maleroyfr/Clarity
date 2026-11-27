@@ -91,4 +91,81 @@ public sealed class ComparisonScreenTests
         var foreign = WebUtility.HtmlDecode(await consultant.GetStringAsync($"/projects/{beta}/comparison", token));
         foreign.ShouldNotContain("Supprimé : 3");
     }
+
+    [Fact]
+    public async Task SourceTargetScreenShowsPlannedTargetsAsNotComparedAndHidesRuleControlsFromReaders()
+    {
+        await using var app = new FoundationApplication();
+        var (alpha, beta) = await app.SeedAsync();
+        var workspace = DevelopmentAuthenticationHandler.AlphaWorkspace;
+        ProjectEnvironment Environment(string tenant, EnvironmentRole role, TargetState state) => new()
+        {
+            WorkspaceId = workspace,
+            ProjectId = alpha,
+            Kind = EnvironmentKind.M365Tenant,
+            ExternalId = tenant,
+            Role = role,
+            TargetState = state,
+            Hypotheses = state == TargetState.Planned ? "Synthetic tenant to create" : ""
+        };
+        var source = Environment("00000000-0000-0000-0000-000000000411", EnvironmentRole.Source, TargetState.Existing);
+        var target = Environment("00000000-0000-0000-0000-000000000413", EnvironmentRole.Target, TargetState.Planned);
+        var consultantId = DevelopmentAuthenticationHandler.Personas["consultant"];
+        var rule = new TargetMappingRule
+        {
+            WorkspaceId = workspace,
+            ProjectId = alpha,
+            ObjectType = "user",
+            Kind = TargetRuleKind.ComputedUpn,
+            SourceField = "userPrincipalName",
+            TargetField = "userPrincipalName",
+            TargetDomain = "target.example",
+            Priority = 1,
+            Justification = "Synthetic computed UPN rule",
+            OperationId = Guid.NewGuid(),
+            CreatedByTenantId = DevelopmentAuthenticationHandler.SyntheticTenant,
+            CreatedByObjectId = consultantId
+        };
+        var comparison = new TargetComparison
+        {
+            WorkspaceId = workspace,
+            ProjectId = alpha,
+            SourceEnvironmentId = source.Id,
+            TargetEnvironmentId = target.Id,
+            Data = TargetDataState.Planned,
+            OperationId = Guid.NewGuid(),
+            ActorTenantId = DevelopmentAuthenticationHandler.SyntheticTenant,
+            ActorObjectId = consultantId,
+            ComputedAtUtc = DateTimeOffset.UtcNow,
+            NotCompared = 3,
+            RulesJson = System.Text.Json.JsonSerializer.Serialize(new[] { new TargetRuleInput(rule.Id, "user", rule.Kind, rule.SourceField,
+                rule.TargetField, rule.TargetDomain, 1) }, ContractJson.Options),
+            CoverageJson = "[]"
+        };
+        await using (var db = app.CreateUnscopedContext())
+        {
+            db.AddRange(source, target, rule, comparison);
+            await db.SaveChangesAsync(TestContext.Current.CancellationToken);
+        }
+        var token = TestContext.Current.CancellationToken;
+        using var consultant = await app.CreatePersonaClientAsync("consultant");
+        var html = WebUtility.HtmlDecode(await consultant.GetStringAsync($"/projects/{alpha}/comparison?view=target", token));
+        html.ShouldContain("Comparaison source-cible");
+        html.ShouldContain("Synthetic computed UPN rule");
+        html.ShouldContain("UPN cible calculé");
+        html.ShouldContain("Comparer la source et la cible");
+        html.ShouldContain("Cible prévue");
+        html.ShouldContain("Non comparé : 3");
+        html.ShouldContain("Hypothèses de la cible : Synthetic tenant to create");
+        html.ShouldContain("Associations source-cible");
+        html.ShouldNotContain("Comparer deux collectes");
+
+        using var reader = await app.CreatePersonaClientAsync("reader");
+        var readOnly = WebUtility.HtmlDecode(await reader.GetStringAsync($"/projects/{alpha}/comparison?view=target", token));
+        readOnly.ShouldContain("Non comparé : 3");
+        readOnly.ShouldNotContain("Comparer la source et la cible");
+        readOnly.ShouldNotContain("Retirer la règle");
+        var foreign = WebUtility.HtmlDecode(await consultant.GetStringAsync($"/projects/{beta}/comparison?view=target", token));
+        foreign.ShouldNotContain("Synthetic computed UPN rule");
+    }
 }

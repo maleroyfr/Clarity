@@ -104,6 +104,8 @@ ID can confirm an AD computer only when Graph reports the matching device ID
 and ServerAd trust type. Name/serial evidence is a review hint.
 
 All candidate comparisons stay on the same side, never source versus target.
+Source-target associations are a separate mapping kind, proposed only by the
+documented project rules of the comparison screen ([comparison.md](comparison.md)).
 The matcher fingerprints critical values, trust and competing candidate IDs,
 not ingestion timestamps. An identical observation does not erase a decision.
 A changed candidate or critical value adds a dated review revision; prior author,

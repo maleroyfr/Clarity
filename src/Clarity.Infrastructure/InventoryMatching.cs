@@ -151,7 +151,7 @@ public sealed class InventoryMatching(IDbContextFactory<ClarityDbContext> factor
                 matches.AddRange(candidates.Values);
             }
         }
-        var decisions = await db.MappingDecisions.Where(x => x.WorkspaceId == workspace && x.ProjectId == project.Id)
+        var decisions = await db.MappingDecisions.Where(x => x.WorkspaceId == workspace && x.ProjectId == project.Id && x.Kind == MappingKind.Hybrid)
             .ToDictionaryAsync(x => (x.AdObjectId, x.EntraObjectId), token);
         var matched = matches.Select(m => (m.Ad.Item.Id, m.Entra.Item.Id)).ToHashSet();
         var byId = identities.ToDictionary(i => i.Item.Id);

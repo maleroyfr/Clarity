@@ -9,7 +9,14 @@
     <h2>@Text["Comparison"] · @Text[Side.ToString()]</h2>
     <nav class="toolbar" aria-label="@Text["Comparison"]">
         <a href="@Link(null)">@Text["ComparisonRuns"]</a>
+        <a href="@Link("target")">@Text["SourceTargetComparison"]</a>
     </nav>
+    @if (View == "target")
+    {
+        <TargetComparisonPanel ProjectId="ProjectId" />
+    }
+    else
+    {
     @if (Error is not null) { <p class="error" role="alert">@Error</p> }
     @if (_message is not null) { <p role="status">@_message</p> }
     <h3>@Text["ComparisonRuns"]</h3>
@@ -105,6 +112,7 @@
             </ClarityGrid>
         </article>
     }
+    }
 </section>
 @if (_detail is { } item)
 {
@@ -137,7 +145,7 @@
 
     private RunChange? Change => Enum.TryParse<RunChange>(_change, out var change) ? change : null;
 
-    protected override Task OnParametersSetAsync() => RunAsync(async () =>
+    protected override Task OnParametersSetAsync() => View == "target" ? Task.CompletedTask : RunAsync(async () =>
     {
         var project = await Foundation.GetProjectAsync(ProjectId);
         _canQualify = project.Status == ProjectStatus.Active && Authorization.Allows(project.WorkspaceId, WorkspaceOperation.Qualify);

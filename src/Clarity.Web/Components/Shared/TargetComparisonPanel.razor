@@ -1,0 +1,241 @@
+@using Clarity.Contracts
+@using Clarity.Infrastructure
+@inherits FoundationPage
+@inject TargetComparisonService Targets
+@inject FoundationService Foundation
+@inject WorkspaceAuthorization Authorization
+
+<section aria-label="@Text["SourceTargetComparison"]">
+    <h3>@Text["SourceTargetComparison"]</h3>
+    <p>@Text["SourceTargetHint"]</p>
+    @if (Error is not null) { <p class="error" role="alert">@Error</p> }
+    @if (_message is not null) { <p role="status">@_message</p> }
+    <h4>@Text["TargetMappingRules"]</h4>
+    <p>@Text["TargetMappingRulesHint"]</p>
+    <label><input type="checkbox" @bind="_includeRetired" @bind:after="LoadRulesAsync" /> @Text["ShowRetiredRules"]</label>
+    @if (_rules.Count == 0) { <p>@Text["NoTargetMappingRule"]</p> }
+    else
+    {
+        <table aria-label="@Text["TargetMappingRules"]">
+            <thead><tr><th>@Text["ObjectType"]</th><th>@Text["TargetRuleKindLabel"]</th><th>@Text["SourceField"]</th><th>@Text["TargetField"]</th>
+                <th>@Text["RulePriority"]</th><th>@Text["Justification"]</th><th>@Text["Status"]</th><th>@Text["Actions"]</th></tr></thead>
+            <tbody>
+                @foreach (var rule in _rules)
+                {
+                    <tr>
+                        <td>@Text[$"ObjectType_{rule.ObjectType}"]</td>
+                        <td>@Text[$"TargetRuleKind_{rule.Kind}"]</td>
+                        <td>@rule.SourceField</td>
+                        <td>@rule.TargetField @if (rule.TargetDomain is { } domain) { <small>@($"@{domain}")</small> }</td>
+                        <td>@rule.Priority</td>
+                        <td>@rule.Justification</td>
+                        <td>@if (rule.RetiredAtUtc is { } retired) { <span>@Text["RuleRetired"] · @retired.ToString("u") · @rule.RetirementReason</span> }
+                            else { <span>@Text["RuleActive"] · @rule.CreatedAtUtc.ToString("u")</span> }</td>
+                        <td>@if (_canQualify && rule.RetiredAtUtc is null) { <FluentButton OnClick="@(() => BeginRetire(rule))">@Text["RetireRule"]</FluentButton> }</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    @if (_retiring is { } retiring)
+    {
+        <fieldset><legend>@Text["RetireRule"] · @retiring.SourceField → @retiring.TargetField</legend>
+            <FluentTextInput Label="@Text["Justification"]" @bind-Value="_retireReason" />
+            <FluentButton OnClick="RetireAsync" Disabled="@(Busy || string.IsNullOrWhiteSpace(_retireReason))">@Text["RetireRule"]</FluentButton>
+            <FluentButton OnClick="@(() => _retiring = null)">@Text["Cancel"]</FluentButton>
+        </fieldset>
+    }
+    @if (_canQualify)
+    {
+        <fieldset><legend>@Text["AddTargetRule"]</legend>
+            <label>@Text["ObjectType"] <select @bind="_type">
+                @foreach (var type in TargetComparisonRules.ObjectTypes) { <option value="@type">@Text[$"ObjectType_{type}"]</option> }</select></label>
+            <label>@Text["TargetRuleKindLabel"] <select @bind="_kind">
+                @foreach (var kind in Enum.GetValues<TargetRuleKind>()) { <option value="@kind">@Text[$"TargetRuleKind_{kind}"]</option> }</select></label>
+            <FluentTextInput Label="@Text["SourceField"]" @bind-Value="_sourceField" />
+            @if (_kind == TargetRuleKind.SharedAttribute) { <FluentTextInput Label="@Text["TargetField"]" @bind-Value="_targetField" /> }
+            else { <FluentTextInput Label="@Text["TargetDomainLabel"]" @bind-Value="_domain" /> }
+            <label>@Text["RulePriority"] <input type="number" min="1" max="100" @bind="_priority" /></label>
+            <FluentTextInput Label="@Text["Justification"]" @bind-Value="_justification" />
+            <FluentButton OnClick="AddRuleAsync" Disabled="@(Busy || string.IsNullOrWhiteSpace(_sourceField) || string.IsNullOrWhiteSpace(_justification))">
+                @Text["AddTargetRule"]</FluentButton>
+        </fieldset>
+        @if (_sources.Count == 0 || _targets.Count == 0) { <p>@Text["SourceTargetEnvironmentsMissing"]</p> }
+        else
+        {
+            <fieldset><legend>@Text["CompareSourceTarget"]</legend>
+                <label>@Text["Source"] <select @bind="_source">@foreach (var e in _sources) { <option value="@e.Id">@e.ExternalId</option> }</select></label>
+                <label>@Text["Target"] <select @bind="_target">
+                    @foreach (var e in _targets) { <option value="@e.Id">@e.ExternalId · @Text[e.TargetState.ToString()]</option> }</select></label>
+                <FluentButton OnClick="CompareAsync" Disabled="@Busy">@Text["CompareAction"]</FluentButton>
+            </fieldset>
+        }
+    }
+    else { <p>@Text["ScopeReadOnly"]</p> }
+
+    @if (_comparisons.Count == 0) { <p>@Text["NoTargetComparison"]</p> }
+    else
+    {
+        <label>@Text["Comparison"] <select value="@_selected?.Id" @onchange="Choose">
+            @foreach (var c in _comparisons) { <option value="@c.Id">@c.Source → @c.Target · @c.ComputedAtUtc.ToString("u")</option> }
+        </select></label>
+    }
+    @if (_selected is { } comparison)
+    {
+        <article aria-label="@Text["TargetComparisonTotals"]">
+            <p>@comparison.Source → @comparison.Target · @Text[comparison.TargetState.ToString()] · @Text[$"TargetDataState_{comparison.Data}"]
+                · @comparison.ComputedAtUtc.ToString("u") · @Text["SsoAuthor"] : @comparison.ActorObjectId</p>
+            @if (!string.IsNullOrWhiteSpace(comparison.Hypotheses)) { <p>@Text["TargetHypotheses"] : @comparison.Hypotheses</p> }
+            @if (comparison.Data != TargetDataState.Available) { <p>@Text[$"TargetDataStateHint_{comparison.Data}"]</p> }
+            <ul aria-label="@Text["TargetComparisonTotals"]">
+                @foreach (var outcome in Enum.GetValues<TargetOutcome>()) { <li>@Text[$"TargetOutcome_{outcome}"] : @Count(comparison, outcome).ToString("N0")</li> }
+                <li>@Text["TargetCollisions"] : @comparison.Collisions.ToString("N0")</li>
+            </ul>
+            <p>@Text["TargetAbsenceHint"]</p>
+            <table aria-label="@Text["Coverage"]">
+                <thead><tr><th>@Text["Environments"]</th><th>@Text["ObjectType"]</th><th>@Text["ComparedObjects"]</th><th>@Text["Coverage"]</th>
+                    <th>@Text["MissingFields"]</th></tr></thead>
+                <tbody>
+                    @foreach (var row in comparison.Coverage)
+                    {
+                        <tr>
+                            <td>@Text[row.Side.ToString()]</td>
+                            <td>@Text[$"ObjectType_{row.Type}"]</td>
+                            <td>@row.Objects.ToString("N0")</td>
+                            <td>@Text[row.Exhaustive ? "TargetExhaustive" : "TargetNotExhaustiveCoverage"]</td>
+                            <td>@(row.MissingFields.Count == 0 ? "—" : string.Join(", ", row.MissingFields))</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <h4>@Text["TargetOutcomes"]</h4>
+            <label>@Text["TargetOutcomeLabel"] <select @bind="_outcome" @bind:after="Reload"><option value="">@Text["All"]</option>
+                @foreach (var outcome in Enum.GetValues<TargetOutcome>()) { <option value="@outcome">@Text[$"TargetOutcome_{outcome}"]</option> }
+            </select></label>
+            <FluentTextInput Label="@Text["Search"]" @bind-Value="_search" />
+            <ClarityGrid @key="(comparison.Id, _outcome, _search, _revision)" TGridItem="TargetItemRow" Search="@_search"
+                         Load="@((p, ct) => Targets.ItemsAsync(ProjectId, comparison.Id, false, Outcome, null, p, ct))">
+                <Columns>
+                    <TemplateColumn Title="@Text["Source"]" Context="r"><a href="@Sheet(r.SourceId, EnvironmentRole.Source)">@(r.Label ?? r.SourceId.ToString())</a>
+                        <small>@Text[$"ObjectType_{r.ObjectType}"]</small></TemplateColumn>
+                    <TemplateColumn Title="@Text["TargetOutcomeLabel"]" Context="r">@Text[$"TargetOutcome_{r.Outcome}"]
+                        <small>@Text[$"TargetReason_{r.Reason}"]</small></TemplateColumn>
+                    <TemplateColumn Title="@Text["TargetKey"]" Context="r">@r.Key <small>@RuleLabel(comparison, r.RuleId)</small></TemplateColumn>
+                    <TemplateColumn Title="@Text["Target"]" Context="r">
+                        @if (r.TargetId is { } target) { <a href="@Sheet(target, EnvironmentRole.Target)">@(r.TargetLabel ?? target.ToString())</a> }
+                        else if (r.CandidateCount > 1) { <span>@r.CandidateCount @Text["Candidates"]</span> }
+                        else { <span>—</span> }
+                        @if (r.OtherId is { } other) { <small>@Text["SharedWith"] <a href="@Sheet(other, EnvironmentRole.Source)">@(r.OtherLabel ?? other.ToString())</a></small> }
+                    </TemplateColumn>
+                </Columns>
+                <EmptyContent><p>@Text["NoTargetItems"]</p></EmptyContent>
+            </ClarityGrid>
+            <h4>@Text["TargetCollisions"]</h4>
+            <p>@Text["TargetCollisionsHint"]</p>
+            <label>@Text["CollisionKindLabel"] <select @bind="_collision" @bind:after="Reload"><option value="">@Text["All"]</option>
+                @foreach (var kind in Enum.GetValues<CollisionKind>()) { <option value="@kind">@Text[$"CollisionKind_{kind}"]</option> }
+            </select></label>
+            <ClarityGrid @key="(comparison.Id, _collision, _revision)" TGridItem="TargetItemRow"
+                         Load="@((p, ct) => Targets.ItemsAsync(ProjectId, comparison.Id, true, null, Collision, p, ct))">
+                <Columns>
+                    <TemplateColumn Title="@Text["CollisionKindLabel"]" Context="r">@Text[$"CollisionKind_{r.Collision}"]
+                        <small>@Text[$"TargetReason_{r.Reason}"]</small></TemplateColumn>
+                    <TemplateColumn Title="@Text["TargetKey"]" Context="r">@r.Key <small>@RuleLabel(comparison, r.RuleId)</small></TemplateColumn>
+                    <TemplateColumn Title="@Text["Source"]" Context="r">
+                        @if (r.SourceId is { } source) { <a href="@Sheet(source, EnvironmentRole.Source)">@(r.Label ?? source.ToString())</a> } else { <span>—</span> }
+                        @if (r.OtherId is { } other) { <small>@Text["SharedWith"] <a href="@Sheet(other, EnvironmentRole.Source)">@(r.OtherLabel ?? other.ToString())</a></small> }
+                    </TemplateColumn>
+                    <TemplateColumn Title="@Text["Target"]" Context="r">
+                        @if (r.TargetId is { } target) { <a href="@Sheet(target, EnvironmentRole.Target)">@(r.TargetLabel ?? target.ToString())</a> } else { <span>—</span> }
+                    </TemplateColumn>
+                </Columns>
+                <EmptyContent><p>@Text["NoTargetCollisions"]</p></EmptyContent>
+            </ClarityGrid>
+        </article>
+    }
+    <MappingPanel @key="(ProjectId, _revision)" ProjectId="ProjectId" Side="EnvironmentRole.Source" Kind="MappingKind.SourceTarget" />
+</section>
+
+@code {
+    [Parameter] public Guid ProjectId { get; set; }
+    private IReadOnlyList<TargetMappingRule> _rules = [];
+    private IReadOnlyList<ProjectEnvironment> _sources = [], _targets = [];
+    private IReadOnlyList<TargetComparisonSummary> _comparisons = [];
+    private TargetComparisonSummary? _selected;
+    private TargetMappingRule? _retiring;
+    private Guid _source, _target, _compareOperation = Guid.NewGuid(), _ruleOperation = Guid.NewGuid();
+    private TargetRuleKind _kind = TargetRuleKind.SharedAttribute;
+    private string _type = "user", _sourceField = "", _targetField = "", _domain = "", _justification = "", _retireReason = "";
+    private string _outcome = "", _collision = "", _search = "";
+    private string? _message;
+    private int _priority = 1, _revision;
+    private bool _canQualify, _includeRetired;
+
+    private TargetOutcome? Outcome => Enum.TryParse<TargetOutcome>(_outcome, out var value) ? value : null;
+    private CollisionKind? Collision => Enum.TryParse<CollisionKind>(_collision, out var value) ? value : null;
+
+    protected override Task OnParametersSetAsync() => RunAsync(async () =>
+    {
+        var project = await Foundation.GetProjectAsync(ProjectId);
+        _canQualify = project.Status == ProjectStatus.Active && Authorization.Allows(project.WorkspaceId, WorkspaceOperation.Qualify);
+        var environments = await Foundation.ListEnvironmentsAsync(ProjectId);
+        _sources = environments.Where(e => e.Role == EnvironmentRole.Source && e.TargetState == TargetState.Existing).ToList();
+        _targets = environments.Where(e => e.Role == EnvironmentRole.Target).ToList();
+        _source = _sources.FirstOrDefault()?.Id ?? Guid.Empty;
+        _target = _targets.FirstOrDefault()?.Id ?? Guid.Empty;
+        _rules = await Targets.RulesAsync(ProjectId, _includeRetired);
+        _comparisons = await Targets.ComparisonsAsync(ProjectId);
+        _selected = _comparisons.FirstOrDefault();
+    });
+
+    private string Sheet(Guid? id, EnvironmentRole side) => $"/projects/{ProjectId}/inventory?side={side}&object={id}";
+    private string RuleLabel(TargetComparisonSummary comparison, Guid? id) =>
+        comparison.Rules.FirstOrDefault(r => r.Id == id) is { } rule
+            ? rule.Kind == TargetRuleKind.ComputedUpn ? $"{rule.SourceField} → {rule.TargetField} @{rule.TargetDomain}" : $"{rule.SourceField} → {rule.TargetField}"
+            : "";
+    private static int Count(TargetComparisonSummary c, TargetOutcome outcome) => outcome switch
+    {
+        TargetOutcome.Matched => c.Matched,
+        TargetOutcome.Ambiguous => c.Ambiguous,
+        TargetOutcome.Absent => c.Absent,
+        TargetOutcome.Unknown => c.Unknown,
+        _ => c.NotCompared
+    };
+    private void Reload() => _revision++;
+    private void Choose(ChangeEventArgs e)
+    {
+        _selected = _comparisons.FirstOrDefault(c => c.Id.ToString() == e.Value?.ToString()) ?? _selected;
+        _revision++;
+    }
+    private void BeginRetire(TargetMappingRule rule) { _retiring = rule; _retireReason = ""; _message = null; }
+
+    private Task LoadRulesAsync() => RunAsync(async () => _rules = await Targets.RulesAsync(ProjectId, _includeRetired));
+
+    private Task AddRuleAsync() => RunAsync(async () =>
+    {
+        await Targets.AddRuleAsync(ProjectId, new(_type, _kind, _sourceField, _targetField,
+            string.IsNullOrWhiteSpace(_domain) ? null : _domain, _priority, _justification), _ruleOperation);
+        _ruleOperation = Guid.NewGuid();
+        _sourceField = ""; _targetField = ""; _domain = ""; _justification = "";
+        _rules = await Targets.RulesAsync(ProjectId, _includeRetired);
+        _message = Messages["TargetRuleAdded"];
+    });
+
+    private Task RetireAsync() => RunAsync(async () =>
+    {
+        await Targets.RetireRuleAsync(ProjectId, _retiring!.Id, _retireReason);
+        _retiring = null; _retireReason = "";
+        _rules = await Targets.RulesAsync(ProjectId, _includeRetired);
+        _message = Messages["TargetRuleRetired"];
+    });
+
+    private Task CompareAsync() => RunAsync(async () =>
+    {
+        var id = await Targets.CompareAsync(ProjectId, _source, _target, _compareOperation);
+        _compareOperation = Guid.NewGuid();
+        _comparisons = await Targets.ComparisonsAsync(ProjectId);
+        _selected = _comparisons.FirstOrDefault(c => c.Id == id);
+        _revision++;
+        _message = Messages["TargetCompared"];
+    });
+}

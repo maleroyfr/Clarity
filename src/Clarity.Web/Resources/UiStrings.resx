@@ -876,4 +876,78 @@
   <data name="DecisionKind_SsoDependency" xml:space="preserve"><value>Dépendance SSO</value></data>
   <data name="DecisionKind_TeamsChatScope" xml:space="preserve"><value>Conversations Teams</value></data>
   <data name="DecisionKind_TeamsTelephonyScope" xml:space="preserve"><value>Téléphonie Teams</value></data>
+  <data name="SourceTargetComparison" xml:space="preserve"><value>Comparaison source-cible</value></data>
+  <data name="SourceTargetHint" xml:space="preserve"><value>Documente les règles de correspondance du projet et compare un environnement source à une cible prévue ou existante. Les comparaisons de données ne s’activent que lorsque la cible existe et dispose de données publiées.</value></data>
+  <data name="TargetMappingRules" xml:space="preserve"><value>Règles de correspondance</value></data>
+  <data name="TargetMappingRulesHint" xml:space="preserve"><value>Chaque règle documente comment retrouver l’objet cible : attribut partagé, par exemple un identifiant employé unique, ou UPN cible calculé. Une règle n’est jamais modifiée : retirez-la avec une justification puis ajoutez-en une autre.</value></data>
+  <data name="ShowRetiredRules" xml:space="preserve"><value>Afficher les règles retirées</value></data>
+  <data name="NoTargetMappingRule" xml:space="preserve"><value>Aucune règle de correspondance documentée.</value></data>
+  <data name="TargetRuleKindLabel" xml:space="preserve"><value>Type de règle</value></data>
+  <data name="SourceField" xml:space="preserve"><value>Attribut source</value></data>
+  <data name="TargetField" xml:space="preserve"><value>Attribut cible</value></data>
+  <data name="RulePriority" xml:space="preserve"><value>Priorité</value></data>
+  <data name="RuleRetired" xml:space="preserve"><value>Retirée</value></data>
+  <data name="RuleActive" xml:space="preserve"><value>Active</value></data>
+  <data name="RetireRule" xml:space="preserve"><value>Retirer la règle</value></data>
+  <data name="AddTargetRule" xml:space="preserve"><value>Ajouter une règle</value></data>
+  <data name="TargetDomainLabel" xml:space="preserve"><value>Domaine cible du UPN calculé</value></data>
+  <data name="SourceTargetEnvironmentsMissing" xml:space="preserve"><value>Déclarez au moins un environnement source existant et un environnement cible, prévu ou existant, pour comparer.</value></data>
+  <data name="CompareSourceTarget" xml:space="preserve"><value>Comparer la source et la cible</value></data>
+  <data name="NoTargetComparison" xml:space="preserve"><value>Aucune comparaison source-cible calculée.</value></data>
+  <data name="TargetComparisonTotals" xml:space="preserve"><value>Synthèse source-cible</value></data>
+  <data name="TargetHypotheses" xml:space="preserve"><value>Hypothèses de la cible</value></data>
+  <data name="TargetDataState_Planned" xml:space="preserve"><value>Cible prévue</value></data>
+  <data name="TargetDataState_NoData" xml:space="preserve"><value>Cible sans données publiées</value></data>
+  <data name="TargetDataState_Available" xml:space="preserve"><value>Données cibles disponibles</value></data>
+  <data name="TargetDataStateHint_Planned" xml:space="preserve"><value>La cible est prévue : aucune comparaison de données n’est faite. Seules les collisions entre UPN calculés de la source sont signalées.</value></data>
+  <data name="TargetDataStateHint_NoData" xml:space="preserve"><value>La cible existe mais aucune collecte n’est publiée : aucune comparaison de données n’est faite. Publiez une collecte de la cible puis recalculez.</value></data>
+  <data name="TargetOutcome_Matched" xml:space="preserve"><value>Correspondance unique</value></data>
+  <data name="TargetOutcome_Ambiguous" xml:space="preserve"><value>Ambigu</value></data>
+  <data name="TargetOutcome_Absent" xml:space="preserve"><value>Absent de la cible</value></data>
+  <data name="TargetOutcome_Unknown" xml:space="preserve"><value>Inconnu</value></data>
+  <data name="TargetOutcome_NotCompared" xml:space="preserve"><value>Non comparé</value></data>
+  <data name="TargetCollisions" xml:space="preserve"><value>Collisions</value></data>
+  <data name="TargetAbsenceHint" xml:space="preserve"><value>Un objet n’est déclaré absent que si la cible a été collectée de façon exhaustive pour son type et que l’attribut de la règle a été collecté sans conflit ; sinon il reste inconnu.</value></data>
+  <data name="MissingFields" xml:space="preserve"><value>Attributs non collectés</value></data>
+  <data name="TargetExhaustive" xml:space="preserve"><value>Exhaustive</value></data>
+  <data name="TargetNotExhaustiveCoverage" xml:space="preserve"><value>Non exhaustive</value></data>
+  <data name="TargetOutcomes" xml:space="preserve"><value>Résultats par objet source</value></data>
+  <data name="TargetOutcomeLabel" xml:space="preserve"><value>Résultat</value></data>
+  <data name="TargetKey" xml:space="preserve"><value>Clé de correspondance</value></data>
+  <data name="SharedWith" xml:space="preserve"><value>partagé avec</value></data>
+  <data name="NoTargetItems" xml:space="preserve"><value>Aucun objet source ne correspond à ces filtres.</value></data>
+  <data name="TargetCollisionsHint" xml:space="preserve"><value>Collisions d’UPN, d’adresse SMTP, d’alias ou de domaine entre la source et la cible, à arbitrer avant la migration.</value></data>
+  <data name="CollisionKindLabel" xml:space="preserve"><value>Type de collision</value></data>
+  <data name="CollisionKind_Upn" xml:space="preserve"><value>UPN</value></data>
+  <data name="CollisionKind_Smtp" xml:space="preserve"><value>Adresse SMTP</value></data>
+  <data name="CollisionKind_Alias" xml:space="preserve"><value>Alias</value></data>
+  <data name="CollisionKind_Domain" xml:space="preserve"><value>Domaine</value></data>
+  <data name="NoTargetCollisions" xml:space="preserve"><value>Aucune collision détectée.</value></data>
+  <data name="TargetRuleKind_SharedAttribute" xml:space="preserve"><value>Attribut partagé</value></data>
+  <data name="TargetRuleKind_ComputedUpn" xml:space="preserve"><value>UPN cible calculé</value></data>
+  <data name="TargetRuleAdded" xml:space="preserve"><value>Règle ajoutée.</value></data>
+  <data name="TargetRuleRetired" xml:space="preserve"><value>Règle retirée.</value></data>
+  <data name="TargetCompared" xml:space="preserve"><value>Comparaison source-cible calculée.</value></data>
+  <data name="SourceTargetMappings" xml:space="preserve"><value>Associations source-cible</value></data>
+  <data name="NoSourceTargetMappings" xml:space="preserve"><value>Aucune association source-cible proposée. Calculez une comparaison avec une cible disposant de données publiées.</value></data>
+  <data name="MappingRuleAttribute" xml:space="preserve"><value>Règle de correspondance documentée</value></data>
+  <data name="ComputedTargetUpn" xml:space="preserve"><value>UPN cible calculé</value></data>
+  <data name="TargetReason_SingleCandidate" xml:space="preserve"><value>Un seul candidat cible</value></data>
+  <data name="TargetReason_MultipleCandidates" xml:space="preserve"><value>Plusieurs candidats cibles</value></data>
+  <data name="TargetReason_SharedCandidate" xml:space="preserve"><value>Candidat cible partagé avec un autre objet source</value></data>
+  <data name="TargetReason_NoCandidate" xml:space="preserve"><value>Aucun candidat dans une cible collectée de façon exhaustive</value></data>
+  <data name="TargetReason_TargetNotExhaustive" xml:space="preserve"><value>Cible non collectée de façon exhaustive : l’absence n’est pas prouvée</value></data>
+  <data name="TargetReason_SourceValueMissing" xml:space="preserve"><value>Valeur source absente</value></data>
+  <data name="TargetReason_SourceAttributeNotCollected" xml:space="preserve"><value>Attribut source non collecté</value></data>
+  <data name="TargetReason_TargetAttributeNotCollected" xml:space="preserve"><value>Attribut cible non collecté</value></data>
+  <data name="TargetReason_TargetValueConflicting" xml:space="preserve"><value>Valeurs cibles en conflit entre collectes</value></data>
+  <data name="TargetReason_SourceValueConflicting" xml:space="preserve"><value>Valeurs sources en conflit entre collectes</value></data>
+  <data name="TargetReason_TargetPlanned" xml:space="preserve"><value>Cible prévue : pas de comparaison de données</value></data>
+  <data name="TargetReason_TargetDataMissing" xml:space="preserve"><value>Aucune donnée cible publiée</value></data>
+  <data name="TargetReason_ComputedUpnShared" xml:space="preserve"><value>Le même UPN cible est calculé pour plusieurs objets source</value></data>
+  <data name="TargetReason_TargetUpnTaken" xml:space="preserve"><value>L’UPN calculé est déjà utilisé par un autre objet cible</value></data>
+  <data name="TargetReason_SmtpTaken" xml:space="preserve"><value>Adresse SMTP déjà utilisée par un autre objet cible</value></data>
+  <data name="TargetReason_AliasTaken" xml:space="preserve"><value>Alias déjà utilisé par un autre objet cible</value></data>
+  <data name="TargetReason_SharedDomain" xml:space="preserve"><value>Domaine présent dans la source et dans la cible</value></data>
+  <data name="TargetReason_TargetDomainNotVerified" xml:space="preserve"><value>Domaine cible de la règle absent ou non vérifié dans la cible</value></data>
 </root>

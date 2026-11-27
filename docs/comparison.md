@@ -1,12 +1,14 @@
 # Comparisons
 
 This guide covers the Lot 5 comparison screen. Its first view compares two
-collections of one environment. The French product specification
-(`docs/specification.md`, "Comparaison" screen, "Comparer deux collectes d’un même
-environnement") remains authoritative; this page records the implemented choices.
+collections of one environment; its second view compares the source with the target.
+The French product specification (`docs/specification.md`, "Comparaison" screen,
+"Comparer deux collectes d’un même environnement" and "Comparer source et cible")
+remains authoritative; this page records the implemented choices.
 
 The screen is at `/projects/{projectId}/comparison` (with `?side=Target` for the
-target side). Business text is French, from `UiStrings.resx`.
+target side, and `?view=target` for the source-target view). Business text is French,
+from `UiStrings.resx`.
 
 ## Comparing two collections
 
@@ -83,16 +85,106 @@ decisions first (value and wave), then mapping decisions (state and rule), then 
 current revision of each assessment. The item list can be filtered to objects with an
 affected decision.
 
+## Comparing source and target
+
+### Mapping rules
+
+Each project documents its correspondence rules (`TargetMappingRule`). A rule names
+an object type (`user`, `group`, `mailbox`, `sharedMailbox`, `resourceMailbox`,
+`mailGroup`, `recipient` or `device`), a priority from 1 to 100 and a mandatory
+justification. Two kinds exist:
+
+| Kind | Key |
+|---|---|
+| Shared attribute | A source field must equal a target field, ignoring case (for example `employeeId` → `employeeId`, or `mail` → `mail`). |
+| Computed target UPN | The local part of a source field (before any `@`) joined to the rule's target domain, compared with the target `userPrincipalName`. |
+
+Rules are never edited. A change retires the rule with a justification and adds a
+new one, so every comparison keeps the exact rules it applied (`RulesJson`). At most
+50 active rules exist per project. Adding a rule is idempotent per operation ID.
+Adding and retiring write `TargetMapping.RuleAdded` and `TargetMapping.RuleRetired`
+audit events.
+
+### Running a comparison
+
+A consultant with the qualify right picks a source and a target environment.
+`TargetComparisonService.CompareAsync` reads the current values of observed objects on
+both sides, applies the active rules in priority order and calls the pure
+`TargetComparisonEngine`. The snapshot (`TargetComparison`, `TargetComparisonItem`)
+replaces the previous one for the same pair, is idempotent per operation ID, is
+serialized per project, and writes a `TargetComparison.Computed` audit event. It is
+recomputed only on request.
+
+The target's data state decides what is compared:
+
+| Data state | Meaning |
+|---|---|
+| Planned target | The environment's target state is `Planned`. Its documented hypotheses are shown. No target data is read: every source object is "Not compared", and only computed UPNs shared by several source objects are reported. |
+| No target data | The target exists but has no published section. Every source object is "Not compared". |
+| Data available | The target exists and has published data. Outcomes, collisions and proposed associations are computed. |
+
+Coverage is shown per object type and side: object count, whether a complete
+tenant-wide section proves absence, and the rule fields that no published section
+collected. Coverage uses the latest published section per capability and scope, and
+the same exhaustiveness rule as the collection comparison.
+
+### Outcomes
+
+| Outcome | Rule |
+|---|---|
+| Matched | Exactly one target candidate, not claimed by another source object. |
+| Ambiguous | Several candidates, or one candidate also claimed by another source object. |
+| Absent | No candidate, every rule produced a key or the source value is legitimately empty, every target field was collected without conflict, and a complete tenant-wide section of that type was observed. |
+| Unknown | No candidate, and absence cannot be proven: the target type is not exhaustive, a field was not collected, a value is conflicting, or the source has no key. |
+| Not compared | The target is planned or has no data. |
+
+Each item records its reason (for example `TargetNotExhaustive`,
+`SourceAttributeNotCollected` or `TargetPlanned`), the key and the rule used.
+
+### Collisions
+
+| Collision | Reported when |
+|---|---|
+| UPN | Two source objects compute the same target UPN (`ComputedUpnShared`), or a computed UPN is already used by a target object that is not this object's candidate (`TargetUpnTaken`). |
+| SMTP | A source primary or `smtp:` proxy address is held by a target object that is not its candidate (`SmtpTaken`). X500, SIP and other address types are ignored. |
+| Alias | A source alias is held by an unrelated target object (`AliasTaken`). |
+| Domain | A domain is observed in both tenants (`SharedDomain`), or a computed-UPN rule targets a domain that is not verified in the observed target domains (`TargetDomainNotVerified`). |
+
+Mailboxes and Exchange groups are related to their directory principal (through
+`mailboxOf` or a unique `externalDirectoryObjectId`), so an address held by the
+mailbox of a matched user is not a collision.
+
+### Source-target associations
+
+When target data is available, each candidate pair becomes a `MappingDecision` of
+kind `SourceTarget` (rule `ComputedTargetUpn` or `MappingRuleAttribute`): proposed when
+the outcome is matched, to review when it is ambiguous. The decision keeps the rule,
+key, candidates, competing source objects and the supporting observation IDs.
+Consultants review them in the same mapping queue as hybrid associations, filtered by
+kind ("Associations source-cible"). They can validate or reject a proposal, but not
+correct it to another target.
+
+The evidence fingerprint covers the rule, key, candidates and competing objects, not
+observation IDs. Recomputing with unchanged evidence keeps the consultant's decision.
+Changed evidence adds an `AssociationEvidenceChanged` revision to review; a pair that
+no longer has a candidate gets `NoCurrentCandidate` and a `CandidateNoLongerObserved`
+revision. Earlier revisions remain. Hybrid recomputation, inventory overviews and
+dependency resolution consider only hybrid associations, so a source-target
+association never merges a source object with a target object.
+
 ## Authorization, isolation and audit
 
 - Reading runs, comparisons, items and decisions requires read access to the project.
-  Comparing requires the qualify right on an active project.
+  Comparing collections or source and target, and adding or retiring mapping rules,
+  require the qualify right on an active project.
 - Workspace context comes from the authorized project, never from a client-supplied
   workspace ID. Runs must belong to the project and environment. A foreign or missing
   comparison or run is denied.
-- `RunComparisons` and `RunComparisonItems` carry `WorkspaceId`, composite foreign keys,
-  EF global query filters and SQL row-level security policies.
-- Each comparison writes one `Comparison.RunsCompared` audit event keyed by its
+- `RunComparisons`, `RunComparisonItems`, `TargetMappingRules`, `TargetComparisons` and
+  `TargetComparisonItems` carry `WorkspaceId`, composite foreign keys, EF global query
+  filters and SQL row-level security policies.
+- Each collection comparison writes one `Comparison.RunsCompared` audit event, and each
+  source-target comparison one `TargetComparison.Computed` event, keyed by its
   operation ID.
 
 ## Limits
@@ -105,3 +197,12 @@ affected decision.
 - The Teams, SharePoint and Exchange coverage limits in the connector guides still
   apply. For example, incoming shared channels and channel members are not collected,
   so their absence is never asserted.
+- The Entra connector does not collect `employeeId` or `mailNickname`. A rule on an
+  uncollected field produces "Unknown" outcomes with `SourceAttributeNotCollected` or
+  `TargetAttributeNotCollected` until an import profile supplies the field.
+- Entra users are collected incrementally and AD imports are never tenant-wide
+  exhaustive sections, so absence of a user in the target is not proven with the
+  current connectors; such users are "Unknown" (`TargetNotExhaustive`).
+- A planned target only checks computed UPNs among source objects. Target domain
+  collisions need observed target domains.
+- A source-target comparison holds at most 200,000 objects per side.

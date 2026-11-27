@@ -50,7 +50,7 @@ public sealed class InventoryOverview(IDbContextFactory<ClarityDbContext> factor
         }
         var review = await (from m in db.MappingDecisions
                             join e in db.Environments on new { m.WorkspaceId, Id = m.AdEnvironmentId } equals new { e.WorkspaceId, e.Id }
-                            where m.WorkspaceId == project.WorkspaceId && m.ProjectId == projectId && e.Role == side
+                            where m.WorkspaceId == project.WorkspaceId && m.ProjectId == projectId && m.Kind == MappingKind.Hybrid && e.Role == side
                                 && (m.State == MappingState.Proposed || m.State == MappingState.ToReview)
                             select m.Id).CountAsync(token);
         var changes = await Items(new(side)).Where(i => i.LastChangedAtUtc != null)

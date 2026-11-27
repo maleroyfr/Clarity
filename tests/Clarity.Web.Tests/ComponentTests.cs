@@ -175,6 +175,12 @@ public class ComponentTests : BunitContext
             .Concat(Enum.GetNames<DecisionKind>().Select(x => $"DecisionKind_{x}"))
             .Concat(Enum.GetNames<CollectionChannel>().Select(x => $"Channel_{x}"))
             .Concat(Enum.GetNames<MappingState>().Concat(Enum.GetNames<AssociationRule>()))
+            .Concat(Enum.GetNames<TargetOutcome>().Select(x => $"TargetOutcome_{x}"))
+            .Concat(Enum.GetNames<CollisionKind>().Select(x => $"CollisionKind_{x}"))
+            .Concat(Enum.GetNames<TargetRuleKind>().Select(x => $"TargetRuleKind_{x}"))
+            .Concat(Enum.GetNames<TargetDataState>().Select(x => $"TargetDataState_{x}"))
+            .Concat(TargetComparisonRules.Reasons.Select(x => $"TargetReason_{x}"))
+            .Concat(TargetComparisonRules.ObjectTypes.Concat(TargetComparisonRules.DomainTypes).Select(x => $"ObjectType_{x}"))
             .Concat(new[] { "group", "mailGroup", "team", "teamChannel", "site", "oneDrive", "mailbox", "sharedMailbox", "resourceMailbox", "servicePrincipal",
                 "mobileApp", "deviceConfiguration", "deviceCompliancePolicy", "managedDevice", "device", "user" }.Select(x => $"ObjectType_{x}"));
         foreach (var key in keys)

@@ -10,12 +10,19 @@ public sealed record CorrectionPreview(MappingSelection Original, Guid Replaceme
 
 public sealed class MappingReview(IDbContextFactory<ClarityDbContext> factory, IProjectAccess access, IWorkspaceContext scope)
 {
-    public async Task<PageResult<MappingRow>> PageAsync(Guid projectId, EnvironmentRole side, string state, PageRequest page, CancellationToken token = default)
+    public Task<PageResult<MappingRow>> PageAsync(Guid projectId, EnvironmentRole side, string state, PageRequest page, CancellationToken token = default) =>
+        PageAsync(projectId, MappingKind.Hybrid, side, state, page, token);
+
+    /// <summary>Hybrid rows pair two environments of one side; source-target rows pair a source with a target environment.</summary>
+    public async Task<PageResult<MappingRow>> PageAsync(Guid projectId, MappingKind kind, EnvironmentRole side, string state, PageRequest page,
+        CancellationToken token = default)
     {
         page.Validate();
+        if (!Enum.IsDefined(kind)) { throw new ArgumentException("Invalid mapping kind."); }
         var project = await access.RequireAsync(projectId, WorkspaceOperation.Read, token);
         await using var db = await factory.CreateDbContextAsync(token);
-        var decisions = Decisions(db, project);
+        var decisions = Decisions(db, project).Where(x => x.Kind == kind);
+        var (first, second) = kind == MappingKind.Hybrid ? (side, side) : (EnvironmentRole.Source, EnvironmentRole.Target);
         decisions = state switch
         {
             "Queue" => decisions.Where(x => x.State == MappingState.Proposed || x.State == MappingState.ToReview),
@@ -28,7 +35,7 @@ public sealed class MappingReview(IDbContextFactory<ClarityDbContext> factory, I
                     join b in db.InventoryObjects on new { m.WorkspaceId, Id = m.EntraObjectId } equals new { b.WorkspaceId, b.Id }
                     join ad in db.Environments on new { m.WorkspaceId, Id = m.AdEnvironmentId } equals new { ad.WorkspaceId, ad.Id }
                     join cloud in db.Environments on new { m.WorkspaceId, Id = m.EntraEnvironmentId } equals new { cloud.WorkspaceId, cloud.Id }
-                    where ad.Role == side && cloud.Role == side
+                    where ad.Role == first && cloud.Role == second
                     orderby a.DisplayName, m.Id
                     select new MappingRow(m.Id, m.Revision, m.State, m.Rule, a.Id, b.Id,
                         a.UserPrincipalName ?? a.DisplayName ?? a.Id.ToString(), b.UserPrincipalName ?? b.DisplayName ?? b.Id.ToString(), ad.ExternalId, cloud.ExternalId);
@@ -110,14 +117,20 @@ public sealed class MappingReview(IDbContextFactory<ClarityDbContext> factory, I
         var rows = await decisions.Where(x => ids.Contains(x.Id)).ToListAsync(token);
         if (rows.Count != ids.Length) { throw new AccessDeniedException(); }
         if (rows.Any(r => r.Revision != revisions[r.Id])) { throw new ConflictException(); }
+        if (rows.Select(r => r.Kind).Distinct().Count() != 1) { throw new ArgumentException("Select associations of one kind."); }
         if (validate)
         {
+            // A source object may have one validated counterpart per target environment; a hybrid object has one overall.
+            var kind = rows[0].Kind;
+            Guid Scope(MappingDecision d) => kind == MappingKind.Hybrid ? Guid.Empty : d.EntraEnvironmentId;
             var ad = rows.Select(x => x.AdObjectId).Distinct().ToArray();
             var cloud = rows.Select(x => x.EntraObjectId).Distinct().ToArray();
-            if (ad.Length != rows.Count || cloud.Length != rows.Count || rows.Any(r => r.Rule == AssociationRule.NoCurrentCandidate)
-                || await decisions.AnyAsync(x => !ids.Contains(x.Id) && x.State == MappingState.Validated
-                    && (ad.Contains(x.AdObjectId) || cloud.Contains(x.EntraObjectId)), token))
+            var claimed = rows.Select(x => (x.AdObjectId, Scope(x))).ToHashSet();
+            if (claimed.Count != rows.Count || cloud.Length != rows.Count || rows.Any(r => r.Rule == AssociationRule.NoCurrentCandidate))
             { throw new ConflictException(); }
+            var others = await decisions.Where(x => x.Kind == kind && !ids.Contains(x.Id) && x.State == MappingState.Validated
+                && (ad.Contains(x.AdObjectId) || cloud.Contains(x.EntraObjectId))).ToListAsync(token);
+            if (others.Any(x => cloud.Contains(x.EntraObjectId) || claimed.Contains((x.AdObjectId, Scope(x))))) { throw new ConflictException(); }
         }
         return rows.Where(r => r.State != (validate ? MappingState.Validated : MappingState.Rejected)).ToList();
     }
@@ -127,6 +140,7 @@ public sealed class MappingReview(IDbContextFactory<ClarityDbContext> factory, I
     {
         var decisions = Decisions(db, project);
         var original = await decisions.SingleOrDefaultAsync(x => x.Id == selection.Id, token) ?? throw new AccessDeniedException();
+        if (original.Kind != MappingKind.Hybrid) { throw new ArgumentException("Source-target associations follow the project's mapping rules."); }
         if (original.Revision != selection.Revision || original.EntraObjectId == replacementId) { throw new ConflictException(); }
         var ad = await db.InventoryObjects.SingleAsync(x => x.WorkspaceId == project.WorkspaceId && x.EnvironmentId == original.AdEnvironmentId
             && x.Id == original.AdObjectId, token);
@@ -135,7 +149,8 @@ public sealed class MappingReview(IDbContextFactory<ClarityDbContext> factory, I
         if (ad.Presence != InventoryPresence.Observed || replacement.Presence != InventoryPresence.Observed
             || (ad.Type, replacement.Type) is not (("user", "user") or ("computer", "device"))) { throw new ConflictException(); }
         var target = await decisions.SingleOrDefaultAsync(x => x.AdObjectId == ad.Id && x.EntraObjectId == replacementId, token);
-        if (await decisions.AnyAsync(x => x.Id != original.Id && x.Id != (target == null ? Guid.Empty : target.Id) && x.State == MappingState.Validated
+        if (await decisions.AnyAsync(x => x.Kind == MappingKind.Hybrid && x.Id != original.Id && x.Id != (target == null ? Guid.Empty : target.Id)
+            && x.State == MappingState.Validated
             && (x.AdObjectId == ad.Id || x.EntraObjectId == replacementId), token)) { throw new ConflictException(); }
         var proofIds = await db.CurrentValues.Where(x => x.WorkspaceId == project.WorkspaceId && x.ObjectId == replacementId)
             .Select(x => x.ObservationId).Distinct().Order().ToListAsync(token);

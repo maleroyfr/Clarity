@@ -160,6 +160,24 @@ public static class ModelRules
                     throw new ArgumentException("Invalid dependency link.");
                 }
                 break;
+            case TargetMappingRule targetRule:
+                TargetComparisonRules.Validate(targetRule);
+                break;
+            case TargetComparisonItem targetItem:
+                TargetComparisonRules.Validate(targetItem);
+                break;
+            case TargetComparison targetComparison:
+                if (!Enum.IsDefined(targetComparison.Data) || targetComparison.SourceEnvironmentId == targetComparison.TargetEnvironmentId)
+                {
+                    throw new ArgumentException("Invalid target comparison.");
+                }
+                break;
+            case MappingDecision mapping:
+                if (!Enum.IsDefined(mapping.Kind) || !Enum.IsDefined(mapping.Rule) || !Enum.IsDefined(mapping.State))
+                {
+                    throw new ArgumentException("Invalid mapping decision.");
+                }
+                break;
             case Project project:
                 Name(project.Name);
                 if (!Enum.IsDefined(project.Scenario))

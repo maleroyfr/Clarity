@@ -55,7 +55,7 @@ Never use a production database for tests.
 - [SharePoint and OneDrive collection](docs/connectors/sharepoint-onedrive.md)
 - [Teams collection and chat/telephony qualifications](docs/connectors/teams.md)
 - [Migration scoping: populations, list import and scope decisions](docs/scoping.md)
-- [Comparisons: successive collections and decisions to review](docs/comparison.md)
+- [Comparisons: successive collections, source and target, and decisions to review](docs/comparison.md)
 - [Azure provisioning, deployment and rollback](docs/deployment.md)
 - [Contributor conventions](.github/copilot-instructions.md)
 

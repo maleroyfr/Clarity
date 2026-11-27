@@ -7,27 +7,33 @@
 @inject NavigationManager Navigation
 
 <section aria-label="@Text["MappingReview"]">
-    <h2>@Text["MappingReview"] · @Text[Side.ToString()]</h2>
+    @if (Kind == MappingKind.Hybrid) { <h2>@Text["MappingReview"] · @Text[Side.ToString()]</h2> }
+    else { <h3>@Text["SourceTargetMappings"]</h3> }
     @if (Error is not null) { <p class="error" role="alert">@Error</p> }
     @if (_message is not null) { <p role="status">@_message</p> }
     <label>@Text["Status"] <select value="@_state" @onchange="ChangeState">
         @foreach (var s in States) { <option value="@s">@Text[s]</option> }
     </select></label>
-    <ClarityGrid @key="(ProjectId, Side, _state, _revision)" TGridItem="MappingRow" Load="@((p, ct) => Review.PageAsync(ProjectId, Side, _state, p, ct))">
+    <ClarityGrid @key="(ProjectId, Kind, Side, _state, _revision)" TGridItem="MappingRow" Load="@((p, ct) => Review.PageAsync(ProjectId, Kind, Side, _state, p, ct))">
         <Columns>
             <TemplateColumn Title="@Text["SelectAssociation"]" Context="r">
                 <input type="checkbox" aria-label="@($"{Text["SelectAssociation"]} : {r.AdLabel} / {r.EntraLabel}")" disabled="@(!_canQualify || Busy)"
                        checked="@_selected.ContainsKey(r.Id)" @onchange="e => Select(r, e.Value is true)" />
             </TemplateColumn>
-            <TemplateColumn Title="AD" Context="r"><a href="@Sheet(r.AdId)">@r.AdLabel</a><small>@r.Forest</small></TemplateColumn>
-            <TemplateColumn Title="Entra" Context="r"><a href="@Sheet(r.EntraId)">@r.EntraLabel</a><small>@r.Tenant</small></TemplateColumn>
+            <TemplateColumn Title="@(Kind == MappingKind.Hybrid ? "AD" : Text["Source"].Value)" Context="r">
+                <a href="@Sheet(r.AdId, Kind == MappingKind.Hybrid ? Side : EnvironmentRole.Source)">@r.AdLabel</a><small>@r.Forest</small></TemplateColumn>
+            <TemplateColumn Title="@(Kind == MappingKind.Hybrid ? "Entra" : Text["Target"].Value)" Context="r">
+                <a href="@Sheet(r.EntraId, Kind == MappingKind.Hybrid ? Side : EnvironmentRole.Target)">@r.EntraLabel</a><small>@r.Tenant</small></TemplateColumn>
             <TemplateColumn Title="@Text["Status"]" Context="r">@Text[r.State.ToString()] · @Text[r.Rule.ToString()]</TemplateColumn>
             <TemplateColumn Title="@Text["Actions"]" Context="r">
                 <FluentButton OnClick="@(() => _proof = new(ProofKind.Mapping, r.Id))">@Text["Provenance"]</FluentButton>
-                @if (_canQualify) { <FluentButton OnClick="@(() => BeginCorrection(r))">@Text["CorrectAssociation"]</FluentButton> }
+                @if (_canQualify && Kind == MappingKind.Hybrid) { <FluentButton OnClick="@(() => BeginCorrection(r))">@Text["CorrectAssociation"]</FluentButton> }
             </TemplateColumn>
         </Columns>
-        <EmptyContent><p>@Text["NoMappings"] <a href="@($"/projects/{ProjectId}/discovery?side={Side}")">Discovery</a></p></EmptyContent>
+        <EmptyContent>
+            @if (Kind == MappingKind.Hybrid) { <p>@Text["NoMappings"] <a href="@($"/projects/{ProjectId}/discovery?side={Side}")">Discovery</a></p> }
+            else { <p>@Text["NoSourceTargetMappings"]</p> }
+        </EmptyContent>
     </ClarityGrid>
     @if (_canQualify)
     {
@@ -51,7 +57,7 @@
                 }
             </article>
         }
-        @if (_forests.Count != 0 && _tenants.Count != 0)
+        @if (Kind == MappingKind.Hybrid && _forests.Count != 0 && _tenants.Count != 0)
         {
             <details><summary>@Text["VerifySourceAnchor"]</summary>
                 <p>@Text["AnchorHint"]</p>
@@ -75,6 +81,7 @@
 @code {
     [Parameter] public Guid ProjectId { get; set; }
     [Parameter] public EnvironmentRole Side { get; set; }
+    [Parameter] public MappingKind Kind { get; set; } = MappingKind.Hybrid;
     [SupplyParameterFromQuery(Name = "state")] public string? State { get; set; }
     private static readonly string[] States = ["Queue", "Proposed", "ToReview", "Validated", "Rejected", "All"];
     private readonly Dictionary<Guid, MappingSelection> _selected = [];
@@ -110,7 +117,7 @@
         await Matching.VerifyAnchorAsync(ProjectId, _forest, _tenant, _anchor == "" ? null : Enum.Parse<SourceAnchor>(_anchor), _anchorReason);
         await ReadBindingAsync(); Updated();
     });
-    private string Sheet(Guid id) => $"/projects/{ProjectId}/inventory?side={Side}&object={id}";
+    private string Sheet(Guid id, EnvironmentRole side) => $"/projects/{ProjectId}/inventory?side={side}&object={id}";
     private void ChangeState(ChangeEventArgs e) => Navigation.NavigateTo(Navigation.GetUriWithQueryParameter("state", e.Value?.ToString()));
     private void Select(MappingRow row, bool select)
     {

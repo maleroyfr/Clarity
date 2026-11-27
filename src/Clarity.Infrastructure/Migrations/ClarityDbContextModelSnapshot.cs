@@ -16,7 +16,7 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261127011504_RunComparisons";
+    public override string LastMigrationId => "20261127014518_TargetComparisons";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -999,6 +999,9 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
                     .IsUnicode(false)
                     .HasColumnType("varchar(64)");
 
+                b.Property<int>("Kind")
+                    .HasColumnType("int");
+
                 b.Property<Guid>("ProjectId")
                     .HasColumnType("uniqueidentifier");
 
@@ -1839,6 +1842,235 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
                 b.ToTable("SyncBindings");
             });
 
+        modelBuilder.Entity("Clarity.Core.TargetComparison", b =>
+            {
+                b.Property<Guid>("WorkspaceId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("Id")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<int>("Absent")
+                    .HasColumnType("int");
+
+                b.Property<Guid>("ActorObjectId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("ActorTenantId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<int>("Ambiguous")
+                    .HasColumnType("int");
+
+                b.Property<int>("Collisions")
+                    .HasColumnType("int");
+
+                b.Property<DateTimeOffset>("ComputedAtUtc")
+                    .HasColumnType("datetimeoffset");
+
+                b.Property<string>("CoverageJson")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<int>("Data")
+                    .HasColumnType("int");
+
+                b.Property<int>("Matched")
+                    .HasColumnType("int");
+
+                b.Property<int>("NotCompared")
+                    .HasColumnType("int");
+
+                b.Property<Guid>("OperationId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("ProjectId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<string>("RulesJson")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<Guid>("SourceEnvironmentId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("TargetEnvironmentId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<int>("Unknown")
+                    .HasColumnType("int");
+
+                b.HasKey("WorkspaceId", "Id");
+
+                b.HasIndex("WorkspaceId", "OperationId")
+                    .IsUnique();
+
+                b.HasIndex("WorkspaceId", "ProjectId", "TargetEnvironmentId");
+
+                b.HasIndex("WorkspaceId", "ProjectId", "SourceEnvironmentId", "TargetEnvironmentId")
+                    .IsUnique();
+
+                b.ToTable("TargetComparisons");
+            });
+
+        modelBuilder.Entity("Clarity.Core.TargetComparisonItem", b =>
+            {
+                b.Property<Guid>("WorkspaceId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("Id")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<int>("CandidateCount")
+                    .HasColumnType("int");
+
+                b.Property<int?>("Collision")
+                    .HasColumnType("int");
+
+                b.Property<Guid>("ComparisonId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<string>("Key")
+                    .IsRequired()
+                    .HasMaxLength(500)
+                    .HasColumnType("nvarchar(500)");
+
+                b.Property<string>("Label")
+                    .HasMaxLength(400)
+                    .HasColumnType("nvarchar(400)");
+
+                b.Property<string>("ObjectType")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("nvarchar(100)");
+
+                b.Property<string>("OtherLabel")
+                    .HasMaxLength(400)
+                    .HasColumnType("nvarchar(400)");
+
+                b.Property<Guid?>("OtherObjectId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<int?>("Outcome")
+                    .HasColumnType("int");
+
+                b.Property<string>("Reason")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("nvarchar(100)");
+
+                b.Property<Guid?>("RuleId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("SourceEnvironmentId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid?>("SourceObjectId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("TargetEnvironmentId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<string>("TargetLabel")
+                    .HasMaxLength(400)
+                    .HasColumnType("nvarchar(400)");
+
+                b.Property<Guid?>("TargetObjectId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.HasKey("WorkspaceId", "Id");
+
+                b.HasIndex("WorkspaceId", "SourceEnvironmentId", "OtherObjectId");
+
+                b.HasIndex("WorkspaceId", "SourceEnvironmentId", "SourceObjectId");
+
+                b.HasIndex("WorkspaceId", "TargetEnvironmentId", "TargetObjectId");
+
+                b.HasIndex("WorkspaceId", "ComparisonId", "Collision", "Key");
+
+                b.HasIndex("WorkspaceId", "ComparisonId", "Outcome", "Label");
+
+                b.HasIndex("WorkspaceId", "SourceEnvironmentId", "TargetEnvironmentId", "ComparisonId");
+
+                b.ToTable("TargetComparisonItems");
+            });
+
+        modelBuilder.Entity("Clarity.Core.TargetMappingRule", b =>
+            {
+                b.Property<Guid>("WorkspaceId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("Id")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<DateTimeOffset>("CreatedAtUtc")
+                    .HasColumnType("datetimeoffset");
+
+                b.Property<Guid>("CreatedByObjectId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("CreatedByTenantId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<string>("Justification")
+                    .IsRequired()
+                    .HasMaxLength(1000)
+                    .HasColumnType("nvarchar(1000)");
+
+                b.Property<int>("Kind")
+                    .HasColumnType("int");
+
+                b.Property<string>("ObjectType")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("nvarchar(100)");
+
+                b.Property<Guid>("OperationId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<int>("Priority")
+                    .HasColumnType("int");
+
+                b.Property<Guid>("ProjectId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<DateTimeOffset?>("RetiredAtUtc")
+                    .HasColumnType("datetimeoffset");
+
+                b.Property<Guid?>("RetiredByObjectId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid?>("RetiredByTenantId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<string>("RetirementReason")
+                    .HasMaxLength(1000)
+                    .HasColumnType("nvarchar(1000)");
+
+                b.Property<string>("SourceField")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("nvarchar(100)");
+
+                b.Property<string>("TargetDomain")
+                    .HasMaxLength(253)
+                    .HasColumnType("nvarchar(253)");
+
+                b.Property<string>("TargetField")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("nvarchar(100)");
+
+                b.HasKey("WorkspaceId", "Id");
+
+                b.HasIndex("WorkspaceId", "OperationId")
+                    .IsUnique();
+
+                b.HasIndex("WorkspaceId", "ProjectId", "RetiredAtUtc");
+
+                b.ToTable("TargetMappingRules");
+            });
+
         modelBuilder.Entity("Clarity.Core.WorkspaceMember", b =>
             {
                 b.Property<Guid>("WorkspaceId")
@@ -2505,6 +2737,78 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
                     .WithMany()
                     .HasForeignKey("WorkspaceId", "ProjectId", "EntraEnvironmentId")
                     .HasPrincipalKey("WorkspaceId", "ProjectId", "Id")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+            });
+
+        modelBuilder.Entity("Clarity.Core.TargetComparison", b =>
+            {
+                b.HasOne("Clarity.Core.ClientWorkspace", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+
+                b.HasOne("Clarity.Core.ProjectEnvironment", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId", "ProjectId", "SourceEnvironmentId")
+                    .HasPrincipalKey("WorkspaceId", "ProjectId", "Id")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+
+                b.HasOne("Clarity.Core.ProjectEnvironment", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId", "ProjectId", "TargetEnvironmentId")
+                    .HasPrincipalKey("WorkspaceId", "ProjectId", "Id")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+            });
+
+        modelBuilder.Entity("Clarity.Core.TargetComparisonItem", b =>
+            {
+                b.HasOne("Clarity.Core.ClientWorkspace", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+
+                b.HasOne("Clarity.Core.InventoryObject", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId", "SourceEnvironmentId", "OtherObjectId")
+                    .HasPrincipalKey("WorkspaceId", "EnvironmentId", "Id")
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                b.HasOne("Clarity.Core.InventoryObject", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId", "SourceEnvironmentId", "SourceObjectId")
+                    .HasPrincipalKey("WorkspaceId", "EnvironmentId", "Id")
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                b.HasOne("Clarity.Core.InventoryObject", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId", "TargetEnvironmentId", "TargetObjectId")
+                    .HasPrincipalKey("WorkspaceId", "EnvironmentId", "Id")
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                b.HasOne("Clarity.Core.TargetComparison", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId", "SourceEnvironmentId", "TargetEnvironmentId", "ComparisonId")
+                    .HasPrincipalKey("WorkspaceId", "SourceEnvironmentId", "TargetEnvironmentId", "Id")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+            });
+
+        modelBuilder.Entity("Clarity.Core.TargetMappingRule", b =>
+            {
+                b.HasOne("Clarity.Core.ClientWorkspace", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+
+                b.HasOne("Clarity.Core.Project", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId", "ProjectId")
                     .OnDelete(DeleteBehavior.NoAction)
                     .IsRequired();
             });

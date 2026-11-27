@@ -293,7 +293,7 @@ public sealed class DependencyService(IDbContextFactory<ClarityDbContext> factor
         var users = nodes.Where(n => n.Type == "user").Select(n => n.Id).ToHashSet();
         var sides = own.Where(x => users.Contains(x.Key)).ToDictionary();
         var links = await db.MappingDecisions.AsNoTracking().Where(m => m.WorkspaceId == project.WorkspaceId && m.ProjectId == project.Id
-                && m.State == MappingState.Validated && (m.EntraEnvironmentId == env || m.AdEnvironmentId == env))
+                && m.Kind == MappingKind.Hybrid && m.State == MappingState.Validated && (m.EntraEnvironmentId == env || m.AdEnvironmentId == env))
             .Select(m => new { Local = m.EntraEnvironmentId == env ? m.EntraObjectId : m.AdObjectId, Remote = m.EntraEnvironmentId == env ? m.AdObjectId : m.EntraObjectId })
             .ToListAsync(token);
         links = links.Where(l => users.Contains(l.Local) && !sides.ContainsKey(l.Local)).ToList();
