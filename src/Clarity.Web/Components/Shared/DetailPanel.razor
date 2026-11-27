@@ -1,8 +1,13 @@
-<aside class="detail-panel" role="region" aria-labelledby="@_titleId" tabindex="-1" @onkeydown="OnKeyDown" @ref="_panel">
-    <header><h2 id="@_titleId">@Title</h2><FluentButton OnClick="Close">@Text["Close"]</FluentButton></header>
-    @if (Error is not null) { <p role="alert" class="error">@Error</p> }
-    @ChildContent
-</aside>
+<FluentDialog @ref="_dialog" Alignment="DialogAlignment.End" Class="detail-drawer" Modal="true" aria-labelledby="@_titleId" OnStateChange="StateChanged">
+    <FluentDialogBody FixedHeaderFooter="true">
+        <TitleTemplate><FluentText Id="@_titleId" As="TextTag.H2" Size="TextSize.Size500" Weight="TextWeight.Semibold">@Title</FluentText></TitleTemplate>
+        <TitleActionTemplate><FluentButton OnClick="DismissAsync">@Text["Close"]</FluentButton></TitleActionTemplate>
+        <ChildContent>
+            @if (Error is not null) { <FluentMessageBar Intent="MessageBarIntent.Error" AllowDismiss="false">@Error</FluentMessageBar> }
+            @ChildContent
+        </ChildContent>
+    </FluentDialogBody>
+</FluentDialog>
 
 @code {
     private readonly string _titleId = $"detail-{Guid.NewGuid():N}";
@@ -10,10 +15,11 @@
     [Parameter] public RenderFragment? ChildContent { get; set; }
     [Parameter] public EventCallback Close { get; set; }
     [Parameter] public string? Error { get; set; }
-    private ElementReference _panel;
+    private FluentDialog _dialog = default!;
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender) { await _panel.FocusAsync(); }
+        if (firstRender) { await _dialog.ShowAsync(); }
     }
-    private Task OnKeyDown(KeyboardEventArgs args) => args.Key == "Escape" ? Close.InvokeAsync() : Task.CompletedTask;
+    private Task DismissAsync() => _dialog.HideAsync();
+    private Task StateChanged(DialogEventArgs args) => args.State == DialogState.Closed ? Close.InvokeAsync() : Task.CompletedTask;
 }

@@ -6,19 +6,32 @@
 @inject NavigationManager Navigation
 
 <PageTitle>@(_project?.Name ?? Text["Projects"]) · Clarity</PageTitle>
-@if (Error is not null) { <p class="error" role="alert">@Error</p> }
+@if (Error is not null) { <FluentMessageBar Intent="MessageBarIntent.Error" AllowDismiss="false">@Error</FluentMessageBar> }
 @if (_project is not null)
 {
-    <div class="breadcrumbs"><a href="/">@Text["Clients"]</a> / <a href="@($"/clients/{_project.WorkspaceId}/projects")">@_clientName · @Text["Projects"]</a></div>
-    <div class="page-heading"><div><p class="eyebrow">@Text[_project.Scenario.ToString()] · @Text[_project.Status.ToString()]</p><h1>@_project.Name</h1><p>@_project.Description</p></div>
+    <nav aria-label="@Text["Breadcrumb"]">
+        <FluentStack Wrap="true" VerticalAlignment="VerticalAlignment.Center">
+            <FluentLink Href="/">@Text["Clients"]</FluentLink>
+            <FluentIcon Value="@(new Icons.Regular.Size12.ChevronRight())" aria-hidden="true" />
+            <FluentLink Href="@($"/clients/{_project.WorkspaceId}/projects")">@_clientName · @Text["Projects"]</FluentLink>
+        </FluentStack>
+    </nav>
+    <FluentStack Wrap="true" VerticalAlignment="VerticalAlignment.Center">
+        <FluentText As="TextTag.H1" Size="TextSize.Size700" Weight="TextWeight.Semibold">@_project.Name</FluentText>
+        <FluentBadge Content="@Text[_project.Scenario.ToString()]" />
+        <FluentBadge Content="@Text[_project.Status.ToString()]" />
+        <FluentSpacer />
         <FluentSelect TOption="EnvironmentRole" TValue="EnvironmentRole" Items="Enum.GetValues<EnvironmentRole>()" OptionText="@(role => Text[role.ToString()])" Value="_side" ValueChanged="ChangeSide" Label="@Text["ActiveSide"]" />
-    </div>
-    <nav class="project-tabs" aria-label="@Text["Projects"]">
+    </FluentStack>
+    @if (!string.IsNullOrEmpty(_project.Description)) { <p>@_project.Description</p> }
+    <div class="section-tabs">
+    <FluentTabs ActiveTabId="@(Section ?? "overview")" ActiveTabIdChanged="ChangeSection" aria-label="@Text["Projects"]">
         @foreach (var section in Sections)
         {
-            <NavLink href="@($"/projects/{ProjectId}/{section.Key}{(_side == EnvironmentRole.Target ? "?side=Target" : "")}")">@Text[section.Value]</NavLink>
+            <FluentTab Id="@section.Key" Header="@Text[section.Value]" />
         }
-    </nav>
+    </FluentTabs>
+    </div>
     @if (Section == "discovery")
     {
         <DiscoveryPanel ProjectId="ProjectId" Side="_side" InitialView="@DiscoveryView" />
@@ -52,11 +65,11 @@
         }
         @foreach (var environment in _environments.Where(x => x.Role == _side))
         {
-            <article class="environment-card">
+            <FluentCard>
                 <h3>@Text[environment.Kind.ToString()] · @Text[environment.Role.ToString()]</h3>
                 <p>@environment.ExternalId</p><p>@Text["DeclaredScope"] : @environment.DeclaredScope</p>
                 <p>@Text[environment.TargetState.ToString()] · @environment.Hypotheses</p>
-            </article>
+            </FluentCard>
         }
         <p><a href="@($"/projects/{ProjectId}/discovery?side={_side}")">@Text["ViewCollections"]</a></p>
     }
@@ -103,6 +116,13 @@
     [SupplyParameterFromQuery(Name = "view")] public string? DiscoveryView { get; set; }
     [SupplyParameterFromQuery(Name = "side")] public string? SideQuery { get; set; }
     private void ChangeSide(EnvironmentRole side) => Navigation.NavigateTo($"/projects/{ProjectId}/{Section ?? "overview"}?side={side}");
+    private void ChangeSection(string? section)
+    {
+        if (section is not null && Sections.ContainsKey(section) && section != (Section ?? "overview"))
+        {
+            Navigation.NavigateTo($"/projects/{ProjectId}/{section}{(_side == EnvironmentRole.Target ? "?side=Target" : "")}");
+        }
+    }
     private static readonly Dictionary<string, string> Sections = new()
     {
         ["overview"] = "Overview", ["discovery"] = "Discovery", ["inventory"] = "Inventory",

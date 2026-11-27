@@ -37,7 +37,16 @@ Fake authentication, its cookie selector and the `X-Clarity-Persona` test header
 exist only in Development/Testing. Never expose a Development deployment publicly.
 Production requires Entra configuration and SQL; missing configuration does not
 fall back to a fake identity. Business labels are neutral French resources with
-`fr-FR` request culture. The foundation shell intentionally uses a light theme.
+`fr-FR` request culture.
+
+The Interactive Server layout follows the system light/dark preference through
+`IThemeService`. Leave the Fluent JS initializer, `use-reboot`, the app's scoped
+CSS bundle (which imports the library bundle), and `FluentProviders` in place.
+Choose Fluent UI Blazor v5 components for controls, navigation and feedback;
+reserve HTML for semantics and native browser contracts. Use Fluent design tokens
+for layout overrides. Check APIs with the Fluent UI Blazor skill and MCP, then
+confirm against the installed package: the skill also covers v4, and the server
+can document a different v5 minor version.
 
 Discovery provides **Connexions**, **Collectes** and **Couverture** for existing
 source or target environments. A planned target cannot be collected. AD script

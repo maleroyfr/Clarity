@@ -1,22 +1,17 @@
 @typeparam TGridItem
 @attribute [CascadingTypeParameter(nameof(TGridItem))]
-@implements IDisposable
 @inject ILogger<ClarityGrid<TGridItem>> Logger
 
-<div class="grid-container">
+<FluentCard Class="grid-container">
     <FluentDataGrid TGridItem="TGridItem" ItemsProvider="ProvideAsync" Pagination="_pagination" @ref="_grid"
                     HandleLoadingError="HandleError">
         <ChildContent>@Columns</ChildContent>
-        <LoadingContent><p role="status">@Text["Loading"]</p></LoadingContent>
+        <LoadingContent><FluentSpinner Label="@Text["Loading"]" /></LoadingContent>
         <EmptyContent>@EmptyContent</EmptyContent>
-        <ErrorContent><p role="alert">@Text["Error"]</p></ErrorContent>
+        <ErrorContent><FluentMessageBar Intent="MessageBarIntent.Error" AllowDismiss="false">@Text["Error"]</FluentMessageBar></ErrorContent>
     </FluentDataGrid>
-</div>
-<nav class="pagination" aria-label="@Text["Page"]">
-    <FluentButton Disabled="@(_pagination.CurrentPageIndex == 0)" OnClick="PreviousAsync">@Text["Previous"]</FluentButton>
-    <span aria-live="polite">@Text["Page"] @(_pagination.CurrentPageIndex + 1) · @(_pagination.TotalItemCount ?? 0) @Text["Items"]</span>
-    <FluentButton Disabled="@(_pagination.LastPageIndex is null || _pagination.CurrentPageIndex >= _pagination.LastPageIndex)" OnClick="NextAsync">@Text["Next"]</FluentButton>
-</nav>
+</FluentCard>
+<FluentPaginator State="_pagination" aria-label="@Text["Page"]" />
 
 @code {
     [Parameter, EditorRequired] public Func<PageRequest, CancellationToken, Task<PageResult<TGridItem>>> Load { get; set; } = default!;
@@ -25,10 +20,6 @@
     [Parameter] public string Search { get; set; } = "";
     private readonly PaginationState _pagination = new() { ItemsPerPage = 20 };
     private FluentDataGrid<TGridItem>? _grid;
-
-    protected override void OnInitialized() => _pagination.TotalItemCountChanged += TotalChanged;
-    private void TotalChanged(object? sender, TotalItemCountChangedEventArgs args) => _ = InvokeAsync(StateHasChanged);
-    public void Dispose() => _pagination.TotalItemCountChanged -= TotalChanged;
 
     private async ValueTask<GridItemsProviderResult<TGridItem>> ProvideAsync(GridItemsProviderRequest<TGridItem> request)
     {
@@ -49,6 +40,4 @@
         await _pagination.SetCurrentPageIndexAsync(0);
         if (_grid is not null) { await _grid.RefreshDataAsync(); }
     }
-    private Task PreviousAsync() => _pagination.SetCurrentPageIndexAsync(_pagination.CurrentPageIndex - 1);
-    private Task NextAsync() => _pagination.SetCurrentPageIndexAsync(_pagination.CurrentPageIndex + 1);
 }

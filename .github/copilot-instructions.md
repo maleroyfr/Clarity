@@ -6,6 +6,7 @@
   `.resx` resources with `fr-FR` as default. Keep Discovery and Microsoft names.
 - Use .NET 11, EF Core 11, Fluent UI Blazor v5 and central package versions.
   Nullable, analyzers and warnings-as-errors are enabled; keep formatting clean.
+- Use Fluent UI Blazor v5 components and theme tokens for UI; verify their APIs with the Fluent UI Blazor skill and MCP against the installed version.
 - Keep each commit focused on one verifiable journey and include the exact
   validation commands and results in its body. Never claim a skipped test passed.
 - Public repository: synthetic data only; no real client names, tenant IDs,

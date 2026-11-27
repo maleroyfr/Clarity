@@ -1,0 +1,16 @@
+<form action="/development/persona" method="post" class="persona-picker">
+    <AntiforgeryToken />
+    <FluentStack VerticalAlignment="VerticalAlignment.Bottom" Wrap="true">
+        <FluentSelect TOption="string" TValue="string" Items="DevelopmentAuthenticationHandler.Personas.Keys"
+                      Label="@Text["LocalPersona"]" OptionText="@(p => Text[$"Persona_{p}"])"
+                      @bind-Value="_selection" />
+        <input type="hidden" name="persona" value="@_selection" />
+        <FluentButton Type="ButtonType.Submit">@Text["SwitchPersona"]</FluentButton>
+    </FluentStack>
+</form>
+
+@code {
+    [Parameter, EditorRequired] public string? Current { get; set; }
+    private string? _selection;
+    protected override void OnInitialized() => _selection = Current;
+}

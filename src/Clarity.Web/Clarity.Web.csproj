@@ -5,6 +5,7 @@
     <ProjectReference Include="..\Clarity.Infrastructure\Clarity.Infrastructure.csproj" />
     <PackageReference Include="Microsoft.Identity.Web" />
     <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components" />
+    <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components.Icons" />
     <PackageReference Include="Azure.Monitor.OpenTelemetry.Exporter" />
     <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
     <PackageReference Include="Azure.Identity" />

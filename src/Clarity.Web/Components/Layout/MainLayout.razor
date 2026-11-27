@@ -3,43 +3,49 @@
 @inject IThemeService ThemeService
 
 <a class="skip-link" href="#main-content">@Text["SkipNavigation"]</a>
-<header class="app-header">
-    <a class="brand" href="/">Clarity<span class="brand-dot" aria-hidden="true">.</span></a>
-    <span class="tagline">@Text["Tagline"]</span>
-    <AuthorizeView><Authorized><span class="identity">@(Environment.IsDevelopment() || Environment.IsEnvironment("Testing") ? Text[$"Persona_{context.User.Identity?.Name}"] : context.User.Identity?.Name)</span></Authorized></AuthorizeView>
-</header>
-<div class="app-shell">
-    <nav class="app-nav" aria-label="@Text["Clients"]">
-        <NavLink href="/" Match="NavLinkMatch.All">@Text["Clients"]</NavLink>
-    </nav>
-    <main id="main-content">
-        @if (Environment.IsDevelopment() || Environment.IsEnvironment("Testing"))
-        {
-            <AuthorizeView Context="personaState"><Authorized>
-            <form class="persona-bar" action="/development/persona" method="post">
-                <AntiforgeryToken />
-                <label for="persona">@Text["LocalPersona"]</label>
-                <select id="persona" name="persona">
-                    @foreach (var persona in DevelopmentAuthenticationHandler.Personas.Keys)
-                    {
-                        <option value="@persona" selected="@(persona == personaState.User.Identity?.Name)">@Text[$"Persona_{persona}"]</option>
-                    }
-                </select>
-                <button type="submit">@Text["SwitchPersona"]</button>
-            </form>
+<FluentLayout NavigationDeferredLoading="true">
+    <FluentLayoutItem Area="LayoutArea.Header" Class="masthead" role="banner" Padding="@Padding.Horizontal4">
+        <FluentStack VerticalAlignment="VerticalAlignment.Center" Height="100%" HorizontalGap="var(--spacingHorizontalL)">
+            <FluentLayoutHamburger IconTitle="@Text["Navigation"]" PanelHeader="@Text["Navigation"]" />
+            <FluentLink Href="/" Class="wordmark"><FluentText Size="TextSize.Size500" Weight="TextWeight.Semibold">Clarity</FluentText></FluentLink>
+            <FluentSpacer />
+            <AuthorizeView><Authorized>
+                <FluentText Truncate="true">@(IsLocal ? Text[$"Persona_{context.User.Identity?.Name}"] : context.User.Identity?.Name)</FluentText>
             </Authorized></AuthorizeView>
-        }
-        @Body
-    </main>
+        </FluentStack>
+    </FluentLayoutItem>
+    <FluentLayoutItem Area="LayoutArea.Navigation" Width="224px" Padding="@Padding.All3" Class="navigation-pane">
+        <FluentNav aria-label="@Text["Navigation"]" UseIcons="true">
+            <FluentNavItem Href="/" Match="NavLinkMatch.All" IconRest="@(new Icons.Regular.Size20.FolderPeople())">
+                @Text["Clients"]
+            </FluentNavItem>
+        </FluentNav>
+    </FluentLayoutItem>
+    <FluentLayoutItem Area="LayoutArea.Content" Class="workspace">
+        <main id="main-content" tabindex="-1">
+            @if (IsLocal)
+            {
+                <AuthorizeView><Authorized><PersonaPicker Current="@context.User.Identity?.Name" /></Authorized></AuthorizeView>
+            }
+            @Body
+        </main>
+    </FluentLayoutItem>
+    <FluentLayoutItem Area="LayoutArea.Footer" role="contentinfo" Padding="@Padding.Horizontal4">
+        <FluentText Size="TextSize.Size200">@Text["Tagline"]</FluentText>
+    </FluentLayoutItem>
+</FluentLayout>
+<FluentProviders />
+<div id="blazor-error-ui" data-nosnippet>
+    <FluentMessageBar Intent="MessageBarIntent.Error" AllowDismiss="false">
+        @Text["Error"] <a href="." class="reload">@Text["Reload"]</a>
+    </FluentMessageBar>
 </div>
 
 @code {
+    private bool IsLocal => Environment.IsDevelopment() || Environment.IsEnvironment("Testing");
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender) { await ThemeService.SetThemeAsync(ThemeMode.Light); }
+        if (firstRender) { await ThemeService.SetThemeAsync(ThemeMode.System); }
     }
 }
-<FluentProviders />
-<div id="blazor-error-ui" data-nosnippet role="alert">
-    @Text["Error"] <a href="." class="reload">@Text["Reload"]</a>
-</div>

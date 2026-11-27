@@ -16,6 +16,7 @@ builder.AddClarityTelemetry();
 builder.Services.AddClarityReadiness(builder.Configuration);
 builder.Services.AddFluentUIComponents();
 builder.Services.AddLocalization();
+builder.Services.AddSingleton<IFluentLocalizer, Clarity.Web.FluentUiLocalizer>();
 builder.Services.Configure<RequestLocalizationOptions>(options =>
 {
     options.SetDefaultCulture("fr-FR").AddSupportedCultures("fr-FR").AddSupportedUICultures("fr-FR");

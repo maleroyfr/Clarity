@@ -4,19 +4,26 @@
 @inject FoundationService Service
 
 <PageTitle>@Text["Projects"] · Clarity</PageTitle>
-<a href="/">@Text["Clients"]</a>
-<div class="page-heading"><h1>@Text["Projects"]</h1><FluentButton Appearance="ButtonAppearance.Primary" OnClick="@(() => _create = true)">@Text["NewProject"]</FluentButton></div>
-@if (Error is not null) { <p class="error" role="alert">@Error</p> }
-<div class="toolbar"><FluentTextInput Label="@Text["Search"]" @bind-Value="_search" /><FluentButton OnClick="SearchAsync">@Text["SearchAction"]</FluentButton></div>
-<ClarityGrid TGridItem="Project" @key="WorkspaceId" Load="LoadAsync" Search="_search" @ref="_grid">
+<nav aria-label="@Text["Breadcrumb"]"><FluentLink Href="/">@Text["Clients"]</FluentLink></nav>
+<FluentStack Wrap="true" VerticalAlignment="VerticalAlignment.Center">
+    <FluentText As="TextTag.H1" Size="TextSize.Size700" Weight="TextWeight.Semibold">@Text["Projects"]</FluentText>
+    <FluentSpacer />
+    <FluentButton Appearance="ButtonAppearance.Primary" OnClick="@(() => _create = true)">@Text["NewProject"]</FluentButton>
+</FluentStack>
+@if (Error is not null) { <FluentMessageBar Intent="MessageBarIntent.Error" AllowDismiss="false">@Error</FluentMessageBar> }
+<FluentStack Wrap="true" VerticalAlignment="VerticalAlignment.Bottom">
+    <FluentTextInput TextInputType="TextInputType.Search" Label="@Text["Search"]" @bind-Value="_search" />
+    <FluentButton OnClick="SearchAsync">@Text["SearchAction"]</FluentButton>
+</FluentStack>
+<ClarityGrid TGridItem="Project" @key="WorkspaceId" Load="LoadAsync" Search="@_search" @ref="_grid">
     <Columns>
         <PropertyColumn Property="@(x => x.Name)" Title="@Text["Name"]" Sortable="true" />
         <TemplateColumn Title="@Text["Scenario"]">@Text[context.Scenario.ToString()]</TemplateColumn>
-        <TemplateColumn Title="@Text["Status"]">@Text[context.Status.ToString()]</TemplateColumn>
+        <TemplateColumn Title="@Text["Status"]"><FluentBadge Content="@Text[context.Status.ToString()]" /></TemplateColumn>
         <TemplateColumn Title="@Text["LastInventory"]">@Text["NoInventory"]</TemplateColumn>
         <TemplateColumn Title="@Text["SectionsToVerify"]">@Text["Unknown"]</TemplateColumn>
         <TemplateColumn Title="@Text["TargetPresence"]">@Text["Unknown"]</TemplateColumn>
-        <TemplateColumn Title="@Text["Overview"]"><a href="@($"/projects/{context.Id}")">@Text["Overview"]</a></TemplateColumn>
+        <TemplateColumn Title="@Text["Overview"]"><FluentLink Href="@($"/projects/{context.Id}")">@Text["Overview"]</FluentLink></TemplateColumn>
         <TemplateColumn Title="@Text["Archive"]"><FluentButton Disabled="@(context.Status == ProjectStatus.Archived)" OnClick="@(() => _archive = context.Id)">@Text["Archive"]</FluentButton></TemplateColumn>
     </Columns>
     <EmptyContent><EmptyState Title="@Text["NoProjects"]" Description="@Text["NoProjectsHint"]"><FluentButton OnClick="@(() => _create = true)">@Text["NewProject"]</FluentButton></EmptyState></EmptyContent>

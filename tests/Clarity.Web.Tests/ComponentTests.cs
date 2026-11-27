@@ -17,6 +17,7 @@ public class ComponentTests : BunitContext
         Services.AddLogging();
         Services.AddLocalization();
         Services.AddFluentUIComponents();
+        Services.AddSingleton<IFluentLocalizer, FluentUiLocalizer>();
         JSInterop.Mode = JSRuntimeMode.Loose;
     }
 
@@ -27,7 +28,7 @@ public class ComponentTests : BunitContext
             .Add(x => x.Title, "Aucun dossier").Add(x => x.Description, "Déclarez votre source.")
             .AddChildContent("<a href='/'>Créer un dossier</a>"));
         var section = component.Find("section");
-        component.Find("h2").Id.ShouldBe(section.GetAttribute("aria-labelledby"));
+        component.Find($"#{section.GetAttribute("aria-labelledby")} h2").TextContent.ShouldBe("Aucun dossier");
         component.Find("a").TextContent.ShouldBe("Créer un dossier");
     }
 
@@ -37,9 +38,13 @@ public class ComponentTests : BunitContext
         var closed = false;
         var component = Render<DetailPanel>(parameters => parameters
             .Add(x => x.Title, "Dossier").Add(x => x.Close, () => closed = true));
-        await component.Find("aside").KeyDownAsync(Key.Escape);
+        var drawer = component.Find("fluent-drawer");
+        component.Find($"#{drawer.GetAttribute("aria-labelledby")} h2").TextContent.ShouldBe("Dossier");
+        var dialog = component.FindComponent<FluentDialog>().Instance;
+        dialog.PreventDismissOnEscape.ShouldBeFalse();
+        await drawer.KeyDownAsync(Key.Escape);
+        await drawer.TriggerEventAsync("ondialogtoggle", new DialogToggleEventArgs { Id = dialog.Id!, OldState = "open", NewState = "closed", Type = "toggle" });
         closed.ShouldBeTrue();
-        component.Find("aside").GetAttribute("aria-labelledby").ShouldBe(component.Find("h2").Id);
     }
 
     [Fact]
@@ -65,9 +70,9 @@ public class ComponentTests : BunitContext
         component.WaitForAssertion(() => requests.ShouldNotBeEmpty());
         requests[^1].Count.ShouldBe(20);
         requests[^1].Search.ShouldBe("alpha");
-        component.WaitForAssertion(() => component.FindAll("fluent-button")
-            .Single(button => button.TextContent.Contains("Suivant")).HasAttribute("disabled").ShouldBeFalse());
-        await component.FindAll("fluent-button").Single(button => button.TextContent.Contains("Suivant")).ClickAsync(new());
+        const string next = "fluent-button[aria-label='Page suivante']";
+        component.WaitForAssertion(() => component.Find(next).HasAttribute("disabled-focusable").ShouldBeFalse());
+        await component.Find(next).ClickAsync(new());
         component.WaitForAssertion(() => requests[^1].Start.ShouldBe(20));
         await component.InvokeAsync(() => component.FindComponent<FluentDataGrid<ClientWorkspace>>().Instance
             .SortByColumnAsync("Nom", DataGridSortDirection.Descending));

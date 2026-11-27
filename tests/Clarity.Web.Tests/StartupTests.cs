@@ -16,7 +16,9 @@ public class StartupTests
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var html = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
-        html.ShouldContain("<h1>Clients</h1>");
+        var document = new AngleSharp.Html.Parser.HtmlParser().ParseDocument(html);
+        document.QuerySelector("main h1").ShouldNotBeNull().TextContent.ShouldBe("Clients");
+        document.QuerySelector("body[use-reboot]").ShouldNotBeNull();
         html.ShouldContain("Aucun espace client");
         html.ShouldContain("SQL n");
         html.ShouldNotContain("Hello, world!");

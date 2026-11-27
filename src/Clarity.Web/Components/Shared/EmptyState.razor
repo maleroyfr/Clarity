@@ -1,8 +1,12 @@
-<section class="empty-state" aria-labelledby="@_titleId">
-    <div class="empty-mark" aria-hidden="true">+</div>
-    <h2 id="@_titleId">@Title</h2>
-    <p>@Description</p>
-    @ChildContent
+<section aria-labelledby="@_titleId">
+    <FluentCard Padding="@Padding.All5">
+        <FluentStack Orientation="Orientation.Vertical" HorizontalAlignment="HorizontalAlignment.Center">
+            <FluentIcon Value="@(new Icons.Regular.Size32.Folder())" Color="Color.Primary" aria-hidden="true" />
+            <FluentText As="TextTag.H2" Id="@_titleId" Size="TextSize.Size500" Weight="TextWeight.Semibold">@Title</FluentText>
+            <FluentText Align="TextAlign.Center">@Description</FluentText>
+            @ChildContent
+        </FluentStack>
+    </FluentCard>
 </section>
 
 @code {

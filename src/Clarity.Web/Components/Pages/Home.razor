@@ -6,24 +6,29 @@
 @inject IWebHostEnvironment Environment
 
 <PageTitle>@Text["Clients"] · Clarity</PageTitle>
-<div class="page-heading"><div><p class="eyebrow">CLARITY</p><h1>@Text["Clients"]</h1><p>@Text["ClientIntro"]</p></div>
+<FluentStack Wrap="true" VerticalAlignment="VerticalAlignment.Center">
+    <FluentText As="TextTag.H1" Size="TextSize.Size700" Weight="TextWeight.Semibold">@Text["Clients"]</FluentText>
+    <FluentSpacer />
     <FluentButton Appearance="ButtonAppearance.Primary" Disabled="@(!Configured)" OnClick="@(() => _create = true)">@Text["NewClient"]</FluentButton>
-</div>
-@if (Error is not null) { <p role="alert" class="error">@Error</p> }
+</FluentStack>
+<p>@Text["ClientIntro"]</p>
+@if (Error is not null) { <FluentMessageBar Intent="MessageBarIntent.Error" AllowDismiss="false">@Error</FluentMessageBar> }
 @if (!Configured)
 {
-    <p role="status" class="notice">@Text["SqlRequired"]</p>
+    <FluentMessageBar Intent="MessageBarIntent.Info" AllowDismiss="false">@Text["SqlRequired"]</FluentMessageBar>
     <EmptyState Title="@Text["NoClients"]" Description="@Text["NoClientsHint"]" />
 }
 else
 {
-    <div class="toolbar"><FluentTextInput Label="@Text["Search"]" @bind-Value="_search" />
-        <FluentButton OnClick="SearchAsync">@Text["SearchAction"]</FluentButton></div>
-    <ClarityGrid TGridItem="ClientWorkspace" Load="LoadAsync" Search="_search" @ref="_grid">
+    <FluentStack Wrap="true" VerticalAlignment="VerticalAlignment.Bottom">
+        <FluentTextInput TextInputType="TextInputType.Search" Label="@Text["Search"]" @bind-Value="_search" />
+        <FluentButton OnClick="SearchAsync">@Text["SearchAction"]</FluentButton>
+    </FluentStack>
+    <ClarityGrid TGridItem="ClientWorkspace" Load="LoadAsync" Search="@_search" @ref="_grid">
         <Columns>
             <PropertyColumn Property="@(x => x.Name)" Title="@Text["Name"]" Sortable="true" />
-            <TemplateColumn Title="@Text["Status"]">@Text[context.Status.ToString()]</TemplateColumn>
-            <TemplateColumn Title="@Text["Projects"]"><a href="@($"/clients/{context.Id}/projects")">@Text["Projects"]</a></TemplateColumn>
+            <TemplateColumn Title="@Text["Status"]"><FluentBadge Content="@Text[context.Status.ToString()]" /></TemplateColumn>
+            <TemplateColumn Title="@Text["Projects"]"><FluentLink Href="@($"/clients/{context.Id}/projects")">@Text["Projects"]</FluentLink></TemplateColumn>
             <TemplateColumn Title="@Text["ManageMembers"]"><FluentButton OnClick="@(() => _memberWorkspace = context.Id)">@Text["ManageMembers"]</FluentButton></TemplateColumn>
             <TemplateColumn Title="@Text["Archive"]"><FluentButton Disabled="@(context.Status == WorkspaceStatus.Archived)" OnClick="@(() => _archive = context.Id)">@Text["Archive"]</FluentButton></TemplateColumn>
         </Columns>
