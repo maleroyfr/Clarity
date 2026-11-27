@@ -67,6 +67,10 @@
     {
         <ComparisonPanel @key="(ProjectId, _side, DiscoveryView)" ProjectId="ProjectId" Side="_side" View="@DiscoveryView" />
     }
+    else if (Section == "exports")
+    {
+        <ExportPanel @key="(ProjectId, _side)" ProjectId="ProjectId" Side="_side" />
+    }
     else
     {
         <EmptyState Title="@Text[Sections.GetValueOrDefault(Section, "NotFound")]" Description="@Text["LaterLot"]">

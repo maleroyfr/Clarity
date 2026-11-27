@@ -26,6 +26,8 @@ public static class DiscoveryRegistration
         services.AddSingleton(new PackageLimits());
         services.AddSingleton<ZipPackageReader>();
         services.AddSingleton<IArtifactStore, BlobArtifactStore>();
+        services.AddSingleton<IExportStore, BlobExportStore>();
+        services.AddSingleton<IExportText, ResourceExportText>();
         services.AddHttpClient("DiscoveryGraph", client => client.Timeout = TimeSpan.FromSeconds(90))
             .RemoveAllLoggers()
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
@@ -53,11 +55,13 @@ public static class DiscoveryRegistration
         services.AddScoped<ScriptRequestService>();
         services.AddScoped<GraphDiscoveryService>();
         services.AddScoped<JobService>();
+        services.AddScoped<ExportService>();
         if (storage && !string.IsNullOrWhiteSpace(sql))
         {
             services.AddSingleton(new SqlJobQueue(sql, TimeProvider.System));
             services.AddSingleton<ICollectionJobHandler, ImportJobHandler>();
             services.AddSingleton<ICollectionJobHandler, GraphJobHandler>();
+            services.AddSingleton<ICollectionJobHandler, ExportJobHandler>();
             services.AddSingleton<CollectionJobProcessor>();
             services.AddHostedService<CollectionWorker>();
         }

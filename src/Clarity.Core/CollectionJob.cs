@@ -1,6 +1,17 @@
 namespace Clarity.Core;
 
-public enum CollectionJobKind { Import, Graph }
+public enum CollectionJobKind { Import, Graph, Export }
+
+public static class CollectionJobKinds
+{
+    /// <summary>The workspace operation a job of this kind requires, at launch and again in the worker.</summary>
+    public static WorkspaceOperation Operation(this CollectionJobKind kind) => kind switch
+    {
+        CollectionJobKind.Import => WorkspaceOperation.Import,
+        CollectionJobKind.Export => WorkspaceOperation.Export,
+        _ => WorkspaceOperation.Collect
+    };
+}
 
 public sealed class CollectionJob : WorkspaceEntity
 {

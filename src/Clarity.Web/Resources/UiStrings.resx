@@ -965,4 +965,112 @@
   <data name="ReconfirmedObjects" xml:space="preserve"><value>Décisions à reconfirmer</value></data>
   <data name="NoDecisions" xml:space="preserve"><value>Aucune décision pour ce filtre.</value></data>
   <data name="QualifyFromSheet" xml:space="preserve"><value>Qualifier depuis la fiche</value></data>
+  <data name="Export_Title" xml:space="preserve"><value>Export Clarity — synthèse de cadrage</value></data>
+  <data name="Export_Project" xml:space="preserve"><value>Projet</value></data>
+  <data name="Export_Side" xml:space="preserve"><value>Côté</value></data>
+  <data name="Export_Author" xml:space="preserve"><value>Auteur de la génération (tenant / identifiant Entra)</value></data>
+  <data name="Export_AsOf" xml:space="preserve"><value>Sélection datée figée le (UTC)</value></data>
+  <data name="Export_GeneratedAt" xml:space="preserve"><value>Généré le (UTC)</value></data>
+  <data name="Export_SelectionHash" xml:space="preserve"><value>Empreinte SHA-256 de la sélection</value></data>
+  <data name="Export_Filters" xml:space="preserve"><value>Filtres</value></data>
+  <data name="Export_Counters" xml:space="preserve"><value>Compteurs rapprochables</value></data>
+  <data name="Export_Objects" xml:space="preserve"><value>Objets exportés</value></data>
+  <data name="Export_ExceptionTotal" xml:space="preserve"><value>Exceptions</value></data>
+  <data name="Export_Mappings" xml:space="preserve"><value>Correspondances</value></data>
+  <data name="Export_InventoryCsvRows" xml:space="preserve"><value>Lignes du CSV inventaire</value></data>
+  <data name="Export_MappingsCsvRows" xml:space="preserve"><value>Lignes du CSV correspondances</value></data>
+  <data name="Export_Reconciled" xml:space="preserve"><value>Rapproché</value></data>
+  <data name="Export_NotReconciled" xml:space="preserve"><value>Écart à analyser</value></data>
+  <data name="Export_PartialNote" xml:space="preserve"><value>Une couverture partielle, en échec ou non collectée n’est jamais interprétée comme une absence d’objet.</value></data>
+  <data name="Export_NotCollected" xml:space="preserve"><value>Non collecté</value></data>
+  <data name="Export_Undecided" xml:space="preserve"><value>Sans décision</value></data>
+  <data name="Export_Yes" xml:space="preserve"><value>Oui</value></data>
+  <data name="Export_No" xml:space="preserve"><value>Non</value></data>
+  <data name="Export_Sheet_Summary" xml:space="preserve"><value>Synthèse</value></data>
+  <data name="Export_Sheet_Inventory" xml:space="preserve"><value>Inventaire utile</value></data>
+  <data name="Export_Sheet_Exceptions" xml:space="preserve"><value>Exceptions</value></data>
+  <data name="Export_MappingKind_Hybrid" xml:space="preserve"><value>Hybride AD ↔ Entra</value></data>
+  <data name="Export_MappingKind_SourceTarget" xml:space="preserve"><value>Source ↔ cible</value></data>
+  <data name="Export_Check_Decisions" xml:space="preserve"><value>Objets = somme par décision</value></data>
+  <data name="Export_Check_Presence" xml:space="preserve"><value>Objets = somme par présence</value></data>
+  <data name="Export_Check_Exceptions" xml:space="preserve"><value>Exceptions = somme par catégorie</value></data>
+  <data name="Export_Check_Coverage" xml:space="preserve"><value>Lacunes de couverture = sections partielles, en échec ou non collectées</value></data>
+  <data name="Export_Col_Environment" xml:space="preserve"><value>Environnement</value></data>
+  <data name="Export_Col_ObjectType" xml:space="preserve"><value>Type d’objet</value></data>
+  <data name="Export_Col_DisplayName" xml:space="preserve"><value>Nom</value></data>
+  <data name="Export_Col_Upn" xml:space="preserve"><value>UPN</value></data>
+  <data name="Export_Col_Smtp" xml:space="preserve"><value>SMTP principal</value></data>
+  <data name="Export_Col_Domain" xml:space="preserve"><value>Domaine</value></data>
+  <data name="Export_Col_Site" xml:space="preserve"><value>Site</value></data>
+  <data name="Export_Col_Enabled" xml:space="preserve"><value>Activé</value></data>
+  <data name="Export_Col_Presence" xml:space="preserve"><value>Présence</value></data>
+  <data name="Export_Col_LastObserved" xml:space="preserve"><value>Dernière observation (UTC)</value></data>
+  <data name="Export_Col_SourceCapability" xml:space="preserve"><value>Section source</value></data>
+  <data name="Export_Col_SourceDate" xml:space="preserve"><value>Date de la collecte source (UTC)</value></data>
+  <data name="Export_Col_Decision" xml:space="preserve"><value>Décision de périmètre</value></data>
+  <data name="Export_Col_Wave" xml:space="preserve"><value>Vague</value></data>
+  <data name="Export_Col_Population" xml:space="preserve"><value>Population</value></data>
+  <data name="Export_Col_Reason" xml:space="preserve"><value>Justification</value></data>
+  <data name="Export_Col_DecidedAt" xml:space="preserve"><value>Décidé le (UTC)</value></data>
+  <data name="Export_Col_NeedsReview" xml:space="preserve"><value>À revoir</value></data>
+  <data name="Export_Col_Conflicting" xml:space="preserve"><value>Valeurs contradictoires</value></data>
+  <data name="Export_Col_ObjectId" xml:space="preserve"><value>Identifiant Clarity de l’objet</value></data>
+  <data name="Export_Col_Category" xml:space="preserve"><value>Catégorie</value></data>
+  <data name="Export_Col_Detail" xml:space="preserve"><value>Détail</value></data>
+  <data name="Export_Col_Date" xml:space="preserve"><value>Date (UTC)</value></data>
+  <data name="Export_Col_MappingKind" xml:space="preserve"><value>Type de correspondance</value></data>
+  <data name="Export_Col_State" xml:space="preserve"><value>État</value></data>
+  <data name="Export_Col_Rule" xml:space="preserve"><value>Règle</value></data>
+  <data name="Export_Col_LeftEnvironment" xml:space="preserve"><value>Environnement de gauche</value></data>
+  <data name="Export_Col_LeftLabel" xml:space="preserve"><value>Objet de gauche</value></data>
+  <data name="Export_Col_RightEnvironment" xml:space="preserve"><value>Environnement de droite</value></data>
+  <data name="Export_Col_RightLabel" xml:space="preserve"><value>Objet de droite</value></data>
+  <data name="Export_Col_Revision" xml:space="preserve"><value>Révision</value></data>
+  <data name="Export_Col_ConsultantQualified" xml:space="preserve"><value>Qualifiée par un consultant</value></data>
+  <data name="Export_Col_LeftObjectId" xml:space="preserve"><value>Identifiant Clarity de gauche</value></data>
+  <data name="Export_Col_RightObjectId" xml:space="preserve"><value>Identifiant Clarity de droite</value></data>
+  <data name="Export_Col_MappingId" xml:space="preserve"><value>Identifiant de la correspondance</value></data>
+  <data name="Export_Col_Capability" xml:space="preserve"><value>Section</value></data>
+  <data name="Export_Col_Coverage" xml:space="preserve"><value>Couverture</value></data>
+  <data name="Export_Col_Run" xml:space="preserve"><value>Collecte</value></data>
+  <data name="Export_Col_Scope" xml:space="preserve"><value>Périmètre collecté</value></data>
+  <data name="ExportException_CoverageGap" xml:space="preserve"><value>Lacune de couverture</value></data>
+  <data name="ExportException_ConflictingValue" xml:space="preserve"><value>Valeur contradictoire</value></data>
+  <data name="ExportException_ReviewFlag" xml:space="preserve"><value>Décision à revoir</value></data>
+  <data name="ExportException_ToArbitrate" xml:space="preserve"><value>Objet à arbitrer</value></data>
+  <data name="ExportException_IncludedNotObserved" xml:space="preserve"><value>Inclus mais non observé dans la dernière collecte</value></data>
+  <data name="ExportException_MappingPending" xml:space="preserve"><value>Correspondance non validée</value></data>
+  <data name="ExportException_TargetComparison" xml:space="preserve"><value>Cible absente, inconnue ou ambiguë</value></data>
+  <data name="ExportException_Collision" xml:space="preserve"><value>Collision UPN, SMTP, alias ou domaine</value></data>
+  <data name="ExportException_SharedDependency" xml:space="preserve"><value>Dépendance partagée ou à arbitrer</value></data>
+  <data name="ExportHint" xml:space="preserve"><value>Générez une synthèse Excel (synthèse, inventaire utile, exceptions) et des CSV filtrés (inventaire, correspondances). La sélection datée des observations est figée au lancement ; filtres, auteur, dates et couverture sont enregistrés avec l’export.</value></data>
+  <data name="ExportReadOnlyHint" xml:space="preserve"><value>Votre rôle permet de consulter et télécharger les exports de ce projet, pas d’en générer.</value></data>
+  <data name="NewExport" xml:space="preserve"><value>Nouvel export</value></data>
+  <data name="ExportWave" xml:space="preserve"><value>Vague</value></data>
+  <data name="ExportPopulation" xml:space="preserve"><value>Population</value></data>
+  <data name="ExportSelectionHint" xml:space="preserve"><value>Si les données du projet changent avant la fin de la génération, l’export échoue au lieu de mélanger deux états ; relancez-le.</value></data>
+  <data name="LaunchExport" xml:space="preserve"><value>Générer l’export</value></data>
+  <data name="ExportQueued" xml:space="preserve"><value>Export mis en file. Actualisez pour suivre sa génération.</value></data>
+  <data name="ExportHistory" xml:space="preserve"><value>Exports du projet</value></data>
+  <data name="ExportRefresh" xml:space="preserve"><value>Actualiser</value></data>
+  <data name="ExportAsOf" xml:space="preserve"><value>Sélection du (UTC)</value></data>
+  <data name="ExportFilters" xml:space="preserve"><value>Filtres</value></data>
+  <data name="ExportGeneratedAt" xml:space="preserve"><value>Généré le</value></data>
+  <data name="ExportCounters" xml:space="preserve"><value>Compteurs</value></data>
+  <data name="ExportObjects" xml:space="preserve"><value>Objets</value></data>
+  <data name="ExportExceptions" xml:space="preserve"><value>Exceptions</value></data>
+  <data name="ExportMappings" xml:space="preserve"><value>Correspondances</value></data>
+  <data name="ExportCoverageGaps" xml:space="preserve"><value>Lacunes de couverture signalées</value></data>
+  <data name="ExportSelectionHash" xml:space="preserve"><value>Sélection</value></data>
+  <data name="ExportFiles" xml:space="preserve"><value>Fichiers</value></data>
+  <data name="ExportNoFiles" xml:space="preserve"><value>Aucun fichier pour le moment.</value></data>
+  <data name="ExportRows" xml:space="preserve"><value>lignes</value></data>
+  <data name="ExportArtifact_Workbook" xml:space="preserve"><value>Synthèse Excel</value></data>
+  <data name="ExportArtifact_InventoryCsv" xml:space="preserve"><value>CSV inventaire</value></data>
+  <data name="ExportArtifact_MappingsCsv" xml:space="preserve"><value>CSV correspondances</value></data>
+  <data name="NoExports" xml:space="preserve"><value>Aucun export pour ce côté du projet.</value></data>
+  <data name="ExportError_SelectionSuperseded" xml:space="preserve"><value>Les données du projet ont changé depuis le lancement : la sélection datée n’est plus actuelle. Relancez l’export.</value></data>
+  <data name="ExportError_ExportTooLarge" xml:space="preserve"><value>La sélection dépasse 50 000 objets. Affinez les filtres puis relancez l’export.</value></data>
+  <data name="ExportError_AccessDenied" xml:space="preserve"><value>L’auteur n’a plus le droit de générer des exports pour ce projet.</value></data>
+  <data name="ExportErrorGeneric" xml:space="preserve"><value>La génération a échoué sans exposer de donnée sensible. Relancez l’export ou contactez l’administrateur.</value></data>
 </root>

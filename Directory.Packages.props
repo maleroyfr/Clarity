@@ -20,5 +20,6 @@
     <PackageVersion Include="Azure.Identity" Version="1.21.0" />
     <PackageVersion Include="JsonSchema.Net" Version="9.7.0" />
     <PackageVersion Include="Azure.Security.KeyVault.Certificates" Version="4.10.0" />
+    <PackageVersion Include="ClosedXML" Version="0.105.1" />
   </ItemGroup>
 </Project>

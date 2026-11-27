@@ -70,6 +70,7 @@ app.MapStaticAssets();
 app.MapClarityHealth();
 app.MapFoundationEndpoints();
 app.MapDiscoveryEndpoints();
+app.MapExportEndpoints();
 app.MapGet("/authentication/login", () => Results.Challenge(new AuthenticationProperties { RedirectUri = "/" }));
 if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"))
 {

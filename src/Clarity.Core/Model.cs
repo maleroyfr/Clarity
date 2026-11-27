@@ -178,6 +178,12 @@ public static class ModelRules
                     throw new ArgumentException("Invalid mapping decision.");
                 }
                 break;
+            case ExportJob export:
+                ExportRules.Validate(export);
+                break;
+            case ExportArtifact exportArtifact:
+                ExportRules.Validate(exportArtifact);
+                break;
             case Project project:
                 Name(project.Name);
                 if (!Enum.IsDefined(project.Scenario))

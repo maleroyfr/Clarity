@@ -25,6 +25,9 @@ Dependencies point inward: Core has no infrastructure or UI dependency.
 Create one EF context per operation through `IDbContextFactory`; never retain
 a context for a Blazor circuit. Grids filter, sort and page in the database.
 
+Excel exports (Lot 5) are written with ClosedXML (MIT) in `Clarity.Infrastructure`
+only; CSV files are written without a library. See `docs/exports.md`.
+
 ## Client security boundary
 
 Every workspace-owned table carries `WorkspaceId`. Composite foreign keys

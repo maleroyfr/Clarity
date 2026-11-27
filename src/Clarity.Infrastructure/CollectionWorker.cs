@@ -40,7 +40,7 @@ public sealed class CollectionJobProcessor(SqlJobQueue queue, IEnumerable<IColle
             var factory = queue.CreateFactory(job);
             var workspace = new WorkspaceScope(new UserIdentity(job.ActorTenantId, job.ActorObjectId), [job.WorkspaceId]);
             var access = new StoredProjectAccess(factory, workspace);
-            await access.RequireAsync(job.ProjectId, job.Kind == CollectionJobKind.Import ? WorkspaceOperation.Import : WorkspaceOperation.Collect, lease.Token);
+            await access.RequireAsync(job.ProjectId, job.Kind.Operation(), lease.Token);
             var handler = handlers.SingleOrDefault(x => x.Kind == job.Kind)
                 ?? throw new InvalidOperationException("Collection handler unavailable.");
             await handler.ExecuteAsync(new JobExecution(job, factory, access, async (progress, token) =>
@@ -90,7 +90,7 @@ public sealed class CollectionJobProcessor(SqlJobQueue queue, IEnumerable<IColle
         try
         {
             await new StoredProjectAccess(factory, workspace).RequireAsync(job.ProjectId,
-                job.Kind == CollectionJobKind.Import ? WorkspaceOperation.Import : WorkspaceOperation.Collect, ct);
+                job.Kind.Operation(), ct);
         }
         catch (AccessDeniedException)
         {

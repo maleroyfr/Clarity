@@ -224,6 +224,10 @@ carry `WorkspaceId`, composite foreign keys and row-level security predicates.
   batches write audit events (`Scope.*`) with a correlation ID. Logs never
   contain imported values.
 
+Scope decisions, waves, populations and shared dependencies are exported in the
+dated Excel workbook and inventory CSV described in
+[exports](exports.md); the export filters by decision, wave and population.
+
 ## Limits
 
 - Evaluation uses the consolidated inventory only; Clarity never queries a tenant

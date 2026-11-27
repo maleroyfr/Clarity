@@ -8,7 +8,7 @@ public sealed class JobService(IDbContextFactory<ClarityDbContext> factory, IPro
     public async Task EnqueueAsync(Guid projectId, Guid operationId, CollectionJobKind kind, string payloadJson,
         string concurrencyKey, string correlationId, CancellationToken cancellationToken = default)
     {
-        var project = await access.RequireAsync(projectId, kind == CollectionJobKind.Import ? WorkspaceOperation.Import : WorkspaceOperation.Collect, cancellationToken);
+        var project = await access.RequireAsync(projectId, kind.Operation(), cancellationToken);
         if (operationId == Guid.Empty || concurrencyKey.Length != 64 || payloadJson.Length > 16000)
         {
             throw new ArgumentException("Invalid job request.");
@@ -46,7 +46,8 @@ public sealed class JobService(IDbContextFactory<ClarityDbContext> factory, IPro
     {
         var project = await access.RequireAsync(projectId, WorkspaceOperation.Collect, cancellationToken);
         await using var db = await factory.CreateDbContextAsync(cancellationToken);
-        var query = db.CollectionJobs.Where(x => x.WorkspaceId == project.WorkspaceId && x.ProjectId == projectId && x.Id == jobId);
+        var query = db.CollectionJobs.Where(x => x.WorkspaceId == project.WorkspaceId && x.ProjectId == projectId && x.Id == jobId
+            && x.Kind != CollectionJobKind.Export);
         if (!await query.AnyAsync(cancellationToken)) { throw new AccessDeniedException(); }
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         await query.Where(x => x.State == CollectionRunState.Pending || x.State == CollectionRunState.Running)
@@ -62,7 +63,7 @@ public sealed class JobService(IDbContextFactory<ClarityDbContext> factory, IPro
         await using var db = await factory.CreateDbContextAsync(cancellationToken);
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         var changed = await db.CollectionJobs.Where(x => x.WorkspaceId == project.WorkspaceId && x.ProjectId == project.Id && x.Id == jobId
-            && (x.State == CollectionRunState.Failed || x.State == CollectionRunState.Cancelled))
+            && x.Kind != CollectionJobKind.Export && (x.State == CollectionRunState.Failed || x.State == CollectionRunState.Cancelled))
             .ExecuteUpdateAsync(update => update.SetProperty(x => x.State, CollectionRunState.Pending)
                 .SetProperty(x => x.CancellationRequested, false).SetProperty(x => x.Attempt, 0)
                 .SetProperty(x => x.AvailableAtUtc, DateTimeOffset.UtcNow).SetProperty(x => x.ErrorCode, (string?)null)

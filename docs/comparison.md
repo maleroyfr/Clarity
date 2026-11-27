@@ -189,6 +189,10 @@ association never merges a source object with a target object.
   source-target comparison one `TargetComparison.Computed` event, keyed by its
   operation ID.
 
+Source-target outcomes that need attention (ambiguous, absent, unknown) and
+collisions, plus pending mappings, appear in the exceptions sheet and mappings CSV
+of an [export](exports.md).
+
 ## Limits
 
 - A comparison covers one environment and two runs. To compare two producers, compare

@@ -16,7 +16,7 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261127021746_DecisionHistory";
+    public override string LastMigrationId => "20261127025715_ExportJobs";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -739,6 +739,120 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
                 b.HasIndex("WorkspaceId", "AnalysisId", "Classification", "Family");
 
                 b.ToTable("DependencyResources");
+            });
+
+        modelBuilder.Entity("Clarity.Core.ExportArtifact", b =>
+            {
+                b.Property<Guid>("WorkspaceId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("Id")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<string>("BlobName")
+                    .IsRequired()
+                    .HasMaxLength(200)
+                    .IsUnicode(false)
+                    .HasColumnType("varchar(200)");
+
+                b.Property<long>("Bytes")
+                    .HasColumnType("bigint");
+
+                b.Property<string>("ContentHash")
+                    .IsRequired()
+                    .HasMaxLength(64)
+                    .IsUnicode(false)
+                    .HasColumnType("varchar(64)");
+
+                b.Property<string>("ContentType")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .IsUnicode(false)
+                    .HasColumnType("varchar(100)");
+
+                b.Property<DateTimeOffset>("CreatedAtUtc")
+                    .HasColumnType("datetimeoffset");
+
+                b.Property<Guid>("ExportJobId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<string>("FileName")
+                    .IsRequired()
+                    .HasMaxLength(200)
+                    .HasColumnType("nvarchar(200)");
+
+                b.Property<int>("Kind")
+                    .HasColumnType("int");
+
+                b.Property<int>("RowCount")
+                    .HasColumnType("int");
+
+                b.HasKey("WorkspaceId", "Id");
+
+                b.HasIndex("WorkspaceId", "ExportJobId", "Kind")
+                    .IsUnique();
+
+                b.ToTable("ExportArtifacts");
+            });
+
+        modelBuilder.Entity("Clarity.Core.ExportJob", b =>
+            {
+                b.Property<Guid>("WorkspaceId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("Id")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<DateTimeOffset>("AsOfUtc")
+                    .HasColumnType("datetimeoffset");
+
+                b.Property<Guid>("AuthorObjectId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("AuthorTenantId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<int?>("CoverageGaps")
+                    .HasColumnType("int");
+
+                b.Property<int?>("ExceptionCount")
+                    .HasColumnType("int");
+
+                b.Property<string>("FiltersJson")
+                    .IsRequired()
+                    .HasMaxLength(4000)
+                    .HasColumnType("nvarchar(4000)");
+
+                b.Property<DateTimeOffset?>("GeneratedAtUtc")
+                    .HasColumnType("datetimeoffset");
+
+                b.Property<int?>("MappingCount")
+                    .HasColumnType("int");
+
+                b.Property<int?>("ObjectCount")
+                    .HasColumnType("int");
+
+                b.Property<Guid>("ProjectId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<string>("SelectionHash")
+                    .IsRequired()
+                    .HasMaxLength(64)
+                    .IsUnicode(false)
+                    .HasColumnType("varchar(64)");
+
+                b.Property<string>("SelectionJson")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<int>("Side")
+                    .HasColumnType("int");
+
+                b.HasKey("WorkspaceId", "Id");
+
+                b.HasIndex("WorkspaceId", "ProjectId", "Side", "AsOfUtc");
+
+                b.ToTable("ExportJobs");
             });
 
         modelBuilder.Entity("Clarity.Core.ExternalKey", b =>
@@ -2356,6 +2470,42 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
                     .WithMany()
                     .HasForeignKey("WorkspaceId", "EnvironmentId", "ObjectId")
                     .HasPrincipalKey("WorkspaceId", "EnvironmentId", "Id")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+            });
+
+        modelBuilder.Entity("Clarity.Core.ExportArtifact", b =>
+            {
+                b.HasOne("Clarity.Core.ClientWorkspace", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+
+                b.HasOne("Clarity.Core.ExportJob", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId", "ExportJobId")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+            });
+
+        modelBuilder.Entity("Clarity.Core.ExportJob", b =>
+            {
+                b.HasOne("Clarity.Core.ClientWorkspace", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+
+                b.HasOne("Clarity.Core.CollectionJob", null)
+                    .WithOne()
+                    .HasForeignKey("Clarity.Core.ExportJob", "WorkspaceId", "Id")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+
+                b.HasOne("Clarity.Core.Project", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId", "ProjectId")
                     .OnDelete(DeleteBehavior.NoAction)
                     .IsRequired();
             });

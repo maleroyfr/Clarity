@@ -55,7 +55,8 @@ public sealed class DiscoveryQueries(IDbContextFactory<ClarityDbContext> factory
         page.Validate();
         var project = await access.RequireAsync(projectId, WorkspaceOperation.Read, ct);
         await using var db = await factory.CreateDbContextAsync(ct);
-        var query = db.CollectionJobs.AsNoTracking().Where(x => x.WorkspaceId == project.WorkspaceId && x.ProjectId == projectId)
+        var query = db.CollectionJobs.AsNoTracking().Where(x => x.WorkspaceId == project.WorkspaceId && x.ProjectId == projectId
+                && x.Kind != CollectionJobKind.Export)
             .Select(x => new JobView(x.Id, x.Kind, x.State, x.Attempt, x.Progress, x.CancellationRequested, x.ErrorCode, x.CorrelationId, x.CreatedAtUtc));
         var count = await query.CountAsync(ct);
         var ordered = page.Descending ? query.OrderByDescending(x => x.CreatedAtUtc).ThenBy(x => x.Id) : query.OrderBy(x => x.CreatedAtUtc).ThenBy(x => x.Id);

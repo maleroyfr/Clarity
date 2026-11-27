@@ -21,7 +21,7 @@ public sealed class ImportJobHandler(IArtifactStore store, ZipPackageReader read
     public async Task PublishAsync(JobExecution execution, Guid runId, CancellationToken cancellationToken)
     {
         var job = execution.Job;
-        var operation = job.Kind == CollectionJobKind.Import ? WorkspaceOperation.Import : WorkspaceOperation.Collect;
+        var operation = job.Kind.Operation();
         var project = await execution.Access.RequireAsync(job.ProjectId, operation, cancellationToken);
         var scope = new WorkspaceScope(new UserIdentity(job.ActorTenantId, job.ActorObjectId), [project.WorkspaceId]);
         var imports = new ImportService(execution.Factory, execution.Access, scope, store, reader, limits, catalog, profiles);

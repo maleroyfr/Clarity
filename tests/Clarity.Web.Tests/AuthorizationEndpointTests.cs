@@ -133,6 +133,8 @@ internal sealed class FoundationApplication(string environment = "Testing", bool
             {
                 services.RemoveAll<IArtifactStore>();
                 services.AddSingleton<IArtifactStore, TestArtifactStore>();
+                services.RemoveAll<IExportStore>();
+                services.AddSingleton<IExportStore, TestExportStore>();
                 services.RemoveAll<DiscoveryAvailability>();
                 services.AddSingleton(new DiscoveryAvailability(true, false));
             }

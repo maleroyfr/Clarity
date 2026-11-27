@@ -1,0 +1,127 @@
+@using Clarity.Infrastructure
+@inherits FoundationPage
+@inject ExportService Exports
+@inject InventoryQueries Queries
+@inject ScopeService Scope
+@inject FoundationService Foundation
+@inject WorkspaceAuthorization Authorization
+@inject DiscoveryAvailability Availability
+
+<h2>@Text["Exports"] · @Text[Side.ToString()]</h2>
+<p>@Text["ExportHint"]</p>
+@if (Error is not null) { <p class="error" role="alert">@Error</p> }
+@if (_message is not null) { <p role="status">@_message</p> }
+@if (!Availability.Storage) { <p class="notice">@Text["StorageRequired"]</p> }
+else if (!_canExport) { <p class="notice">@Text["ExportReadOnlyHint"]</p> }
+else
+{
+    <section aria-label="@Text["NewExport"]">
+        <h3>@Text["NewExport"]</h3>
+        <label>@Text["Environments"] <select @bind="_environment"><option value="">@Text["All"]</option>
+            @foreach (var e in _environments) { <option value="@e.Id">@e.ExternalId</option> }</select></label>
+        <label>@Text["ObjectType"] <select @bind="_type"><option value="">@Text["All"]</option>
+            @foreach (var t in _types) { <option value="@t">@TypeName(t)</option> }</select></label>
+        <label>@Text["Status"] <select @bind="_status"><option value="">@Text["All"]</option>
+            @foreach (var s in Statuses) { <option value="@s">@Text[s]</option> }</select></label>
+        <label>@Text["ScopeDecisionValue"] <select @bind="_decision">
+            @foreach (var d in Enum.GetValues<ExportDecisionFilter>()) { <option value="@d">@DecisionName(d)</option> }</select></label>
+        <FluentTextInput Label="@Text["ExportWave"]" @bind-Value="_wave" />
+        <label>@Text["ExportPopulation"] <select @bind="_population"><option value="">@Text["All"]</option>
+            @foreach (var p in _populations) { <option value="@p.Id">@p.Name · @p.Environment</option> }</select></label>
+        <p>@Text["ExportSelectionHint"]</p>
+        <FluentButton Appearance="ButtonAppearance.Primary" OnClick="LaunchAsync" Disabled="@Busy">@Text["LaunchExport"]</FluentButton>
+    </section>
+}
+<div class="section-heading"><h3>@Text["ExportHistory"]</h3>
+    <FluentButton OnClick="@(() => _revision++)">@Text["ExportRefresh"]</FluentButton></div>
+<ClarityGrid @key="(ProjectId, Side, _revision)" TGridItem="ExportRow" Load="@((p, ct) => Exports.PageAsync(ProjectId, Side, p, ct))">
+    <Columns>
+        <TemplateColumn Title="@Text["ExportAsOf"]" Context="r">@r.AsOfUtc.ToString("u")
+            <small>@Text["SsoAuthor"] : @r.AuthorTenantId / @r.AuthorObjectId</small></TemplateColumn>
+        <TemplateColumn Title="@Text["ExportFilters"]" Context="r">@Filters(r)</TemplateColumn>
+        <TemplateColumn Title="@Text["Status"]" Context="r">@Text[r.State.ToString()]
+            @if (r.ErrorCode is { } failure) { <p>@ErrorText(failure) <code>@failure</code></p> }
+            @if (r.GeneratedAtUtc is { } generated) { <small>@Text["ExportGeneratedAt"] @generated.ToString("u")</small> }</TemplateColumn>
+        <TemplateColumn Title="@Text["ExportCounters"]" Context="r">
+            @if (r.ObjectCount is { } objects)
+            {
+                <span>@Text["ExportObjects"] : @objects.ToString("N0") · @Text["ExportExceptions"] : @(r.ExceptionCount?.ToString("N0"))
+                    · @Text["ExportMappings"] : @(r.MappingCount?.ToString("N0"))</span>
+                @if (r.CoverageGaps is > 0) { <p class="notice">@Text["ExportCoverageGaps"] : @r.CoverageGaps</p> }
+            }
+            <small>@Text["ExportSelectionHash"] <code>@r.SelectionHash[..12]</code></small></TemplateColumn>
+        <TemplateColumn Title="@Text["ExportFiles"]" Context="r">
+            @if (r.Artifacts.Count == 0) { <span>@Text["ExportNoFiles"]</span> }
+            <ul aria-label="@Text["ExportFiles"]">
+                @foreach (var a in r.Artifacts)
+                {
+                    <li><a href="@($"/api/projects/{ProjectId}/exports/{r.Id}/artifacts/{a.Id}")" download>@Text[$"ExportArtifact_{a.Kind}"]</a>
+                        <small>@a.FileName · @a.RowCount.ToString("N0") @Text["ExportRows"] · @Size(a.Bytes) · SHA-256 @a.ContentHash[..12]</small></li>
+                }
+            </ul></TemplateColumn>
+    </Columns>
+    <EmptyContent><p>@Text["NoExports"]</p></EmptyContent>
+</ClarityGrid>
+
+@code {
+    [Parameter] public Guid ProjectId { get; set; }
+    [Parameter] public EnvironmentRole Side { get; set; }
+    private static readonly string[] Statuses = ["Observed", "AbsentFromScope", "Deleted", "Unknown", "Enabled", "Disabled"];
+    private IReadOnlyList<ProjectEnvironment> _environments = [];
+    private IReadOnlyList<string> _types = [];
+    private IReadOnlyList<PopulationRow> _populations = [];
+    private string _environment = "", _type = "", _status = "", _wave = "", _population = "";
+    private ExportDecisionFilter _decision = ExportDecisionFilter.All;
+    private string? _message;
+    private bool _canExport;
+    private int _revision;
+    private Guid _operation = Guid.NewGuid();
+
+    protected override Task OnParametersSetAsync() => RunAsync(async () =>
+    {
+        _message = null;
+        var project = await Foundation.GetProjectAsync(ProjectId);
+        _canExport = project.Status == ProjectStatus.Active && Authorization.Allows(project.WorkspaceId, WorkspaceOperation.Export);
+        _environments = (await Foundation.ListEnvironmentsAsync(ProjectId)).Where(e => e.Role == Side && e.TargetState == TargetState.Existing).ToList();
+        if (_canExport && Availability.Storage)
+        {
+            _types = (await Queries.OptionsAsync(ProjectId, Side)).Types;
+            _populations = (await Scope.PopulationsAsync(ProjectId, Side, new PageRequest(0, 100))).Items;
+        }
+    });
+
+    private string TypeName(string type) => Text[$"ObjectType_{type}"] is { ResourceNotFound: false } label ? label.Value : type;
+
+    private string DecisionName(ExportDecisionFilter decision) => decision switch
+    {
+        ExportDecisionFilter.All => Text["All"],
+        ExportDecisionFilter.Undecided => Text["Export_Undecided"],
+        _ => Text[$"ScopeDecision_{decision}"]
+    };
+
+    private string ErrorText(string code) => Text[$"ExportError_{code}"] is { ResourceNotFound: false } text ? text.Value : Text["ExportErrorGeneric"];
+
+    private string Filters(ExportRow row) => string.Join(" · ", new[]
+    {
+        row.Environment ?? Text["All"].Value,
+        row.Filter.Type is { } type ? TypeName(type) : null,
+        row.Filter.Status is { } status ? Text[status].Value : null,
+        row.Filter.Decision == ExportDecisionFilter.All ? null : DecisionName(row.Filter.Decision),
+        row.Filter.Wave is { } wave ? $"{Text["ExportWave"]} {wave}" : null,
+        row.Population is { } population ? $"{Text["ExportPopulation"]} {population}" : null
+    }.Where(x => x is not null));
+
+    private static string Size(long bytes) => bytes < 1024 * 1024
+        ? $"{Math.Max(1, bytes / 1024.0):N0} Ko"
+        : $"{bytes / (1024.0 * 1024):N1} Mo";
+
+    private Task LaunchAsync() => RunAsync(async () =>
+    {
+        var filter = new ExportFilter(Side, Guid.TryParse(_environment, out var environment) ? environment : null, _type, _status, _decision, _wave,
+            Guid.TryParse(_population, out var population) ? population : null);
+        await Exports.LaunchAsync(ProjectId, new ExportRequest(_operation, filter));
+        _operation = Guid.NewGuid();
+        _revision++;
+        _message = Messages["ExportQueued"];
+    });
+}

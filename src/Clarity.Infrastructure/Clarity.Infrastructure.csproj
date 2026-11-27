@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
     <ProjectReference Include="..\Clarity.Core\Clarity.Core.csproj" />
@@ -8,6 +8,7 @@
     <PackageReference Include="Azure.Storage.Blobs" />
     <PackageReference Include="Azure.Identity" />
     <PackageReference Include="Azure.Security.KeyVault.Certificates" />
+    <PackageReference Include="ClosedXML" />
     <!-- Every script family under scripts/<folder> is bundled by ScriptBundleRegistry; tests and sample files stay out. -->
     <EmbeddedResource Include="../../scripts/**/*.ps1;../../scripts/**/*.psm1;../../scripts/**/*.psd1"
                       Exclude="../../scripts/**/*.Tests.ps1" LogicalName="Scripts/%(RecursiveDir)%(Filename)%(Extension)" />

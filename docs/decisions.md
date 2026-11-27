@@ -96,6 +96,9 @@ de revue**. Recomputing re-evaluates every decision of the project under the pro
 lock and writes a `DecisionReview.Recomputed` audit event; it never changes a
 decision.
 
+Open review flags are listed in the exceptions sheet of an [export](exports.md),
+and the inventory sheet marks each object with an open flag.
+
 ## Limits
 
 - The comparison screen's "Décisions à revoir" list ([Comparisons](comparison.md))
