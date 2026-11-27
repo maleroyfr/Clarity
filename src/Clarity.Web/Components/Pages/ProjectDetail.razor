@@ -2,6 +2,7 @@
 @page "/projects/{ProjectId:guid}/{Section}"
 @attribute [Authorize]
 @inherits FoundationPage
+@implements IDisposable
 @inject FoundationService Service
 @inject NavigationManager Navigation
 
@@ -118,11 +119,15 @@
     private void ChangeSide(EnvironmentRole side) => Navigation.NavigateTo($"/projects/{ProjectId}/{Section ?? "overview"}?side={side}");
     private void ChangeSection(string? section)
     {
-        if (section is not null && Sections.ContainsKey(section) && section != (Section ?? "overview"))
+        // FluentTabs also reports selection changes while removing tabs, including during SSR teardown.
+        if (RendererInfo.IsInteractive && !_disposed && _project is not null
+            && section is not null && Sections.ContainsKey(section) && section != (Section ?? "overview"))
         {
             Navigation.NavigateTo($"/projects/{ProjectId}/{section}{(_side == EnvironmentRole.Target ? "?side=Target" : "")}");
         }
     }
+    private bool _disposed;
+    public void Dispose() => _disposed = true;
     private static readonly Dictionary<string, string> Sections = new()
     {
         ["overview"] = "Overview", ["discovery"] = "Discovery", ["inventory"] = "Inventory",
