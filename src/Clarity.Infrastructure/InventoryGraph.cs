@@ -52,12 +52,28 @@ public sealed class InventoryGraph(IDbContextFactory<ClarityDbContext> factory, 
             {
                 var query = db.InventoryRelationships.Where(e => e.WorkspaceId == project.WorkspaceId && e.EnvironmentId == environment
                     && e.Origin == RelationshipOrigin.Membership && e.IsCurrent && e.FromObjectId != null && e.ToObjectId != null);
-                var edges = await query.Where(e => ids.Contains(reverse ? e.ToObjectId!.Value : e.FromObjectId!.Value))
-                    .OrderBy(e => e.Id).Select(e => new { e.Id, From = e.FromObjectId!.Value, To = e.ToObjectId!.Value }).ToListAsync(token);
+                // Branch outside the expression so SQL Server seeks the From or To index instead of scanning a CASE. Each edge also reports
+                // whether its far end has edges of its own, so leaves such as users never become a frontier that is probed in vain.
+                var edges = await (reverse
+                    ? query.Where(e => ids.Contains(e.ToObjectId!.Value)).OrderBy(e => e.Id).Select(e => new
+                    {
+                        e.Id,
+                        Child = e.FromObjectId!.Value,
+                        Parent = e.ToObjectId!.Value,
+                        Expands = db.InventoryRelationships.Any(x => x.WorkspaceId == e.WorkspaceId && x.EnvironmentId == e.EnvironmentId
+                            && x.ToObjectId == e.FromObjectId && x.Origin == RelationshipOrigin.Membership && x.IsCurrent)
+                    })
+                    : query.Where(e => ids.Contains(e.FromObjectId!.Value)).OrderBy(e => e.Id).Select(e => new
+                    {
+                        e.Id,
+                        Child = e.ToObjectId!.Value,
+                        Parent = e.FromObjectId!.Value,
+                        Expands = db.InventoryRelationships.Any(x => x.WorkspaceId == e.WorkspaceId && x.EnvironmentId == e.EnvironmentId
+                            && x.FromObjectId == e.ToObjectId && x.Origin == RelationshipOrigin.Membership && x.IsCurrent)
+                    })).ToListAsync(token);
                 foreach (var edge in edges)
                 {
-                    var child = reverse ? edge.From : edge.To;
-                    if (child != objectId && parents.TryAdd(child, (reverse ? edge.To : edge.From, edge.Id))) { next.Add(child); }
+                    if (edge.Child != objectId && parents.TryAdd(edge.Child, (edge.Parent, edge.Id)) && edge.Expands) { next.Add(edge.Child); }
                 }
             }
             frontier = next;

@@ -28,10 +28,8 @@ internal static class RelationshipProjection
             .ToListAsync(token)).ToLookup(x => (x.Namespace, AlternateKeyProjection.Normalize(x.Namespace, x.OriginalValue)));
         var sections = (await ProjectedSection.LoadAsync(db, workspace, environment, token)).ToDictionary(x => x.Section.Id);
         var exhaustive = sections.Values.Where(x => x.IsExhaustive(catalog)).ToLookup(x => x.Stream);
-        var edges = db.InventoryRelationships.Where(x => x.WorkspaceId == workspace && x.EnvironmentId == environment);
-        await db.RelationshipSupports.Where(x => x.WorkspaceId == workspace && edges.Any(e => e.Id == x.RelationshipId))
-            .ExecuteDeleteAsync(token);
-        await edges.ExecuteDeleteAsync(token);
+        var desired = new Dictionary<Guid, InventoryRelationship>();
+        var desiredSupports = new Dictionary<Guid, Guid>();
 
         var claims = observations.Select(o => new Claim(o, sections[o.SectionRunId], Resolve(o.FromJson, o.ObservedAtUtc),
             ResolveTarget(o)));
@@ -67,10 +65,10 @@ internal static class RelationshipProjection
                     _ => RelationshipOrigin.Observed
                 }
             };
-            db.InventoryRelationships.Add(edge);
-            db.RelationshipSupports.AddRange(sorted.Select(c => new RelationshipSupport
-            { WorkspaceId = workspace, RelationshipId = edge.Id, ObservationId = c.Row.Id }));
+            desired.Add(edge.Id, edge);
+            foreach (var c in sorted) { desiredSupports.Add(c.Row.Id, edge.Id); }
         }
+        await ApplyAsync(db, workspace, environment, desired, desiredSupports, token);
 
         // A producer may list weaker identifiers of the same target in properties.fallbackTo, strongest first.
         // They are tried in order only while the stronger one is unobserved; an ambiguous match is never overridden or skipped.
@@ -111,6 +109,48 @@ internal static class RelationshipProjection
             };
         }
     }
+
+    /// <summary>
+    /// Brings the stored edges and supports of the environment to the projected state by difference, so each publication writes only
+    /// what changed instead of rewriting every edge. Edge identifiers derive from their oldest observation and stay stable.
+    /// </summary>
+    private static async Task ApplyAsync(ClarityDbContext db, Guid workspace, Guid environment, Dictionary<Guid, InventoryRelationship> desired,
+        Dictionary<Guid, Guid> desiredSupports, CancellationToken token)
+    {
+        var existing = await db.InventoryRelationships.AsNoTracking().Where(x => x.WorkspaceId == workspace && x.EnvironmentId == environment)
+            .ToDictionaryAsync(x => x.Id, token);
+        var supports = await (from s in db.RelationshipSupports.AsNoTracking()
+                              join e in db.InventoryRelationships on new { s.WorkspaceId, Id = s.RelationshipId } equals new { e.WorkspaceId, e.Id }
+                              where s.WorkspaceId == workspace && e.EnvironmentId == environment
+                              select new { s.Id, s.RelationshipId, s.ObservationId }).ToListAsync(token);
+        var kept = new HashSet<Guid>();
+        var staleSupports = new List<Guid>();
+        foreach (var support in supports)
+        {
+            if (desiredSupports.TryGetValue(support.ObservationId, out var edge) && edge == support.RelationshipId) { kept.Add(support.ObservationId); }
+            else { staleSupports.Add(support.Id); }
+        }
+        foreach (var chunk in staleSupports.Chunk(500))
+        {
+            await db.RelationshipSupports.Where(x => x.WorkspaceId == workspace && chunk.Contains(x.Id)).ExecuteDeleteAsync(token);
+        }
+        foreach (var chunk in existing.Keys.Where(id => !desired.ContainsKey(id)).Chunk(500))
+        {
+            await db.InventoryRelationships.Where(x => x.WorkspaceId == workspace && chunk.Contains(x.Id)).ExecuteDeleteAsync(token);
+        }
+        foreach (var edge in desired.Values)
+        {
+            if (!existing.TryGetValue(edge.Id, out var stored)) { db.InventoryRelationships.Add(edge); }
+            else if (!Same(stored, edge)) { db.InventoryRelationships.Update(edge); }
+        }
+        db.RelationshipSupports.AddRange(desiredSupports.Where(s => !kept.Contains(s.Key)).Select(s => new RelationshipSupport
+        { WorkspaceId = workspace, RelationshipId = s.Value, ObservationId = s.Key }));
+    }
+
+    private static bool Same(InventoryRelationship a, InventoryRelationship b) =>
+        a.FromObjectId == b.FromObjectId && a.ToObjectId == b.ToObjectId && a.FromMethod == b.FromMethod && a.ToMethod == b.ToMethod
+        && a.Origin == b.Origin && a.IsCurrent == b.IsCurrent && string.Equals(a.FromJson, b.FromJson, StringComparison.Ordinal)
+        && string.Equals(a.ToJson, b.ToJson, StringComparison.Ordinal) && string.Equals(a.RelationType, b.RelationType, StringComparison.Ordinal);
 
     private const int MaxFallbackReferences = 8;
 

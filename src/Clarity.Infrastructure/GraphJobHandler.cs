@@ -109,15 +109,7 @@ public sealed class GraphJobHandler(IGraphSessionFactory sessions, EntraCollecto
         await execution.Access.RequireAsync(job.ProjectId, WorkspaceOperation.Collect, cancellationToken);
         await using var complete = await execution.Factory.CreateDbContextAsync(cancellationToken);
         await using var transaction = await complete.Database.BeginTransactionAsync(cancellationToken);
-        var fenced = await complete.CollectionJobs.FromSql($"""
-            SELECT * FROM dbo.CollectionJobs WITH (UPDLOCK, HOLDLOCK)
-            WHERE WorkspaceId = {job.WorkspaceId} AND Id = {job.Id}
-            """).SingleAsync(cancellationToken);
-        if (fenced.LeaseToken != job.LeaseToken || fenced.State != CollectionRunState.Running
-            || fenced.CancellationRequested || fenced.LeaseExpiresAtUtc <= DateTimeOffset.UtcNow)
-        {
-            throw new OperationCanceledException("Job lease lost.", cancellationToken);
-        }
+        await SqlJobQueue.FenceAsync(complete, job, DateTimeOffset.UtcNow, cancellationToken);
         await PublicationService.LockEnvironmentAsync(complete, project.WorkspaceId, payload.EnvironmentId, cancellationToken);
         foreach (var continuation in JsonSerializer.Deserialize<GraphContinuation[]>(prepared.ContinuationJson, ContractJson.Options)!)
         {

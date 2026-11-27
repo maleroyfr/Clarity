@@ -32,7 +32,7 @@ public static class Telemetry
             .ConfigureResource(resource => resource.AddService(Name))
             .WithTracing(tracing =>
             {
-                tracing.AddSource(Name);
+                tracing.AddSource(Name, Clarity.Infrastructure.PublicationService.Activities.Name);
                 if (!string.IsNullOrWhiteSpace(connectionString))
                 {
                     tracing.AddAzureMonitorTraceExporter(options => options.ConnectionString = connectionString);

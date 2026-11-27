@@ -7,7 +7,8 @@ namespace Clarity.Infrastructure;
 
 /// <summary>
 /// Generates an export in the background: re-authorizes the author, verifies the dated selection captured at launch is still current before and
-/// after reading, writes the workbook and CSV files to private storage, then records artifacts, reconciled counters and the audit in one save.
+/// after reading, writes the workbook and CSV files to private storage, then, fenced by the job lease, purges files of interrupted attempts and
+/// records artifacts, reconciled counters and the audit in one transaction.
 /// </summary>
 public sealed class ExportJobHandler(IExportStore store, IExportText text, DiscoveryCatalog catalog, TimeProvider? clock = null) : ICollectionJobHandler
 {
@@ -73,8 +74,14 @@ public sealed class ExportJobHandler(IExportStore store, IExportText text, Disco
             await execution.ReportProgressAsync(3, cancellationToken);
             await execution.Access.RequireAsync(job.ProjectId, WorkspaceOperation.Export, cancellationToken);
             await using var db = await execution.Factory.CreateDbContextAsync(cancellationToken);
+            await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+            // A worker whose lease was reclaimed while it wrote files must not record them over the new owner's attempt.
+            await SqlJobQueue.FenceAsync(db, job, (clock ?? TimeProvider.System).GetUtcNow(), cancellationToken);
             var tracked = await db.ExportJobs.SingleAsync(x => x.WorkspaceId == ws && x.Id == export.Id, cancellationToken);
             if (tracked.GeneratedAtUtc is not null) { throw new ConflictException(); }
+            // Files of an interrupted earlier attempt are never referenced, since artifacts are only recorded together with GeneratedAtUtc.
+            // Purging under the fence means a stale worker can never delete the files of the attempt that owns the lease.
+            await store.PurgeExportAsync(ws, export.Id, saved.Select(a => a.BlobName).ToHashSet(StringComparer.Ordinal), cancellationToken);
             tracked.GeneratedAtUtc = document.Header.GeneratedAtUtc;
             tracked.ObjectCount = document.Inventory.Count;
             tracked.ExceptionCount = document.Exceptions.Count;
@@ -91,6 +98,7 @@ public sealed class ExportJobHandler(IExportStore store, IExportText text, Disco
                 CorrelationId = job.CorrelationId
             });
             await db.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
         }
         catch
         {

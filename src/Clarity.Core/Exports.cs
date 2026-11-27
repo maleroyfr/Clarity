@@ -110,6 +110,9 @@ public interface IExportStore
     Task<StoredArtifact> SaveAsync(Guid workspaceId, Guid exportId, string extension, string contentType, Stream source, CancellationToken cancellationToken);
     Task<Stream> OpenAsync(Guid workspaceId, string blobName, CancellationToken cancellationToken);
     Task DeleteAsync(Guid workspaceId, string blobName, CancellationToken cancellationToken);
+
+    /// <summary>Deletes every file stored under the export's prefix except the listed blob names and returns how many were removed.</summary>
+    Task<int> PurgeExportAsync(Guid workspaceId, Guid exportId, IReadOnlySet<string> keep, CancellationToken cancellationToken);
 }
 
 /// <summary>Localized business labels of generated files; a missing key falls back to the key itself.</summary>

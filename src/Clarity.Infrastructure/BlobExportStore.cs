@@ -54,6 +54,17 @@ public sealed class BlobExportStore(BlobServiceClient? blobs = null) : IExportSt
         return Container.GetBlobClient(blobName).DeleteIfExistsAsync(cancellationToken: cancellationToken);
     }
 
+    public async Task<int> PurgeExportAsync(Guid workspaceId, Guid exportId, IReadOnlySet<string> keep, CancellationToken cancellationToken)
+    {
+        var container = Container;
+        var deleted = 0;
+        await foreach (var item in container.GetBlobsAsync(new GetBlobsOptions { Prefix = $"{workspaceId:N}/{exportId:N}/" }, cancellationToken))
+        {
+            if (!keep.Contains(item.Name) && await container.GetBlobClient(item.Name).DeleteIfExistsAsync(cancellationToken: cancellationToken)) { deleted++; }
+        }
+        return deleted;
+    }
+
     private static void DemandPrefix(Guid workspaceId, string name)
     {
         if (!name.StartsWith($"{workspaceId:N}/", StringComparison.Ordinal) || name.Contains("..", StringComparison.Ordinal))

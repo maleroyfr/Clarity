@@ -82,6 +82,15 @@ export to include the change.
 Launch is idempotent per operation identifier: repeating the same request returns
 the same export, and reusing the identifier with different filters is a conflict.
 
+## Worker restarts
+
+Files are written before the artifacts are recorded. The final save runs in one
+transaction fenced by the job lease: it fails if another worker has reclaimed the
+job, deletes files of interrupted earlier attempts under `<workspace>/<export>/`,
+then records artifacts, counters, `GeneratedAtUtc` and the `ExportGenerated` audit
+together. A worker that lost its lease deletes only the files it wrote. See
+[resilience and performance](resilience-performance.md).
+
 ## Coverage and reconciliation
 
 Partial, failed or never-collected coverage is reported as a coverage gap, never as

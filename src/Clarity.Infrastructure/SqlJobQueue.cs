@@ -74,6 +74,23 @@ public sealed class SqlJobQueue(string connectionString, TimeProvider time)
             .SetProperty(x => x.LeaseExpiresAtUtc, (DateTimeOffset?)null), cancellationToken) == 1;
     }
 
+    /// <summary>
+    /// Locks the job row until the caller's transaction ends, so no other worker can reclaim it meanwhile, and fails unless the caller still
+    /// holds a live lease. Handlers call it inside the transaction of their final save.
+    /// </summary>
+    public static async Task FenceAsync(ClarityDbContext db, CollectionJob job, DateTimeOffset now, CancellationToken cancellationToken)
+    {
+        var fenced = await db.CollectionJobs.FromSql($"""
+            SELECT * FROM dbo.CollectionJobs WITH (UPDLOCK, HOLDLOCK)
+            WHERE WorkspaceId = {job.WorkspaceId} AND Id = {job.Id}
+            """).AsNoTracking().SingleAsync(cancellationToken);
+        if (fenced.LeaseToken != job.LeaseToken || fenced.State != CollectionRunState.Running
+            || fenced.CancellationRequested || fenced.LeaseExpiresAtUtc <= now)
+        {
+            throw new OperationCanceledException("Job lease lost.", cancellationToken);
+        }
+    }
+
     public static IQueryable<CollectionJob> OwnedLease(ClarityDbContext db, CollectionJob job, DateTimeOffset now) =>
         db.CollectionJobs.Where(x => x.WorkspaceId == job.WorkspaceId && x.Id == job.Id
             && x.State == CollectionRunState.Running && x.LeaseToken == job.LeaseToken && x.LeaseExpiresAtUtc > now);

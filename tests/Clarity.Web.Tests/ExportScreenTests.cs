@@ -150,4 +150,11 @@ internal sealed class TestExportStore : IExportStore
         blobs.TryRemove(blobName, out _);
         return Task.CompletedTask;
     }
+
+    public Task<int> PurgeExportAsync(Guid workspaceId, Guid exportId, IReadOnlySet<string> keep, CancellationToken cancellationToken)
+    {
+        var prefix = $"{workspaceId:N}/{exportId:N}/";
+        return Task.FromResult(blobs.Keys.Where(k => k.StartsWith(prefix, StringComparison.Ordinal) && !keep.Contains(k))
+            .ToList().Count(k => blobs.TryRemove(k, out _)));
+    }
 }

@@ -50,6 +50,7 @@ public sealed partial class ClarityDbContext
         key.Property(x => x.IsPrimary).HasDefaultValue(true);
         key.Property(x => x.SearchId).HasMaxLength(500).HasComputedColumnSql("UPPER([ExternalId])", stored: true);
         key.HasIndex(x => new { x.WorkspaceId, x.SearchId });
+        key.HasIndex(x => new { x.WorkspaceId, x.ObjectId, x.IsPrimary }).IncludeProperties(x => new { x.Namespace, x.ExternalId });
         key.HasIndex(x => new { x.WorkspaceId, x.EnvironmentId, x.Namespace, x.Type, x.ExternalId }).IsUnique()
             .HasFilter("[IsPrimary] = 1");
 

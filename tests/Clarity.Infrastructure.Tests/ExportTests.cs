@@ -227,4 +227,13 @@ internal sealed class MemoryExportStore : IExportStore
         files.TryRemove(blobName, out _);
         return Task.CompletedTask;
     }
+
+    public Task<int> PurgeExportAsync(Guid workspaceId, Guid exportId, IReadOnlySet<string> keep, CancellationToken cancellationToken)
+    {
+        var prefix = $"{workspaceId:N}/{exportId:N}/";
+        return Task.FromResult(files.Keys.Where(k => k.StartsWith(prefix, StringComparison.Ordinal) && !keep.Contains(k))
+            .ToList().Count(k => files.TryRemove(k, out _)));
+    }
+
+    public IReadOnlyList<string> Names => [.. files.Keys];
 }

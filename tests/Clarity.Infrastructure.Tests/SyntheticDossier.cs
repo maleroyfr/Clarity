@@ -22,18 +22,29 @@ internal sealed class SyntheticDossier
     internal static readonly string[] Departments = ["Sales", "Finance", "Operations", "Research"];
     private static readonly string[] UserFields = ["displayName", "userPrincipalName", "mail", "sAMAccountName", "distinguishedName", "enabled"];
     private static readonly string[] GroupFields = ["displayName", "distinguishedName"];
-    private static readonly CollectionScope DomainScope = new("domain", Domain);
     private readonly int seed;
+    private readonly string domain;
+    private readonly string usersSection;
+    private readonly string groupsSection;
+    private readonly string domainComponents;
+    private readonly CollectionScope domainScope;
 
-    internal SyntheticDossier(int users = 12, int projectMemberships = 2, int seed = 6)
+    /// <param name="domain">The AD domain of the users and groups; volume tests shard a forest into several domains, each with its own seed.</param>
+    internal SyntheticDossier(int users = 12, int projectMemberships = 2, int seed = 6, string domain = Domain)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(users, 1);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(users, 99_999);
         ArgumentOutOfRangeException.ThrowIfNegative(projectMemberships);
+        ArgumentException.ThrowIfNullOrWhiteSpace(domain);
         Users = users;
         ProjectMemberships = projectMemberships;
         ProjectGroups = Math.Max(projectMemberships + 1, users / 25);
         this.seed = seed;
+        this.domain = domain;
+        usersSection = $"ad.users:{domain}";
+        groupsSection = $"ad.groups:{domain}";
+        domainComponents = string.Join(',', domain.Split('.').Select(part => $"DC={part}"));
+        domainScope = new("domain", domain);
     }
 
     internal int Users { get; }
@@ -61,7 +72,7 @@ internal sealed class SyntheticDossier
     internal IEnumerable<int> ProjectsOf(int index) => Enumerable.Range(0, ProjectMemberships).Select(k => (index - 1 + k) % ProjectGroups + 1);
 
     /// <summary>
-    /// An AD forest package for the <c>example.test</c> domain observed on <paramref name="day"/>. Renamed users get a new UPN and mail under
+    /// An AD forest package for the dossier's domain observed on <paramref name="day"/>. Renamed users get a new UPN and mail under
     /// the same object GUID. <paramref name="groups"/> null leaves the groups section out; Failed (with an access error) or NotApplicable omit
     /// group data, Partial keeps it with a warning.
     /// </summary>
@@ -78,13 +89,13 @@ internal sealed class SyntheticDossier
         {
             objects.AddRange(Enumerable.Range(1, Users).Select(i =>
             {
-                var upn = Upn(i, renamed.Contains(i));
+                var upn = Upn(i, renamed.Contains(i), domain);
                 var name = $"u{i:D5}";
-                return new ObjectRecord(UsersSection, "user", "ad.objectGUID", UserId(i), date, Attributes(("displayName", DisplayName(i)),
+                return new ObjectRecord(usersSection, "user", "ad.objectGUID", UserId(i), date, Attributes(("displayName", DisplayName(i)),
                     ("userPrincipalName", upn), ("mail", upn), ("sAMAccountName", name),
-                    ("distinguishedName", $"CN={name},OU={Department(i)},DC=example,DC=test"), ("enabled", i % 7 != 0)));
+                    ("distinguishedName", $"CN={name},OU={Department(i)},{domainComponents}"), ("enabled", i % 7 != 0)));
             }));
-            results.Add(new(UsersSection, "ad.users", CoverageStatus.Complete, DomainScope, UserFields, [], Users, 0, [], []));
+            results.Add(new(usersSection, "ad.users", CoverageStatus.Complete, domainScope, UserFields, [], Users, 0, [], []));
         }
         if (groups is { } status)
         {
@@ -92,8 +103,8 @@ internal sealed class SyntheticDossier
             if (withData)
             {
                 var names = new[] { AllStaff }.Concat(Departments).Concat(Enumerable.Range(1, ProjectGroups).Select(p => $"project-{p}"));
-                objects.AddRange(names.Select(name => new ObjectRecord(GroupsSection, "group", "ad.objectGUID", GroupId(name), date,
-                    Attributes(("displayName", $"Synthetic {name}"), ("distinguishedName", $"CN={name},OU=Groups,DC=example,DC=test")))));
+                objects.AddRange(names.Select(name => new ObjectRecord(groupsSection, "group", "ad.objectGUID", GroupId(name), date,
+                    Attributes(("displayName", $"Synthetic {name}"), ("distinguishedName", $"CN={name},OU=Groups,{domainComponents}")))));
                 links.AddRange(Departments.Select(d => Member("group", GroupId(d), GroupId(AllStaff), date)));
                 for (var i = 1; i <= Users; i++)
                 {
@@ -103,11 +114,11 @@ internal sealed class SyntheticDossier
             }
             SectionIssue[] warnings = status == CoverageStatus.Partial ? [new("Limited", "Synthetic partial group read.")] : [];
             SectionIssue[] errors = status == CoverageStatus.Failed ? [new("AccessDenied", "Synthetic group read failure.")] : [];
-            results.Add(new(GroupsSection, "ad.groups", status, DomainScope, withData ? GroupFields : [], withData ? ["memberOf"] : [],
+            results.Add(new(groupsSection, "ad.groups", status, domainScope, withData ? GroupFields : [], withData ? ["memberOf"] : [],
                 withData ? Groups : null, withData ? links.Count : null, warnings, errors));
         }
-        var key = $"ad|{forest}|{day}|{users}|{groups}|{requestId}|{string.Join(',', renamed.Order())}";
-        return new(new PackageManifest("1.0", Guid.Parse(Id("run", key)), "clarity.ad", "1.0.0", "AdForest", forest, DomainScope, date,
+        var key = $"ad|{forest}|{day}|{users}|{groups}|{requestId}|{string.Join(',', renamed.Order())}{(domain == Domain ? "" : $"|{domain}")}";
+        return new(new PackageManifest("1.0", Guid.Parse(Id("run", key)), "clarity.ad", "1.0.0", "AdForest", forest, domainScope, date,
             date.AddMinutes(30), new Dictionary<string, string>(), "Synthetic dossier", requestId), objects, links, results);
     }
 
@@ -135,8 +146,8 @@ internal sealed class SyntheticDossier
             ]);
     }
 
-    private static RelationshipRecord Member(string type, string id, string group, DateTimeOffset date) =>
-        new(GroupsSection, "memberOf", new ExternalReference(type, "ad.objectGUID", id), new ExternalReference("group", "ad.objectGUID", group), date);
+    private RelationshipRecord Member(string type, string id, string group, DateTimeOffset date) =>
+        new(groupsSection, "memberOf", new ExternalReference(type, "ad.objectGUID", id), new ExternalReference("group", "ad.objectGUID", group), date);
 
     private static Dictionary<string, JsonElement> Attributes(params (string Name, object Value)[] values) =>
         values.ToDictionary(x => x.Name, x => JsonSerializer.SerializeToElement(x.Value));

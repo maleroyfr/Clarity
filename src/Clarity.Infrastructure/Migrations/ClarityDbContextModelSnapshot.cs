@@ -16,7 +16,7 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261127050122_GlobalProjectIdentifiers";
+    public override string LastMigrationId => "20261127104959_VolumeIndexes";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -903,6 +903,10 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
                 b.HasIndex("WorkspaceId", "SearchId");
 
                 b.HasIndex("WorkspaceId", "EnvironmentId", "ObjectId");
+
+                var index = b.HasIndex("WorkspaceId", "ObjectId", "IsPrimary");
+
+                SqlServerIndexBuilderExtensions.IncludeProperties(index, new[] { "Namespace", "ExternalId" });
 
                 b.HasIndex("WorkspaceId", "EnvironmentId", "Namespace", "Type", "ExternalId")
                     .IsUnique()

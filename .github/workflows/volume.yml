@@ -1,0 +1,73 @@
+name: Volume
+
+# Large-volume timing on a disposable SQL Server with synthetic data only (docs/resilience-performance.md).
+on:
+  workflow_dispatch:
+    inputs:
+      users_per_shard:
+        description: Synthetic users per AD domain shard; five shards, 10000 gives 50,000 users and 500,020 memberships
+        required: false
+        default: '10000'
+  schedule:
+    - cron: '0 3 * * 1'
+  push:
+    branches:
+      - 'ci/volume-**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: volume-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  volume:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    services:
+      sql:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: Y
+          MSSQL_SA_PASSWORD: Clarity-Volume-${{ github.run_id }}-${{ github.run_attempt }}!
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$MSSQL_SA_PASSWORD\" -C -Q 'SELECT 1' -b"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 15
+    env:
+      DOTNET_NOLOGO: true
+      DOTNET_CLI_TELEMETRY_OPTOUT: true
+      CLARITY_TEST_SQL: Server=localhost,1433;Database=master;User Id=sa;Password=Clarity-Volume-${{ github.run_id }}-${{ github.run_attempt }}!;Encrypt=True;TrustServerCertificate=True
+      CLARITY_TEST_VOLUME: ${{ inputs.users_per_shard || '10000' }}
+      CLARITY_VOLUME_REPORT: ${{ github.workspace }}/artifacts/volume-report.md
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - run: dotnet restore
+      - run: dotnet build --no-restore --configuration Release -warnaserror
+      - name: Volume test
+        run: |
+          mkdir -p artifacts
+          : > "$CLARITY_VOLUME_REPORT"
+          tail -n +1 -F "$CLARITY_VOLUME_REPORT" &
+          tail_pid=$!
+          trap 'kill "$tail_pid" || true' EXIT
+          dotnet test --project tests/Clarity.Infrastructure.Tests --no-build --configuration Release --filter-trait "Category=Volume"
+      - name: Publish timing report
+        if: always()
+        run: test -s "$CLARITY_VOLUME_REPORT" && cat "$CLARITY_VOLUME_REPORT" >> "$GITHUB_STEP_SUMMARY" || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: volume-report-${{ github.run_id }}
+          path: artifacts/volume-report.md
+          retention-days: 30
+          if-no-files-found: ignore

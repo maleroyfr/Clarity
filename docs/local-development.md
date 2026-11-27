@@ -86,7 +86,8 @@ Neither endpoint returns configuration, exception text or inventory.
 
 Logs are JSON with a generated W3C trace/correlation ID returned in
 `X-Correlation-ID`. Only Clarity-owned, sanitized log messages are enabled.
-OpenTelemetry records HTTP status/duration and UI operation spans; it intentionally
+OpenTelemetry records HTTP status/duration and UI operation spans, and the
+`Clarity.Publication` stage spans (name and duration only); it intentionally
 does not auto-instrument SQL, outbound HTTP, authentication or framework logs that
 could include query strings, exception contents or customer data. New telemetry
 must follow this allowlist approach, not export then redact. No request body,

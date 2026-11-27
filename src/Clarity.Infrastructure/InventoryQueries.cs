@@ -84,10 +84,16 @@ public sealed class InventoryQueries(IDbContextFactory<ClarityDbContext> factory
         if (term.Length != 0)
         {
             var literal = search.Trim();
-            query = query.Where(i => i.SearchName != null && i.SearchName.StartsWith(term)
-                || db.ExternalKeys.Any(k => k.WorkspaceId == workspace && k.ObjectId == i.Id && k.SearchId!.StartsWith(term))
-                || db.AlternateKeyPeriods.Any(k => k.WorkspaceId == workspace && k.ObjectId == i.Id
-                    && (k.NormalizedValue.StartsWith(term) || k.NormalizedValue.StartsWith(literal))));
+            // A union of prefix seeks on each search index; an OR of correlated EXISTS probes every object of the project instead.
+            var matches = db.InventoryObjects.Where(i => i.WorkspaceId == workspace && i.SearchName!.StartsWith(term)).Select(i => i.Id)
+                .Concat(db.ExternalKeys.Where(k => k.WorkspaceId == workspace && k.SearchId!.StartsWith(term)).Select(k => k.ObjectId))
+                .Concat(db.AlternateKeyPeriods.Where(k => k.WorkspaceId == workspace && k.NormalizedValue.StartsWith(term)).Select(k => k.ObjectId));
+            if (literal != term)
+            {
+                matches = matches.Concat(db.AlternateKeyPeriods.Where(k => k.WorkspaceId == workspace && k.NormalizedValue.StartsWith(literal))
+                    .Select(k => k.ObjectId));
+            }
+            query = query.Where(i => matches.Contains(i.Id));
         }
         return query;
     }
@@ -109,7 +115,10 @@ public sealed class InventoryQueries(IDbContextFactory<ClarityDbContext> factory
             (null or "" or nameof(InventoryRow.DisplayName), false) => query.OrderBy(i => i.DisplayName),
             _ => throw new ArgumentException("Unknown inventory sort column.")
         };
-        var rows = await (from i in ordered.ThenBy(i => i.Id).Skip(page.Start).Take(page.Count)
+        // Page the identifiers first, so the per-row lookups below run only for the rows of this page, however deep it is.
+        var ids = await ordered.ThenBy(i => i.Id).Skip(page.Start).Take(page.Count).Select(i => i.Id).ToListAsync(token);
+        var rows = await (from i in db.InventoryObjects.AsNoTracking()
+                          where i.WorkspaceId == project.WorkspaceId && ids.Contains(i.Id)
                           select new InventoryRow(i.Id, i.EnvironmentId, db.Environments.Where(e => e.WorkspaceId == i.WorkspaceId && e.Id == i.EnvironmentId)
                               .Select(e => e.ExternalId).Single(), i.DisplayName, i.Type, i.Presence, i.Domain, i.Site, i.UserPrincipalName, i.Smtp, i.Enabled,
                               i.LastObservedAtUtc, db.ExternalKeys.Where(k => k.WorkspaceId == i.WorkspaceId && k.ObjectId == i.Id && k.IsPrimary)
@@ -121,6 +130,7 @@ public sealed class InventoryQueries(IDbContextFactory<ClarityDbContext> factory
                               db.CurrentValues.Any(v => v.WorkspaceId == i.WorkspaceId && v.ObjectId == i.Id && v.Field == "mail"),
                               db.CurrentValues.Where(v => v.WorkspaceId == i.WorkspaceId && v.ObjectId == i.Id && v.Field == filter.Volume)
                                   .Select(v => v.ValueJson).FirstOrDefault())).ToListAsync(token);
-        return new(rows, count);
+        var position = ids.Select((id, index) => (id, index)).ToDictionary(x => x.id, x => x.index);
+        return new([.. rows.OrderBy(r => position[r.Id])], count);
     }
 }

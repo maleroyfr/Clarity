@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -71,13 +72,54 @@ public sealed class PublicationService(
             throw new ContractException("EnvironmentMismatch", "manifest.json");
         }
         var changedObjects = new List<Guid>();
+        using (Stage("Publication.Observations"))
+        {
+            await AddObservationsAsync(db, project, run, section, package, sectionId, changedObjects, cancellationToken);
+        }
+        using (Stage("Publication.AlternateKeys"))
+        {
+            await AlternateKeyProjection.RebuildAsync(db, project.WorkspaceId, run.EnvironmentId, changedObjects, cancellationToken);
+        }
+        IReadOnlyCollection<Guid> affected;
+        using (Stage("Publication.CurrentValues"))
+        {
+            affected = await CurrentProjection.RefreshAsync(db, catalog, run.WorkspaceId, run.EnvironmentId, section, changedObjects, cancellationToken);
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        using (Stage("Publication.DecisionReview"))
+        {
+            await DecisionReviewProjection.RefreshAsync(db, run.WorkspaceId, project.Id, affected, cancellationToken);
+        }
+        using (Stage("Publication.Relationships"))
+        {
+            await RelationshipProjection.RefreshAsync(db, catalog, run.WorkspaceId, run.EnvironmentId, cancellationToken);
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        using (Stage("Publication.Matching"))
+        {
+            await InventoryMatching.RefreshAsync(db, project, cancellationToken);
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        using (Stage("Publication.Commit"))
+        {
+            await transaction.CommitAsync(cancellationToken);
+        }
+    }
+
+    private static async Task AddObservationsAsync(ClarityDbContext db, Project project, CollectionRun run, SectionRun section,
+        DiscoveryPackage package, string sectionId, List<Guid> changedObjects, CancellationToken cancellationToken)
+    {
+        // Key columns use a binary collation, so ordinal tuple equality matches the unique primary-key index exactly.
+        var keys = await db.ExternalKeys.AsNoTracking().Where(x => x.IsPrimary && x.WorkspaceId == project.WorkspaceId
+                && x.EnvironmentId == run.EnvironmentId)
+            .Select(x => new { x.Namespace, x.Type, x.ExternalId, x.ObjectId })
+            .ToDictionaryAsync(x => (x.Namespace, x.Type, x.ExternalId), x => x.ObjectId, cancellationToken);
         foreach (var record in package.Objects.Where(x => x.SectionId == sectionId))
         {
-            var reference = new ExternalReference(record.Type, record.Namespace, record.ExternalId);
-            var key = await FindKeyAsync(reference);
-            var objectId = key?.ObjectId ?? Guid.NewGuid();
-            if (key is null)
+            if (!keys.TryGetValue((record.Namespace, record.Type, record.ExternalId), out var objectId))
             {
+                objectId = Guid.NewGuid();
+                keys.Add((record.Namespace, record.Type, record.ExternalId), objectId);
                 db.InventoryObjects.Add(new InventoryObject
                 {
                     Id = objectId,
@@ -85,7 +127,15 @@ public sealed class PublicationService(
                     EnvironmentId = run.EnvironmentId,
                     Type = record.Type
                 });
-                AddKey(reference, objectId);
+                db.ExternalKeys.Add(new ExternalKey
+                {
+                    WorkspaceId = project.WorkspaceId,
+                    EnvironmentId = run.EnvironmentId,
+                    ObjectId = objectId,
+                    Namespace = record.Namespace,
+                    Type = record.Type,
+                    ExternalId = record.ExternalId
+                });
             }
             changedObjects.Add(objectId);
             db.ObjectObservations.Add(new ObjectObservation
@@ -121,33 +171,12 @@ public sealed class PublicationService(
         }
         section.PublishedAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync(cancellationToken);
-        await AlternateKeyProjection.RebuildAsync(db, project.WorkspaceId, run.EnvironmentId, changedObjects, cancellationToken);
-        var affected = await CurrentProjection.RefreshAsync(db, catalog, run.WorkspaceId, run.EnvironmentId, section, changedObjects, cancellationToken);
-        await db.SaveChangesAsync(cancellationToken);
-        await DecisionReviewProjection.RefreshAsync(db, run.WorkspaceId, project.Id, affected, cancellationToken);
-        await RelationshipProjection.RefreshAsync(db, catalog, run.WorkspaceId, run.EnvironmentId, cancellationToken);
-        await db.SaveChangesAsync(cancellationToken);
-        await InventoryMatching.RefreshAsync(db, project, cancellationToken);
-        await db.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
-        return;
-
-        async Task<ExternalKey?> FindKeyAsync(ExternalReference reference) =>
-            db.ExternalKeys.Local.FirstOrDefault(x => x.IsPrimary && x.WorkspaceId == project.WorkspaceId && x.EnvironmentId == run.EnvironmentId
-                && x.Namespace == reference.Namespace && x.Type == reference.Type && x.ExternalId == reference.ExternalId)
-            ?? await db.ExternalKeys.SingleOrDefaultAsync(x => x.IsPrimary && x.WorkspaceId == project.WorkspaceId && x.EnvironmentId == run.EnvironmentId
-                && x.Namespace == reference.Namespace && x.Type == reference.Type && x.ExternalId == reference.ExternalId, cancellationToken);
-
-        void AddKey(ExternalReference reference, Guid objectId) => db.ExternalKeys.Add(new ExternalKey
-        {
-            WorkspaceId = project.WorkspaceId,
-            EnvironmentId = run.EnvironmentId,
-            ObjectId = objectId,
-            Namespace = reference.Namespace,
-            Type = reference.Type,
-            ExternalId = reference.ExternalId
-        });
     }
+
+    /// <summary>Publication stages as activities, so operators and the volume harness can see where a publication spends its time.</summary>
+    public static readonly ActivitySource Activities = new("Clarity.Publication");
+
+    private static Activity? Stage(string name) => Activities.StartActivity(name);
 
     internal static Task LockEnvironmentAsync(ClarityDbContext db, Guid workspaceId, Guid environmentId, CancellationToken cancellationToken) =>
         db.Database.ExecuteSqlAsync($"""
