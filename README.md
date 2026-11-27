@@ -54,6 +54,7 @@ Never use a production database for tests.
 - [Office settings, GPO links and security filtering](docs/connectors/office-gpo.md)
 - [SharePoint and OneDrive collection](docs/connectors/sharepoint-onedrive.md)
 - [Teams collection and chat/telephony qualifications](docs/connectors/teams.md)
+- [Migration scoping: populations, list import and scope decisions](docs/scoping.md)
 - [Azure provisioning, deployment and rollback](docs/deployment.md)
 - [Contributor conventions](.github/copilot-instructions.md)
 

@@ -59,6 +59,10 @@
         }
         <p><a href="@($"/projects/{ProjectId}/discovery?side={_side}")">@Text["ViewCollections"]</a></p>
     }
+    else if (Section == "scope")
+    {
+        <ScopePanel @key="(ProjectId, _side, DiscoveryView)" ProjectId="ProjectId" Side="_side" View="@DiscoveryView" />
+    }
     else
     {
         <EmptyState Title="@Text[Sections.GetValueOrDefault(Section, "NotFound")]" Description="@Text["LaterLot"]">

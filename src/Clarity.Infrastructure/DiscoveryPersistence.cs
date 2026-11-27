@@ -66,6 +66,7 @@ public sealed partial class ClarityDbContext
         ConfigureObservations(model);
         ConfigureMatching(model);
         ConfigureAssessments(model);
+        ConfigureScope(model);
         ConfigureJobs(model);
         var cursor = DiscoveryOwned<GraphCursor>(model);
         cursor.HasOne<ProjectEnvironment>().WithMany().HasForeignKey(x => new { x.WorkspaceId, x.EnvironmentId }).OnDelete(DeleteBehavior.NoAction);

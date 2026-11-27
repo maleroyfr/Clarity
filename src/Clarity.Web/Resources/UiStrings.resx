@@ -687,4 +687,66 @@
   <data name="QualificationScope_Unknown" xml:space="preserve"><value>À qualifier</value></data>
   <data name="QualificationScope_Included" xml:space="preserve"><value>Inclus dans le périmètre</value></data>
   <data name="QualificationScope_Excluded" xml:space="preserve"><value>Hors périmètre</value></data>
+  <data name="Populations" xml:space="preserve"><value>Populations</value></data>
+  <data name="ImportAssistant" xml:space="preserve"><value>Assistant d’import de liste</value></data>
+  <data name="ImportAssistantHint" xml:space="preserve"><value>Collez une valeur par ligne, choisissez l’identifiant de rapprochement, puis résolvez les correspondances. Les valeurs ambiguës ou introuvables restent visibles et ne sont jamais rattachées automatiquement.</value></data>
+  <data name="ScopeDecisions" xml:space="preserve"><value>Décisions de périmètre</value></data>
+  <data name="ScopeSummary" xml:space="preserve"><value>Synthèse des décisions de périmètre</value></data>
+  <data name="ScopeDecision_Include" xml:space="preserve"><value>Inclure</value></data>
+  <data name="ScopeDecision_Exclude" xml:space="preserve"><value>Exclure</value></data>
+  <data name="ScopeDecision_ToArbitrate" xml:space="preserve"><value>À arbitrer</value></data>
+  <data name="ScopeDecisionValue" xml:space="preserve"><value>Décision de périmètre</value></data>
+  <data name="ScopeDecisionFilter" xml:space="preserve"><value>Filtrer par décision</value></data>
+  <data name="NoWave" xml:space="preserve"><value>Sans vague</value></data>
+  <data name="NoScopeDecisions" xml:space="preserve"><value>Aucune décision de périmètre enregistrée.</value></data>
+  <data name="NoScopeDecision" xml:space="preserve"><value>Aucune décision : périmètre non qualifié</value></data>
+  <data name="ImportIdentifierLabel" xml:space="preserve"><value>Identifiant de rapprochement</value></data>
+  <data name="ImportIdentifier_UserPrincipalName" xml:space="preserve"><value>UPN</value></data>
+  <data name="ImportIdentifier_Smtp" xml:space="preserve"><value>Adresse SMTP</value></data>
+  <data name="ImportIdentifier_SamAccountName" xml:space="preserve"><value>sAMAccountName</value></data>
+  <data name="ImportIdentifier_ExternalId" xml:space="preserve"><value>Identifiant source</value></data>
+  <data name="ImportIdentifier_DisplayName" xml:space="preserve"><value>Nom affiché</value></data>
+  <data name="ImportValues" xml:space="preserve"><value>Valeurs importées</value></data>
+  <data name="ImportValuesHint" xml:space="preserve"><value>Une valeur par ligne, 5 000 lignes au maximum. Les doublons sont ignorés sans tenir compte de la casse.</value></data>
+  <data name="ResolveList" xml:space="preserve"><value>Résoudre la liste</value></data>
+  <data name="ScopeReadOnly" xml:space="preserve"><value>Consultation seule : vous ne pouvez pas modifier le périmètre de ce projet.</value></data>
+  <data name="CreatePopulation" xml:space="preserve"><value>Créer une population</value></data>
+  <data name="PopulationKind_Group" xml:space="preserve"><value>Groupe</value></data>
+  <data name="PopulationKind_OrganizationalUnit" xml:space="preserve"><value>Unité d’organisation</value></data>
+  <data name="PopulationKind_Domain" xml:space="preserve"><value>Domaine</value></data>
+  <data name="PopulationKind_Site" xml:space="preserve"><value>Site</value></data>
+  <data name="PopulationKind_Filter" xml:space="preserve"><value>Filtre</value></data>
+  <data name="PopulationKind_ImportedList" xml:space="preserve"><value>Liste importée</value></data>
+  <data name="PopulationCriterion_Group" xml:space="preserve"><value>Groupe</value></data>
+  <data name="PopulationCriterion_OrganizationalUnit" xml:space="preserve"><value>Nom distinctif de l’unité d’organisation (OU=…,DC=…)</value></data>
+  <data name="PopulationCriterion_Domain" xml:space="preserve"><value>Domaine (suffixe UPN ou SMTP)</value></data>
+  <data name="PopulationCriterion_Site" xml:space="preserve"><value>Site</value></data>
+  <data name="PopulationCriterion_Filter" xml:space="preserve"><value>Texte recherché (nom, UPN ou SMTP)</value></data>
+  <data name="GroupSearch" xml:space="preserve"><value>Rechercher un groupe</value></data>
+  <data name="PopulationGroup" xml:space="preserve"><value>Groupe racine (membres directs et imbriqués)</value></data>
+  <data name="PopulationMembers" xml:space="preserve"><value>Membres</value></data>
+  <data name="NoPopulationMembers" xml:space="preserve"><value>Aucun objet ne correspond à cette population.</value></data>
+  <data name="UnresolvedEntries" xml:space="preserve"><value>À résoudre</value></data>
+  <data name="EvaluatedAt" xml:space="preserve"><value>Évaluée le</value></data>
+  <data name="RefreshPopulation" xml:space="preserve"><value>Réévaluer</value></data>
+  <data name="NoPopulations" xml:space="preserve"><value>Aucune population. Créez-en une par groupe, unité d’organisation, domaine, site, filtre ou liste importée.</value></data>
+  <data name="ImportEntries" xml:space="preserve"><value>Lignes importées</value></data>
+  <data name="ImportResolutionFilter" xml:space="preserve"><value>Filtrer par résolution</value></data>
+  <data name="ImportResolution_Matched" xml:space="preserve"><value>Rapprochée</value></data>
+  <data name="ImportResolution_Ambiguous" xml:space="preserve"><value>Ambiguë</value></data>
+  <data name="ImportResolution_Unmatched" xml:space="preserve"><value>Introuvable</value></data>
+  <data name="ImportResolution_Chosen" xml:space="preserve"><value>Choisie par le consultant</value></data>
+  <data name="Candidates" xml:space="preserve"><value>Candidats</value></data>
+  <data name="ChooseCandidate" xml:space="preserve"><value>Choisir</value></data>
+  <data name="NoCandidates" xml:space="preserve"><value>Aucun candidat actuel pour cette valeur.</value></data>
+  <data name="NoImportEntries" xml:space="preserve"><value>Aucune ligne pour ce filtre.</value></data>
+  <data name="SelectObject" xml:space="preserve"><value>Sélectionner l’objet</value></data>
+  <data name="BatchDecision" xml:space="preserve"><value>Décision par lot</value></data>
+  <data name="MigrationWave" xml:space="preserve"><value>Vague de migration</value></data>
+  <data name="PreviewPopulationDecision" xml:space="preserve"><value>Aperçu pour toute la population</value></data>
+  <data name="PreviewSelectionDecision" xml:space="preserve"><value>Aperçu pour la sélection</value></data>
+  <data name="AffectedObjects" xml:space="preserve"><value>Objets affectés</value></data>
+  <data name="UnchangedObjects" xml:space="preserve"><value>Objets inchangés</value></data>
+  <data name="ScopeHistory" xml:space="preserve"><value>Historique de la décision</value></data>
+  <data name="ScopeNeedsReview" xml:space="preserve"><value>Les attributs clés ont changé depuis la décision : à revoir. La décision est conservée.</value></data>
 </root>

@@ -122,6 +122,30 @@ public static class ModelRules
             case ClientWorkspace workspace:
                 Name(workspace.Name);
                 break;
+            case Population population:
+                Name(population.Name);
+                if (!Enum.IsDefined(population.Kind) || population.Criterion.Length > 1000 || population.ObjectType is { Length: > 100 }
+                    || population.Status is { Length: > 50 } || population.MemberCount is < 0 or > ScopeRules.MaxPopulation
+                    || (population.Kind == PopulationKind.ImportedList) != population.Identifier.HasValue
+                    || (population.Kind == PopulationKind.Group) != population.RootObjectId.HasValue
+                    || population.Identifier is { } identifier && !Enum.IsDefined(identifier))
+                {
+                    throw new ArgumentException("Invalid population definition.");
+                }
+                break;
+            case PopulationEntry entry:
+                if (entry.Value.Length is < 1 or > 500 || !Enum.IsDefined(entry.Resolution) || entry.Line < 1
+                    || (entry.Resolution is ImportResolution.Matched or ImportResolution.Chosen) != entry.ObjectId.HasValue)
+                {
+                    throw new ArgumentException("Invalid imported list entry.");
+                }
+                break;
+            case ScopeDecision decision:
+                if (!Enum.IsDefined(decision.Value) || decision.Wave is { Length: > 100 } || decision.Fingerprint.Length != 64)
+                {
+                    throw new ArgumentException("Invalid scope decision.");
+                }
+                break;
             case Project project:
                 Name(project.Name);
                 if (!Enum.IsDefined(project.Scenario))

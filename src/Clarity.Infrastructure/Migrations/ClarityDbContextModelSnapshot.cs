@@ -16,7 +16,7 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261126234027_TeamsScopeAssessments";
+    public override string LastMigrationId => "20261127001220_ScopePopulations";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -945,6 +945,142 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
                 b.ToTable("PlatformAdmins");
             });
 
+        modelBuilder.Entity("Clarity.Core.Population", b =>
+            {
+                b.Property<Guid>("WorkspaceId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("Id")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("AuthorObjectId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("AuthorTenantId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<DateTimeOffset>("CreatedAtUtc")
+                    .HasColumnType("datetimeoffset");
+
+                b.Property<string>("Criterion")
+                    .IsRequired()
+                    .HasMaxLength(1000)
+                    .HasColumnType("nvarchar(1000)");
+
+                b.Property<Guid>("EnvironmentId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<DateTimeOffset>("EvaluatedAtUtc")
+                    .HasColumnType("datetimeoffset");
+
+                b.Property<int?>("Identifier")
+                    .HasColumnType("int");
+
+                b.Property<int>("Kind")
+                    .HasColumnType("int");
+
+                b.Property<int>("MemberCount")
+                    .HasColumnType("int");
+
+                b.Property<string>("Name")
+                    .IsRequired()
+                    .HasMaxLength(200)
+                    .HasColumnType("nvarchar(200)");
+
+                b.Property<string>("ObjectType")
+                    .HasMaxLength(100)
+                    .HasColumnType("nvarchar(100)");
+
+                b.Property<Guid>("ProjectId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid?>("RootObjectId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<string>("Status")
+                    .HasMaxLength(50)
+                    .HasColumnType("nvarchar(50)");
+
+                b.HasKey("WorkspaceId", "Id");
+
+                b.HasIndex("WorkspaceId", "EnvironmentId", "RootObjectId");
+
+                b.HasIndex("WorkspaceId", "ProjectId", "CreatedAtUtc");
+
+                b.HasIndex("WorkspaceId", "ProjectId", "EnvironmentId");
+
+                b.ToTable("Populations");
+            });
+
+        modelBuilder.Entity("Clarity.Core.PopulationEntry", b =>
+            {
+                b.Property<Guid>("WorkspaceId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("Id")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<int>("CandidateCount")
+                    .HasColumnType("int");
+
+                b.Property<int>("Line")
+                    .HasColumnType("int");
+
+                b.Property<Guid?>("ObjectId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("PopulationId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<int>("Resolution")
+                    .HasColumnType("int");
+
+                b.Property<string>("Value")
+                    .IsRequired()
+                    .HasMaxLength(500)
+                    .HasColumnType("nvarchar(500)");
+
+                b.HasKey("WorkspaceId", "Id");
+
+                b.HasIndex("WorkspaceId", "ObjectId");
+
+                b.HasIndex("WorkspaceId", "PopulationId", "Line")
+                    .IsUnique();
+
+                b.ToTable("PopulationEntries");
+            });
+
+        modelBuilder.Entity("Clarity.Core.PopulationMember", b =>
+            {
+                b.Property<Guid>("WorkspaceId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("Id")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("EnvironmentId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("ObjectId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("PopulationId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.HasKey("WorkspaceId", "Id");
+
+                b.HasIndex("WorkspaceId", "ObjectId");
+
+                b.HasIndex("WorkspaceId", "EnvironmentId", "ObjectId");
+
+                b.HasIndex("WorkspaceId", "EnvironmentId", "PopulationId");
+
+                b.HasIndex("WorkspaceId", "PopulationId", "ObjectId")
+                    .IsUnique();
+
+                b.ToTable("PopulationMembers");
+            });
+
         modelBuilder.Entity("Clarity.Core.Project", b =>
             {
                 b.Property<Guid>("WorkspaceId")
@@ -1134,6 +1270,126 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
                 b.HasIndex("WorkspaceId", "RelationshipId");
 
                 b.ToTable("RelationshipSupports");
+            });
+
+        modelBuilder.Entity("Clarity.Core.ScopeDecision", b =>
+            {
+                b.Property<Guid>("WorkspaceId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("Id")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("EnvironmentId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<string>("Fingerprint")
+                    .IsRequired()
+                    .HasMaxLength(64)
+                    .IsUnicode(false)
+                    .HasColumnType("varchar(64)");
+
+                b.Property<Guid>("ObjectId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid?>("PopulationId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("ProjectId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<long>("Revision")
+                    .IsConcurrencyToken()
+                    .HasColumnType("bigint");
+
+                b.Property<DateTimeOffset>("UpdatedAtUtc")
+                    .HasColumnType("datetimeoffset");
+
+                b.Property<int>("Value")
+                    .HasColumnType("int");
+
+                b.Property<string>("Wave")
+                    .HasMaxLength(100)
+                    .HasColumnType("nvarchar(100)");
+
+                b.HasKey("WorkspaceId", "Id");
+
+                b.HasIndex("WorkspaceId", "PopulationId");
+
+                b.HasIndex("WorkspaceId", "EnvironmentId", "ObjectId");
+
+                b.HasIndex("WorkspaceId", "ProjectId", "EnvironmentId");
+
+                b.HasIndex("WorkspaceId", "ProjectId", "ObjectId")
+                    .IsUnique();
+
+                b.HasIndex("WorkspaceId", "ProjectId", "Value", "Wave");
+
+                b.ToTable("ScopeDecisions");
+            });
+
+        modelBuilder.Entity("Clarity.Core.ScopeDecisionRevision", b =>
+            {
+                b.Property<Guid>("WorkspaceId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("Id")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("ActorObjectId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("ActorTenantId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid>("DecisionId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid?>("EvidenceObservationId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<string>("Fingerprint")
+                    .IsRequired()
+                    .HasMaxLength(64)
+                    .IsUnicode(false)
+                    .HasColumnType("varchar(64)");
+
+                b.Property<long>("Number")
+                    .HasColumnType("bigint");
+
+                b.Property<DateTimeOffset>("OccurredAtUtc")
+                    .HasColumnType("datetimeoffset");
+
+                b.Property<Guid>("OperationId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<Guid?>("PopulationId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<string>("Reason")
+                    .IsRequired()
+                    .HasMaxLength(1000)
+                    .HasColumnType("nvarchar(1000)");
+
+                b.Property<int>("Value")
+                    .HasColumnType("int");
+
+                b.Property<string>("Wave")
+                    .HasMaxLength(100)
+                    .HasColumnType("nvarchar(100)");
+
+                b.HasKey("WorkspaceId", "Id");
+
+                b.HasIndex("WorkspaceId", "EvidenceObservationId");
+
+                b.HasIndex("WorkspaceId", "OperationId");
+
+                b.HasIndex("WorkspaceId", "PopulationId");
+
+                b.HasIndex("WorkspaceId", "DecisionId", "Number")
+                    .IsUnique();
+
+                b.ToTable("ScopeDecisionRevisions");
             });
 
         modelBuilder.Entity("Clarity.Core.SectionRun", b =>
@@ -1566,6 +1822,71 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
                     .IsRequired();
             });
 
+        modelBuilder.Entity("Clarity.Core.Population", b =>
+            {
+                b.HasOne("Clarity.Core.ClientWorkspace", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+
+                b.HasOne("Clarity.Core.InventoryObject", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId", "EnvironmentId", "RootObjectId")
+                    .HasPrincipalKey("WorkspaceId", "EnvironmentId", "Id")
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                b.HasOne("Clarity.Core.ProjectEnvironment", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId", "ProjectId", "EnvironmentId")
+                    .HasPrincipalKey("WorkspaceId", "ProjectId", "Id")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+            });
+
+        modelBuilder.Entity("Clarity.Core.PopulationEntry", b =>
+            {
+                b.HasOne("Clarity.Core.ClientWorkspace", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+
+                b.HasOne("Clarity.Core.InventoryObject", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId", "ObjectId")
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                b.HasOne("Clarity.Core.Population", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId", "PopulationId")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+            });
+
+        modelBuilder.Entity("Clarity.Core.PopulationMember", b =>
+            {
+                b.HasOne("Clarity.Core.ClientWorkspace", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+
+                b.HasOne("Clarity.Core.InventoryObject", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId", "EnvironmentId", "ObjectId")
+                    .HasPrincipalKey("WorkspaceId", "EnvironmentId", "Id")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+
+                b.HasOne("Clarity.Core.Population", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId", "EnvironmentId", "PopulationId")
+                    .HasPrincipalKey("WorkspaceId", "EnvironmentId", "Id")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+            });
+
         modelBuilder.Entity("Clarity.Core.Project", b =>
             {
                 b.HasOne("Clarity.Core.ClientWorkspace", null)
@@ -1639,6 +1960,59 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
                     .HasForeignKey("WorkspaceId", "RelationshipId")
                     .OnDelete(DeleteBehavior.NoAction)
                     .IsRequired();
+            });
+
+        modelBuilder.Entity("Clarity.Core.ScopeDecision", b =>
+            {
+                b.HasOne("Clarity.Core.ClientWorkspace", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+
+                b.HasOne("Clarity.Core.Population", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId", "PopulationId")
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                b.HasOne("Clarity.Core.InventoryObject", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId", "EnvironmentId", "ObjectId")
+                    .HasPrincipalKey("WorkspaceId", "EnvironmentId", "Id")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+
+                b.HasOne("Clarity.Core.ProjectEnvironment", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId", "ProjectId", "EnvironmentId")
+                    .HasPrincipalKey("WorkspaceId", "ProjectId", "Id")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+            });
+
+        modelBuilder.Entity("Clarity.Core.ScopeDecisionRevision", b =>
+            {
+                b.HasOne("Clarity.Core.ClientWorkspace", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+
+                b.HasOne("Clarity.Core.ScopeDecision", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId", "DecisionId")
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .IsRequired();
+
+                b.HasOne("Clarity.Core.ObjectObservation", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId", "EvidenceObservationId")
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                b.HasOne("Clarity.Core.Population", null)
+                    .WithMany()
+                    .HasForeignKey("WorkspaceId", "PopulationId")
+                    .OnDelete(DeleteBehavior.NoAction);
             });
 
         modelBuilder.Entity("Clarity.Core.SectionRun", b =>

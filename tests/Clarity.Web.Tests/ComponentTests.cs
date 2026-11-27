@@ -157,6 +157,21 @@ public class ComponentTests : BunitContext
     }
 
     [Fact]
+    public void Every_scope_enum_value_has_a_french_label()
+    {
+        var text = Services.GetRequiredService<Microsoft.Extensions.Localization.IStringLocalizer<UiStrings>>();
+        var keys = Enum.GetNames<ScopeValue>().Select(x => $"ScopeDecision_{x}")
+            .Concat(Enum.GetNames<PopulationKind>().Select(x => $"PopulationKind_{x}"))
+            .Concat(Enum.GetNames<PopulationKind>().Where(x => x != nameof(PopulationKind.ImportedList)).Select(x => $"PopulationCriterion_{x}"))
+            .Concat(Enum.GetNames<ImportIdentifier>().Select(x => $"ImportIdentifier_{x}"))
+            .Concat(Enum.GetNames<ImportResolution>().Select(x => $"ImportResolution_{x}"));
+        foreach (var key in keys)
+        {
+            text[key].ResourceNotFound.ShouldBeFalse(key);
+        }
+    }
+
+    [Fact]
     public void Every_supported_report_profile_and_declared_limit_has_a_french_label()
     {
         var text = Services.GetRequiredService<Microsoft.Extensions.Localization.IStringLocalizer<UiStrings>>();

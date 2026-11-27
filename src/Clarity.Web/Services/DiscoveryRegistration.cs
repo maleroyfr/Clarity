@@ -45,6 +45,7 @@ public static class DiscoveryRegistration
         services.AddScoped<SsoQualificationService>();
         services.AddScoped<TeamsQualificationService>();
         services.AddScoped<InventoryOverview>();
+        services.AddScoped<ScopeService>();
         services.AddScoped<ScriptRequestService>();
         services.AddScoped<GraphDiscoveryService>();
         services.AddScoped<JobService>();

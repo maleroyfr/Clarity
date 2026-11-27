@@ -1,0 +1,315 @@
+@using Clarity.Infrastructure
+@inherits FoundationPage
+@inject ScopeService Scope
+@inject FoundationService Foundation
+@inject WorkspaceAuthorization Authorization
+@inject NavigationManager Navigation
+
+<section aria-label="@Text["Scope"]">
+    <h2>@Text["Scope"] · @Text[Side.ToString()]</h2>
+    <nav class="toolbar" aria-label="@Text["Scope"]">
+        <a href="@Link(null)">@Text["Populations"]</a>
+        <a href="@Link("import")">@Text["ImportAssistant"]</a>
+        <a href="@Link("decisions")">@Text["ScopeDecisions"]</a>
+    </nav>
+    @if (Error is not null) { <p class="error" role="alert">@Error</p> }
+    @if (_message is not null) { <p role="status">@_message</p> }
+    @if (_summary is { } summary)
+    {
+        <p>@Text["Populations"] : @summary.Populations</p>
+        <ul aria-label="@Text["ScopeSummary"]">
+            @foreach (var count in summary.Counts)
+            { <li>@Text[$"ScopeDecision_{count.Value}"] · @(count.Wave ?? Text["NoWave"].Value) : @count.Count</li> }
+            @if (summary.Counts.Count == 0) { <li>@Text["NoScopeDecisions"]</li> }
+        </ul>
+    }
+    @if (View == "decisions")
+    {
+        <label>@Text["ScopeDecisionFilter"] <select value="@_filter" @onchange="ChangeFilter">
+            <option value="All">@Text["All"]</option>
+            @foreach (var value in Enum.GetValues<ScopeValue>()) { <option value="@value">@Text[$"ScopeDecision_{value}"]</option> }
+        </select></label>
+        <FluentTextInput Label="@Text["Search"]" @bind-Value="_search" />
+        <ClarityGrid @key="(ProjectId, Side, _filter, _search, _revision)" TGridItem="ScopeObjectRow" Search="@_search"
+                     Load="@((p, ct) => Scope.DecisionsAsync(ProjectId, Side, _filter, p, ct))">
+            <Columns>@ObjectColumns</Columns>
+            <EmptyContent><p>@Text["NoScopeDecisions"]</p></EmptyContent>
+        </ClarityGrid>
+    }
+    else
+    {
+        @if (View == "import")
+        {
+            <h3>@Text["ImportAssistant"]</h3>
+            <p>@Text["ImportAssistantHint"]</p>
+            @if (_canQualify && _environments.Count != 0)
+            {
+                <label>@Text["Environments"] <select @bind="_environment">@foreach (var e in _environments) { <option value="@e.Id">@e.ExternalId</option> }</select></label>
+                <FluentTextInput Label="@Text["Name"]" @bind-Value="_name" />
+                <label>@Text["ImportIdentifierLabel"] <select @bind="_identifier">
+                    @foreach (var value in Enum.GetValues<ImportIdentifier>()) { <option value="@value">@Text[$"ImportIdentifier_{value}"]</option> }
+                </select></label>
+                @TypeSelect
+                <label>@Text["ImportValues"] <textarea rows="8" @bind="_values" aria-describedby="import-hint"></textarea></label>
+                <p id="import-hint">@Text["ImportValuesHint"]</p>
+                <FluentButton OnClick="ImportAsync" Disabled="@(Busy || string.IsNullOrWhiteSpace(_name) || string.IsNullOrWhiteSpace(_values))">@Text["ResolveList"]</FluentButton>
+            }
+            else if (!_canQualify) { <p>@Text["ScopeReadOnly"]</p> }
+            else { <p>@Text["NoSource"]</p> }
+        }
+        else if (_canQualify && _environments.Count != 0)
+        {
+            <details><summary>@Text["CreatePopulation"]</summary>
+                <label>@Text["Environments"] <select @bind="_environment">@foreach (var e in _environments) { <option value="@e.Id">@e.ExternalId</option> }</select></label>
+                <FluentTextInput Label="@Text["Name"]" @bind-Value="_name" />
+                <label>@Text["Kind"] <select @bind="_kind">
+                    @foreach (var kind in Enum.GetValues<PopulationKind>().Where(x => x != PopulationKind.ImportedList))
+                    { <option value="@kind">@Text[$"PopulationKind_{kind}"]</option> }
+                </select></label>
+                @if (_kind == PopulationKind.Group)
+                {
+                    <FluentTextInput Label="@Text["GroupSearch"]" @bind-Value="_groupSearch" />
+                    <FluentButton OnClick="SearchGroupsAsync" Disabled="@Busy">@Text["SearchAction"]</FluentButton>
+                    @if (_groups.Count != 0)
+                    {
+                        <label>@Text["PopulationGroup"] <select @bind="_root"><option value="">—</option>
+                            @foreach (var g in _groups) { <option value="@g.ObjectId">@g.Label</option> }
+                        </select></label>
+                    }
+                }
+                else { <FluentTextInput Label="@Text[$"PopulationCriterion_{_kind}"]" @bind-Value="_criterion" /> }
+                @TypeSelect
+                <label>@Text["Status"] <select @bind="_status"><option value="">@Text["All"]</option>
+                    @foreach (var status in Statuses) { <option value="@status">@Text[status]</option> }
+                </select></label>
+                <FluentButton OnClick="CreateAsync" Disabled="@(Busy || string.IsNullOrWhiteSpace(_name))">@Text["CreatePopulation"]</FluentButton>
+            </details>
+        }
+        <ClarityGrid @key="(ProjectId, Side, _revision)" TGridItem="PopulationRow" Load="@((p, ct) => Scope.PopulationsAsync(ProjectId, Side, p, ct))">
+            <Columns>
+                <TemplateColumn Title="@Text["Name"]" Context="r"><FluentButton OnClick="@(() => Open(r))">@r.Name</FluentButton><small>@r.Environment</small></TemplateColumn>
+                <TemplateColumn Title="@Text["Kind"]" Context="r">@Text[$"PopulationKind_{r.Kind}"]<small>@Criterion(r)</small></TemplateColumn>
+                <TemplateColumn Title="@Text["PopulationMembers"]" Context="r">@r.MemberCount
+                    @if (r.Unresolved != 0) { <small>@Text["UnresolvedEntries"] : @r.Unresolved</small> }</TemplateColumn>
+                <TemplateColumn Title="@Text["EvaluatedAt"]" Context="r">@r.EvaluatedAtUtc.ToString("u")</TemplateColumn>
+                <TemplateColumn Title="@Text["Actions"]" Context="r">
+                    @if (_canQualify) { <FluentButton OnClick="@(() => RefreshAsync(r.Id))" Disabled="@Busy">@Text["RefreshPopulation"]</FluentButton> }
+                </TemplateColumn>
+            </Columns>
+            <EmptyContent><p>@Text["NoPopulations"]</p></EmptyContent>
+        </ClarityGrid>
+        @if (_population is { } population)
+        {
+            <article aria-label="@population.Name">
+                <h3>@population.Name · @Text[$"PopulationKind_{population.Kind}"]</h3>
+                <p>@Criterion(population) · @Text["PopulationMembers"] : @population.MemberCount · @population.EvaluatedAtUtc.ToString("u")</p>
+                @if (population.Kind == PopulationKind.ImportedList)
+                {
+                    <h4>@Text["ImportEntries"]</h4>
+                    <label>@Text["ImportResolutionFilter"] <select @bind="_resolution" @bind:after="Reload">
+                        <option value="All">@Text["All"]</option><option value="Unresolved">@Text["UnresolvedEntries"]</option>
+                        @foreach (var value in Enum.GetValues<ImportResolution>()) { <option value="@value">@Text[$"ImportResolution_{value}"]</option> }
+                    </select></label>
+                    <ClarityGrid @key="(population.Id, _resolution, _revision)" TGridItem="ImportEntryRow"
+                                 Load="@((p, ct) => Scope.EntriesAsync(ProjectId, population.Id, _resolution, p, ct))">
+                        <Columns>
+                            <PropertyColumn Property="@(e => e.Line)" Title="@Text["Line"]" />
+                            <TemplateColumn Title="@Text["ImportValues"]" Context="e">@e.Value</TemplateColumn>
+                            <TemplateColumn Title="@Text["Status"]" Context="e">@Text[$"ImportResolution_{e.Resolution}"]
+                                @if (e.CandidateCount > 1) { <small>@Text["Candidates"] : @e.CandidateCount</small> }</TemplateColumn>
+                            <TemplateColumn Title="@Text["ObjectId"]" Context="e">
+                                @if (e.ObjectId is { } id) { <a href="@Sheet(id)">@(e.Label ?? id.ToString())</a> }
+                            </TemplateColumn>
+                            <TemplateColumn Title="@Text["Actions"]" Context="e">
+                                @if (_canQualify && e.Resolution is ImportResolution.Ambiguous or ImportResolution.Chosen)
+                                { <FluentButton OnClick="@(() => CandidatesAsync(e))" Disabled="@Busy">@Text["ChooseCandidate"]</FluentButton> }
+                            </TemplateColumn>
+                        </Columns>
+                        <EmptyContent><p>@Text["NoImportEntries"]</p></EmptyContent>
+                    </ClarityGrid>
+                    @if (_entry is { } entry)
+                    {
+                        <DetailPanel Title="@($"{Text["ChooseCandidate"]} · {entry.Value}")" Error="@Error" Close="@(() => _entry = null)">
+                            @foreach (var c in _candidates)
+                            { <p>@c.Label · @Text[$"ObjectType_{c.Type}"] <FluentButton OnClick="@(() => ChooseAsync(entry, c))" Disabled="@Busy">@Text["ChooseCandidate"]</FluentButton></p> }
+                            @if (_candidates.Count == 0) { <p>@Text["NoCandidates"]</p> }
+                        </DetailPanel>
+                    }
+                }
+                <h4>@Text["PopulationMembers"]</h4>
+                <FluentTextInput Label="@Text["Search"]" @bind-Value="_search" />
+                <ClarityGrid @key="(population.Id, _search, _revision)" TGridItem="ScopeObjectRow" Search="@_search"
+                             Load="@((p, ct) => Scope.MembersAsync(ProjectId, population.Id, p, ct))">
+                    <Columns>
+                        @if (_canQualify)
+                        {
+                            <TemplateColumn Title="@Text["SelectObject"]" Context="r">
+                                <input type="checkbox" aria-label="@($"{Text["SelectObject"]} : {r.DisplayName ?? r.ObjectId.ToString()}")" disabled="@Busy"
+                                       checked="@_selected.Contains(r.ObjectId)" @onchange="e => Select(r.ObjectId, e.Value is true)" />
+                            </TemplateColumn>
+                        }
+                        @ObjectColumns
+                    </Columns>
+                    <EmptyContent><p>@Text["NoPopulationMembers"]</p></EmptyContent>
+                </ClarityGrid>
+                @if (_canQualify)
+                {
+                    <fieldset><legend>@Text["BatchDecision"]</legend>
+                        <label>@Text["ScopeDecisionValue"] <select @bind="_value" @bind:after="ResetBatch">
+                            @foreach (var value in Enum.GetValues<ScopeValue>()) { <option value="@value">@Text[$"ScopeDecision_{value}"]</option> }
+                        </select></label>
+                        <FluentTextInput Label="@Text["MigrationWave"]" @bind-Value="_wave" @bind-Value:after="ResetBatch" />
+                        <FluentTextInput Label="@Text["Justification"]" @bind-Value="_reason" />
+                        <FluentButton OnClick="@(() => PreviewAsync(true))" Disabled="@(Busy || population.MemberCount == 0)">@Text["PreviewPopulationDecision"]</FluentButton>
+                        <FluentButton OnClick="@(() => PreviewAsync(false))" Disabled="@(Busy || _selected.Count == 0)">@Text["PreviewSelectionDecision"] (@_selected.Count)</FluentButton>
+                        @if (_preview is { } preview)
+                        {
+                            <p role="status">@Text["AffectedObjects"] : @preview.Result.Affected · @Text["UnchangedObjects"] : @preview.Result.Unchanged · @Text[$"ScopeDecision_{preview.Batch.Value}"]
+                                @if (preview.Batch.Wave is { Length: > 0 } wave) { <span> · @Text["MigrationWave"] : @wave</span> }</p>
+                            <FluentButton OnClick="ApplyAsync" Disabled="@(Busy || preview.Result.Affected == 0 || string.IsNullOrWhiteSpace(_reason))">@Text["ConfirmDecisions"]</FluentButton>
+                        }
+                    </fieldset>
+                }
+            </article>
+        }
+    }
+</section>
+@if (_history is { } history)
+{
+    <DetailPanel Title="@($"{Text["ScopeHistory"]} · {history.DisplayName ?? history.ObjectId.ToString()}")" Close="@(() => _history = null)">
+        <ClarityGrid @key="history.ObjectId" TGridItem="ScopeHistoryRow" Load="@((p, ct) => Scope.HistoryAsync(ProjectId, history.ObjectId, p, ct))">
+            <Columns>
+                <PropertyColumn Property="@(h => h.Number)" Title="@Text["SsoRevision"]" />
+                <TemplateColumn Title="@Text["Date"]" Context="h">@h.OccurredAtUtc.ToString("u")</TemplateColumn>
+                <TemplateColumn Title="@Text["SsoAuthor"]" Context="h">@h.ActorObjectId</TemplateColumn>
+                <TemplateColumn Title="@Text["ScopeDecisionValue"]" Context="h">@Text[$"ScopeDecision_{h.Value}"] · @(h.Wave ?? Text["NoWave"].Value)
+                    <small>@h.Population</small><p>@h.Reason</p></TemplateColumn>
+            </Columns>
+            <EmptyContent><p>@Text["NoScopeDecisions"]</p></EmptyContent>
+        </ClarityGrid>
+    </DetailPanel>
+}
+
+@code {
+    [Parameter] public Guid ProjectId { get; set; }
+    [Parameter] public EnvironmentRole Side { get; set; }
+    [Parameter] public string? View { get; set; }
+    private static readonly string[] Statuses = ["Enabled", "Disabled", "Observed", "AbsentFromScope", "Unknown"];
+    private static readonly string[] Types = ["user", "group", "device", "computer", "mailbox", "sharedMailbox", "site", "team", "application", "servicePrincipal"];
+    private readonly HashSet<Guid> _selected = [];
+    private ScopeSummary? _summary;
+    private IReadOnlyList<ProjectEnvironment> _environments = [];
+    private IReadOnlyList<ScopeCandidate> _groups = [], _candidates = [];
+    private PopulationRow? _population;
+    private ImportEntryRow? _entry;
+    private ScopeObjectRow? _history;
+    private (ScopeBatch Batch, ScopePreview Result)? _preview;
+    private Guid _environment, _operation = Guid.NewGuid();
+    private PopulationKind _kind = PopulationKind.Group;
+    private ImportIdentifier _identifier;
+    private ScopeValue _value;
+    private string _name = "", _criterion = "", _groupSearch = "", _root = "", _type = "", _status = "", _values = "", _wave = "", _reason = "",
+        _search = "", _filter = "All", _resolution = "All";
+    private string? _message;
+    private bool _canQualify;
+    private int _revision;
+
+    private RenderFragment TypeSelect => @<label>@Text["ObjectType"] <select @bind="_type"><option value="">@Text["All"]</option>
+        @foreach (var type in Types) { <option value="@type">@Text[$"ObjectType_{type}"]</option> }
+    </select></label>;
+
+    private RenderFragment ObjectColumns => @<text>
+        <TemplateColumn Title="@Text["Name"]" TGridItem="ScopeObjectRow" Context="r"><a href="@Sheet(r.ObjectId)">@(r.DisplayName ?? r.ObjectId.ToString())</a>
+            <small>@r.Upn · @Text[$"ObjectType_{r.Type}"] · @Text[r.Presence.ToString()]</small></TemplateColumn>
+        <TemplateColumn Title="@Text["ScopeDecisionValue"]" TGridItem="ScopeObjectRow" Context="r">
+            @if (r.Value is { } value)
+            {
+                <span>@Text[$"ScopeDecision_{value}"] · @(r.Wave ?? Text["NoWave"].Value)</span><small>@r.Population</small>
+                @if (r.NeedsReview) { <p role="note">@Text["ScopeNeedsReview"]</p> }
+            }
+            else { <span>@Text["NoScopeDecision"]</span> }
+        </TemplateColumn>
+        <TemplateColumn Title="@Text["Actions"]" TGridItem="ScopeObjectRow" Context="r">
+            @if (r.DecisionId is not null) { <FluentButton OnClick="@(() => _history = r)">@Text["ScopeHistory"]</FluentButton> }
+        </TemplateColumn>
+    </text>;
+
+    protected override Task OnParametersSetAsync() => RunAsync(async () =>
+    {
+        _message = null; _population = null; _history = null; _entry = null; ResetBatch(); _selected.Clear();
+        var project = await Foundation.GetProjectAsync(ProjectId);
+        _canQualify = project.Status == ProjectStatus.Active && Authorization.Allows(project.WorkspaceId, WorkspaceOperation.Qualify);
+        _environments = (await Foundation.ListEnvironmentsAsync(ProjectId)).Where(x => x.Role == Side && x.TargetState == TargetState.Existing).ToList();
+        _environment = _environments.FirstOrDefault()?.Id ?? Guid.Empty;
+        _summary = await Scope.SummaryAsync(ProjectId, Side);
+    });
+
+    private string Link(string? view) => $"/projects/{ProjectId}/scope?side={Side}" + (view is null ? "" : $"&view={view}");
+    private string Sheet(Guid id) => $"/projects/{ProjectId}/inventory?side={Side}&object={id}";
+    private string Criterion(PopulationRow row) => row.Kind == PopulationKind.ImportedList
+        ? Text[$"ImportIdentifier_{row.Identifier}"].Value
+        : string.Join(" · ", new[] { row.Criterion, row.ObjectType is null ? null : Text[$"ObjectType_{row.ObjectType}"].Value,
+            row.Status is null ? null : Text[row.Status].Value }.Where(x => !string.IsNullOrEmpty(x)));
+    private void ChangeFilter(ChangeEventArgs e) { _filter = e.Value?.ToString() ?? "All"; _revision++; }
+    private void Reload() => _revision++;
+    private void Open(PopulationRow row) { _population = row; _entry = null; _selected.Clear(); ResetBatch(); _resolution = "All"; }
+    private void Select(Guid id, bool select)
+    {
+        if (select && _selected.Count < 100) { _selected.Add(id); } else if (!select) { _selected.Remove(id); }
+        ResetBatch();
+    }
+    private void ResetBatch() { _preview = null; _operation = Guid.NewGuid(); }
+
+    private Task SearchGroupsAsync() => RunAsync(async () => { _root = ""; _groups = await Scope.GroupsAsync(ProjectId, _environment, _groupSearch.Trim()); });
+
+    private Task CreateAsync() => RunAsync(async () =>
+    {
+        Guid? root = _kind == PopulationKind.Group && Guid.TryParse(_root, out var id) ? id : null;
+        var created = await Scope.CreatePopulationAsync(ProjectId, new(_operation, _environment, _name, _kind, _criterion, root,
+            _type.Length == 0 ? null : _type, _status.Length == 0 ? null : _status));
+        await OpenAsync(created);
+        _name = ""; _criterion = ""; _root = ""; _groups = [];
+    });
+
+    private Task ImportAsync() => RunAsync(async () =>
+    {
+        var created = await Scope.ImportAsync(ProjectId, new(_operation, _environment, _name, _identifier, _type.Length == 0 ? null : _type, _values));
+        await OpenAsync(created);
+        _name = ""; _values = "";
+    });
+
+    private Task RefreshAsync(Guid id) => RunAsync(async () => { await Scope.RefreshPopulationAsync(ProjectId, id); await OpenAsync(id); });
+
+    private async Task OpenAsync(Guid id)
+    {
+        _summary = await Scope.SummaryAsync(ProjectId, Side);
+        var row = await Scope.GetPopulationAsync(ProjectId, id);
+        _revision++; _message = Messages["ChangesSaved"];
+        Open(row);
+    }
+
+    private Task CandidatesAsync(ImportEntryRow entry) => RunAsync(async () => { _entry = entry; _candidates = await Scope.CandidatesAsync(ProjectId, entry.Id); });
+
+    private Task ChooseAsync(ImportEntryRow entry, ScopeCandidate candidate) => RunAsync(async () =>
+    {
+        await Scope.ChooseAsync(ProjectId, entry.Id, candidate.ObjectId);
+        _entry = null; await OpenAsync(_population!.Id);
+    });
+
+    private ScopeBatch Batch(bool population) => new(_operation, _value, _wave, _reason, population ? _population!.Id : null,
+        population ? null : _selected.ToList());
+
+    private Task PreviewAsync(bool population) => RunAsync(async () =>
+    {
+        _preview = null;
+        var batch = Batch(population);
+        _preview = (batch, await Scope.PreviewAsync(ProjectId, batch));
+    });
+
+    private Task ApplyAsync() => RunAsync(async () =>
+    {
+        var (batch, result) = _preview!.Value;
+        await Scope.ApplyAsync(ProjectId, batch with { Reason = _reason }, result.Affected);
+        _selected.Clear(); _reason = ""; await OpenAsync(_population!.Id);
+    });
+}
