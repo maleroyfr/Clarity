@@ -49,6 +49,7 @@ public sealed partial class IsolationSweepTests
             DevelopmentAuthenticationHandler.SyntheticTenant, DevelopmentAuthenticationHandler.Personas["manager"], WorkspaceRole.WorkspaceManager))),
         new("GET", "/api/projects/{projectId:guid}"),
         new("POST", "/api/projects/{projectId:guid}/archive"),
+        new("POST", "/api/projects/{projectId:guid}/delete", _ => JsonContent.Create(new DeletionInput("Beta audit"))),
         new("GET", "/api/projects/{projectId:guid}/environments"),
         new("POST", "/api/projects/{projectId:guid}/environments", _ => JsonContent.Create(new EnvironmentInput(Guid.NewGuid(), EnvironmentRole.Source,
             EnvironmentKind.AdForest, "hostile.example.test", "", TargetState.Existing, ""))),

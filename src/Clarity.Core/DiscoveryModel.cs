@@ -84,6 +84,9 @@ public sealed class RawArtifact : WorkspaceEntity
     public long CompressedBytes { get; init; }
     public long UncompressedBytes { get; init; }
     public DateTimeOffset UploadedAtUtc { get; init; } = DateTimeOffset.UtcNow;
+
+    /// <summary>When retention removed the raw file; the published observations and this metadata remain as evidence.</summary>
+    public DateTimeOffset? PurgedAtUtc { get; set; }
 }
 
 public static class DiscoveryScope

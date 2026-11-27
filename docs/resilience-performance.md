@@ -52,8 +52,9 @@ can never delete the owner's files, because the purge only runs under the fence.
 
 Residual risk: a stale worker that writes a file after the owner's purge and then
 crashes before its own cleanup, or a hard kill on the last attempt, leaves an
-unreferenced file. Retention and controlled deletion sweep export prefixes
-regardless of artifacts.
+unreferenced file. The retention sweep deletes such files after
+`OrphanGraceHours`, and controlled deletion purges the whole export prefix
+regardless of artifacts (see [retention and deletion](retention-deletion.md)).
 
 ## Volume run
 

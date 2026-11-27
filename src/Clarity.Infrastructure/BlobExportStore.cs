@@ -1,4 +1,6 @@
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
+using Azure;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Clarity.Core;
@@ -45,7 +47,22 @@ public sealed class BlobExportStore(BlobServiceClient? blobs = null) : IExportSt
     public async Task<Stream> OpenAsync(Guid workspaceId, string blobName, CancellationToken cancellationToken)
     {
         DemandPrefix(workspaceId, blobName);
-        return await Container.GetBlobClient(blobName).OpenReadAsync(cancellationToken: cancellationToken);
+        try
+        {
+            return await Container.GetBlobClient(blobName).OpenReadAsync(cancellationToken: cancellationToken);
+        }
+        catch (RequestFailedException exception) when (exception.Status == 404)
+        {
+            throw new FileExpiredException("FileMissing");
+        }
+    }
+
+    public async IAsyncEnumerable<StoredFile> ListAsync(Guid workspaceId, [EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        await foreach (var item in Container.GetBlobsAsync(new GetBlobsOptions { Prefix = $"{workspaceId:N}/" }, cancellationToken))
+        {
+            yield return new StoredFile(item.Name, item.Properties.LastModified ?? DateTimeOffset.MinValue);
+        }
     }
 
     public Task DeleteAsync(Guid workspaceId, string blobName, CancellationToken cancellationToken)

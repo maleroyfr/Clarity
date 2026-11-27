@@ -69,6 +69,41 @@ public class AuthorizationEndpointTests
     }
 
     [Fact]
+    public async Task Only_a_manager_can_request_deletion_of_an_archived_project_confirmed_by_its_exact_name()
+    {
+        await using var app = new FoundationApplication();
+        var (alpha, beta) = await app.SeedAsync();
+        var ct = TestContext.Current.CancellationToken;
+        var confirm = new DeletionInput("Alpha audit");
+        using var manager = await app.CreatePersonaClientAsync("manager");
+        (await manager.PostAsJsonAsync($"/api/projects/{alpha}/delete", confirm, ct)).StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+        (await manager.PostAsync($"/api/projects/{alpha}/archive", null, ct)).StatusCode.ShouldBe(HttpStatusCode.OK);
+        foreach (var persona in new[] { "consultant", "reader", "platform-admin" })
+        {
+            using var client = await app.CreatePersonaClientAsync(persona);
+            (await client.PostAsJsonAsync($"/api/projects/{alpha}/delete", confirm, ct)).StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+        }
+        (await manager.PostAsJsonAsync($"/api/projects/{beta}/delete", new DeletionInput("Beta audit"), ct)).StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+        (await manager.PostAsJsonAsync($"/api/projects/{alpha}/delete", new DeletionInput("Alpha"), ct)).StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        // Deletion needs the SQL job queue and Blob storage; without them the request is refused rather than half-applied.
+        (await manager.PostAsJsonAsync($"/api/projects/{alpha}/delete", confirm, ct)).StatusCode.ShouldBe(HttpStatusCode.ServiceUnavailable);
+        await using var db = app.CreateUnscopedContext();
+        (await db.Projects.IgnoreQueryFilters().SingleAsync(x => x.Id == alpha, ct)).Status.ShouldBe(ProjectStatus.Archived);
+        (await db.Projects.IgnoreQueryFilters().SingleAsync(x => x.Id == beta, ct)).Status.ShouldBe(ProjectStatus.Active);
+        (await db.CollectionJobs.IgnoreQueryFilters().AnyAsync(ct)).ShouldBeFalse();
+        (await db.AuditEvents.IgnoreQueryFilters().AnyAsync(x => x.Action.StartsWith("ProjectDeletion"), ct)).ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task Retention_settings_outside_their_allowed_range_fail_startup()
+    {
+        await using var root = new FoundationApplication();
+        await using var app = root.WithWebHostBuilder(builder => builder.UseSetting("Retention:AuditEventDays", "7"));
+        Should.Throw<Microsoft.Extensions.Options.OptionsValidationException>(() => app.Services)
+            .Message.ShouldContain(nameof(RetentionOptions.AuditEventDays));
+    }
+
+    [Fact]
     public async Task Platform_admin_needs_explicit_membership_for_inventory()
     {
         await using var app = new FoundationApplication();

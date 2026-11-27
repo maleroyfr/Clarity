@@ -310,7 +310,7 @@ public sealed class ImportService(
         var project = await access.RequireAsync(projectId, WorkspaceOperation.Read, cancellationToken);
         await using var db = await factory.CreateDbContextAsync(cancellationToken);
         var run = await RunAsync(db, project, runId, cancellationToken);
-        var artifact = await db.RawArtifacts.SingleAsync(x => x.WorkspaceId == project.WorkspaceId && x.RunId == run.Id, cancellationToken);
+        var artifact = Retained(await db.RawArtifacts.SingleAsync(x => x.WorkspaceId == project.WorkspaceId && x.RunId == run.Id, cancellationToken));
         Audit(db, project.WorkspaceId, run.Id, "RawArtifactDownloaded");
         await db.SaveChangesAsync(cancellationToken);
         var content = await store.OpenAsync(project.WorkspaceId, artifact.BlobName, cancellationToken);
@@ -319,10 +319,14 @@ public sealed class ImportService(
             : new RawDownload(content, "application/zip", "result.zip");
     }
 
+    /// <summary>Refuses a raw file the retention sweep has purged; its metadata, hash and published evidence remain.</summary>
+    private static RawArtifact Retained(RawArtifact artifact) =>
+        artifact.PurgedAtUtc is null ? artifact : throw new FileExpiredException("RawFilePurged");
+
     internal async Task<DiscoveryPackage> ReadAsync(ClarityDbContext db, CollectionRun run, CancellationToken cancellationToken)
     {
         if (run.Channel == CollectionChannel.Report) { return (await ReadReportAsync(db, run, cancellationToken)).Package; }
-        var artifact = await db.RawArtifacts.SingleAsync(x => x.WorkspaceId == run.WorkspaceId && x.RunId == run.Id, cancellationToken);
+        var artifact = Retained(await db.RawArtifacts.SingleAsync(x => x.WorkspaceId == run.WorkspaceId && x.RunId == run.Id, cancellationToken));
         await using var source = await store.OpenAsync(run.WorkspaceId, artifact.BlobName, cancellationToken);
         return (await reader.ReadAsync(source, artifact.ContentHash, cancellationToken)).Package;
     }
@@ -355,7 +359,7 @@ public sealed class ImportService(
     /// <summary>Re-interprets a staged report deterministically from its retained raw file and recorded profile/scope.</summary>
     internal async Task<ReportConversion> ReadReportAsync(ClarityDbContext db, CollectionRun run, CancellationToken cancellationToken)
     {
-        var artifact = await db.RawArtifacts.SingleAsync(x => x.WorkspaceId == run.WorkspaceId && x.RunId == run.Id, cancellationToken);
+        var artifact = Retained(await db.RawArtifacts.SingleAsync(x => x.WorkspaceId == run.WorkspaceId && x.RunId == run.Id, cancellationToken));
         var manifest = JsonSerializer.Deserialize<PackageManifest>(run.ManifestJson, ContractJson.Options)
             ?? throw new ContractException("ReportProfileUnavailable", "profile");
         var profile = reports.ForProducer(run.ProducerId, run.ProducerVersion)

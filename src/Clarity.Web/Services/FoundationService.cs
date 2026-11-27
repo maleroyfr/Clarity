@@ -81,6 +81,10 @@ public sealed class FoundationService(
         var project = await db.Projects.AsNoTracking().SingleOrDefaultAsync(x => x.Id == projectId, cancellationToken)
             ?? throw new AccessDeniedException();
         await authorization.DemandAsync(project.WorkspaceId, WorkspaceOperation.Read);
+        if (!ProjectLifecycle.Permits(project.Status, true, WorkspaceOperation.Read))
+        {
+            throw new AccessDeniedException();
+        }
         AddAudit(db, project.WorkspaceId, "ProjectRead", project.Id);
         await db.SaveChangesAsync(cancellationToken);
         return project;
@@ -113,7 +117,7 @@ public sealed class FoundationService(
         await using var db = await factory.CreateDbContextAsync(cancellationToken);
         var project = await db.Projects.SingleOrDefaultAsync(x => x.Id == projectId, cancellationToken) ?? throw new AccessDeniedException();
         await authorization.DemandAsync(project.WorkspaceId, WorkspaceOperation.Qualify);
-        if (project.Status == ProjectStatus.Archived)
+        if (project.Status != ProjectStatus.Active)
         {
             return;
         }
@@ -136,7 +140,7 @@ public sealed class FoundationService(
         DemandOperationId(operationId);
         var project = await GetProjectAsync(projectId, cancellationToken);
         await authorization.DemandAsync(project.WorkspaceId, WorkspaceOperation.ManageConnections);
-        if (project.Status == ProjectStatus.Archived)
+        if (project.Status != ProjectStatus.Active)
         {
             throw new ArgumentException("An archived project cannot be changed.");
         }

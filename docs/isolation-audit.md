@@ -20,7 +20,7 @@ Measuring isolation on a real tenant remains part of the user-led pilot.
 uses the in-memory HTTP host and covers the following.
 
 - **Route inventory.** The test enumerates the actual `/api` endpoints from the
-  routing data source and compares them with its own list of 33 routes. A new
+  routing data source and compares them with its own list of 34 routes. A new
   endpoint fails the test until it is added to the sweep. Routable Blazor pages
   are enumerated the same way from their `@page` templates.
 - **Foreign identifiers.** A workspace manager of Alpha calls every route with
@@ -107,7 +107,10 @@ checks the SQL catalog independently. Every table with a `WorkspaceId`, and ever
 table mapped from a `WorkspaceEntity`, must be covered by an enabled,
 schema-bound security policy. That policy must have a filter predicate and both
 `AFTER INSERT` and `AFTER UPDATE` block predicates, all calling functions in the
-`Security` schema. A new table without row-level security therefore fails CI.
+`Security` schema. `AuditEvents` must also have the `BEFORE DELETE` block
+predicate that refuses deleting recent events (see
+[retention and deletion](retention-deletion.md#sql-guard-on-audit-deletion)). A new
+table without row-level security therefore fails CI.
 `RowLevelSecurityTests.Bypassing_EF_filters_cannot_read_or_mutate_other_clients_and_pooled_scope_is_reset`
 proves that raw SQL and `IgnoreQueryFilters` cannot bypass these predicates and
 that a pooled connection never inherits a previous scope.
@@ -131,7 +134,8 @@ Sensitive actions append an `AuditEvent` in the same transaction as the change
 they describe. The event records the workspace, the resource, the action, the
 actor's tenant and object identifiers, and the correlation identifier from the
 current trace. Audit rows are workspace-owned and protected by row-level
-security like every other inventory table.
+security like every other inventory table. SQL also refuses to delete an audit
+event younger than 29 days, whatever the application requests.
 
 | Area | Audited actions |
 |---|---|
@@ -142,6 +146,7 @@ security like every other inventory table.
 | Scope and decisions | `Scope.*` population, list and decision actions, assessments, dependency analysis, `DecisionReview.Recomputed` |
 | Comparisons | run comparisons, target rules and target comparisons |
 | Exports | `ExportRequested`, `ExportGenerated`, `ExportDownloaded` |
+| Retention and deletion | `ProjectDeletionRequested`, `ProjectDeletionRetried`, `ProjectDeleted`; system events `RawFilePurged`, `ExportFilesExpired`, `AuditEventsPurged` ([retention and deletion](retention-deletion.md)) |
 
 The Lot 6 audit added the Graph and job actions above. Before Lot 6, connections,
 connection tests, Graph launches, cancellations and retries left no audit trail.

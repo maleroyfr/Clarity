@@ -52,7 +52,7 @@ public sealed class JobService(IDbContextFactory<ClarityDbContext> factory, IPro
         var project = await access.RequireAsync(projectId, WorkspaceOperation.Collect, cancellationToken);
         await using var db = await factory.CreateDbContextAsync(cancellationToken);
         var query = db.CollectionJobs.Where(x => x.WorkspaceId == project.WorkspaceId && x.ProjectId == projectId && x.Id == jobId
-            && x.Kind != CollectionJobKind.Export);
+            && x.Kind != CollectionJobKind.Export && x.Kind != CollectionJobKind.Deletion);
         if (!await query.AnyAsync(cancellationToken)) { throw new AccessDeniedException(); }
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         await query.Where(x => x.State == CollectionRunState.Pending || x.State == CollectionRunState.Running)
@@ -69,7 +69,7 @@ public sealed class JobService(IDbContextFactory<ClarityDbContext> factory, IPro
         var project = await access.RequireAsync(projectId, WorkspaceOperation.Collect, cancellationToken);
         await using var db = await factory.CreateDbContextAsync(cancellationToken);
         var query = db.CollectionJobs.Where(x => x.WorkspaceId == project.WorkspaceId && x.ProjectId == project.Id && x.Id == jobId
-            && x.Kind != CollectionJobKind.Export);
+            && x.Kind != CollectionJobKind.Export && x.Kind != CollectionJobKind.Deletion);
         // An identifier outside the authorized project is indistinguishable from an unknown one; only a known job can conflict.
         if (!await query.AnyAsync(cancellationToken)) { throw new AccessDeniedException(); }
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);

@@ -10,7 +10,8 @@ public sealed record ExportJobPayload(Guid ExportId);
 public sealed record ExportArtifactView(Guid Id, ExportArtifactKind Kind, string FileName, long Bytes, int RowCount, string ContentHash);
 public sealed record ExportRow(Guid Id, ExportFilter Filter, string? Environment, string? Population, CollectionRunState State, int? Progress,
     string? ErrorCode, Guid AuthorTenantId, Guid AuthorObjectId, DateTimeOffset AsOfUtc, DateTimeOffset? GeneratedAtUtc, int? ObjectCount,
-    int? ExceptionCount, int? MappingCount, int? CoverageGaps, string SelectionHash, IReadOnlyList<ExportArtifactView> Artifacts);
+    int? ExceptionCount, int? MappingCount, int? CoverageGaps, string SelectionHash, IReadOnlyList<ExportArtifactView> Artifacts,
+    DateTimeOffset? FilesPurgedAtUtc);
 
 /// <summary>
 /// Launches, lists and downloads consultant exports. A launch captures the dated selection and queues the generation job in one transaction;
@@ -122,7 +123,7 @@ public sealed class ExportService(IDbContextFactory<ClarityDbContext> factory, I
                 x.Export.AuthorTenantId, x.Export.AuthorObjectId, x.Export.AsOfUtc, x.Export.GeneratedAtUtc, x.Export.ObjectCount,
                 x.Export.ExceptionCount, x.Export.MappingCount, x.Export.CoverageGaps, x.Export.SelectionHash,
                 artifacts[x.Export.Id].OrderBy(a => a.Kind).Select(a => new ExportArtifactView(a.Id, a.Kind, a.FileName, a.Bytes, a.RowCount, a.ContentHash))
-                    .ToList());
+                    .ToList(), x.Export.FilesPurgedAtUtc);
         }).ToList();
         return new(rows, count);
     }
@@ -135,7 +136,9 @@ public sealed class ExportService(IDbContextFactory<ClarityDbContext> factory, I
         var artifact = await (from a in db.ExportArtifacts.AsNoTracking()
                               join x in db.ExportJobs on new { a.WorkspaceId, Id = a.ExportJobId } equals new { x.WorkspaceId, x.Id }
                               where a.WorkspaceId == ws && x.ProjectId == project.Id && x.Id == exportId && a.Id == artifactId
-                              select a).SingleOrDefaultAsync(token) ?? throw new AccessDeniedException();
+                              select new { a.Id, a.BlobName, a.ContentType, a.FileName, x.FilesPurgedAtUtc }).SingleOrDefaultAsync(token)
+            ?? throw new AccessDeniedException();
+        if (artifact.FilesPurgedAtUtc is not null) { throw new FileExpiredException("ExportFilesExpired"); }
         db.AuditEvents.Add(new AuditEvent
         {
             WorkspaceId = ws,

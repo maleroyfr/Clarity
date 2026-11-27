@@ -3,6 +3,7 @@ using Clarity.Core;
 using Clarity.Infrastructure;
 using Clarity.Web.Security;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace Clarity.Web.Services;
 
@@ -20,6 +21,8 @@ public static class DiscoveryRegistration
             && Guid.TryParse(options.ClientId, out _) && !string.IsNullOrWhiteSpace(options.KeyVaultUri)
             && !string.IsNullOrWhiteSpace(options.CertificateName)));
         services.AddSingleton(options);
+        services.AddOptions<RetentionOptions>().Bind(configuration.GetSection("Retention")).ValidateDataAnnotations().ValidateOnStart();
+        services.AddSingleton(provider => provider.GetRequiredService<IOptions<RetentionOptions>>().Value);
         services.AddSingleton(DiscoveryCatalog.Load());
         services.AddSingleton(provider => ReportProfiles.Load(provider.GetRequiredService<DiscoveryCatalog>()));
         services.AddSingleton<PackageValidator>();
@@ -57,14 +60,20 @@ public static class DiscoveryRegistration
         services.AddScoped<GraphDiscoveryService>();
         services.AddScoped<JobService>();
         services.AddScoped<ExportService>();
+        services.AddScoped<ProjectDeletionService>();
         if (storage && !string.IsNullOrWhiteSpace(sql))
         {
             services.AddSingleton(new SqlJobQueue(sql, TimeProvider.System));
             services.AddSingleton<ICollectionJobHandler, ImportJobHandler>();
             services.AddSingleton<ICollectionJobHandler, GraphJobHandler>();
             services.AddSingleton<ICollectionJobHandler, ExportJobHandler>();
+            services.AddSingleton<ICollectionJobHandler, DeletionJobHandler>();
             services.AddSingleton<CollectionJobProcessor>();
             services.AddHostedService<CollectionWorker>();
+            services.AddSingleton(provider => new RetentionSweeper(sql, provider.GetRequiredService<IArtifactStore>(),
+                provider.GetRequiredService<IExportStore>(), provider.GetRequiredService<RetentionOptions>(), TimeProvider.System,
+                provider.GetRequiredService<ILogger<RetentionSweeper>>()));
+            services.AddHostedService<RetentionWorker>();
         }
     }
 }
@@ -78,8 +87,8 @@ public sealed class WebProjectAccess(IDbContextFactory<ClarityDbContext> factory
         var project = await db.Projects.AsNoTracking().SingleOrDefaultAsync(x => x.Id == projectId, cancellationToken)
             ?? throw new AccessDeniedException();
         await authorization.DemandAsync(project.WorkspaceId, operation);
-        if (operation != WorkspaceOperation.Read && (project.Status != ProjectStatus.Active
-            || !await db.Workspaces.AnyAsync(x => x.Id == project.WorkspaceId && x.Status == WorkspaceStatus.Active, cancellationToken)))
+        if (!ProjectLifecycle.Permits(project.Status, operation is WorkspaceOperation.Read or WorkspaceOperation.DeleteProject
+            || await db.Workspaces.AnyAsync(x => x.Id == project.WorkspaceId && x.Status == WorkspaceStatus.Active, cancellationToken), operation))
         {
             throw new AccessDeniedException();
         }

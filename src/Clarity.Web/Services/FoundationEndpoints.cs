@@ -16,6 +16,8 @@ public static class FoundationEndpoints
         api.MapPost("/workspaces/{workspaceId:guid}/members", (Guid workspaceId, MemberInput input, FoundationService service, CancellationToken ct) => service.SetMemberAsync(workspaceId, new(input.TenantId, input.ObjectId), input.Role, ct));
         api.MapGet("/projects/{projectId:guid}", (Guid projectId, FoundationService service, CancellationToken ct) => service.GetProjectAsync(projectId, ct));
         api.MapPost("/projects/{projectId:guid}/archive", (Guid projectId, FoundationService service, CancellationToken ct) => service.ArchiveProjectAsync(projectId, ct));
+        api.MapPost("/projects/{projectId:guid}/delete", (Guid projectId, DeletionInput input, ProjectDeletionService service, CancellationToken ct) =>
+            service.RequestAsync(projectId, input.ConfirmationName, ct));
         api.MapGet("/projects/{projectId:guid}/environments", (Guid projectId, FoundationService service, CancellationToken ct) => service.ListEnvironmentsAsync(projectId, ct));
         api.MapGet("/projects/{projectId:guid}/scenario", (Guid projectId, ScenarioOverviewService service, CancellationToken ct) => service.ReadAsync(projectId, ct));
         api.MapPost("/projects/{projectId:guid}/environments", (Guid projectId, EnvironmentInput input, FoundationService service, CancellationToken ct) =>
@@ -37,4 +39,5 @@ public static class FoundationEndpoints
 public sealed record WorkspaceInput(Guid OperationId, string Name);
 public sealed record ProjectInput(Guid OperationId, string Name, ProjectScenario Scenario, string Description);
 public sealed record EnvironmentInput(Guid OperationId, EnvironmentRole Role, EnvironmentKind Kind, string ExternalId, string DeclaredScope, TargetState TargetState, string Hypotheses);
+public sealed record DeletionInput(string ConfirmationName);
 public sealed record MemberInput(Guid TenantId, Guid ObjectId, WorkspaceRole Role);

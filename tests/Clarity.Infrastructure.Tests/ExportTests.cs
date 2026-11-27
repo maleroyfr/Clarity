@@ -203,6 +203,7 @@ public sealed class ExportTests
 internal sealed class MemoryExportStore : IExportStore
 {
     private readonly ConcurrentDictionary<string, byte[]> files = new(StringComparer.Ordinal);
+    private readonly ConcurrentDictionary<string, DateTimeOffset> modified = new(StringComparer.Ordinal);
     public int Count => files.Count;
     public bool IsConfigured => true;
 
@@ -214,6 +215,7 @@ internal sealed class MemoryExportStore : IExportStore
         var bytes = stream.ToArray();
         var name = $"{workspaceId:N}/{exportId:N}/{Guid.NewGuid():N}{extension}";
         files[name] = bytes;
+        modified[name] = DateTimeOffset.UtcNow;
         return new StoredArtifact(name, Convert.ToHexStringLower(SHA256.HashData(bytes)), bytes.Length);
     }
 
@@ -236,4 +238,8 @@ internal sealed class MemoryExportStore : IExportStore
     }
 
     public IReadOnlyList<string> Names => [.. files.Keys];
+
+    public IAsyncEnumerable<StoredFile> ListAsync(Guid workspaceId, CancellationToken cancellationToken) =>
+        files.Keys.Where(k => k.StartsWith($"{workspaceId:N}/", StringComparison.Ordinal)).Select(k => new StoredFile(k, modified[k]))
+            .ToAsyncEnumerable();
 }

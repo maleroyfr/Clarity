@@ -1,8 +1,11 @@
 @page "/clients/{WorkspaceId:guid}/projects"
 @attribute [Authorize]
 @inherits FoundationPage
+@using Clarity.Infrastructure
 @inject FoundationService Service
 @inject INotificationService Notifications
+@inject ProjectDeletionService Deletion
+@inject RetentionOptions Retention
 
 <PageTitle>@Text["Projects"] · Clarity</PageTitle>
 <nav aria-label="@Text["Breadcrumb"]"><FluentLink Href="/">@Text["Clients"]</FluentLink></nav>
@@ -20,12 +23,13 @@
     <Columns>
         <PropertyColumn Property="@(x => x.Name)" Title="@Text["Name"]" Sortable="true" />
         <TemplateColumn Title="@Text["Scenario"]">@Text[context.Scenario.ToString()]</TemplateColumn>
-        <TemplateColumn Title="@Text["Status"]"><FluentBadge Content="@Text[context.Status.ToString()]" /></TemplateColumn>
+        <TemplateColumn Title="@Text["Status"]"><FluentBadge Content="@Text[context.Status.ToString()]" />@if (Retention.DeletionDue(context, DateTimeOffset.UtcNow)) { <FluentBadge Content="@Text["DeletionDue"]" /> }</TemplateColumn>
         <TemplateColumn Title="@Text["LastInventory"]">@Text["NoInventory"]</TemplateColumn>
         <TemplateColumn Title="@Text["SectionsToVerify"]">@Text["Unknown"]</TemplateColumn>
         <TemplateColumn Title="@Text["TargetPresence"]">@Text["Unknown"]</TemplateColumn>
-        <TemplateColumn Title="@Text["Overview"]"><FluentLink Href="@($"/projects/{context.Id}")">@Text["Overview"]</FluentLink></TemplateColumn>
-        <TemplateColumn Title="@Text["Archive"]"><FluentButton Disabled="@(context.Status == ProjectStatus.Archived)" OnClick="@(() => _archive = context.Id)">@Text["Archive"]</FluentButton></TemplateColumn>
+        <TemplateColumn Title="@Text["Overview"]">@if (context.Status == ProjectStatus.Deleting) { <FluentText>@Text["Deleting"]</FluentText> } else { <FluentLink Href="@($"/projects/{context.Id}")">@Text["Overview"]</FluentLink> }</TemplateColumn>
+        <TemplateColumn Title="@Text["Archive"]"><FluentButton Disabled="@(context.Status != ProjectStatus.Active)" OnClick="@(() => _archive = context.Id)">@Text["Archive"]</FluentButton></TemplateColumn>
+        <TemplateColumn Title="@Text["DeleteProject"]"><FluentButton Disabled="@(context.Status == ProjectStatus.Active)" OnClick="@(() => { _delete = context; _confirmation = ""; })">@Text["DeleteProject"]</FluentButton></TemplateColumn>
     </Columns>
     <EmptyContent><EmptyState Title="@Text["NoProjects"]" Description="@Text["NoProjectsHint"]"><FluentButton OnClick="@(() => _create = true)">@Text["NewProject"]</FluentButton></EmptyState></EmptyContent>
 </ClarityGrid>
@@ -46,6 +50,16 @@
         <p>@Text["ArchiveConfirm"]</p><FluentButton Disabled="Busy" OnClick="ArchiveAsync">@Text["Archive"]</FluentButton>
     </DetailPanel>
 }
+@if (_delete is not null)
+{
+    <DetailPanel Title="@Text["DeleteProject"]" Error="@Error" Close="@(() => _delete = null)">
+        <FluentMessageBar Intent="MessageBarIntent.Warning" AllowDismiss="false">@Text["DeleteConfirm"]</FluentMessageBar>
+        <form @onsubmit="DeleteAsync" @onsubmit:preventDefault>
+            <FluentTextInput Label="@Text["DeleteConfirmName"]" Required="true" @bind-Value="_confirmation" />
+            <FluentButton Type="ButtonType.Submit" Appearance="ButtonAppearance.Primary" Disabled="@(Busy || _confirmation != _delete.Name)">@Text["DeleteProject"]</FluentButton>
+        </form>
+    </DetailPanel>
+}
 
 @code {
     [Parameter] public Guid WorkspaceId { get; set; }
@@ -54,6 +68,8 @@
     private bool _create;
     private Guid _operationId = Guid.NewGuid();
     private Guid? _archive;
+    private Project? _delete;
+    private string _confirmation = "";
     private ClarityGrid<Project>? _grid;
     private Task<PageResult<Project>> LoadAsync(PageRequest request, CancellationToken ct) => Service.ListProjectsAsync(WorkspaceId, request, ct);
     private Task SearchAsync() => _grid?.RefreshAsync() ?? Task.CompletedTask;
@@ -66,5 +82,9 @@
     private Task ArchiveAsync() => RunAsync(async () =>
     {
         await Service.ArchiveProjectAsync(_archive!.Value); _archive = null; await SearchAsync();
+    });
+    private Task DeleteAsync() => RunAsync(async () =>
+    {
+        await Deletion.RequestAsync(_delete!.Id, _confirmation); _delete = null; await SearchAsync();
     });
 }

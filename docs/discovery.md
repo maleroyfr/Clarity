@@ -98,8 +98,10 @@ Confirmation atomically creates a single import job with the confirmation actor
 and marks the run confirmed. No observations exist before confirmation. Parallel
 identical content deduplicates under the environment lock; a reused run ID with
 different bytes is a conflict. Rejected/duplicate uploads delete their temporary
-Blob; abrupt host death may leave an unreferenced Blob for operator retention
-cleanup before a real pilot. Raw downloads reauthorize the project; no SAS URL or
+Blob; abrupt host death may leave an unreferenced Blob, which the retention sweep
+deletes after `OrphanGraceHours` (see [retention and deletion](retention-deletion.md)).
+Raw files themselves are purged after `RawFileDays`; their row and hash remain,
+and a download then returns 410. Raw downloads reauthorize the project; no SAS URL or
 Blob reference is handed to the browser.
 
 ## Graph Entra

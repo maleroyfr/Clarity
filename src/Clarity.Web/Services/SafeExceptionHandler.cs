@@ -10,6 +10,7 @@ public sealed class SafeExceptionHandler(ILogger<SafeExceptionHandler> logger) :
         var status = exception switch
         {
             AccessDeniedException => StatusCodes.Status403Forbidden,
+            FileExpiredException => StatusCodes.Status410Gone,
             Clarity.Infrastructure.DiscoveryConfigurationException or Clarity.Infrastructure.GraphReadException =>
                 StatusCodes.Status503ServiceUnavailable,
             ConflictException => StatusCodes.Status409Conflict,

@@ -13,8 +13,8 @@ public sealed class StoredProjectAccess(IDbContextFactory<ClarityDbContext> fact
         var member = await db.Members.AsNoTracking().SingleOrDefaultAsync(x => x.WorkspaceId == project.WorkspaceId
             && x.TenantId == scope.Identity.TenantId && x.ObjectId == scope.Identity.ObjectId, cancellationToken);
         if (!WorkspacePolicy.Allows(member?.Role, operation)
-            || (operation != WorkspaceOperation.Read && (project.Status != ProjectStatus.Active
-                || !await db.Workspaces.AnyAsync(x => x.Id == project.WorkspaceId && x.Status == WorkspaceStatus.Active, cancellationToken))))
+            || !ProjectLifecycle.Permits(project.Status, operation is WorkspaceOperation.Read or WorkspaceOperation.DeleteProject
+                || await db.Workspaces.AnyAsync(x => x.Id == project.WorkspaceId && x.Status == WorkspaceStatus.Active, cancellationToken), operation))
         {
             throw new AccessDeniedException();
         }

@@ -7,9 +7,10 @@ ALTER ROLE db_owner ADD MEMBER [clarity-migrations];
 CREATE USER [clarity-app] FROM EXTERNAL PROVIDER;
 GRANT SELECT, INSERT, UPDATE ON dbo.ClientWorkspaces TO [clarity-app];
 GRANT SELECT, INSERT, UPDATE ON dbo.Members TO [clarity-app];
-GRANT SELECT, INSERT, UPDATE ON dbo.Projects TO [clarity-app];
-GRANT SELECT, INSERT, UPDATE ON dbo.Environments TO [clarity-app];
-GRANT SELECT, INSERT ON dbo.AuditEvents TO [clarity-app];
+GRANT SELECT, INSERT, UPDATE, DELETE ON dbo.Projects TO [clarity-app];
+GRANT SELECT, INSERT, UPDATE, DELETE ON dbo.Environments TO [clarity-app];
+-- DELETE serves audit retention only: the Security.AuditRetention block predicate refuses events younger than 29 days.
+GRANT SELECT, INSERT, DELETE ON dbo.AuditEvents TO [clarity-app];
 GRANT SELECT ON dbo.PlatformAdmins TO [clarity-app];
 DENY ALTER ANY SECURITY POLICY TO [clarity-app];
 DENY ALTER ANY ROLE TO [clarity-app];

@@ -1185,4 +1185,11 @@
   <data name="StepCount_Exports" xml:space="preserve"><value>Exports générés</value></data>
   <data name="StepCount_FailedExports" xml:space="preserve"><value>Exports en échec</value></data>
   <data name="StepCount_PendingExports" xml:space="preserve"><value>Exports en cours</value></data>
+  <data name="Deleting" xml:space="preserve"><value>Suppression en cours</value></data>
+  <data name="DeleteProject" xml:space="preserve"><value>Supprimer</value></data>
+  <data name="DeleteConfirm" xml:space="preserve"><value>La suppression efface définitivement le dossier archivé : inventaire, décisions, comparaisons, exports et fichiers bruts, dans SQL et le stockage Blob. Le journal d’audit de l’espace client est conservé. Seul un responsable d’espace peut la demander ; une nouvelle demande relance une suppression interrompue.</value></data>
+  <data name="DeleteConfirmName" xml:space="preserve"><value>Saisissez le nom exact du dossier pour confirmer</value></data>
+  <data name="DeletionDue" xml:space="preserve"><value>durée de conservation après archivage atteinte</value></data>
+  <data name="FileExpired" xml:space="preserve"><value>Ce fichier n’est plus conservé : la durée de conservation est écoulée ou le fichier a été supprimé.</value></data>
+  <data name="ExportFilesExpired" xml:space="preserve"><value>Fichiers expirés le</value></data>
 </root>

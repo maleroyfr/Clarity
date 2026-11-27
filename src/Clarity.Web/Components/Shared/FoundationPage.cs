@@ -33,7 +33,7 @@ public abstract class FoundationPage : ComponentBase
         {
             await action();
         }
-        catch (Exception exception) when (exception is AccessDeniedException or ArgumentException or ConflictException or DbException or DbUpdateException
+        catch (Exception exception) when (exception is AccessDeniedException or FileExpiredException or ArgumentException or ConflictException or DbException or DbUpdateException
             or ContractException or GraphReadException or DiscoveryConfigurationException or Azure.RequestFailedException
             or Azure.Identity.AuthenticationFailedException or IOException or HttpRequestException or OperationCanceledException)
         {
@@ -48,6 +48,7 @@ public abstract class FoundationPage : ComponentBase
             Error = Messages[exception switch
             {
                 AccessDeniedException => "Denied",
+                FileExpiredException => "FileExpired",
                 ArgumentException => "Invalid",
                 ConflictException => "Conflict",
                 ContractException contract => contract.Code is "EnvironmentOrScopeMismatch" or "EnvironmentMismatch" or "RequestMismatch" ? "PackageMismatch" : "InvalidPackage",

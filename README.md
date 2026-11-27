@@ -62,6 +62,7 @@ Never use a production database for tests.
 - [Reference acceptance (recette) on a synthetic dossier](docs/recette.md)
 - [Client isolation audit: routes, pages, circuit services, RLS and audit trail](docs/isolation-audit.md)
 - [Resilience under restarts and throttling, and 50,000-user volume timings](docs/resilience-performance.md)
+- [Retention per category, project archival and controlled deletion](docs/retention-deletion.md)
 - [Azure provisioning, deployment and rollback](docs/deployment.md)
 - [Contributor conventions](.github/copilot-instructions.md)
 

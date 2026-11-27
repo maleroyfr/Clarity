@@ -68,6 +68,7 @@ public sealed class CollectionJobProcessor(SqlJobQueue queue, IEnumerable<IColle
                 AccessDeniedException => "AccessDenied",
                 ContractException contract => contract.Code,
                 RetryableCollectionException retry => retry.Code,
+                FileExpiredException expired => expired.Code,
                 _ => "ProcessingFailed"
             };
             logger.LogWarning("Collection job failed with {ErrorType}; attempt {Attempt}; correlation {CorrelationId}",

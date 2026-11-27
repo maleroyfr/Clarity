@@ -220,7 +220,11 @@ public sealed class ZipImportTests
 internal sealed class MemoryArtifactStore : IArtifactStore
 {
     private readonly ConcurrentDictionary<string, byte[]> files = new(StringComparer.Ordinal);
+    private readonly ConcurrentDictionary<string, DateTimeOffset> modified = new(StringComparer.Ordinal);
     public int Count => files.Count;
+    public IReadOnlyList<string> Names => [.. files.Keys];
+    /// <summary>Simulates Blob storage being unreachable for deletions.</summary>
+    public bool FailDeletes { get; set; }
 
     public async Task<StoredArtifact> SaveAsync(Guid workspaceId, Stream source, long maxBytes, CancellationToken cancellationToken)
     {
@@ -230,6 +234,7 @@ internal sealed class MemoryArtifactStore : IArtifactStore
         if (bytes.Length > maxBytes) { throw new ContractException("CompressedSizeLimit", "zip"); }
         var name = $"{workspaceId:N}/{Guid.NewGuid():N}.zip";
         files[name] = bytes;
+        modified[name] = DateTimeOffset.UtcNow;
         return new StoredArtifact(name, Convert.ToHexStringLower(SHA256.HashData(bytes)), bytes.Length);
     }
     public Task<Stream> OpenAsync(Guid workspaceId, string blobName, CancellationToken cancellationToken) =>
@@ -238,7 +243,11 @@ internal sealed class MemoryArtifactStore : IArtifactStore
     public Task DeleteAsync(Guid workspaceId, string blobName, CancellationToken cancellationToken)
     {
         if (!blobName.StartsWith($"{workspaceId:N}/", StringComparison.Ordinal)) { throw new AccessDeniedException(); }
+        if (FailDeletes) { throw new IOException("Synthetic storage outage."); }
         files.TryRemove(blobName, out _);
         return Task.CompletedTask;
     }
+    public IAsyncEnumerable<StoredFile> ListAsync(Guid workspaceId, CancellationToken cancellationToken) =>
+        files.Keys.Where(k => k.StartsWith($"{workspaceId:N}/", StringComparison.Ordinal)).Select(k => new StoredFile(k, modified[k]))
+            .ToAsyncEnumerable();
 }

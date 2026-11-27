@@ -16,7 +16,7 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261127104959_VolumeIndexes";
+    public override string LastMigrationId => "20261127114305_RetentionAndDeletion";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -818,6 +818,9 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
                 b.Property<int?>("ExceptionCount")
                     .HasColumnType("int");
 
+                b.Property<DateTimeOffset?>("FilesPurgedAtUtc")
+                    .HasColumnType("datetimeoffset");
+
                 b.Property<string>("FiltersJson")
                     .IsRequired()
                     .HasMaxLength(4000)
@@ -1413,6 +1416,9 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
                 b.Property<Guid>("Id")
                     .HasColumnType("uniqueidentifier");
 
+                b.Property<DateTimeOffset?>("ArchivedAtUtc")
+                    .HasColumnType("datetimeoffset");
+
                 b.Property<string>("Description")
                     .IsRequired()
                     .HasMaxLength(4000)
@@ -1512,6 +1518,9 @@ partial class ClarityDbContextModelSnapshot : ModelSnapshot
                     .IsRequired()
                     .HasMaxLength(200)
                     .HasColumnType("nvarchar(200)");
+
+                b.Property<DateTimeOffset?>("PurgedAtUtc")
+                    .HasColumnType("datetimeoffset");
 
                 b.Property<Guid>("RunId")
                     .HasColumnType("uniqueidentifier");

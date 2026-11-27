@@ -157,4 +157,8 @@ internal sealed class TestExportStore : IExportStore
         return Task.FromResult(blobs.Keys.Where(k => k.StartsWith(prefix, StringComparison.Ordinal) && !keep.Contains(k))
             .ToList().Count(k => blobs.TryRemove(k, out _)));
     }
+
+    public IAsyncEnumerable<StoredFile> ListAsync(Guid workspaceId, CancellationToken cancellationToken) =>
+        blobs.Keys.Where(k => k.StartsWith($"{workspaceId:N}/", StringComparison.Ordinal)).Select(k => new StoredFile(k, DateTimeOffset.UtcNow))
+            .ToAsyncEnumerable();
 }

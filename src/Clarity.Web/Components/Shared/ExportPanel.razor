@@ -59,11 +59,13 @@ else
             }
             <small>@Text["ExportSelectionHash"] <code>@r.SelectionHash[..12]</code></small></TemplateColumn>
         <TemplateColumn Title="@Text["ExportFiles"]" Context="r">
-            @if (r.Artifacts.Count == 0) { <span>@Text["ExportNoFiles"]</span> }
+            @if (r.FilesPurgedAtUtc is { } purged) { <FluentText>@Text["ExportFilesExpired"] @purged.ToString("u")</FluentText> }
+            else if (r.Artifacts.Count == 0) { <span>@Text["ExportNoFiles"]</span> }
             <ul aria-label="@Text["ExportFiles"]">
                 @foreach (var a in r.Artifacts)
                 {
-                    <li><FluentLink Href="@($"/api/projects/{ProjectId}/exports/{r.Id}/artifacts/{a.Id}")" download ForceLoad="true">@Text[$"ExportArtifact_{a.Kind}"]</FluentLink>
+                    <li>@if (r.FilesPurgedAtUtc is null) { <FluentLink Href="@($"/api/projects/{ProjectId}/exports/{r.Id}/artifacts/{a.Id}")" download ForceLoad="true">@Text[$"ExportArtifact_{a.Kind}"]</FluentLink> }
+                        else { <FluentText>@Text[$"ExportArtifact_{a.Kind}"]</FluentText> }
                         <small>@a.FileName · @a.RowCount.ToString("N0") @Text["ExportRows"] · @Size(a.Bytes) · SHA-256 @a.ContentHash[..12]</small></li>
                 }
             </ul></TemplateColumn>

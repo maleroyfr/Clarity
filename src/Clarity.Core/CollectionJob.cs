@@ -1,6 +1,6 @@
 namespace Clarity.Core;
 
-public enum CollectionJobKind { Import, Graph, Export }
+public enum CollectionJobKind { Import, Graph, Export, Deletion }
 
 public static class CollectionJobKinds
 {
@@ -9,6 +9,7 @@ public static class CollectionJobKinds
     {
         CollectionJobKind.Import => WorkspaceOperation.Import,
         CollectionJobKind.Export => WorkspaceOperation.Export,
+        CollectionJobKind.Deletion => WorkspaceOperation.DeleteProject,
         _ => WorkspaceOperation.Collect
     };
 }

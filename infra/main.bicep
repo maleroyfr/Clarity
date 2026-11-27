@@ -171,6 +171,29 @@ resource containers 'Microsoft.Storage/storageAccounts/blobServices/containers@2
   properties: { publicAccess: 'None' }
 }]
 
+// Retention and project deletion turn current raw/export files into previous versions. Previous versions are aged from their original
+// write, so this rule removes them at the next daily policy run (at least 7 days after upload); soft delete then keeps them 7 more days.
+// Without it, versioning would keep every "deleted" file indefinitely.
+resource lifecycle 'Microsoft.Storage/storageAccounts/managementPolicies@2023-05-01' = {
+  parent: storage
+  name: 'default'
+  properties: {
+    policy: {
+      rules: [
+        {
+          name: 'expire-deleted-file-versions'
+          enabled: true
+          type: 'Lifecycle'
+          definition: {
+            filters: { blobTypes: ['blockBlob'], prefixMatch: ['raw-artifacts/', 'exports/'] }
+            actions: { version: { delete: { daysAfterCreationGreaterThan: 7 } } }
+          }
+        }
+      ]
+    }
+  }
+}
+
 resource vault 'Microsoft.KeyVault/vaults@2023-07-01' = {
   name: 'cl-${suffix}-kv'
   location: location

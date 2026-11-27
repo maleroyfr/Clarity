@@ -107,8 +107,11 @@ and the inventory sheet marks each object with an open flag.
 - Only presence and the critical fields above trigger a review. Relationship
   changes (for example group membership) do not flag a scope decision; refresh the
   population and re-apply the decision instead.
-- Retention purges must keep or deliberately clear the evidence observations
-  referenced by decision revisions and assessments.
+- Retention never purges the observations referenced by decision revisions and
+  assessments: inventory evidence is kept for the project's lifetime and removed
+  only by its controlled deletion. A purged raw file only stops the evidence
+  from being re-read from its source file. See
+  [retention and deletion](retention-deletion.md).
 
 The project overview counts decisions to review as the "Revoir les décisions"
 scenario step; see [scenarios.md](scenarios.md).

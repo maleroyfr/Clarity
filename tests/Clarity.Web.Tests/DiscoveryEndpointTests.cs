@@ -333,4 +333,7 @@ internal sealed class TestArtifactStore : IArtifactStore
         blobs.TryRemove(blobName, out _);
         return Task.CompletedTask;
     }
+    public IAsyncEnumerable<StoredFile> ListAsync(Guid workspaceId, CancellationToken cancellationToken) =>
+        blobs.Keys.Where(k => k.StartsWith($"{workspaceId:N}/", StringComparison.Ordinal)).Select(k => new StoredFile(k, DateTimeOffset.UtcNow))
+            .ToAsyncEnumerable();
 }

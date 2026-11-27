@@ -157,7 +157,10 @@ Excel cell maximum.
 - An export is limited to 50,000 inventory rows.
 - Export jobs are not cancelled or retried through the discovery job controls; a
   failed export is relaunched with a new operation.
-- Generated files have no retention or purge policy yet.
+- Generated files are deleted `ExportFileDays` after generation (30 by default);
+  the export record and each file's name, rows, size and hash remain, and the
+  screen shows "Fichiers expirés le". See
+  [retention and deletion](retention-deletion.md).
 - The author is shown as tenant and object identifiers.
 - The population selector lists the first 100 populations of the side.
 - Mapping decisions are exported only when one side is in the exported objects.

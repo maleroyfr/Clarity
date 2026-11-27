@@ -15,7 +15,10 @@ Key Vault, Log Analytics and Application Insights. SQL, Blob and Key Vault use
 private endpoints, private DNS and disabled public access. Shared Storage keys,
 public blobs, FTP and basic SCM publishing credentials are disabled. TLS 1.2,
 SQL encryption, Blob versioning/7-day soft delete, and vault purge protection
-are enabled. These are starter capacities, not an HA or disaster-recovery SLA.
+are enabled. A lifecycle rule deletes previous versions of `raw-artifacts` and
+`exports` blobs at least 7 days after upload, so files removed by
+[retention or project deletion](retention-deletion.md) do not survive indefinitely
+as versions. These are starter capacities, not an HA or disaster-recovery SLA.
 Review region, capacity, backup retention, cost and the `10.42.0.0/16` range before
 provisioning. Purge-protected vaults cannot be immediately recreated after deletion.
 
@@ -149,7 +152,9 @@ Entra authentication. Use the staged statements in `infra/bootstrap-sql.sql`:
 3. Replace the app display name with the template's managed-identity name, create
    its external database user, and apply the explicit table grants/denials.
    Never grant it `db_owner`, `db_ddladmin`, schema ownership, arbitrary role
-   management or permission to alter RLS. Do not grant audit update/delete.
+   management or permission to alter RLS. Do not grant audit update. Audit delete
+   exists only for [retention](retention-deletion.md); the RLS block predicate
+   `Security.AuditRetention` makes SQL refuse to delete events younger than 29 days.
 4. Replace the final zero GUIDs with the first platform administrator's `tid`/`oid`
    and insert that row. This is an operator bootstrap, not startup seeding.
    Platform administration still grants no inventory access: create a client and
@@ -233,6 +238,13 @@ Confirm private DNS, SQL user mapping, Blob/container access, vault resolution a
 the absence of auto-instrumentation. A green CI is not evidence that an unconfigured
 Azure tenant has been deployed or that live RBAC has propagated.
 
+### Retention settings
+
+Retention defaults apply without configuration. Before admitting pilot data,
+choose and record the `Retention__*` App Service settings described in
+[retention and deletion](retention-deletion.md); out-of-range values stop startup.
+Retention runs inside the web process, so a stopped app also stops purges.
+
 ## Schema changes and rollback
 
 Use expand/contract migrations: add nullable/defaulted fields, deploy compatible
@@ -256,6 +268,10 @@ To roll back an application:
 4. Require both health endpoints to return 200, verify sign-in and one authorized
    journey, and record the rollback. Correct/revert application code on main and
    restore the gate only when the next release is ready.
+
+Releases before the retention migration do not know the `Deleting` project status.
+Do not roll back below that release while a project deletion is pending; let the
+deletion finish (or record the project) first.
 
 Preserve approved release artifacts outside the 90-day GitHub retention if a longer
 rollback window is required. If a schema change was not backward compatible,

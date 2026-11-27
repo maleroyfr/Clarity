@@ -167,3 +167,6 @@ All four journeys run against SQL, so CI runs them and local runs skip them.
   and Teams data rather than the generated dossier.
 - **Data volume.** The default dossier is deliberately small so that each
   journey stays fast and readable.
+- **Retention and deletion.** Retention per category, archival and controlled
+  deletion are operations requirements, not rows of the recette table. Their
+  tests are listed in [retention and deletion](retention-deletion.md).

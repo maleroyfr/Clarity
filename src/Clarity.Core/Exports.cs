@@ -40,6 +40,9 @@ public sealed class ExportJob : WorkspaceEntity
     public int? ExceptionCount { get; set; }
     public int? MappingCount { get; set; }
     public int? CoverageGaps { get; set; }
+
+    /// <summary>When retention removed the generated files; the request, counters and selection stay as the export's history.</summary>
+    public DateTimeOffset? FilesPurgedAtUtc { get; set; }
 }
 
 /// <summary>One generated private file of an export, kept in the workspace prefix of the exports Blob container.</summary>
@@ -113,6 +116,7 @@ public interface IExportStore
 
     /// <summary>Deletes every file stored under the export's prefix except the listed blob names and returns how many were removed.</summary>
     Task<int> PurgeExportAsync(Guid workspaceId, Guid exportId, IReadOnlySet<string> keep, CancellationToken cancellationToken);
+    IAsyncEnumerable<StoredFile> ListAsync(Guid workspaceId, CancellationToken cancellationToken);
 }
 
 /// <summary>Localized business labels of generated files; a missing key falls back to the key itself.</summary>

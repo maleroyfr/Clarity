@@ -89,7 +89,10 @@ public class RowLevelSecurityTests
         foreach (var table in tables)
         {
             var kinds = predicates.Where(x => x.Table == table).Select(x => x.Kind).Order(StringComparer.Ordinal).ToArray();
-            kinds.ShouldBe(["BLOCK AFTER INSERT", "BLOCK AFTER UPDATE", "FILTER"], $"{table} must have enabled, schema-bound row-level security.");
+            // Audit events additionally refuse deletion of recent events, so retention cannot erase recent activity.
+            kinds.ShouldBe(table == "AuditEvents"
+                ? ["BLOCK AFTER INSERT", "BLOCK AFTER UPDATE", "BLOCK BEFORE DELETE", "FILTER"]
+                : ["BLOCK AFTER INSERT", "BLOCK AFTER UPDATE", "FILTER"], $"{table} must have enabled, schema-bound row-level security.");
             predicates.Where(x => x.Table == table).ShouldAllBe(x => x.Function.Contains("[Security].", StringComparison.Ordinal),
                 $"{table} predicates must use the Security schema functions.");
         }

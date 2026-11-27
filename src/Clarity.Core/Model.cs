@@ -3,7 +3,7 @@ namespace Clarity.Core;
 public enum WorkspaceStatus { Active, Archived }
 public enum WorkspaceRole { WorkspaceManager, Consultant, Reader }
 public enum ProjectScenario { TenantToTenant, CarveOut, CarveIn, AuditOnly }
-public enum ProjectStatus { Active, Archived }
+public enum ProjectStatus { Active, Archived, Deleting }
 public enum EnvironmentRole { Source, Target }
 public enum EnvironmentKind { M365Tenant, AdForest, AzureScope, Other }
 public enum TargetState { Planned, Existing }
@@ -54,9 +54,37 @@ public sealed class Project : WorkspaceEntity
     public ProjectScenario Scenario { get; init; }
     public string Description { get; set; } = "";
     public ProjectStatus Status { get; private set; }
+    public DateTimeOffset? ArchivedAtUtc { get; private set; }
     public string ScopingParameters { get; set; } = "{}";
 
-    public void Archive() => Status = ProjectStatus.Archived;
+    /// <summary>Archives an active project once; archiving again, or archiving a project being deleted, changes nothing.</summary>
+    public void Archive(DateTimeOffset? atUtc = null)
+    {
+        if (Status != ProjectStatus.Active) { return; }
+        Status = ProjectStatus.Archived;
+        ArchivedAtUtc = atUtc ?? DateTimeOffset.UtcNow;
+    }
+
+    /// <summary>Starts the controlled deletion of an archived project; there is no way back to an archived or active state.</summary>
+    public void BeginDeletion()
+    {
+        if (Status == ProjectStatus.Active) { throw new InvalidOperationException("Only an archived project can be deleted."); }
+        Status = ProjectStatus.Deleting;
+    }
+}
+
+public static class ProjectLifecycle
+{
+    /// <summary>
+    /// Whether the project's lifecycle state permits an operation once the role allows it: an archived project stays readable, only its
+    /// deletion is possible while it is being deleted, and every change needs an active project in an active workspace.
+    /// </summary>
+    public static bool Permits(ProjectStatus status, bool workspaceActive, WorkspaceOperation operation) => operation switch
+    {
+        WorkspaceOperation.DeleteProject => status is ProjectStatus.Archived or ProjectStatus.Deleting,
+        WorkspaceOperation.Read => status != ProjectStatus.Deleting,
+        _ => status == ProjectStatus.Active && workspaceActive
+    };
 }
 
 public sealed class ProjectEnvironment : WorkspaceEntity
