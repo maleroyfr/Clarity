@@ -108,6 +108,40 @@ public sealed class DependencyTests
         (await outside.DependencyLinks.IgnoreQueryFilters().CountAsync()).ShouldBe(0);
     }
 
+    [SqlFact]
+    public async Task ScenarioWorkflowCountsSharedResourcesOnceAcrossRepeatedAnalysesAndStaysWorkspaceScoped()
+    {
+        await using var fixture = await DiscoveryFixture.CreateAsync();
+        var (environment, ids) = await SeedAsync(fixture);
+        var project = fixture.Project.Id;
+        await ScopeTests.Service(fixture).ApplyAsync(project,
+            new(Guid.NewGuid(), ScopeValue.Include, "Vague 1", "Synthetic migrating user", ObjectIds: [ids["alice"]]), 1);
+        var service = Service(fixture);
+        await service.AnalyzeAsync(project, environment.Id, null, Guid.NewGuid());
+        await service.AnalyzeAsync(project, environment.Id, null, Guid.NewGuid());
+        var scenarios = new ScenarioOverviewService(fixture.Factory, fixture.Access);
+
+        var overview = await scenarios.ReadAsync(project);
+
+        overview.Scenario.ShouldBe(ProjectScenario.TenantToTenant);
+        var facts = overview.Facts;
+        (facts.Sources, facts.ExistingTargets, facts.PlannedTargets).ShouldBe((2, 0, 0));
+        facts.SourceSections.ShouldBeGreaterThan(0);
+        (facts.Included, facts.Excluded, facts.ToArbitrate).ShouldBe((1, 0, 0));
+        (facts.DependencyAnalyses, facts.SharedResources, facts.RemainingPrincipals).ShouldBe((1, 3, 1));
+        (facts.TargetComparisons, facts.Exports, facts.Decisions).ShouldBe((0, 0, 1));
+        var dependencies = overview.Steps.Single(s => s.Step == ScenarioStep.Dependencies);
+        (dependencies.State, dependencies.Key).ShouldBe((ScenarioStepState.Attention, false));
+        overview.Steps.Single(s => s.Step == ScenarioStep.Target).State.ShouldBe(ScenarioStepState.ToDo);
+        overview.Steps.ShouldNotContain(s => s.Step == ScenarioStep.TargetCollection && !s.Key);
+
+        var other = await fixture.OtherWorkspaceAsync();
+        var foreign = new ScenarioOverviewService(other.Factory, other.Access);
+        await Should.ThrowAsync<AccessDeniedException>(() => foreign.ReadAsync(project));
+        var empty = await foreign.ReadAsync(other.Project.Id);
+        (empty.Facts.Sources, empty.Facts.SharedResources, empty.Next!.Step).ShouldBe((0, 0, ScenarioStep.Source));
+    }
+
     private static DependencyService Service(DiscoveryFixture fixture) => new(fixture.Factory, fixture.Access, fixture.Scope, DiscoveryCatalog.Load());
 
     /// <summary>

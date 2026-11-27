@@ -58,6 +58,7 @@ Never use a production database for tests.
 - [Comparisons: successive collections, source and target, and decisions to review](docs/comparison.md)
 - [Decision history, targeted re-review and the decision register](docs/decisions.md)
 - [Exports: dated Excel workbook and filtered CSV files](docs/exports.md)
+- [Scenario workflows: tenant-to-tenant, carve-out, carve-in and audit only](docs/scenarios.md)
 - [Azure provisioning, deployment and rollback](docs/deployment.md)
 - [Contributor conventions](.github/copilot-instructions.md)
 

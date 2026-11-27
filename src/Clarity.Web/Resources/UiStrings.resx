@@ -1073,4 +1073,82 @@
   <data name="ExportError_ExportTooLarge" xml:space="preserve"><value>La sélection dépasse 50 000 objets. Affinez les filtres puis relancez l’export.</value></data>
   <data name="ExportError_AccessDenied" xml:space="preserve"><value>L’auteur n’a plus le droit de générer des exports pour ce projet.</value></data>
   <data name="ExportErrorGeneric" xml:space="preserve"><value>La génération a échoué sans exposer de donnée sensible. Relancez l’export ou contactez l’administrateur.</value></data>
+  <data name="ScenarioWorkflow" xml:space="preserve"><value>Parcours du scénario</value></data>
+  <data name="ScenarioGuide_TenantToTenant" xml:space="preserve"><value>Découvrir la source, inventorier la cible lorsqu’elle est disponible, rapprocher les objets et identifier les écarts qui affectent la préparation.</value></data>
+  <data name="ScenarioGuide_CarveOut" xml:space="preserve"><value>Définir la population qui part, inventorier ses dépendances et identifier les ressources également utilisées par les personnes qui restent.</value></data>
+  <data name="ScenarioGuide_CarveIn" xml:space="preserve"><value>Inventorier l’environnement entrant et la cible existante, mettre en évidence les doublons, les collisions et les dépendances à conserver ou à adapter.</value></data>
+  <data name="ScenarioGuide_AuditOnly" xml:space="preserve"><value>Ouvrir un dossier avec une source, publier la synthèse et ajouter une cible plus tard si la mission évolue.</value></data>
+  <data name="ScenarioProgress" xml:space="preserve"><value>Étapes clés terminées : {0} sur {1}</value></data>
+  <data name="ScenarioNextStep" xml:space="preserve"><value>Prochaine étape</value></data>
+  <data name="ScenarioNoNextStep" xml:space="preserve"><value>Aucune étape clé n’attend d’action : elles sont terminées ou attendent un prérequis.</value></data>
+  <data name="ScenarioSteps" xml:space="preserve"><value>Étapes du scénario</value></data>
+  <data name="ScenarioReadOnlyHint" xml:space="preserve"><value>Le parcours lit les indicateurs du dossier ; chaque étape ouvre l’écran correspondant, où votre rôle détermine les actions possibles.</value></data>
+  <data name="StepKey" xml:space="preserve"><value>Étape clé</value></data>
+  <data name="StepSupporting" xml:space="preserve"><value>Étape complémentaire</value></data>
+  <data name="StepCounts" xml:space="preserve"><value>Indicateurs de l’étape</value></data>
+  <data name="Step_Source" xml:space="preserve"><value>Déclarer la source</value></data>
+  <data name="Step_SourceCollection" xml:space="preserve"><value>Collecter la source</value></data>
+  <data name="Step_Target" xml:space="preserve"><value>Déclarer la cible</value></data>
+  <data name="Step_TargetCollection" xml:space="preserve"><value>Collecter la cible</value></data>
+  <data name="Step_Populations" xml:space="preserve"><value>Constituer les populations</value></data>
+  <data name="Step_ScopeDecisions" xml:space="preserve"><value>Décider du périmètre</value></data>
+  <data name="Step_Dependencies" xml:space="preserve"><value>Analyser les dépendances</value></data>
+  <data name="Step_RunComparison" xml:space="preserve"><value>Comparer deux collectes</value></data>
+  <data name="Step_MappingRules" xml:space="preserve"><value>Documenter les règles de correspondance</value></data>
+  <data name="Step_SourceTargetComparison" xml:space="preserve"><value>Comparer source et cible</value></data>
+  <data name="Step_DecisionReview" xml:space="preserve"><value>Revoir les décisions</value></data>
+  <data name="Step_Export" xml:space="preserve"><value>Générer les exports</value></data>
+  <data name="StepState_Done" xml:space="preserve"><value>Terminé</value></data>
+  <data name="StepState_Attention" xml:space="preserve"><value>À vérifier</value></data>
+  <data name="StepState_ToDo" xml:space="preserve"><value>À faire</value></data>
+  <data name="StepState_Waiting" xml:space="preserve"><value>En attente d’un prérequis</value></data>
+  <data name="StepState_Optional" xml:space="preserve"><value>Facultatif</value></data>
+  <data name="StepHint_Source" xml:space="preserve"><value>Déclarer le tenant Microsoft 365 source et les sources complémentaires, dont l’AD.</value></data>
+  <data name="StepHint_SourceCollection" xml:space="preserve"><value>Lancer les collectes Graph ou déposer les paquets PowerShell, puis vérifier la couverture des sections.</value></data>
+  <data name="StepHint_Target" xml:space="preserve"><value>Déclarer la cible, existante ou prévue avec ses hypothèses.</value></data>
+  <data name="StepHint_TargetCollection" xml:space="preserve"><value>Collecter l’inventaire de la cible existante.</value></data>
+  <data name="StepHint_TargetPlanned" xml:space="preserve"><value>La cible est prévue : aucune donnée à collecter. Les comparaisons de données s’activent lorsque la cible existe.</value></data>
+  <data name="StepHint_Populations" xml:space="preserve"><value>Constituer une population par groupe, OU, domaine, site, filtre ou liste importée.</value></data>
+  <data name="StepHint_ScopeDecisions" xml:space="preserve"><value>Inclure, exclure ou laisser à arbitrer en lot, avec une vague de migration facultative.</value></data>
+  <data name="StepHint_Dependencies" xml:space="preserve"><value>Repérer les dépendances et les ressources partagées entre populations.</value></data>
+  <data name="StepHint_RunComparison" xml:space="preserve"><value>Comparer deux collectes d’un environnement pour repérer les changements et les décisions à revoir.</value></data>
+  <data name="StepHint_MappingRules" xml:space="preserve"><value>Documenter les règles de correspondance du projet, comme un identifiant d’employé unique ou un UPN cible calculé.</value></data>
+  <data name="StepHint_SourceTargetComparison" xml:space="preserve"><value>Montrer les collisions et les objets absents, inconnus ou ambigus.</value></data>
+  <data name="StepHint_DecisionReview" xml:space="preserve"><value>Revoir les décisions dont les conditions de réexamen sont réunies.</value></data>
+  <data name="StepHint_Export" xml:space="preserve"><value>Générer une synthèse Excel et des CSV filtrés.</value></data>
+  <data name="StepHint_TenantToTenant_TargetCollection" xml:space="preserve"><value>Inventorier la cible lorsqu’elle est disponible.</value></data>
+  <data name="StepHint_TenantToTenant_SourceTargetComparison" xml:space="preserve"><value>Rapprocher les objets et identifier les écarts qui affectent la préparation.</value></data>
+  <data name="StepHint_CarveOut_Populations" xml:space="preserve"><value>Définir la population qui part.</value></data>
+  <data name="StepHint_CarveOut_Dependencies" xml:space="preserve"><value>Inventorier ses dépendances et identifier les ressources également utilisées par les personnes qui restent.</value></data>
+  <data name="StepHint_CarveIn_SourceCollection" xml:space="preserve"><value>Inventorier l’environnement entrant.</value></data>
+  <data name="StepHint_CarveIn_Target" xml:space="preserve"><value>Déclarer la cible existante qui accueille l’environnement entrant. Une cible seulement prévue reste à vérifier.</value></data>
+  <data name="StepHint_CarveIn_SourceTargetComparison" xml:space="preserve"><value>Mettre en évidence les doublons et les collisions avec la cible existante.</value></data>
+  <data name="StepHint_CarveIn_Dependencies" xml:space="preserve"><value>Repérer les dépendances à conserver ou à adapter.</value></data>
+  <data name="StepHint_AuditOnly_Target" xml:space="preserve"><value>Ajouter une cible plus tard si la mission évolue.</value></data>
+  <data name="StepHint_AuditOnly_Export" xml:space="preserve"><value>Publier la synthèse.</value></data>
+  <data name="StepCount_Sources" xml:space="preserve"><value>Sources</value></data>
+  <data name="StepCount_Existing" xml:space="preserve"><value>Cibles existantes</value></data>
+  <data name="StepCount_Planned" xml:space="preserve"><value>Cibles prévues</value></data>
+  <data name="StepCount_Sections" xml:space="preserve"><value>Sections publiées</value></data>
+  <data name="StepCount_SectionsToVerify" xml:space="preserve"><value>Sections à vérifier</value></data>
+  <data name="StepCount_Populations" xml:space="preserve"><value>Populations</value></data>
+  <data name="StepCount_Include" xml:space="preserve"><value>Inclus</value></data>
+  <data name="StepCount_Exclude" xml:space="preserve"><value>Exclus</value></data>
+  <data name="StepCount_ToArbitrate" xml:space="preserve"><value>À arbitrer</value></data>
+  <data name="StepCount_Analyses" xml:space="preserve"><value>Analyses récentes</value></data>
+  <data name="StepCount_Shared" xml:space="preserve"><value>Ressources partagées distinctes</value></data>
+  <data name="StepCount_UnresolvedLinks" xml:space="preserve"><value>Liens non résolus</value></data>
+  <data name="StepCount_Remaining" xml:space="preserve"><value>Principaux restants</value></data>
+  <data name="StepCount_Comparisons" xml:space="preserve"><value>Comparaisons</value></data>
+  <data name="StepCount_Rules" xml:space="preserve"><value>Règles actives</value></data>
+  <data name="StepCount_Matched" xml:space="preserve"><value>Rapprochés</value></data>
+  <data name="StepCount_Absent" xml:space="preserve"><value>Absents</value></data>
+  <data name="StepCount_Ambiguous" xml:space="preserve"><value>Ambigus</value></data>
+  <data name="StepCount_Unknown" xml:space="preserve"><value>Inconnus</value></data>
+  <data name="StepCount_Collisions" xml:space="preserve"><value>Collisions</value></data>
+  <data name="StepCount_Decisions" xml:space="preserve"><value>Décisions</value></data>
+  <data name="StepCount_ToReview" xml:space="preserve"><value>À revoir</value></data>
+  <data name="StepCount_Exports" xml:space="preserve"><value>Exports générés</value></data>
+  <data name="StepCount_FailedExports" xml:space="preserve"><value>Exports en échec</value></data>
+  <data name="StepCount_PendingExports" xml:space="preserve"><value>Exports en cours</value></data>
 </root>

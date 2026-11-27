@@ -40,6 +40,7 @@
     else if (Section is null or "overview")
     {
         <p>@Text["TargetPresence"] : <a href="@($"/projects/{ProjectId}/overview?side=Target")">@Text[_environments.Any(x => x.Role == EnvironmentRole.Target) ? "Present" : "Absent"]</a></p>
+        <ScenarioPanel @key="ProjectId" ProjectId="ProjectId" Revision="_environments.Count" />
         <OverviewPanel @key="(ProjectId, _side)" ProjectId="ProjectId" Side="_side" />
         <div class="section-heading"><h2>@Text["Environments"] · @Text[_side.ToString()]</h2>
             <FluentButton OnClick="OpenEnvironment">@Text[_side == EnvironmentRole.Source ? "AddSource" : "AddTarget"]</FluentButton></div>

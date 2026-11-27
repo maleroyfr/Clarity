@@ -152,3 +152,6 @@ Excel cell maximum.
 - The author is shown as tenant and object identifiers.
 - The population selector lists the first 100 populations of the side.
 - Mapping decisions are exported only when one side is in the exported objects.
+
+The project overview shows exports as the last scenario workflow step; see
+[scenarios.md](scenarios.md).

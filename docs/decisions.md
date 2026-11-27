@@ -109,3 +109,6 @@ and the inventory sheet marks each object with an open flag.
   population and re-apply the decision instead.
 - Retention purges must keep or deliberately clear the evidence observations
   referenced by decision revisions and assessments.
+
+The project overview counts decisions to review as the "Revoir les décisions"
+scenario step; see [scenarios.md](scenarios.md).

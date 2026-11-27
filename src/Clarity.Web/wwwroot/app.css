@@ -52,6 +52,12 @@ p { line-height: 1.6; }
 .discovery-form { display: grid; gap: 16px; max-width: 700px; padding: 20px; border: 1px solid #e0e5eb; border-radius: 8px; background: white; }
 .detail-panel pre { white-space: pre-wrap; overflow-wrap: anywhere; padding: 12px; background: #f6f7f9; }
 .detail-panel code, .environment-card code { overflow-wrap: anywhere; }
+.scenario-panel { margin-bottom: 32px; }
+.scenario-steps { padding-left: 24px; }
+.scenario-steps li { background: white; border: 1px solid #e0e5eb; border-radius: 8px; padding: 12px 16px; margin: 8px 0; }
+.scenario-steps li p { margin: 6px 0; }
+.step-state { font-weight: 600; margin: 0 8px; }
+.step-counts { display: flex; flex-wrap: wrap; gap: 4px 16px; list-style: none; padding: 0; margin: 0; font-size: 13px; color: #526174; }
 @media (max-width: 850px) {
     .app-shell { grid-template-columns: 1fr; }
     .app-nav { padding: 8px 16px; border-right: none; }

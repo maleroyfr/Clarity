@@ -1,0 +1,64 @@
+@using Clarity.Infrastructure
+@inherits FoundationPage
+@inject ScenarioOverviewService Scenarios
+
+<section class="scenario-panel" aria-labelledby="scenario-heading">
+    @if (Error is not null) { <p role="alert" class="error">@Error</p> }
+    @if (_data is { } data)
+    {
+        var keySteps = data.Steps.Where(s => s.Key).ToList();
+        <h2 id="scenario-heading">@Text["ScenarioWorkflow"] · @Text[data.Scenario.ToString()]</h2>
+        <p>@Text[$"ScenarioGuide_{data.Scenario}"]</p>
+        <p>@Text["ScenarioProgress", keySteps.Count(s => s.State == ScenarioStepState.Done), keySteps.Count]</p>
+        @if (data.Next is { } next)
+        {
+            <p class="scenario-next"><strong>@Text["ScenarioNextStep"] :</strong> <a href="@StepLink(next)">@Text[$"Step_{next.Step}"]</a> · @Text[next.HintKey]</p>
+        }
+        else { <p class="scenario-next">@Text["ScenarioNoNextStep"]</p> }
+        <h3>@Text["ScenarioSteps"]</h3>
+        <ol class="scenario-steps">
+            @foreach (var step in data.Steps)
+            {
+                <li>
+                    <div><a href="@StepLink(step)">@Text[$"Step_{step.Step}"]</a>
+                        <span class="step-state">@Text[$"StepState_{step.State}"]</span>
+                        <small>@Text[step.Key ? "StepKey" : "StepSupporting"]</small></div>
+                    <p>@Text[step.HintKey]</p>
+                    @if (step.State != ScenarioStepState.Waiting && step.Counts.Count > 0)
+                    {
+                        <ul class="step-counts" aria-label="@Text["StepCounts"]">
+                            @foreach (var count in step.Counts) { <li>@Text[$"StepCount_{count.Label}"] : @count.Value.ToString("N0")</li> }
+                        </ul>
+                    }
+                </li>
+            }
+        </ol>
+        <p><small>@Text["ScenarioReadOnlyHint"]</small></p>
+    }
+</section>
+
+@code {
+    [Parameter] public Guid ProjectId { get; set; }
+    [Parameter] public int Revision { get; set; }
+    private ScenarioOverview? _data;
+
+    private string StepLink(ScenarioStepView step)
+    {
+        var root = $"/projects/{ProjectId}";
+        var side = $"side={step.Side}";
+        return step.Step switch
+        {
+            ScenarioStep.Source or ScenarioStep.Target => $"{root}/overview?{side}",
+            ScenarioStep.SourceCollection or ScenarioStep.TargetCollection => $"{root}/discovery?{side}",
+            ScenarioStep.Populations => $"{root}/scope?{side}",
+            ScenarioStep.ScopeDecisions => $"{root}/scope?{side}&view=decisions",
+            ScenarioStep.Dependencies => $"{root}/scope?{side}&view=dependencies",
+            ScenarioStep.DecisionReview => $"{root}/scope?{side}&view=review",
+            ScenarioStep.RunComparison => $"{root}/comparison?{side}",
+            ScenarioStep.MappingRules or ScenarioStep.SourceTargetComparison => $"{root}/comparison?{side}&view=target",
+            _ => $"{root}/exports?{side}"
+        };
+    }
+
+    protected override Task OnParametersSetAsync() => RunAsync(async () => { _data = null; _data = await Scenarios.ReadAsync(ProjectId); });
+}

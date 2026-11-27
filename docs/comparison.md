@@ -212,3 +212,6 @@ of an [export](exports.md).
 - A planned target only checks computed UPNs among source objects. Target domain
   collisions need observed target domains.
 - A source-target comparison holds at most 200,000 objects per side.
+
+The project overview shows run and source-target comparisons as scenario
+workflow steps; see [scenarios.md](scenarios.md).

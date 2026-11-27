@@ -243,3 +243,6 @@ dated Excel workbook and inventory CSV described in
   resources; larger environments must be scoped by wave.
 - Incoming shared channels and channel-member expansion are not collected, so
   shared-channel dependencies from other tenants are not visible.
+
+The project overview orders populations, scope decisions and dependencies in
+the scenario workflow; see [scenarios.md](scenarios.md).

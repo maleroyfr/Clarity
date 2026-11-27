@@ -1,4 +1,5 @@
 using Clarity.Core;
+using Clarity.Infrastructure;
 
 namespace Clarity.Web.Services;
 
@@ -16,6 +17,7 @@ public static class FoundationEndpoints
         api.MapGet("/projects/{projectId:guid}", (Guid projectId, FoundationService service, CancellationToken ct) => service.GetProjectAsync(projectId, ct));
         api.MapPost("/projects/{projectId:guid}/archive", (Guid projectId, FoundationService service, CancellationToken ct) => service.ArchiveProjectAsync(projectId, ct));
         api.MapGet("/projects/{projectId:guid}/environments", (Guid projectId, FoundationService service, CancellationToken ct) => service.ListEnvironmentsAsync(projectId, ct));
+        api.MapGet("/projects/{projectId:guid}/scenario", (Guid projectId, ScenarioOverviewService service, CancellationToken ct) => service.ReadAsync(projectId, ct));
         api.MapPost("/projects/{projectId:guid}/environments", (Guid projectId, EnvironmentInput input, FoundationService service, CancellationToken ct) =>
             service.AddEnvironmentAsync(projectId, input.OperationId, input.Role, input.Kind, input.ExternalId, input.DeclaredScope, input.TargetState, input.Hypotheses, ct));
         api.AddEndpointFilter(async (context, next) =>
