@@ -23,6 +23,7 @@ public sealed class ScriptRequestTests
     }
 
     [SqlFact]
+    [Trait("Recette", "R04")]
     public async Task ParametersArePortableMetadataAndDownloadsReauthorizeTheProject()
     {
         await using var fixture = await DiscoveryFixture.CreateAsync();

@@ -19,6 +19,7 @@ public sealed class DependencyTests
     private const string Url = "https://contoso.sharepoint.com/sites/Project";
 
     [SqlFact]
+    [Trait("Recette", "R11")]
     public async Task SharedTeamAndSiteCountTheSiteVolumeOnceWithBothPopulationsAndLinkOrigins()
     {
         await using var fixture = await DiscoveryFixture.CreateAsync();
@@ -76,6 +77,7 @@ public sealed class DependencyTests
     }
 
     [SqlFact]
+    [Trait("Recette", "R09")]
     public async Task DependenciesAreWorkspaceIsolatedAndReadersCannotAnalyze()
     {
         await using var fixture = await DiscoveryFixture.CreateAsync();

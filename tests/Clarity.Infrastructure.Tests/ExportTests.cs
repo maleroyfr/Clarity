@@ -66,6 +66,8 @@ public sealed class ExportTests
     }
 
     [SqlFact]
+    [Trait("Recette", "R09")]
+    [Trait("Recette", "R14")]
     public async Task ExportGeneratesReconciledFilesAuditsDownloadsAndIsAuthorizedIsolatedAndIdempotent()
     {
         await using var fixture = await DiscoveryFixture.CreateAsync();
@@ -141,6 +143,8 @@ public sealed class ExportTests
     }
 
     [SqlFact]
+    [Trait("Recette", "R13")]
+    [Trait("Recette", "R14")]
     public async Task SupersededSelectionFailsWithoutFilesAndPartialCoverageIsReportedNotTreatedAsAbsence()
     {
         await using var fixture = await DiscoveryFixture.CreateAsync();
@@ -179,14 +183,14 @@ public sealed class ExportTests
         SummaryValues(workbook)["Export_Col_Wave"].ShouldBe("Vague 1");
     }
 
-    private static ExportService Service(DiscoveryFixture fixture, IExportStore store) =>
+    internal static ExportService Service(DiscoveryFixture fixture, IExportStore store) =>
         new(fixture.Factory, fixture.Access, fixture.Scope, store, DiscoveryCatalog.Load());
 
-    private static Task<bool> ProcessAsync(DiscoveryFixture fixture, IExportStore store) =>
+    internal static Task<bool> ProcessAsync(DiscoveryFixture fixture, IExportStore store) =>
         new CollectionJobProcessor(new SqlJobQueue(fixture.ConnectionString, TimeProvider.System),
             [new ExportJobHandler(store, new KeyText(), DiscoveryCatalog.Load())], NullLogger<CollectionJobProcessor>.Instance).ProcessOneAsync(default);
 
-    private static Dictionary<string, string> SummaryValues(XLWorkbook workbook) =>
+    internal static Dictionary<string, string> SummaryValues(XLWorkbook workbook) =>
         workbook.Worksheet("Export_Sheet_Summary").RowsUsed(XLCellsUsedOptions.Contents).Where(r => !r.Cell(1).IsEmpty())
             .GroupBy(r => r.Cell(1).GetString()).ToDictionary(g => g.Key, g => g.First().Cell(2).GetString());
 

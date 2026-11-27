@@ -8,6 +8,7 @@ namespace Clarity.Infrastructure.Tests;
 public sealed class DecisionHistoryTests
 {
     [SqlFact]
+    [Trait("Recette", "R12")]
     public async Task TargetedRefreshFlagsOnlyChangedDecisionsAndReconfirmationClearsThem()
     {
         await using var fixture = await DiscoveryFixture.CreateAsync();
@@ -53,6 +54,8 @@ public sealed class DecisionHistoryTests
     }
 
     [SqlFact]
+    [Trait("Recette", "R09")]
+    [Trait("Recette", "R12")]
     public async Task RecomputeFlagsLegacyDecisionsWithUnknownChangesAndIsAuthorizedAndIsolated()
     {
         await using var fixture = await DiscoveryFixture.CreateAsync();

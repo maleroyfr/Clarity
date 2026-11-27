@@ -37,6 +37,7 @@ public sealed class JobTests
     }
 
     [SqlFact]
+    [Trait("Recette", "R08")]
     public async Task RestartDuringProcessingResumesPublishedSectionWithoutDuplicates()
     {
         await using var fixture = await DiscoveryFixture.CreateAsync();

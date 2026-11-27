@@ -17,6 +17,7 @@ public sealed class TargetComparisonTests
     private const string NewBob = "b4000000-0000-0000-0000-000000000002", Dave = "b4000000-0000-0000-0000-000000000004";
 
     [SqlFact]
+    [Trait("Recette", "R01")]
     public async Task ExistingTargetsProposeReviewableAssociationsWhilePlannedOrEmptyTargetsAreNeverCompared()
     {
         await using var fixture = await DiscoveryFixture.CreateAsync();
@@ -112,6 +113,7 @@ public sealed class TargetComparisonTests
     }
 
     [SqlFact]
+    [Trait("Recette", "R09")]
     public async Task ComparisonsAreWorkspaceIsolatedAndReadersCannotDocumentOrCompare()
     {
         await using var fixture = await DiscoveryFixture.CreateAsync();

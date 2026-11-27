@@ -63,6 +63,8 @@ public sealed class ZipImportTests
     }
 
     [SqlFact]
+    [Trait("Recette", "R02")]
+    [Trait("Recette", "R04")]
     public async Task IdenticalParallelSeparateMachineUploadsRequireConfirmationAndIntegrateOnce()
     {
         await using var fixture = await DiscoveryFixture.CreateAsync();
@@ -115,6 +117,7 @@ public sealed class ZipImportTests
     }
 
     [SqlFact]
+    [Trait("Recette", "R05")]
     public async Task ConflictingRunWrongEnvironmentRequestAndWorkspaceAreRejectedBeforePublication()
     {
         await using var fixture = await DiscoveryFixture.CreateAsync();
@@ -151,6 +154,7 @@ public sealed class ZipImportTests
     }
 
     [SqlFact]
+    [Trait("Recette", "R06")]
     public async Task PartialPackageUsesCommonPublisherAndKeepsPriorValidData()
     {
         await using var fixture = await DiscoveryFixture.CreateAsync();

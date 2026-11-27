@@ -112,6 +112,7 @@ public sealed class ScopeTests
     }
 
     [SqlFact]
+    [Trait("Recette", "R09")]
     public async Task ScopeIsWorkspaceIsolatedAndReadersCannotDecide()
     {
         await using var fixture = await DiscoveryFixture.CreateAsync();

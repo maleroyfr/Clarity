@@ -19,6 +19,7 @@ public sealed class ReportImportTests
     private static readonly DateTimeOffset Refresh = new(2026, 5, 31, 0, 0, 0, TimeSpan.Zero);
 
     [SqlFact]
+    [Trait("Recette", "R07")]
     public async Task MailboxReportPublishesOnlyAfterConfirmationThroughTheCommonJobPathWithReportProvenance()
     {
         await using var fixture = await DiscoveryFixture.CreateAsync();
@@ -110,6 +111,7 @@ public sealed class ReportImportTests
     }
 
     [SqlFact]
+    [Trait("Recette", "R07")]
     public async Task MixedOneDriveIdentitiesPublishThroughTheCommonJobPathWithoutDuplicates()
     {
         await using var fixture = await DiscoveryFixture.CreateAsync();
@@ -175,6 +177,8 @@ public sealed class ReportImportTests
     }
 
     [SqlFact]
+    [Trait("Recette", "R05")]
+    [Trait("Recette", "R07")]
     public async Task SiteReportsResolveOwnersThroughObservedUpnsAndContradictoryTenantEvidenceBlocksPublication()
     {
         await using var fixture = await DiscoveryFixture.CreateAsync();
@@ -218,6 +222,7 @@ public sealed class ReportImportTests
     }
 
     [SqlFact]
+    [Trait("Recette", "R09")]
     public async Task UnsupportedProfilesScopesFilesAndUnauthorizedOrGuessedIdentifiersAreRejectedAtTheServerBoundary()
     {
         await using var fixture = await DiscoveryFixture.CreateAsync();
@@ -283,6 +288,7 @@ public sealed class ReportImportTests
     }
 
     [SqlFact]
+    [Trait("Recette", "R13")]
     public async Task ConcealedOnlyAndAllInvalidReportsStateTheirFailureAndCannotBeConfirmed()
     {
         await using var fixture = await DiscoveryFixture.CreateAsync();
@@ -311,6 +317,8 @@ public sealed class ReportImportTests
     }
 
     [SqlFact]
+    [Trait("Recette", "R07")]
+    [Trait("Recette", "R13")]
     public async Task PartialReportKeepsPriorValuesPresenceAndValidatedHumanDecisions()
     {
         await using var fixture = await DiscoveryFixture.CreateAsync();
@@ -372,6 +380,7 @@ public sealed class ReportImportTests
     }
 
     [SqlFact]
+    [Trait("Recette", "R08")]
     public async Task JobTimeAuthorizationIsRecheckedAndRetryPublishesTheReportExactlyOnce()
     {
         await using var fixture = await DiscoveryFixture.CreateAsync();

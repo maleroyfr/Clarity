@@ -81,6 +81,7 @@ public sealed class DiscoveryEndpointTests
     }
 
     [Fact]
+    [Trait("Recette", "R04")]
     public async Task SqlSeparateMachineJourneyDownloadsUploadsPreviewsConfirmsAndPreservesCoverage()
     {
         if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("CLARITY_TEST_SQL")))

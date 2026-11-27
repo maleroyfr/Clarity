@@ -159,6 +159,8 @@ public sealed class PublicationTests
     }
 
     [SqlFact]
+    [Trait("Recette", "R06")]
+    [Trait("Recette", "R13")]
     public async Task AbsenceRequiresAnExhaustiveComparableSnapshot()
     {
         await using var fixture = await DiscoveryFixture.CreateAsync();
@@ -195,6 +197,7 @@ public sealed class PublicationTests
     }
 
     [SqlFact]
+    [Trait("Recette", "R10")]
     public async Task MembershipPathsResolveLaterArrivalsPreserveProofAndTerminateOnCycles()
     {
         await using var fixture = await DiscoveryFixture.CreateAsync();

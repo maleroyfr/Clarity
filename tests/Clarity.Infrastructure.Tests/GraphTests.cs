@@ -153,6 +153,8 @@ public sealed partial class GraphTests
     }
 
     [SqlFact]
+    [Trait("Recette", "R03")]
+    [Trait("Recette", "R08")]
     public async Task GraphUsesCommonIngestionSurvivesRestartAndPersistsCursorOnlyAfterPublication()
     {
         await using var fixture = await DiscoveryFixture.CreateAsync();
@@ -291,6 +293,7 @@ public sealed partial class GraphTests
     }
 
     [SqlFact]
+    [Trait("Recette", "R10")]
     public async Task VerifiedConsistencyAnchorAndReviewedUpnSurviveUnrelatedRefreshButNotANewCandidate()
     {
         await using var fixture = await DiscoveryFixture.CreateAsync();
